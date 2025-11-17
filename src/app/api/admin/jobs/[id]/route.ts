@@ -1,0 +1,74 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { requireAdmin } from '@/lib/checkAdmin';
+import { getSupabaseServer } from '@/lib/supabaseServer';
+
+const UpdateJobSchema = z.object({
+	title: z.string().min(1),
+	department: z.string().optional().nullable(),
+	location: z.string().optional().nullable(),
+	description: z.string().optional().nullable(),
+	requirements: z.string().optional().nullable(),
+	is_published: z.union([z.string(), z.boolean()]).transform((v) => {
+		if (typeof v === 'boolean') return v;
+		return v === 'true';
+	})
+});
+
+export async function PUT(
+	req: NextRequest,
+	{ params }: { params: Promise<{ id: string }> }
+) {
+	const { isAdmin } = await requireAdmin();
+	if (!isAdmin) {
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
+	const { id } = await params;
+	const form = await req.formData();
+	
+	const parsed = UpdateJobSchema.parse({
+		title: String(form.get('title') || ''),
+		department: form.get('department') ? String(form.get('department')) : null,
+		location: form.get('location') ? String(form.get('location')) : null,
+		description: form.get('description') ? String(form.get('description')) : null,
+		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
+		is_published: String(form.get('is_published') ?? 'true')
+	});
+
+	const supabase = getSupabaseServer();
+
+	// Verificar si ya existe otra búsqueda con el mismo título (excluyendo la actual)
+	const { data: existingJob } = await supabase
+		.from('jobs')
+		.select('id')
+		.eq('title', parsed.title.trim())
+		.neq('id', id)
+		.maybeSingle();
+
+	if (existingJob) {
+		return NextResponse.json(
+			{ error: 'Ya existe otra búsqueda con este título. Por favor usa un título diferente.' },
+			{ status: 400 }
+		);
+	}
+
+	const { error } = await supabase
+		.from('jobs')
+		.update({
+			title: parsed.title.trim(),
+			department: parsed.department?.trim() || null,
+			location: parsed.location?.trim() || null,
+			description: parsed.description?.trim() || null,
+			requirements: parsed.requirements?.trim() || null,
+			is_published: parsed.is_published
+		})
+		.eq('id', id);
+
+	if (error) {
+		return NextResponse.json({ error: error.message }, { status: 400 });
+	}
+
+	return NextResponse.json({ ok: true });
+}
+
