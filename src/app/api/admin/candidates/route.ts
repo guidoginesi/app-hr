@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 		if (!parsed.success) {
 			console.error('Validation error:', parsed.error);
 			return NextResponse.json(
-				{ error: `Error de validación: ${parsed.error.errors.map(e => e.message).join(', ')}` },
+				{ error: `Error de validación: ${parsed.error.issues.map(e => e.message).join(', ')}` },
 				{ status: 400 }
 			);
 		}
