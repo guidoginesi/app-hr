@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAdmin';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { Stage, StageStatus } from '@/types/funnel';
 
 const CreateCandidateSchema = z.object({
 	name: z.string().min(1),
@@ -27,10 +28,11 @@ const BUCKET = 'resumes';
 
 export async function POST(req: NextRequest) {
 	try {
-		const { isAdmin } = await requireAdmin();
-		if (!isAdmin) {
+		const { isAdmin, user } = await requireAdmin();
+		if (!isAdmin || !user) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 		}
+		const userId = user.id;
 
 		const formData = await req.formData();
 		const linkedinUrlValue = formData.get('linkedinUrl');
@@ -109,24 +111,69 @@ export async function POST(req: NextRequest) {
 			const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(uploadData.path);
 			const resumeUrl = publicUrlData.publicUrl;
 
-			// Crear aplicación con CV
-			const { error: appErr } = await supabase.from('applications').insert({
-				candidate_id: candidate.id,
-				job_id: jobId,
-				resume_url: resumeUrl,
-				status: 'Recibido'
-			});
+			// Crear aplicación con CV usando nuevo modelo
+			// CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW
+			const { data: application, error: appErr } = await supabase
+				.from('applications')
+				.insert({
+					candidate_id: candidate.id,
+					job_id: jobId,
+					resume_url: resumeUrl,
+					current_stage: Stage.HR_REVIEW,
+					current_stage_status: StageStatus.PENDING,
+					status: 'Recibido' // Legacy
+				})
+				.select('id')
+				.single();
 			if (appErr) throw appErr;
+
+			// Crear historial: CV_RECEIVED (completed) -> HR_REVIEW (pending)
+			await supabase.from('stage_history').insert([
+				{
+					application_id: application.id,
+					from_stage: null,
+					to_stage: Stage.CV_RECEIVED,
+					status: StageStatus.COMPLETED,
+					changed_by_user_id: userId,
+					notes: 'CV recibido - aplicación creada manualmente por admin',
+					changed_at: new Date().toISOString()
+				},
+				{
+					application_id: application.id,
+					from_stage: Stage.CV_RECEIVED,
+					to_stage: Stage.HR_REVIEW,
+					status: StageStatus.PENDING,
+					changed_by_user_id: userId,
+					notes: 'Avance automático a revisión HR',
+					changed_at: new Date().toISOString()
+				}
+			]);
 		} else {
-			// Crear aplicación sin CV (solo referencia)
-			// Necesitamos un resume_url, así que usamos un placeholder
-			const { error: appErr } = await supabase.from('applications').insert({
-				candidate_id: candidate.id,
-				job_id: jobId,
-				resume_url: 'manual-entry', // Placeholder para aplicaciones manuales sin CV
-				status: 'Pendiente de Revisión HR'
-			});
+			// Crear aplicación sin CV (solo referencia) - va directo a HR_REVIEW
+			const { data: application, error: appErr } = await supabase
+				.from('applications')
+				.insert({
+					candidate_id: candidate.id,
+					job_id: jobId,
+					resume_url: 'manual-entry', // Placeholder para aplicaciones manuales sin CV
+					current_stage: Stage.HR_REVIEW,
+					current_stage_status: StageStatus.PENDING,
+					status: 'Pendiente de Revisión HR' // Legacy
+				})
+				.select('id')
+				.single();
 			if (appErr) throw appErr;
+
+			// Crear historial inicial
+			await supabase.from('stage_history').insert({
+				application_id: application.id,
+				from_stage: null,
+				to_stage: Stage.HR_REVIEW,
+				status: StageStatus.PENDING,
+				changed_by_user_id: userId,
+				notes: 'Aplicación creada manualmente por admin (sin CV)',
+				changed_at: new Date().toISOString()
+			});
 		}
 
 		return NextResponse.json({ ok: true });

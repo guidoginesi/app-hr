@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Modal } from '../Modal';
 import { CandidateDetailModal } from './CandidateDetailModal';
 import { AddCandidateModal } from './AddCandidateModal';
+import { Stage, StageStatus, StageLabels, StageStatusLabels } from '@/types/funnel';
 
 type Application = {
 	id: string;
@@ -17,6 +18,8 @@ type Application = {
 	ai_extracted?: any;
 	ai_reasons?: string[] | null;
 	ai_match_highlights?: string[] | null;
+	current_stage?: Stage;
+	current_stage_status?: StageStatus;
 };
 
 type Candidate = {
@@ -90,17 +93,25 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 														</div>
 														<div className="mt-1.5 flex items-center gap-3 text-xs text-zinc-500">
 															<span>{candidate.email}</span>
-															<span
-																className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-																	app.status === 'Analizado por IA'
-																		? 'bg-black text-white'
-																		: app.status === 'Recibido'
-																		? 'bg-zinc-100 text-zinc-700'
-																		: 'bg-zinc-50 text-zinc-600'
-																}`}
-															>
-																{app.status}
-															</span>
+															{app.current_stage && app.current_stage_status ? (
+																<span
+																	className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+																		app.current_stage_status === 'DISCARDED_IN_STAGE'
+																			? 'bg-red-100 text-red-700'
+																			: app.current_stage_status === 'COMPLETED'
+																			? 'bg-green-100 text-green-700'
+																			: app.current_stage_status === 'PENDING'
+																			? 'bg-yellow-100 text-yellow-700'
+																			: 'bg-zinc-100 text-zinc-700'
+																	}`}
+																>
+																	{StageLabels[app.current_stage]} - {StageStatusLabels[app.current_stage_status]}
+																</span>
+															) : (
+																<span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+																	{app.status || 'Sin estado'}
+																</span>
+															)}
 															{app.ai_score !== null && (
 																<span className="font-medium text-zinc-600">
 																	Score: <span className="font-semibold text-black">{app.ai_score}/100</span>

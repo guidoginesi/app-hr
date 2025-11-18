@@ -50,10 +50,10 @@ export default async function AdminCandidatesPage() {
 		.select('id,name,email,linkedin_url,created_at')
 		.order('created_at', { ascending: false });
 
-	// Obtener todas las aplicaciones con información de IA
+	// Obtener todas las aplicaciones con información de IA y funnel
 	const { data: applications } = await supabase
 		.from('applications')
-		.select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,ai_extracted,ai_reasons,ai_match_highlights')
+		.select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason')
 		.order('created_at', { ascending: false });
 
 	// Obtener todos los jobs para hacer el join
@@ -88,7 +88,12 @@ export default async function AdminCandidatesPage() {
 					created_at: app.created_at,
 					ai_extracted: app.ai_extracted,
 					ai_reasons: app.ai_reasons,
-					ai_match_highlights: app.ai_match_highlights
+					ai_match_highlights: app.ai_match_highlights,
+					current_stage: app.current_stage,
+					current_stage_status: app.current_stage_status,
+					offer_status: app.offer_status,
+					final_outcome: app.final_outcome,
+					final_rejection_reason: app.final_rejection_reason
 				};
 			});
 

@@ -1,6 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Modal } from '../Modal';
+import { PipelineView } from './PipelineView';
+import { Stage, StageStatus, OfferStatus, FinalOutcome, RejectionReason, StageLabels, StageStatusLabels } from '@/types/funnel';
+
+type StageHistory = {
+	id: string;
+	application_id: string;
+	from_stage: Stage | null;
+	to_stage: Stage;
+	status: StageStatus;
+	changed_by_user_id: string | null;
+	changed_at: string;
+	notes: string | null;
+};
 
 type Application = {
 	id: string;
@@ -14,6 +29,12 @@ type Application = {
 	ai_extracted?: any;
 	ai_reasons?: string[] | null;
 	ai_match_highlights?: string[] | null;
+	current_stage?: Stage;
+	current_stage_status?: StageStatus;
+	offer_status?: OfferStatus | null;
+	final_outcome?: FinalOutcome | null;
+	final_rejection_reason?: RejectionReason | null;
+	stage_history?: StageHistory[];
 };
 
 type Candidate = {
@@ -30,152 +51,408 @@ type CandidateDetailModalProps = {
 	onClose: () => void;
 };
 
+type Tab = 'ai' | 'history' | 'cv' | 'notes';
+
 export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModalProps) {
+	const router = useRouter();
+	const [refreshKey, setRefreshKey] = useState(0);
+	const [currentCandidate, setCurrentCandidate] = useState(candidate);
+	const [loading, setLoading] = useState(false);
+	const [activeTab, setActiveTab] = useState<Tab>('history');
+	const [notes, setNotes] = useState('');
+
+	// Cargar datos actualizados cuando se abre el modal
+	useEffect(() => {
+		async function loadCandidateData() {
+			try {
+				const res = await fetch(`/api/admin/candidates/${candidate.id}`);
+				if (res.ok) {
+					const updatedCandidate = await res.json();
+					setCurrentCandidate(updatedCandidate);
+					console.log('Candidato cargado:', updatedCandidate);
+					console.log('Aplicaciones:', updatedCandidate.applications);
+					if (updatedCandidate.applications.length > 0) {
+						console.log('Historial:', updatedCandidate.applications[0].stage_history);
+					}
+				}
+			} catch (error) {
+				console.error('Error loading candidate:', error);
+			}
+		}
+		loadCandidateData();
+	}, [candidate.id]);
+
+	const displayCandidate = currentCandidate || candidate;
+	const mainApplication = displayCandidate.applications.length > 0 ? displayCandidate.applications[0] : null;
+	
+	// Debug log
+	if (mainApplication) {
+		console.log('Main application:', mainApplication);
+		console.log('Stage history:', mainApplication.stage_history);
+	}
+
+	async function handlePipelineUpdate() {
+		setLoading(true);
+		setRefreshKey((k) => k + 1);
+		
+		// Recargar los datos del candidato desde el servidor
+		try {
+			const res = await fetch(`/api/admin/candidates/${candidate.id}`);
+			if (res.ok) {
+				const updatedCandidate = await res.json();
+				setCurrentCandidate(updatedCandidate);
+			}
+		} catch (error) {
+			console.error('Error reloading candidate:', error);
+		} finally {
+			setLoading(false);
+			router.refresh();
+		}
+	}
+
+	async function handleSaveNotes() {
+		if (!mainApplication) return;
+		
+		try {
+			// TODO: Implementar endpoint para guardar notas del reclutador
+			// Por ahora solo mostramos un mensaje
+			alert('Funcionalidad de notas próximamente disponible');
+		} catch (error) {
+			console.error('Error saving notes:', error);
+		}
+	}
+
+	const currentStageLabel = mainApplication?.current_stage 
+		? StageLabels[mainApplication.current_stage] 
+		: 'Sin etapa';
+
 	return (
-		<Modal isOpen={true} onClose={onClose} title={`Candidato: ${candidate.name}`}>
-			<div className="space-y-6">
-				{/* Información personal */}
-				<div>
-					<h3 className="text-sm font-semibold text-zinc-900">Información personal</h3>
-					<div className="mt-3 space-y-2 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-						<div className="flex items-center justify-between">
-							<span className="text-xs font-medium text-zinc-500">Nombre</span>
-							<span className="text-sm font-medium text-zinc-900">{candidate.name}</span>
-						</div>
-						<div className="flex items-center justify-between">
-							<span className="text-xs font-medium text-zinc-500">Email</span>
-							<a
-								href={`mailto:${candidate.email}`}
-								className="text-sm font-medium text-black hover:underline"
-							>
-								{candidate.email}
-							</a>
-						</div>
-						{candidate.linkedin_url && (
-							<div className="flex items-center justify-between">
-								<span className="text-xs font-medium text-zinc-500">LinkedIn</span>
-								<a
-									href={candidate.linkedin_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-sm font-medium text-black hover:underline"
-								>
-									Ver perfil
-								</a>
+		<Modal isOpen={true} onClose={onClose} title="" maxWidth="max-w-6xl">
+			{loading && (
+				<div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-center">
+					<p className="text-xs text-zinc-600">Actualizando datos...</p>
+				</div>
+			)}
+
+			{/* Header */}
+			<div className="mb-6">
+				<div className="flex items-start justify-between">
+					<div>
+						<h2 className="text-2xl font-bold text-zinc-900">{displayCandidate.name}</h2>
+						{mainApplication && (
+							<div className="flex items-center gap-2 mt-1">
+								<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+								</svg>
+								<p className="text-sm text-zinc-600">{mainApplication.job_title}</p>
 							</div>
 						)}
-						<div className="flex items-center justify-between">
-							<span className="text-xs font-medium text-zinc-500">Registrado</span>
-							<span className="text-sm font-medium text-zinc-900">
-								{new Date(candidate.created_at).toLocaleDateString('es-AR', {
-									day: 'numeric',
-									month: 'long',
-									year: 'numeric'
-								})}
+					</div>
+					{mainApplication?.current_stage && (
+						<div className="flex items-center gap-2">
+							<span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800">
+								{currentStageLabel}
+								<button
+									type="button"
+									onClick={() => {}}
+									className="text-yellow-600 hover:text-yellow-800"
+								>
+									<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
 							</span>
 						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Tres tarjetas horizontales */}
+			<div className="grid grid-cols-3 gap-4 mb-6">
+				{/* Información de Contacto */}
+				<div className="rounded-lg border border-zinc-200 bg-white p-4">
+					<div className="flex items-center gap-2 mb-3">
+						<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+						</svg>
+						<h3 className="text-sm font-semibold text-zinc-900">Información de Contacto</h3>
+					</div>
+					<div className="space-y-2">
+						<div className="flex items-center gap-2">
+							<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+							</svg>
+							<a href={`mailto:${displayCandidate.email}`} className="text-sm text-zinc-700 hover:text-black">
+								{displayCandidate.email}
+							</a>
+						</div>
+						{/* TODO: Agregar teléfono cuando esté disponible en la BD */}
 					</div>
 				</div>
 
-				{/* Aplicaciones */}
-				<div>
-					<h3 className="text-sm font-semibold text-zinc-900">
-						Aplicaciones ({candidate.applications.length})
-					</h3>
-					<div className="mt-3 space-y-4">
-						{candidate.applications.map((app) => (
-							<div
-								key={app.id}
-								className="rounded-lg border border-zinc-200 bg-white p-4"
-							>
-								<div className="flex items-start justify-between">
-									<div className="flex-1">
-										<div className="flex items-center gap-2.5">
-											<h4 className="text-base font-semibold text-zinc-900">{app.job_title}</h4>
-											{app.job_department && (
-												<span className="text-xs text-zinc-500">· {app.job_department}</span>
-											)}
-										</div>
-										<div className="mt-2 flex items-center gap-3">
-											<span
-												className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-													app.status === 'Analizado por IA'
-														? 'bg-black text-white'
-														: app.status === 'Recibido'
-														? 'bg-zinc-100 text-zinc-700'
-														: 'bg-zinc-50 text-zinc-600'
-												}`}
-											>
-												{app.status}
-											</span>
-											{app.ai_score !== null && (
-												<span className="text-xs font-medium text-zinc-600">
-													Score IA: <span className="font-semibold text-black">{app.ai_score}/100</span>
-												</span>
-											)}
-										</div>
-										{app.ai_extracted && (
-											<div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-3">
-												<p className="mb-2 text-xs font-semibold text-zinc-700">Información extraída por IA:</p>
-												<div className="space-y-1 text-xs text-zinc-600">
-													{app.ai_extracted.cargo_actual && (
-														<p><span className="font-medium">Cargo actual:</span> {app.ai_extracted.cargo_actual}</p>
-													)}
-													{app.ai_extracted.anos_experiencia && (
-														<p><span className="font-medium">Años de experiencia:</span> {app.ai_extracted.anos_experiencia}</p>
-													)}
-													{app.ai_extracted.nivel_ingles && (
-														<p><span className="font-medium">Nivel de inglés:</span> {app.ai_extracted.nivel_ingles}</p>
-													)}
-													{app.ai_extracted.provincia && (
-														<p><span className="font-medium">Provincia:</span> {app.ai_extracted.provincia}</p>
-													)}
-													{app.ai_extracted.expectativa_salarial && (
-														<p><span className="font-medium">Expectativa salarial:</span> {app.ai_extracted.expectativa_salarial}</p>
-													)}
-												</div>
-											</div>
-										)}
-										{app.ai_reasons && app.ai_reasons.length > 0 && (
-											<div className="mt-3">
-												<p className="mb-1 text-xs font-semibold text-zinc-700">Razones del score:</p>
-												<ul className="space-y-1 text-xs text-zinc-600">
-													{app.ai_reasons.map((reason, idx) => (
-														<li key={idx} className="flex items-start gap-2">
-															<span className="mt-0.5">•</span>
-															<span>{reason}</span>
-														</li>
-													))}
-												</ul>
-											</div>
-										)}
-										<p className="mt-3 text-xs text-zinc-400">
-											Aplicó el {new Date(app.created_at).toLocaleDateString('es-AR', {
-												day: 'numeric',
-												month: 'long',
-												year: 'numeric',
-												hour: '2-digit',
-												minute: '2-digit'
-											})}
-										</p>
-									</div>
-									<div className="ml-4">
-										<a
-											href={app.resume_url}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="inline-flex items-center rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
-										>
-											Ver CV
-										</a>
-									</div>
+				{/* Datos de la Aplicación */}
+				<div className="rounded-lg border border-zinc-200 bg-white p-4">
+					<div className="flex items-center gap-2 mb-3">
+						<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+						</svg>
+						<h3 className="text-sm font-semibold text-zinc-900">Datos de la Aplicación</h3>
+					</div>
+					<div className="space-y-2">
+						{mainApplication && (
+							<>
+								<div className="flex items-center gap-2">
+									<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									</svg>
+									<span className="text-sm text-zinc-700">
+										{new Date(mainApplication.created_at).toLocaleDateString('es-AR', {
+											day: 'numeric',
+											month: 'long',
+											year: 'numeric'
+										})}
+									</span>
 								</div>
-							</div>
-						))}
+								{mainApplication.ai_extracted?.provincia && (
+									<div className="flex items-center gap-2">
+										<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+										</svg>
+										<span className="text-sm text-zinc-700">{mainApplication.ai_extracted.provincia}</span>
+									</div>
+								)}
+							</>
+						)}
 					</div>
 				</div>
+
+				{/* Enlaces Externos */}
+				<div className="rounded-lg border border-zinc-200 bg-white p-4">
+					<div className="flex items-center gap-2 mb-3">
+						<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+						</svg>
+						<h3 className="text-sm font-semibold text-zinc-900">Enlaces Externos</h3>
+					</div>
+					<div className="space-y-2">
+						{displayCandidate.linkedin_url ? (
+							<a
+								href={displayCandidate.linkedin_url}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+							>
+								<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+									<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+								</svg>
+								LinkedIn
+							</a>
+						) : (
+							<p className="text-sm text-zinc-400">Sin LinkedIn registrado</p>
+						)}
+						{mainApplication?.resume_url && (
+							<a
+								href={mainApplication.resume_url}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="flex items-center gap-2 text-sm text-zinc-700 hover:text-black"
+							>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+								</svg>
+								Ver CV
+							</a>
+						)}
+						{!displayCandidate.linkedin_url && !mainApplication?.resume_url && (
+							<p className="text-sm text-zinc-400">Sin enlaces registrados</p>
+						)}
+					</div>
+				</div>
+			</div>
+
+			{/* Pipeline de Selección */}
+			{mainApplication?.current_stage && (
+				<div className="mb-6">
+					<PipelineView
+						application={{
+							id: mainApplication.id,
+							current_stage: mainApplication.current_stage,
+							current_stage_status: mainApplication.current_stage_status!,
+							offer_status: mainApplication.offer_status || null,
+							final_outcome: mainApplication.final_outcome || null,
+							final_rejection_reason: mainApplication.final_rejection_reason || null
+						}}
+						onUpdate={handlePipelineUpdate}
+					/>
+				</div>
+			)}
+
+			{/* Tabs */}
+			<div className="mb-4">
+				<div className="flex gap-1 border-b border-zinc-200">
+					<button
+						type="button"
+						onClick={() => setActiveTab('history')}
+						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
+							activeTab === 'history'
+								? 'border-b-2 border-black text-black'
+								: 'text-zinc-600 hover:text-zinc-900'
+						}`}
+					>
+						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						Historial
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab('cv')}
+						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
+							activeTab === 'cv'
+								? 'border-b-2 border-black text-black'
+								: 'text-zinc-600 hover:text-zinc-900'
+						}`}
+					>
+						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+						</svg>
+						CVs
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab('notes')}
+						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
+							activeTab === 'notes'
+								? 'border-b-2 border-black text-black'
+								: 'text-zinc-600 hover:text-zinc-900'
+						}`}
+					>
+						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+						</svg>
+						Notas
+					</button>
+				</div>
+			</div>
+
+			{/* Contenido de los tabs */}
+			<div className="min-h-[300px]">
+				{activeTab === 'history' && (
+					<div className="space-y-3">
+						{mainApplication?.stage_history && mainApplication.stage_history.length > 0 ? (
+							mainApplication.stage_history.map((entry) => {
+								const changedDate = new Date(entry.changed_at);
+								const dateStr = changedDate.toLocaleDateString('es-AR', {
+									day: 'numeric',
+									month: 'long',
+									year: 'numeric'
+								});
+								const timeStr = changedDate.toLocaleTimeString('es-AR', {
+									hour: '2-digit',
+									minute: '2-digit'
+								});
+								
+								return (
+									<div key={entry.id} className="rounded-lg border border-zinc-200 bg-white p-4">
+										<div className="flex items-center justify-between gap-4">
+											<div className="flex-1 flex items-center gap-3">
+												<div className="flex items-center gap-2">
+													{entry.from_stage && (
+														<>
+															<span className="text-sm text-zinc-500">
+																{StageLabels[entry.from_stage]}
+															</span>
+															<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+															</svg>
+														</>
+													)}
+													<span className="text-sm font-semibold text-zinc-900">
+														{StageLabels[entry.to_stage]}
+													</span>
+													<span className="text-xs text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-100">
+														{StageStatusLabels[entry.status]}
+													</span>
+												</div>
+												<div className="flex items-center gap-2 text-xs text-zinc-500">
+													<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+													</svg>
+													<span className="font-medium">{dateStr}</span>
+													<span>a las</span>
+													<span className="font-medium">{timeStr}</span>
+												</div>
+											</div>
+											{entry.notes && (
+												<div className="flex-shrink-0 text-right">
+													<p className="text-xs font-medium text-zinc-500 mb-0.5">Notas:</p>
+													<p className="text-sm text-zinc-700 max-w-xs">{entry.notes}</p>
+												</div>
+											)}
+										</div>
+									</div>
+								);
+							})
+						) : (
+							<div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
+								<p className="text-sm text-zinc-500">No hay historial disponible</p>
+							</div>
+						)}
+					</div>
+				)}
+
+				{activeTab === 'cv' && (
+					<div>
+						{mainApplication?.resume_url ? (
+							<div className="rounded-lg border border-zinc-200 bg-white p-4">
+								<a
+									href={mainApplication.resume_url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+								>
+									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
+									Ver CV
+								</a>
+							</div>
+						) : (
+							<div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
+								<p className="text-sm text-zinc-500">No hay CV disponible</p>
+							</div>
+						)}
+					</div>
+				)}
+
+				{activeTab === 'notes' && (
+					<div className="space-y-4">
+						<div className="rounded-lg border border-zinc-200 bg-white p-4">
+							<h4 className="text-sm font-semibold text-zinc-900 mb-3">Notas del Reclutador</h4>
+							<textarea
+								value={notes}
+								onChange={(e) => setNotes(e.target.value)}
+								rows={8}
+								className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+								placeholder="Escribe tus notas sobre este candidato..."
+							/>
+							<div className="mt-4">
+								<button
+									type="button"
+									onClick={handleSaveNotes}
+									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+								>
+									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
+									Guardar Notas
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 		</Modal>
 	);
 }
-

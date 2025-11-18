@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { Stage, StageStatus } from '@/types/funnel';
 
 const FormSchema = z.object({
 	name: z.string().min(1),
@@ -83,18 +84,43 @@ export async function POST(req: NextRequest) {
 			.single();
 		if (candErr) throw candErr;
 
-		// Create application
+		// Create application with new funnel model
+		// CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW
 		const { data: application, error: appErr } = await supabase
 			.from('applications')
 			.insert({
 				candidate_id: candidate.id,
 				job_id: jobId,
 				resume_url: resumeUrl,
-				status: 'Recibido'
+				current_stage: Stage.HR_REVIEW,
+				current_stage_status: StageStatus.PENDING,
+				status: 'Recibido' // Legacy field for compatibility
 			})
 			.select('id,resume_url')
 			.single();
 		if (appErr) throw appErr;
+
+		// Create stage history: CV_RECEIVED (completed) -> HR_REVIEW (pending)
+		await supabase.from('stage_history').insert([
+			{
+				application_id: application.id,
+				from_stage: null,
+				to_stage: Stage.CV_RECEIVED,
+				status: StageStatus.COMPLETED,
+				changed_by_user_id: null,
+				notes: 'CV recibido automáticamente',
+				changed_at: new Date().toISOString()
+			},
+			{
+				application_id: application.id,
+				from_stage: Stage.CV_RECEIVED,
+				to_stage: Stage.HR_REVIEW,
+				status: StageStatus.PENDING,
+				changed_by_user_id: null,
+				notes: 'Avance automático a revisión HR',
+				changed_at: new Date().toISOString()
+			}
+		]);
 
 		// Kick off AI pipelines sequentially for now (separate functions) [[memory:4421972]]
 		// 1) Extraction
@@ -114,6 +140,7 @@ export async function POST(req: NextRequest) {
 		const score = scoreRes.ok ? (await scoreRes.json()).result : null;
 
 		// Persist AI outputs if available
+		// Note: El análisis de IA no cambia la etapa, solo agrega información
 		await supabase
 			.from('applications')
 			.update({
@@ -121,7 +148,7 @@ export async function POST(req: NextRequest) {
 				ai_score: score?.score ?? null,
 				ai_reasons: score?.reasons ?? null,
 				ai_match_highlights: score?.matchHighlights ?? null,
-				status: 'Analizado por IA'
+				status: 'Analizado por IA' // Legacy field
 			})
 			.eq('id', application.id);
 
