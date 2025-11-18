@@ -34,7 +34,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
   return (
     <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-col border-r border-zinc-200 bg-white shadow-sm">
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-zinc-200 bg-white shadow-sm">
         <div className="flex h-16 items-center border-b border-zinc-200 px-6">
           <span className="rounded-md bg-black px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
             Gestión de CV
@@ -107,7 +107,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
       </aside>
 
       {/* Main content */}
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-8 shadow-sm">
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-zinc-900">Sistema de Gestión de CV</h1>
@@ -122,7 +122,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
           </div>
         </header>
 
-        <main className="flex-1 bg-zinc-50 px-8 py-8">{children}</main>
+        <main className="min-w-0 flex-1 bg-zinc-50 px-8 py-8">{children}</main>
       </div>
     </div>
   );

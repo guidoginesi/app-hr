@@ -2,6 +2,10 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAdmin';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { AdminShell } from './AdminShell';
+import { PipelineDashboard } from './dashboard/PipelineDashboard';
+import { STAGE_ORDER } from '@/types/funnel';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
 	const { isAdmin } = await requireAdmin();
@@ -14,6 +18,80 @@ export default async function AdminHome() {
 		.from('jobs')
 		.select('id,title,department,location,is_published,created_at')
 		.order('created_at', { ascending: false });
+
+	// Obtener estadísticas del pipeline (usando historial para el embudo real)
+	const publishedJobIds = (jobs || []).filter((j) => j.is_published).map((j) => j.id);
+	let pipelineStats: any[] = [];
+	
+	if (publishedJobIds.length > 0) {
+		// Obtener todas las aplicaciones para estas búsquedas
+		const { data: applications } = await supabase
+			.from('applications')
+			.select('id, job_id')
+			.in('job_id', publishedJobIds);
+
+		const applicationIds = (applications || []).map((app: any) => app.id);
+
+		// Obtener el historial de etapas para calcular el embudo real
+		let stageHistory: any[] = [];
+		if (applicationIds.length > 0) {
+			const { data: historyData } = await supabase
+				.from('stage_history')
+				.select('application_id, to_stage, status')
+				.in('application_id', applicationIds)
+				.order('changed_at', { ascending: true });
+			stageHistory = historyData || [];
+		}
+
+		// Crear un mapa de aplicaciones por job
+		const applicationsByJob = new Map<string, any[]>();
+		(applications || []).forEach((app: any) => {
+			if (!applicationsByJob.has(app.job_id)) {
+				applicationsByJob.set(app.job_id, []);
+			}
+			applicationsByJob.get(app.job_id)!.push(app.id);
+		});
+
+		// Agrupar por job y calcular el embudo
+		pipelineStats = (jobs || [])
+			.filter((j) => j.is_published)
+			.map((job) => {
+				const jobApplicationIds = applicationsByJob.get(job.id) || [];
+				
+				// Inicializar contadores para todas las etapas (cuántos pasaron por cada etapa)
+				const stage_counts: Record<string, number> = {};
+				STAGE_ORDER.forEach((stage) => {
+					stage_counts[stage] = 0;
+				});
+
+				// El total es el número de aplicaciones (CVs recibidos)
+				const total = jobApplicationIds.length;
+				
+				// CV_RECEIVED siempre es igual al total (todos los CVs recibidos pasan por esa etapa)
+				stage_counts[STAGE_ORDER[0]] = total;
+
+				// Contar cuántos candidatos pasaron por cada etapa usando el historial
+				jobApplicationIds.forEach((appId) => {
+					const appHistory = stageHistory.filter((h) => h.application_id === appId);
+					// Para cada etapa después de CV_RECEIVED, verificar si el candidato pasó por ella
+					STAGE_ORDER.slice(1).forEach((stage) => {
+						const passedThrough = appHistory.some((h) => h.to_stage === stage);
+						if (passedThrough) {
+							stage_counts[stage] = (stage_counts[stage] || 0) + 1;
+						}
+					});
+				});
+
+				return {
+					job_id: job.id,
+					job_title: job.title,
+					job_department: job.department,
+					stage_counts,
+					total
+				};
+			})
+			.filter((stat) => stat.total > 0);
+	}
 
 	return (
 		<AdminShell active="dashboard">
@@ -43,23 +121,10 @@ export default async function AdminHome() {
 					</div>
 				</div>
 
+				{/* Pipeline Dashboard */}
 				<div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-					<h2 className="text-lg font-semibold text-zinc-900">Resumen rápido</h2>
-					<p className="mt-1 text-sm text-zinc-500">
-						Accede a las secciones del menú lateral para gestionar búsquedas, candidatos y más
-					</p>
-					<div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-						<div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 transition-colors hover:bg-zinc-100">
-							<p className="text-sm font-semibold text-zinc-900">Búsquedas activas</p>
-							<p className="mt-1 text-xs text-zinc-600">
-								{jobs?.filter((j) => j.is_published).length ?? 0} publicadas de {jobs?.length ?? 0} total
-							</p>
-						</div>
-						<div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 transition-colors hover:bg-zinc-100">
-							<p className="text-sm font-semibold text-zinc-900">Próximamente</p>
-							<p className="mt-1 text-xs text-zinc-600">Métricas de candidatos y análisis con IA</p>
-						</div>
-					</div>
+					<h2 className="text-lg font-semibold text-zinc-900 mb-4">Pipeline por Búsqueda</h2>
+					<PipelineDashboard stats={pipelineStats} />
 				</div>
 			</div>
 		</AdminShell>
