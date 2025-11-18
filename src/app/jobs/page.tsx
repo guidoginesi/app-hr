@@ -30,9 +30,8 @@ export default async function JobsPage() {
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
       <header className="border-b border-zinc-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-4">
-          <div className="flex items-center gap-3">
-            <Image className="dark:invert" src="/next.svg" alt="Pow HR" width={90} height={18} />
-            <span className="text-lg font-semibold tracking-tight text-zinc-900">Pow - Búsquedas abiertas</span>
+          <div className="flex items-center">
+            <Image src="/Logo-Pow.svg" alt="Pow" width={150} height={50} priority className="h-auto" />
           </div>
           <Link href="#" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
             Trabaja con nosotros
