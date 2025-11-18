@@ -9,8 +9,13 @@ export async function getSupabaseAuthServer() {
 	const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 	if (!supabaseUrl || !supabaseAnonKey) {
+		console.error('Missing Supabase env vars:', {
+			hasUrl: !!supabaseUrl,
+			hasAnonKey: !!supabaseAnonKey,
+			envKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE'))
+		});
 		throw new Error(
-			'Missing Supabase environment variables. Please check your .env.local file has NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
+			'Missing Supabase environment variables. Please check your Vercel project settings have NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY configured for Production environment.'
 		);
 	}
 
