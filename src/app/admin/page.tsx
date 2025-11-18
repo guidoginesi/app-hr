@@ -8,11 +8,12 @@ import { STAGE_ORDER } from '@/types/funnel';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
+	const { isAdmin } = await requireAdmin();
+	if (!isAdmin) {
+		redirect('/admin/login');
+	}
+
 	try {
-		const { isAdmin } = await requireAdmin();
-		if (!isAdmin) {
-			redirect('/admin/login');
-		}
 
 		const supabase = getSupabaseServer();
 		const { data: jobs, error: jobsError } = await supabase
@@ -143,6 +144,10 @@ export default async function AdminHome() {
 		</AdminShell>
 		);
 	} catch (error: any) {
+		// Ignorar NEXT_REDIRECT que es lanzado por redirect()
+		if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message === 'NEXT_REDIRECT') {
+			throw error; // Re-lanzar redirect para que Next.js lo maneje
+		}
 		console.error('Error in AdminHome:', error);
 		return (
 			<AdminShell active="dashboard">
