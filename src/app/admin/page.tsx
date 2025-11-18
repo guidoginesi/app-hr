@@ -8,40 +8,53 @@ import { STAGE_ORDER } from '@/types/funnel';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
-	const { isAdmin } = await requireAdmin();
-	if (!isAdmin) {
-		redirect('/admin/login');
-	}
-
-	const supabase = getSupabaseServer();
-	const { data: jobs } = await supabase
-		.from('jobs')
-		.select('id,title,department,location,is_published,created_at')
-		.order('created_at', { ascending: false });
-
-	// Obtener estadísticas del pipeline (usando historial para el embudo real)
-	const publishedJobIds = (jobs || []).filter((j) => j.is_published).map((j) => j.id);
-	let pipelineStats: any[] = [];
-	
-	if (publishedJobIds.length > 0) {
-		// Obtener todas las aplicaciones para estas búsquedas
-		const { data: applications } = await supabase
-			.from('applications')
-			.select('id, job_id')
-			.in('job_id', publishedJobIds);
-
-		const applicationIds = (applications || []).map((app: any) => app.id);
-
-		// Obtener el historial de etapas para calcular el embudo real
-		let stageHistory: any[] = [];
-		if (applicationIds.length > 0) {
-			const { data: historyData } = await supabase
-				.from('stage_history')
-				.select('application_id, to_stage, status')
-				.in('application_id', applicationIds)
-				.order('changed_at', { ascending: true });
-			stageHistory = historyData || [];
+	try {
+		const { isAdmin } = await requireAdmin();
+		if (!isAdmin) {
+			redirect('/admin/login');
 		}
+
+		const supabase = getSupabaseServer();
+		const { data: jobs, error: jobsError } = await supabase
+			.from('jobs')
+			.select('id,title,department,location,is_published,created_at')
+			.order('created_at', { ascending: false });
+
+		if (jobsError) {
+			console.error('Error fetching jobs:', jobsError);
+		}
+
+		// Obtener estadísticas del pipeline (usando historial para el embudo real)
+		const publishedJobIds = (jobs || []).filter((j) => j.is_published).map((j) => j.id);
+		let pipelineStats: any[] = [];
+		
+		if (publishedJobIds.length > 0) {
+			// Obtener todas las aplicaciones para estas búsquedas
+			const { data: applications, error: appsError } = await supabase
+				.from('applications')
+				.select('id, job_id')
+				.in('job_id', publishedJobIds);
+
+			if (appsError) {
+				console.error('Error fetching applications:', appsError);
+			}
+
+			const applicationIds = (applications || []).map((app: any) => app.id);
+
+			// Obtener el historial de etapas para calcular el embudo real
+			let stageHistory: any[] = [];
+			if (applicationIds.length > 0) {
+				const { data: historyData, error: historyError } = await supabase
+					.from('stage_history')
+					.select('application_id, to_stage, status')
+					.in('application_id', applicationIds)
+					.order('changed_at', { ascending: true });
+				
+				if (historyError) {
+					console.error('Error fetching stage history:', historyError);
+				}
+				stageHistory = historyData || [];
+			}
 
 		// Crear un mapa de aplicaciones por job
 		const applicationsByJob = new Map<string, any[]>();
@@ -91,9 +104,9 @@ export default async function AdminHome() {
 				};
 			})
 			.filter((stat) => stat.total > 0);
-	}
+		}
 
-	return (
+		return (
 		<AdminShell active="dashboard">
 			<div className="space-y-8">
 				<div>
@@ -128,7 +141,22 @@ export default async function AdminHome() {
 				</div>
 			</div>
 		</AdminShell>
-	);
+		);
+	} catch (error: any) {
+		console.error('Error in AdminHome:', error);
+		return (
+			<AdminShell active="dashboard">
+				<div className="space-y-8">
+					<div className="rounded-xl border border-red-200 bg-red-50 p-6">
+						<h2 className="text-lg font-semibold text-red-900">Error al cargar el dashboard</h2>
+						<p className="mt-2 text-sm text-red-700">
+							{error?.message || 'Ocurrió un error inesperado. Por favor intenta recargar la página.'}
+						</p>
+					</div>
+				</div>
+			</AdminShell>
+		);
+	}
 }
 
 
