@@ -39,19 +39,13 @@ export async function POST(req: NextRequest) {
 	// The admin form sends application/x-www-form-urlencoded, so always use formData here
 	const form = await req.formData();
 	
-	// Obtener responsibilities correctamente (puede ser cadena vacía o null)
-	const responsibilitiesValue = form.get('responsibilities');
-	const responsibilitiesStr = responsibilitiesValue !== null && responsibilitiesValue !== undefined 
-		? String(responsibilitiesValue) 
-		: '';
-	
 	const parsed = CreateJobSchema.parse({
 		title: String(form.get('title') || ''),
 		department: form.get('department') ? String(form.get('department')) : null,
 		location: form.get('location') ? String(form.get('location')) : null,
 		work_mode: form.get('work_mode') ? String(form.get('work_mode')) : 'Remota',
 		description: form.get('description') ? String(form.get('description')) : null,
-		responsibilities: responsibilitiesStr || null,
+		responsibilities: form.get('responsibilities') ? String(form.get('responsibilities')) : null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});

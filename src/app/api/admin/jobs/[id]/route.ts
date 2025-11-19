@@ -29,19 +29,13 @@ export async function PUT(
 	const { id } = await params;
 	const form = await req.formData();
 	
-	// Obtener responsibilities directamente del formulario
-	const responsibilitiesValue = form.get('responsibilities');
-	const responsibilitiesStr = responsibilitiesValue 
-		? String(responsibilitiesValue).trim() 
-		: null;
-	
 	const parsed = UpdateJobSchema.parse({
 		title: String(form.get('title') || ''),
 		department: form.get('department') ? String(form.get('department')) : null,
 		location: form.get('location') ? String(form.get('location')) : null,
 		work_mode: form.get('work_mode') ? String(form.get('work_mode')) : 'Remota',
 		description: form.get('description') ? String(form.get('description')) : null,
-		responsibilities: responsibilitiesStr || null,
+		responsibilities: form.get('responsibilities') ? String(form.get('responsibilities')) : null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
