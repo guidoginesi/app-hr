@@ -29,19 +29,11 @@ export async function PUT(
 	const { id } = await params;
 	const form = await req.formData();
 	
-	// Obtener todos los valores del formulario
-	const formDataObj: Record<string, any> = {};
-	for (const [key, value] of form.entries()) {
-		formDataObj[key] = value;
-	}
-	
-	console.log('All form data:', formDataObj);
-	
-	// Obtener responsibilities correctamente
+	// Obtener responsibilities directamente del formulario
 	const responsibilitiesValue = form.get('responsibilities');
-	const responsibilitiesStr = responsibilitiesValue ? String(responsibilitiesValue).trim() : null;
-	
-	console.log('Form responsibilities value:', responsibilitiesValue, 'String:', responsibilitiesStr);
+	const responsibilitiesStr = responsibilitiesValue 
+		? String(responsibilitiesValue).trim() 
+		: null;
 	
 	const parsed = UpdateJobSchema.parse({
 		title: String(form.get('title') || ''),
@@ -53,8 +45,6 @@ export async function PUT(
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
-	
-	console.log('Parsed responsibilities:', parsed.responsibilities);
 
 	const supabase = getSupabaseServer();
 
@@ -88,8 +78,6 @@ export async function PUT(
 	// Siempre incluir responsibilities (puede ser null o string)
 	updateData.responsibilities = parsed.responsibilities || null;
 	
-	console.log('Updating job with data:', JSON.stringify(updateData, null, 2));
-	
 	const { data: updatedJob, error } = await supabase
 		.from('jobs')
 		.update(updateData)
@@ -98,10 +86,8 @@ export async function PUT(
 		.single();
 	
 	if (error) {
-		console.error('Error updating job:', error);
 		// Si falla por columnas inexistentes, intentar sin ellas
 		if (error.message.includes('column') && (error.message.includes('work_mode') || error.message.includes('responsibilities'))) {
-			console.log('Retrying without new columns...');
 			const basicData = {
 				title: parsed.title.trim(),
 				department: parsed.department?.trim() || null,
@@ -115,15 +101,20 @@ export async function PUT(
 				.update(basicData)
 				.eq('id', id);
 			if (basicError) {
-				console.error('Error updating without new columns:', basicError);
-				return NextResponse.json({ error: basicError.message }, { status: 400 });
+				return NextResponse.json({ 
+					error: `Error al actualizar: ${basicError.message}. Nota: La columna 'responsibilities' puede no existir en la base de datos.` 
+				}, { status: 400 });
 			}
+			// Si se actualizó sin responsibilities, devolver éxito pero con advertencia
+			return NextResponse.json({ 
+				ok: true, 
+				warning: 'La columna responsibilities no existe en la base de datos. Por favor aplica la migración SQL.' 
+			});
 		} else {
 			return NextResponse.json({ error: error.message }, { status: 400 });
 		}
 	}
 
-	console.log('Job updated successfully:', updatedJob);
 	return NextResponse.json({ ok: true, job: updatedJob });
 }
 

@@ -41,20 +41,24 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 			const url = isEditing ? `/api/admin/jobs/${job.id}` : '/api/admin/jobs';
 			const method = isEditing ? 'PUT' : 'POST';
 
-			console.log('Submitting form to:', url, 'Method:', method);
-			console.log('Form data:', Object.fromEntries(formData.entries()));
-
 			const res = await fetch(url, {
 				method,
 				body: formData
 			});
 
 			const responseData = await res.json().catch(() => null);
-			console.log('Response status:', res.status, 'Data:', responseData);
 
 			if (!res.ok) {
-				setError(responseData?.error ?? `Error al ${isEditing ? 'actualizar' : 'crear'} la búsqueda`);
+				const errorMsg = responseData?.error ?? `Error al ${isEditing ? 'actualizar' : 'crear'} la búsqueda`;
+				setError(errorMsg);
+				console.error('Error response:', errorMsg);
 				return;
+			}
+
+			// Mostrar advertencia si existe
+			if (responseData?.warning) {
+				console.warn('Warning:', responseData.warning);
+				alert(responseData.warning);
 			}
 
 			// No resetear el formulario si estamos editando (para mantener los valores)
