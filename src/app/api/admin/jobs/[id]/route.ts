@@ -29,13 +29,18 @@ export async function PUT(
 	const { id } = await params;
 	const form = await req.formData();
 	
+	const responsibilitiesValue = form.get('responsibilities');
+	const responsibilitiesStr = responsibilitiesValue !== null && responsibilitiesValue !== undefined 
+		? String(responsibilitiesValue).trim() 
+		: null;
+	
 	const parsed = UpdateJobSchema.parse({
 		title: String(form.get('title') || ''),
 		department: form.get('department') ? String(form.get('department')) : null,
 		location: form.get('location') ? String(form.get('location')) : null,
 		work_mode: form.get('work_mode') ? String(form.get('work_mode')) : 'Remota',
 		description: form.get('description') ? String(form.get('description')) : null,
-		responsibilities: form.get('responsibilities') ? String(form.get('responsibilities')) : null,
+		responsibilities: responsibilitiesStr || null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
@@ -70,7 +75,10 @@ export async function PUT(
 	// Agregar columnas nuevas
 	if (parsed.work_mode) updateData.work_mode = parsed.work_mode;
 	// Siempre incluir responsibilities (puede ser null o string)
-	updateData.responsibilities = parsed.responsibilities || null;
+	// Si es una cadena vacía después de trim, guardar como null, sino guardar el valor
+	updateData.responsibilities = parsed.responsibilities && parsed.responsibilities.trim() 
+		? parsed.responsibilities.trim() 
+		: null;
 	
 	const { data: updatedJob, error } = await supabase
 		.from('jobs')
