@@ -62,9 +62,12 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				formRef.current.reset();
 			}
 
+			// Llamar onSuccess primero para cerrar el modal
+			onSuccess?.();
+			
+			// Luego refrescar los datos
 			startTransition(() => {
 				router.refresh();
-				onSuccess?.();
 			});
 		} catch (err) {
 			console.error('Error submitting form:', err);

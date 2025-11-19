@@ -130,28 +130,23 @@ export function JobsClient({ jobs }: JobsClientProps) {
 			{/* Modal de edición */}
 			<Modal
 				isOpen={!!editingJob}
-				onClose={() => {
-					setEditingJob(null);
-					// Refrescar la página para obtener los datos actualizados
-					if (typeof window !== 'undefined') {
-						window.location.reload();
-					}
-				}}
+				onClose={() => setEditingJob(null)}
 				title="Editar búsqueda"
 			>
 				{editingJob && (
 					<JobForm
+						key={editingJob.id} // Forzar re-render cuando cambia el job
 						job={editingJob}
 						onSuccess={() => {
 							setEditingJob(null);
-							// Refrescar la página para obtener los datos actualizados
-							if (typeof window !== 'undefined') {
-								window.location.reload();
-							}
+							// Refrescar usando router para obtener datos actualizados
+							setTimeout(() => {
+								if (typeof window !== 'undefined') {
+									window.location.reload();
+								}
+							}, 500);
 						}}
-						onCancel={() => {
-							setEditingJob(null);
-						}}
+						onCancel={() => setEditingJob(null)}
 					/>
 				)}
 			</Modal>

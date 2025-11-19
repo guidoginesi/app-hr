@@ -29,11 +29,17 @@ export async function PUT(
 	const { id } = await params;
 	const form = await req.formData();
 	
-	// Obtener responsibilities correctamente (puede ser cadena vacía o null)
+	// Obtener todos los valores del formulario
+	const formDataObj: Record<string, any> = {};
+	for (const [key, value] of form.entries()) {
+		formDataObj[key] = value;
+	}
+	
+	console.log('All form data:', formDataObj);
+	
+	// Obtener responsibilities correctamente
 	const responsibilitiesValue = form.get('responsibilities');
-	const responsibilitiesStr = responsibilitiesValue !== null && responsibilitiesValue !== undefined 
-		? String(responsibilitiesValue) 
-		: '';
+	const responsibilitiesStr = responsibilitiesValue ? String(responsibilitiesValue).trim() : null;
 	
 	console.log('Form responsibilities value:', responsibilitiesValue, 'String:', responsibilitiesStr);
 	
@@ -77,13 +83,10 @@ export async function PUT(
 		is_published: parsed.is_published
 	};
 	
-	// Agregar columnas nuevas solo si existen (se intentará actualizar, si falla se omitirán)
+	// Agregar columnas nuevas
 	if (parsed.work_mode) updateData.work_mode = parsed.work_mode;
-	// Siempre incluir responsibilities (puede ser null o string vacío)
-	// Si es una cadena vacía después de trim, guardar como null, sino guardar el valor
-	updateData.responsibilities = parsed.responsibilities && parsed.responsibilities.trim() 
-		? parsed.responsibilities.trim() 
-		: null;
+	// Siempre incluir responsibilities (puede ser null o string)
+	updateData.responsibilities = parsed.responsibilities || null;
 	
 	console.log('Updating job with data:', JSON.stringify(updateData, null, 2));
 	
