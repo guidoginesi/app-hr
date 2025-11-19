@@ -25,7 +25,10 @@ type JobsClientProps = {
 export function JobsClient({ jobs }: JobsClientProps) {
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [isBenefitsModalOpen, setIsBenefitsModalOpen] = useState(false);
-	const [editingJob, setEditingJob] = useState<Job | null>(null);
+	const [editingJobId, setEditingJobId] = useState<string | null>(null);
+	
+	// Buscar el job actualizado desde los props cuando cambia editingJobId
+	const editingJob = editingJobId ? jobs.find(j => j.id === editingJobId) || null : null;
 
 	return (
 		<>
@@ -97,7 +100,7 @@ export function JobsClient({ jobs }: JobsClientProps) {
 										</div>
 										<button
 											type="button"
-											onClick={() => setEditingJob(job)}
+											onClick={() => setEditingJobId(job.id)}
 											className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
 										>
 											Editar
@@ -129,8 +132,8 @@ export function JobsClient({ jobs }: JobsClientProps) {
 
 			{/* Modal de edición */}
 			<Modal
-				isOpen={!!editingJob}
-				onClose={() => setEditingJob(null)}
+				isOpen={!!editingJobId}
+				onClose={() => setEditingJobId(null)}
 				title="Editar búsqueda"
 			>
 				{editingJob && (
@@ -138,13 +141,11 @@ export function JobsClient({ jobs }: JobsClientProps) {
 						key={editingJob.id} // Forzar re-render cuando cambia el job
 						job={editingJob}
 						onSuccess={() => {
-							setEditingJob(null);
-							// Refrescar usando router para obtener datos actualizados
-							setTimeout(() => {
-								window.location.reload();
-							}, 500);
+							setEditingJobId(null);
+							// Refrescar la página para obtener datos actualizados
+							window.location.reload();
 						}}
-						onCancel={() => setEditingJob(null)}
+						onCancel={() => setEditingJobId(null)}
 					/>
 				)}
 			</Modal>
