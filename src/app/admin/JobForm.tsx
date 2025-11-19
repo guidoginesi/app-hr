@@ -30,11 +30,12 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
+		console.log('🚀 DEBUG: Form submit triggered!');
 		setError(null);
 
 		const form = event.currentTarget;
 		if (!form) {
-			console.error('Form not found');
+			console.error('❌ Form not found');
 			return;
 		}
 
@@ -43,7 +44,16 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 		// Verificar que responsibilities esté en el formData
 		const responsibilitiesCheck = formData.get('responsibilities');
 		console.log('🔍 DEBUG: responsibilities value from form:', responsibilitiesCheck);
+		console.log('🔍 DEBUG: responsibilities type:', typeof responsibilitiesCheck);
 		console.log('🔍 DEBUG: All form data:', Object.fromEntries(formData.entries()));
+		
+		// Verificar también directamente desde el DOM
+		const responsibilitiesInput = form.querySelector<HTMLTextAreaElement>('textarea[name="responsibilities"]');
+		if (responsibilitiesInput) {
+			console.log('🔍 DEBUG: responsibilities from DOM:', responsibilitiesInput.value);
+		} else {
+			console.error('❌ Responsibilities textarea not found in form!');
+		}
 
 		try {
 			const url = isEditing ? `/api/admin/jobs/${job.id}` : '/api/admin/jobs';
