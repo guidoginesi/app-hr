@@ -176,7 +176,7 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
       {/* Salary Expectation */}
       <section>
         <label htmlFor="salaryExpectation" className="mb-1.5 block text-sm font-medium text-zinc-900">
-          ¿Cuál es tu expectativa salarial mensual (bruto)?
+          ¿Cuál es tu expectativa salarial mensual neta (mano)?
         </label>
         <input
           id="salaryExpectation"
