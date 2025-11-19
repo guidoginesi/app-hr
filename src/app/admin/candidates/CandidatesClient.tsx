@@ -15,6 +15,8 @@ type Application = {
 	ai_score: number | null;
 	resume_url: string;
 	created_at: string;
+	salary_expectation?: string | null;
+	english_level?: string | null;
 	ai_extracted?: any;
 	ai_reasons?: string[] | null;
 	ai_match_highlights?: string[] | null;
@@ -26,6 +28,7 @@ type Candidate = {
 	id: string;
 	name: string;
 	email: string;
+	phone: string | null;
 	linkedin_url: string | null;
 	created_at: string;
 	applications: Application[];
