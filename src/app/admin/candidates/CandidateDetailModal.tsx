@@ -26,6 +26,8 @@ type Application = {
 	ai_score: number | null;
 	resume_url: string;
 	created_at: string;
+	salary_expectation?: string | null;
+	english_level?: string | null;
 	ai_extracted?: any;
 	ai_reasons?: string[] | null;
 	ai_match_highlights?: string[] | null;
@@ -41,6 +43,7 @@ type Candidate = {
 	id: string;
 	name: string;
 	email: string;
+	phone: string | null;
 	linkedin_url: string | null;
 	created_at: string;
 	applications: Application[];
@@ -186,7 +189,16 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 								{displayCandidate.email}
 							</a>
 						</div>
-						{/* TODO: Agregar teléfono cuando esté disponible en la BD */}
+						{displayCandidate.phone && (
+							<div className="flex items-center gap-2">
+								<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+								</svg>
+								<a href={`tel:${displayCandidate.phone}`} className="text-sm text-zinc-700 hover:text-black">
+									{displayCandidate.phone}
+								</a>
+							</div>
+						)}
 					</div>
 				</div>
 
@@ -220,6 +232,22 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
 										</svg>
 										<span className="text-sm text-zinc-700">{mainApplication.ai_extracted.provincia}</span>
+									</div>
+								)}
+								{mainApplication.salary_expectation && (
+									<div className="flex items-center gap-2">
+										<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+										</svg>
+										<span className="text-sm text-zinc-700">Expectativa salarial: {mainApplication.salary_expectation}</span>
+									</div>
+								)}
+								{mainApplication.english_level && (
+									<div className="flex items-center gap-2">
+										<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+										</svg>
+										<span className="text-sm text-zinc-700">Nivel de inglés: {mainApplication.english_level}</span>
 									</div>
 								)}
 							</>

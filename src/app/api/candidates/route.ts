@@ -6,8 +6,11 @@ import { Stage, StageStatus } from '@/types/funnel';
 const FormSchema = z.object({
 	name: z.string().min(1),
 	email: z.string().email(),
+	phone: z.string().optional().nullable(),
 	linkedinUrl: z.string().url().optional().nullable(),
-	jobId: z.string().min(1)
+	jobId: z.string().min(1),
+	salaryExpectation: z.string().optional().nullable(),
+	englishLevel: z.string().optional().nullable()
 });
 
 const BUCKET = 'resumes';
@@ -21,10 +24,13 @@ export async function POST(req: NextRequest) {
 		const candidateJson = {
 			name: String(formData.get('name') || ''),
 			email: String(formData.get('email') || ''),
+			phone: formData.get('phone') ? String(formData.get('phone')) : null,
 			linkedinUrl: formData.get('linkedinUrl') ? String(formData.get('linkedinUrl')) : null,
-			jobId: String(formData.get('jobId') || '')
+			jobId: String(formData.get('jobId') || ''),
+			salaryExpectation: formData.get('salaryExpectation') ? String(formData.get('salaryExpectation')) : null,
+			englishLevel: formData.get('englishLevel') ? String(formData.get('englishLevel')) : null
 		};
-		const { name, email, linkedinUrl, jobId } = FormSchema.parse(candidateJson);
+		const { name, email, phone, linkedinUrl, jobId, salaryExpectation, englishLevel } = FormSchema.parse(candidateJson);
 		const file = formData.get('resume') as File | null;
 		if (!file) {
 			return NextResponse.json({ error: 'Missing resume file' }, { status: 400 });
@@ -79,7 +85,7 @@ export async function POST(req: NextRequest) {
 		// Create or upsert candidate
 		const { data: candidate, error: candErr } = await supabase
 			.from('candidates')
-			.upsert({ email, name, linkedin_url: linkedinUrl }, { onConflict: 'email' })
+			.upsert({ email, name, phone, linkedin_url: linkedinUrl }, { onConflict: 'email' })
 			.select('id')
 			.single();
 		if (candErr) throw candErr;
@@ -92,6 +98,8 @@ export async function POST(req: NextRequest) {
 				candidate_id: candidate.id,
 				job_id: jobId,
 				resume_url: resumeUrl,
+				salary_expectation: salaryExpectation,
+				english_level: englishLevel,
 				current_stage: Stage.HR_REVIEW,
 				current_stage_status: StageStatus.PENDING,
 				status: 'Recibido' // Legacy field for compatibility

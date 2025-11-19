@@ -20,7 +20,7 @@ export async function GET(
 		// Obtener el candidato
 		const { data: candidate, error: candidateError } = await supabase
 			.from('candidates')
-			.select('id,name,email,linkedin_url,created_at')
+			.select('id,name,email,phone,linkedin_url,created_at')
 			.eq('id', candidateId)
 			.single();
 
@@ -35,7 +35,7 @@ export async function GET(
 		const { data: applications } = await supabase
 			.from('applications')
 			.select(
-				'id,candidate_id,job_id,status,ai_score,resume_url,created_at,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason'
+				'id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason'
 			)
 			.eq('candidate_id', candidateId)
 			.order('created_at', { ascending: false });
@@ -90,6 +90,8 @@ export async function GET(
 				ai_score: app.ai_score,
 				resume_url: app.resume_url,
 				created_at: app.created_at,
+				salary_expectation: app.salary_expectation,
+				english_level: app.english_level,
 				ai_extracted: app.ai_extracted,
 				ai_reasons: app.ai_reasons,
 				ai_match_highlights: app.ai_match_highlights,
