@@ -69,7 +69,8 @@ export async function PUT(
 	
 	// Agregar columnas nuevas solo si existen (se intentará actualizar, si falla se omitirán)
 	if (parsed.work_mode) updateData.work_mode = parsed.work_mode;
-	if (parsed.responsibilities !== undefined) updateData.responsibilities = parsed.responsibilities?.trim() || null;
+	// Siempre incluir responsibilities (puede ser null o string vacío)
+	updateData.responsibilities = parsed.responsibilities?.trim() || null;
 	
 	const { error } = await supabase
 		.from('jobs')

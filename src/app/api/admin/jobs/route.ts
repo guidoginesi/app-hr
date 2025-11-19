@@ -76,7 +76,8 @@ export async function POST(req: NextRequest) {
 	
 	// Agregar columnas nuevas solo si existen (se intentará insertar, si falla se omitirán)
 	if (parsed.work_mode) insertData.work_mode = parsed.work_mode;
-	if (parsed.responsibilities) insertData.responsibilities = parsed.responsibilities;
+	// Siempre incluir responsibilities (puede ser null o string vacío)
+	insertData.responsibilities = parsed.responsibilities?.trim() || null;
 	
 	const { error } = await supabase.from('jobs').insert(insertData);
 	if (error) {

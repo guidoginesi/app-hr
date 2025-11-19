@@ -10,6 +10,7 @@ type Job = {
 	title: string;
 	department?: string | null;
 	location?: string | null;
+	work_mode?: string | null;
 	description?: string | null;
 	responsibilities?: string | null;
 	requirements?: string | null;
