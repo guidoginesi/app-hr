@@ -112,14 +112,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 	}
 
 	return (
-		<form 
-			ref={formRef} 
-			onSubmit={(e) => {
-				console.log('📝 Form onSubmit event fired!');
-				handleSubmit(e);
-			}} 
-			className="space-y-4"
-		>
+		<form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
 			<div className="grid grid-cols-1 gap-4">
 				<div>
 					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Título *</label>
@@ -213,9 +206,6 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				<button
 					type="submit"
 					disabled={loading}
-					onClick={() => {
-						console.log('🖱️ Submit button clicked!');
-					}}
 					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{loading ? (isEditing ? 'Guardando…' : 'Creando…') : isEditing ? 'Guardar cambios' : 'Crear búsqueda'}
