@@ -103,33 +103,7 @@ export async function PUT(
 	
 	if (error) {
 		console.error('[API] Error updating job:', error);
-		// Si falla por columnas inexistentes, intentar sin ellas
-		if (error.message.includes('column') && (error.message.includes('work_mode') || error.message.includes('responsibilities'))) {
-			const basicData = {
-				title: parsed.title.trim(),
-				department: parsed.department?.trim() || null,
-				location: parsed.location?.trim() || null,
-				description: parsed.description?.trim() || null,
-				requirements: parsed.requirements?.trim() || null,
-				is_published: parsed.is_published
-			};
-			const { error: basicError } = await supabase
-				.from('jobs')
-				.update(basicData)
-				.eq('id', id);
-			if (basicError) {
-				return NextResponse.json({ 
-					error: `Error al actualizar: ${basicError.message}. Nota: La columna 'responsibilities' puede no existir en la base de datos.` 
-				}, { status: 400 });
-			}
-			// Si se actualizó sin responsibilities, devolver éxito pero con advertencia
-			return NextResponse.json({ 
-				ok: true, 
-				warning: 'La columna responsibilities no existe en la base de datos. Por favor aplica la migración SQL.' 
-			});
-		} else {
-			return NextResponse.json({ error: error.message }, { status: 400 });
-		}
+		return NextResponse.json({ error: error.message }, { status: 400 });
 	}
 
 	// Incluir responsibilities en la respuesta para verificar

@@ -64,9 +64,9 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				}
 			}
 
-			// Mostrar advertencia si existe
+			// Si hay warning, solo loggearlo (la columna ya existe en producción)
 			if (responseData?.warning) {
-				alert(responseData.warning);
+				console.warn('⚠️ Warning from API:', responseData.warning);
 			}
 
 			// No resetear el formulario si estamos editando (para mantener los valores)
