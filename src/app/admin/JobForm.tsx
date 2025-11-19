@@ -27,71 +27,37 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 	const [loading, startTransition] = useTransition();
 	const [error, setError] = useState<string | null>(null);
 	const isEditing = !!job?.id;
-	
-	// Log al montar el componente
-	console.log('📋 JobForm mounted, isEditing:', isEditing, 'job:', job?.id);
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		console.log('🚀 DEBUG: Form submit triggered!');
 		setError(null);
 
 		const form = event.currentTarget;
-		if (!form) {
-			console.error('❌ Form not found');
-			return;
-		}
+		if (!form) return;
 
 		const formData = new FormData(form);
-		
-		// Verificar que responsibilities esté en el formData
-		const responsibilitiesCheck = formData.get('responsibilities');
-		console.log('🔍 DEBUG: responsibilities value from form:', responsibilitiesCheck);
-		console.log('🔍 DEBUG: responsibilities type:', typeof responsibilitiesCheck);
-		console.log('🔍 DEBUG: All form data:', Object.fromEntries(formData.entries()));
-		
-		// Verificar también directamente desde el DOM
-		const responsibilitiesInput = form.querySelector<HTMLTextAreaElement>('textarea[name="responsibilities"]');
-		if (responsibilitiesInput) {
-			console.log('🔍 DEBUG: responsibilities from DOM:', responsibilitiesInput.value);
-		} else {
-			console.error('❌ Responsibilities textarea not found in form!');
-		}
 
 		try {
 			const url = isEditing ? `/api/admin/jobs/${job.id}` : '/api/admin/jobs';
 			const method = isEditing ? 'PUT' : 'POST';
-
-			console.log('🔍 DEBUG: Sending request to:', url, 'Method:', method);
 
 			const res = await fetch(url, {
 				method,
 				body: formData
 			});
 
-			console.log('🔍 DEBUG: Response status:', res.status);
-
-			const responseData = await res.json().catch((err) => {
-				console.error('🔍 DEBUG: Error parsing response:', err);
-				return null;
-			});
-
-			console.log('🔍 DEBUG: Response data:', responseData);
+			const responseData = await res.json().catch(() => null);
 
 			if (!res.ok) {
 				const errorMsg = responseData?.error ?? `Error al ${isEditing ? 'actualizar' : 'crear'} la búsqueda`;
 				setError(errorMsg);
-				console.error('❌ Error response:', errorMsg);
 				return;
 			}
 
 			// Mostrar advertencia si existe
 			if (responseData?.warning) {
-				console.warn('⚠️ Warning:', responseData.warning);
 				alert(responseData.warning);
 			}
-			
-			console.log('✅ Success! Job saved');
 
 			// No resetear el formulario si estamos editando (para mantener los valores)
 			if (!isEditing && formRef.current) {
