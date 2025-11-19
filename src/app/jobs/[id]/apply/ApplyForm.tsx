@@ -12,12 +12,35 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [salaryDisplay, setSalaryDisplay] = useState<string>('');
+  
+  // Formatear expectativa salarial mientras escribe
+  function handleSalaryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    // Remover todo excepto números
+    const onlyNumbers = value.replace(/\D/g, '');
+    
+    if (onlyNumbers === '') {
+      setSalaryDisplay('');
+      return;
+    }
+    
+    // Formatear con separadores de miles
+    const formatted = new Intl.NumberFormat('es-AR').format(parseInt(onlyNumbers));
+    setSalaryDisplay(formatted);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    
+    // Asegurarse de enviar solo números para salary
+    const salaryValue = salaryDisplay.replace(/\D/g, '');
+    if (salaryValue) {
+      formData.set('salaryExpectation', salaryValue);
+    }
     
     try {
       const response = await fetch('/api/candidates', {
@@ -142,8 +165,10 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
           id="salaryExpectation"
           name="salaryExpectation"
           type="text"
-          placeholder="Ingresá tu expectativa salarial"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+          value={salaryDisplay}
+          onChange={handleSalaryChange}
+          placeholder="Ej: 1.500.000"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
         />
       </section>
 
