@@ -57,22 +57,44 @@ export async function PUT(
 		);
 	}
 
+	// Intentar actualizar con todas las columnas, si falla por columnas inexistentes, usar solo las básicas
+	const updateData: any = {
+		title: parsed.title.trim(),
+		department: parsed.department?.trim() || null,
+		location: parsed.location?.trim() || null,
+		description: parsed.description?.trim() || null,
+		requirements: parsed.requirements?.trim() || null,
+		is_published: parsed.is_published
+	};
+	
+	// Agregar columnas nuevas solo si existen (se intentará actualizar, si falla se omitirán)
+	if (parsed.work_mode) updateData.work_mode = parsed.work_mode;
+	if (parsed.responsibilities !== undefined) updateData.responsibilities = parsed.responsibilities?.trim() || null;
+	
 	const { error } = await supabase
 		.from('jobs')
-		.update({
-			title: parsed.title.trim(),
-			department: parsed.department?.trim() || null,
-			location: parsed.location?.trim() || null,
-			work_mode: parsed.work_mode || 'Remota',
-			description: parsed.description?.trim() || null,
-			responsibilities: parsed.responsibilities?.trim() || null,
-			requirements: parsed.requirements?.trim() || null,
-			is_published: parsed.is_published
-		})
+		.update(updateData)
 		.eq('id', id);
 
 	if (error) {
-		return NextResponse.json({ error: error.message }, { status: 400 });
+		// Si falla por columnas inexistentes, intentar sin ellas
+		if (error.message.includes('column') && (error.message.includes('work_mode') || error.message.includes('responsibilities'))) {
+			const basicData = {
+				title: parsed.title.trim(),
+				department: parsed.department?.trim() || null,
+				location: parsed.location?.trim() || null,
+				description: parsed.description?.trim() || null,
+				requirements: parsed.requirements?.trim() || null,
+				is_published: parsed.is_published
+			};
+			const { error: basicError } = await supabase
+				.from('jobs')
+				.update(basicData)
+				.eq('id', id);
+			if (basicError) return NextResponse.json({ error: basicError.message }, { status: 400 });
+		} else {
+			return NextResponse.json({ error: error.message }, { status: 400 });
+		}
 	}
 
 	return NextResponse.json({ ok: true });

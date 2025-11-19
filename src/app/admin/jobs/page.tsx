@@ -13,10 +13,14 @@ export default async function AdminJobsPage() {
 	}
 
 	const supabase = getSupabaseServer();
-	const { data: jobs } = await supabase
+	const { data: jobs, error } = await supabase
 		.from('jobs')
-		.select('id,title,department,location,description,responsibilities,requirements,is_published,created_at')
+		.select('*')
 		.order('created_at', { ascending: false });
+	
+	if (error) {
+		console.error('Error fetching jobs:', error);
+	}
 
 	return (
 		<AdminShell active="busquedas">

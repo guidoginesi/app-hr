@@ -20,7 +20,7 @@ export default async function JobsPage() {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from("jobs")
-      .select("id,title,department,location,description,is_published")
+      .select("*")
       .eq("is_published", true)
       .order("created_at", { ascending: false });
     

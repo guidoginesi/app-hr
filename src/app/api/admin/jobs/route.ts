@@ -64,17 +64,38 @@ export async function POST(req: NextRequest) {
 		);
 	}
 	
-	const { error } = await supabase.from('jobs').insert({
+	// Intentar insertar con todas las columnas, si falla por columnas inexistentes, usar solo las básicas
+	const insertData: any = {
 		title: parsed.title.trim(),
 		department: parsed.department?.trim() || null,
 		location: parsed.location?.trim() || null,
-		work_mode: parsed.work_mode || 'Remota',
 		description: parsed.description?.trim() || null,
-		responsibilities: parsed.responsibilities?.trim() || null,
 		requirements: parsed.requirements?.trim() || null,
 		is_published: parsed.is_published
-	});
-	if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+	};
+	
+	// Agregar columnas nuevas solo si existen (se intentará insertar, si falla se omitirán)
+	if (parsed.work_mode) insertData.work_mode = parsed.work_mode;
+	if (parsed.responsibilities) insertData.responsibilities = parsed.responsibilities;
+	
+	const { error } = await supabase.from('jobs').insert(insertData);
+	if (error) {
+		// Si falla por columnas inexistentes, intentar sin ellas
+		if (error.message.includes('column') && (error.message.includes('work_mode') || error.message.includes('responsibilities'))) {
+			const basicData = {
+				title: parsed.title.trim(),
+				department: parsed.department?.trim() || null,
+				location: parsed.location?.trim() || null,
+				description: parsed.description?.trim() || null,
+				requirements: parsed.requirements?.trim() || null,
+				is_published: parsed.is_published
+			};
+			const { error: basicError } = await supabase.from('jobs').insert(basicData);
+			if (basicError) return NextResponse.json({ error: basicError.message }, { status: 400 });
+		} else {
+			return NextResponse.json({ error: error.message }, { status: 400 });
+		}
+	}
 	return NextResponse.json({ ok: true });
 }
 
