@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Modal } from '../Modal';
 import { JobForm } from '../JobForm';
+import { BenefitsForm } from './BenefitsForm';
 
 type Job = {
 	id: string;
@@ -10,6 +11,7 @@ type Job = {
 	department?: string | null;
 	location?: string | null;
 	description?: string | null;
+	responsibilities?: string | null;
 	requirements?: string | null;
 	is_published: boolean;
 	created_at: string;
@@ -21,6 +23,7 @@ type JobsClientProps = {
 
 export function JobsClient({ jobs }: JobsClientProps) {
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [isBenefitsModalOpen, setIsBenefitsModalOpen] = useState(false);
 	const [editingJob, setEditingJob] = useState<Job | null>(null);
 
 	return (
@@ -33,13 +36,22 @@ export function JobsClient({ jobs }: JobsClientProps) {
 							Gestiona todas las posiciones abiertas y crea nuevas búsquedas
 						</p>
 					</div>
-					<button
-						type="button"
-						onClick={() => setIsCreateModalOpen(true)}
-						className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md"
-					>
-						Crear Nueva búsqueda
-					</button>
+					<div className="flex gap-3">
+						<button
+							type="button"
+							onClick={() => setIsBenefitsModalOpen(true)}
+							className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 hover:shadow-md"
+						>
+							Beneficios
+						</button>
+						<button
+							type="button"
+							onClick={() => setIsCreateModalOpen(true)}
+							className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md"
+						>
+							Crear Nueva búsqueda
+						</button>
+					</div>
 				</div>
 
 				<div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
@@ -127,6 +139,15 @@ export function JobsClient({ jobs }: JobsClientProps) {
 						onCancel={() => setEditingJob(null)}
 					/>
 				)}
+			</Modal>
+
+			{/* Modal de beneficios */}
+			<Modal
+				isOpen={isBenefitsModalOpen}
+				onClose={() => setIsBenefitsModalOpen(false)}
+				title="Gestionar Beneficios"
+			>
+				<BenefitsForm />
 			</Modal>
 		</>
 	);

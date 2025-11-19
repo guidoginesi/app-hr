@@ -12,18 +12,26 @@ export default async function JobsPage() {
     title: string;
     department?: string | null;
     location?: string | null;
+    work_mode?: string | null;
     description?: string | null;
   }[] = [];
 
   try {
     const supabase = getSupabaseServer();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("jobs")
       .select("id,title,department,location,description,is_published")
       .eq("is_published", true)
       .order("created_at", { ascending: false });
-    jobs = data ?? [];
-  } catch {
+    
+    if (error) {
+      console.error('Error fetching jobs:', error);
+      jobs = [];
+    } else {
+      jobs = data ?? [];
+    }
+  } catch (err) {
+    console.error('Error in jobs page:', err);
     jobs = [];
   }
   return (
@@ -57,65 +65,41 @@ export default async function JobsPage() {
             <p className="mt-1 text-xs text-zinc-400">Vuelve pronto para ver nuevas oportunidades</p>
           </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <ul className="space-y-4">
             {jobs.map((job) => (
-              <li key={job.id} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-                <div className="mb-5">
+              <li key={job.id} className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 p-6 transition-shadow hover:shadow-md">
+                <div className="flex-1">
                   <h2 className="text-lg font-semibold text-zinc-900">{job.title}</h2>
-                  <p className="mt-1.5 text-sm font-medium text-zinc-600">
-                    {job.department ? `${job.department} · ` : ''}{job.location ?? 'Remoto'}
-                  </p>
-                  {job.description && (
-                    <p className="mt-3 line-clamp-3 text-sm text-zinc-500">{job.description}</p>
-                  )}
-                </div>
-
-                <form
-                  className="space-y-3 border-t border-zinc-200 pt-5"
-                  action="/api/candidates"
-                  method="POST"
-                  encType="multipart/form-data"
-                >
-                  <input type="hidden" name="jobId" value={job.id} />
-                  <div className="grid grid-cols-1 gap-3">
-                    <input
-                      className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-                      type="text"
-                      name="name"
-                      placeholder="Nombre y Apellido"
-                      required
-                    />
-                    <input
-                      className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-                      type="email"
-                      name="email"
-                      placeholder="Email"
-                      required
-                    />
-                    <input
-                      className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-                      type="url"
-                      name="linkedinUrl"
-                      placeholder="LinkedIn (opcional)"
-                    />
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-zinc-700">CV *</label>
-                      <input
-                        className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-                        type="file"
-                        name="resume"
-                        accept=".pdf,.doc,.docx,.txt"
-                        required
-                      />
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-zinc-600">
+                    <div className="flex items-center gap-1.5">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      <span>{job.work_mode || 'Remota'}</span>
                     </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>{job.location || 'Buenos Aires, Buenos Aires, Argentina'}</span>
+                    </div>
+                    {job.department && (
+                      <div className="flex items-center gap-1.5">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span>{job.department}</span>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md"
-                    type="submit"
-                  >
-                    Postularme
-                  </button>
-                </form>
+                </div>
+                <Link
+                  href={`/jobs/${job.id}`}
+                  className="ml-6 rounded-md bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800"
+                >
+                  Ver oferta
+                </Link>
               </li>
             ))}
           </ul>

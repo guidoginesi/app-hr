@@ -7,7 +7,9 @@ const CreateJobSchema = z.object({
 	title: z.string().min(1),
 	department: z.string().optional().nullable(),
 	location: z.string().optional().nullable(),
+	work_mode: z.enum(['Remota', 'Híbrida', 'Presencial']).optional().nullable(),
 	description: z.string().optional().nullable(),
+	responsibilities: z.string().optional().nullable(),
 	requirements: z.string().optional().nullable(),
 	is_published: z.union([z.string(), z.boolean()]).transform((v) => {
 		if (typeof v === 'boolean') return v;
@@ -40,7 +42,9 @@ export async function POST(req: NextRequest) {
 		title: String(form.get('title') || ''),
 		department: form.get('department') ? String(form.get('department')) : null,
 		location: form.get('location') ? String(form.get('location')) : null,
+		work_mode: form.get('work_mode') ? String(form.get('work_mode')) : 'Remota',
 		description: form.get('description') ? String(form.get('description')) : null,
+		responsibilities: form.get('responsibilities') ? String(form.get('responsibilities')) : null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
@@ -64,7 +68,9 @@ export async function POST(req: NextRequest) {
 		title: parsed.title.trim(),
 		department: parsed.department?.trim() || null,
 		location: parsed.location?.trim() || null,
+		work_mode: parsed.work_mode || 'Remota',
 		description: parsed.description?.trim() || null,
+		responsibilities: parsed.responsibilities?.trim() || null,
 		requirements: parsed.requirements?.trim() || null,
 		is_published: parsed.is_published
 	});

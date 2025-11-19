@@ -15,7 +15,7 @@ export default async function AdminJobsPage() {
 	const supabase = getSupabaseServer();
 	const { data: jobs } = await supabase
 		.from('jobs')
-		.select('id,title,department,location,description,requirements,is_published,created_at')
+		.select('id,title,department,location,description,responsibilities,requirements,is_published,created_at')
 		.order('created_at', { ascending: false });
 
 	return (

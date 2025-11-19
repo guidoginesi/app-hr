@@ -8,7 +8,9 @@ type Job = {
 	title: string;
 	department?: string | null;
 	location?: string | null;
+	work_mode?: string | null;
 	description?: string | null;
+	responsibilities?: string | null;
 	requirements?: string | null;
 	is_published: boolean;
 };
@@ -86,11 +88,24 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 					/>
 				</div>
 				<div>
+					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Modalidad *</label>
+					<select
+						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						name="work_mode"
+						defaultValue={job?.work_mode || 'Remota'}
+						required
+					>
+						<option value="Remota">Remota</option>
+						<option value="Híbrida">Híbrida</option>
+						<option value="Presencial">Presencial</option>
+					</select>
+				</div>
+				<div>
 					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Ubicación</label>
 					<input
 						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="location"
-						placeholder="Ej: Buenos Aires, Remoto"
+						placeholder="Ej: Buenos Aires"
 						defaultValue={job?.location || ''}
 					/>
 				</div>
@@ -112,8 +127,18 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 					className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 					name="description"
 					rows={4}
-					placeholder="Describe la posición y responsabilidades..."
+					placeholder="Describe la posición..."
 					defaultValue={job?.description || ''}
+				/>
+			</div>
+			<div>
+				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Responsabilidades</label>
+				<textarea
+					className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+					name="responsibilities"
+					rows={4}
+					placeholder="Lista las responsabilidades del puesto..."
+					defaultValue={job?.responsibilities || ''}
 				/>
 			</div>
 			<div>
