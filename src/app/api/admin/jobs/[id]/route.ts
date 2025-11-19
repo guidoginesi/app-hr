@@ -87,18 +87,18 @@ export async function PUT(
 	
 	console.log('Updating job with data:', JSON.stringify(updateData, null, 2));
 	
-	const { error } = await supabase
+	const { data: updatedJob, error } = await supabase
 		.from('jobs')
 		.update(updateData)
-		.eq('id', id);
+		.eq('id', id)
+		.select()
+		.single();
 	
 	if (error) {
 		console.error('Error updating job:', error);
-	}
-
-	if (error) {
 		// Si falla por columnas inexistentes, intentar sin ellas
 		if (error.message.includes('column') && (error.message.includes('work_mode') || error.message.includes('responsibilities'))) {
+			console.log('Retrying without new columns...');
 			const basicData = {
 				title: parsed.title.trim(),
 				department: parsed.department?.trim() || null,
@@ -111,12 +111,16 @@ export async function PUT(
 				.from('jobs')
 				.update(basicData)
 				.eq('id', id);
-			if (basicError) return NextResponse.json({ error: basicError.message }, { status: 400 });
+			if (basicError) {
+				console.error('Error updating without new columns:', basicError);
+				return NextResponse.json({ error: basicError.message }, { status: 400 });
+			}
 		} else {
 			return NextResponse.json({ error: error.message }, { status: 400 });
 		}
 	}
 
-	return NextResponse.json({ ok: true });
+	console.log('Job updated successfully:', updatedJob);
+	return NextResponse.json({ ok: true, job: updatedJob });
 }
 

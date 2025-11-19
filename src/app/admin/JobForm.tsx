@@ -41,18 +41,24 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 			const url = isEditing ? `/api/admin/jobs/${job.id}` : '/api/admin/jobs';
 			const method = isEditing ? 'PUT' : 'POST';
 
+			console.log('Submitting form to:', url, 'Method:', method);
+			console.log('Form data:', Object.fromEntries(formData.entries()));
+
 			const res = await fetch(url, {
 				method,
 				body: formData
 			});
 
+			const responseData = await res.json().catch(() => null);
+			console.log('Response status:', res.status, 'Data:', responseData);
+
 			if (!res.ok) {
-				const data = await res.json().catch(() => null);
-				setError(data?.error ?? `Error al ${isEditing ? 'actualizar' : 'crear'} la búsqueda`);
+				setError(responseData?.error ?? `Error al ${isEditing ? 'actualizar' : 'crear'} la búsqueda`);
 				return;
 			}
 
-			if (formRef.current) {
+			// No resetear el formulario si estamos editando (para mantener los valores)
+			if (!isEditing && formRef.current) {
 				formRef.current.reset();
 			}
 
@@ -61,6 +67,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				onSuccess?.();
 			});
 		} catch (err) {
+			console.error('Error submitting form:', err);
 			setError('Error de conexión. Por favor intenta nuevamente.');
 		}
 	}

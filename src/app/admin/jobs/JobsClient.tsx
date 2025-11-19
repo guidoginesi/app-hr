@@ -130,14 +130,28 @@ export function JobsClient({ jobs }: JobsClientProps) {
 			{/* Modal de edición */}
 			<Modal
 				isOpen={!!editingJob}
-				onClose={() => setEditingJob(null)}
+				onClose={() => {
+					setEditingJob(null);
+					// Refrescar la página para obtener los datos actualizados
+					if (typeof window !== 'undefined') {
+						window.location.reload();
+					}
+				}}
 				title="Editar búsqueda"
 			>
 				{editingJob && (
 					<JobForm
 						job={editingJob}
-						onSuccess={() => setEditingJob(null)}
-						onCancel={() => setEditingJob(null)}
+						onSuccess={() => {
+							setEditingJob(null);
+							// Refrescar la página para obtener los datos actualizados
+							if (typeof window !== 'undefined') {
+								window.location.reload();
+							}
+						}}
+						onCancel={() => {
+							setEditingJob(null);
+						}}
 					/>
 				)}
 			</Modal>
