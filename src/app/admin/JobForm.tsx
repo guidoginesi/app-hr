@@ -181,7 +181,8 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 					name="responsibilities"
 					rows={4}
 					placeholder="Lista las responsabilidades del puesto..."
-					defaultValue={job?.responsibilities || ''}
+					defaultValue={job?.responsibilities ?? ''}
+					key={`responsibilities-${job?.id || 'new'}`}
 				/>
 			</div>
 			<div>

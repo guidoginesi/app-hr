@@ -141,9 +141,7 @@ export function JobsClient({ jobs }: JobsClientProps) {
 							setEditingJob(null);
 							// Refrescar usando router para obtener datos actualizados
 							setTimeout(() => {
-								if (typeof window !== 'undefined') {
-									window.location.reload();
-								}
+								window.location.reload();
 							}, 500);
 						}}
 						onCancel={() => setEditingJob(null)}
