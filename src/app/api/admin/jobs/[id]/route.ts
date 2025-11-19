@@ -29,10 +29,20 @@ export async function PUT(
 	const { id } = await params;
 	const form = await req.formData();
 	
+	// Debug: ver todos los campos del formulario
+	const allFormData: Record<string, any> = {};
+	for (const [key, value] of form.entries()) {
+		allFormData[key] = value;
+	}
+	console.log('[API] All form data received:', JSON.stringify(allFormData, null, 2));
+	
 	const responsibilitiesValue = form.get('responsibilities');
+	console.log('[API] Raw responsibilities value:', responsibilitiesValue, 'Type:', typeof responsibilitiesValue);
+	
 	const responsibilitiesStr = responsibilitiesValue !== null && responsibilitiesValue !== undefined 
 		? String(responsibilitiesValue).trim() 
 		: null;
+	console.log('[API] Processed responsibilities:', responsibilitiesStr);
 	
 	const parsed = UpdateJobSchema.parse({
 		title: String(form.get('title') || ''),
@@ -44,6 +54,8 @@ export async function PUT(
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
+	
+	console.log('[API] Parsed responsibilities:', parsed.responsibilities);
 
 	const supabase = getSupabaseServer();
 
@@ -80,6 +92,8 @@ export async function PUT(
 		? parsed.responsibilities.trim() 
 		: null;
 	
+	console.log('[API] Update data being sent to DB:', JSON.stringify(updateData, null, 2));
+	
 	const { data: updatedJob, error } = await supabase
 		.from('jobs')
 		.update(updateData)
@@ -88,6 +102,7 @@ export async function PUT(
 		.single();
 	
 	if (error) {
+		console.error('[API] Error updating job:', error);
 		// Si falla por columnas inexistentes, intentar sin ellas
 		if (error.message.includes('column') && (error.message.includes('work_mode') || error.message.includes('responsibilities'))) {
 			const basicData = {
@@ -117,6 +132,7 @@ export async function PUT(
 		}
 	}
 
+	console.log('[API] Job updated successfully. Responsibilities in DB:', updatedJob?.responsibilities);
 	return NextResponse.json({ ok: true, job: updatedJob });
 }
 
