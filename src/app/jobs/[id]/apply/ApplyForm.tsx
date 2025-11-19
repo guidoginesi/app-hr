@@ -132,6 +132,23 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
               />
             </div>
           </div>
+
+          <div>
+            <label htmlFor="provincia" className="mb-1.5 block text-sm font-medium text-zinc-900">
+              Provincia *
+            </label>
+            <select
+              id="provincia"
+              name="provincia"
+              required
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            >
+              <option value="">Seleccionar provincia</option>
+              <option value="CABA">CABA</option>
+              <option value="GBA">GBA</option>
+              <option value="OTRA">Otra</option>
+            </select>
+          </div>
         </div>
       </section>
 

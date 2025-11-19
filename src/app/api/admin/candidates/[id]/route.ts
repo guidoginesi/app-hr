@@ -20,7 +20,7 @@ export async function GET(
 		// Obtener el candidato
 		const { data: candidate, error: candidateError } = await supabase
 			.from('candidates')
-			.select('id,name,email,phone,linkedin_url,created_at')
+			.select('id,name,email,phone,provincia,linkedin_url,created_at')
 			.eq('id', candidateId)
 			.single();
 

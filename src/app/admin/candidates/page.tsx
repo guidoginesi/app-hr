@@ -27,6 +27,7 @@ type Candidate = {
 	name: string;
 	email: string;
 	phone: string | null;
+	provincia: string | null;
 	linkedin_url: string | null;
 	created_at: string;
 	applications: Application[];
@@ -50,7 +51,7 @@ export default async function AdminCandidatesPage() {
 	// Obtener todos los candidatos
 	const { data: candidates } = await supabase
 		.from('candidates')
-		.select('id,name,email,phone,linkedin_url,created_at')
+		.select('id,name,email,phone,provincia,linkedin_url,created_at')
 		.order('created_at', { ascending: false });
 
 	// Obtener todas las aplicaciones con información de IA y funnel

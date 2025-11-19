@@ -10,11 +10,16 @@ create table if not exists public.jobs (
   created_at timestamptz not null default now()
 );
 
+-- Enum para provincias
+create type provincia as enum ('CABA', 'GBA', 'OTRA');
+
 -- Candidates
 create table if not exists public.candidates (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text unique not null,
+  phone text,
+  provincia provincia,
   linkedin_url text,
   created_at timestamptz not null default now()
 );
@@ -124,6 +129,7 @@ create index if not exists idx_applications_stage on public.applications(current
 create index if not exists idx_applications_stage_status on public.applications(current_stage_status);
 create index if not exists idx_stage_history_application on public.stage_history(application_id);
 create index if not exists idx_stage_history_changed_at on public.stage_history(changed_at);
+create index if not exists idx_candidates_provincia on public.candidates(provincia);
 
 -- Trigger para actualizar updated_at automáticamente
 create or replace function update_updated_at_column()

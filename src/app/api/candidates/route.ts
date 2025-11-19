@@ -7,6 +7,7 @@ const FormSchema = z.object({
 	name: z.string().min(1),
 	email: z.string().email(),
 	phone: z.string().optional().nullable(),
+	provincia: z.enum(['CABA', 'GBA', 'OTRA']),
 	linkedinUrl: z.string().url().optional().nullable(),
 	jobId: z.string().min(1),
 	salaryExpectation: z.string().optional().nullable(),
@@ -25,12 +26,13 @@ export async function POST(req: NextRequest) {
 			name: String(formData.get('name') || ''),
 			email: String(formData.get('email') || ''),
 			phone: formData.get('phone') ? String(formData.get('phone')) : null,
+			provincia: String(formData.get('provincia') || ''),
 			linkedinUrl: formData.get('linkedinUrl') ? String(formData.get('linkedinUrl')) : null,
 			jobId: String(formData.get('jobId') || ''),
 			salaryExpectation: formData.get('salaryExpectation') ? String(formData.get('salaryExpectation')) : null,
 			englishLevel: formData.get('englishLevel') ? String(formData.get('englishLevel')) : null
 		};
-		const { name, email, phone, linkedinUrl, jobId, salaryExpectation, englishLevel } = FormSchema.parse(candidateJson);
+		const { name, email, phone, provincia, linkedinUrl, jobId, salaryExpectation, englishLevel } = FormSchema.parse(candidateJson);
 		const file = formData.get('resume') as File | null;
 		if (!file) {
 			return NextResponse.json({ error: 'Missing resume file' }, { status: 400 });
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
 		// Create or upsert candidate
 		const { data: candidate, error: candErr } = await supabase
 			.from('candidates')
-			.upsert({ email, name, phone, linkedin_url: linkedinUrl }, { onConflict: 'email' })
+			.upsert({ email, name, phone, provincia, linkedin_url: linkedinUrl }, { onConflict: 'email' })
 			.select('id')
 			.single();
 		if (candErr) throw candErr;
