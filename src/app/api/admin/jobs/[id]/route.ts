@@ -29,16 +29,26 @@ export async function PUT(
 	const { id } = await params;
 	const form = await req.formData();
 	
+	// Obtener responsibilities correctamente (puede ser cadena vacía o null)
+	const responsibilitiesValue = form.get('responsibilities');
+	const responsibilitiesStr = responsibilitiesValue !== null && responsibilitiesValue !== undefined 
+		? String(responsibilitiesValue) 
+		: '';
+	
+	console.log('Form responsibilities value:', responsibilitiesValue, 'String:', responsibilitiesStr);
+	
 	const parsed = UpdateJobSchema.parse({
 		title: String(form.get('title') || ''),
 		department: form.get('department') ? String(form.get('department')) : null,
 		location: form.get('location') ? String(form.get('location')) : null,
 		work_mode: form.get('work_mode') ? String(form.get('work_mode')) : 'Remota',
 		description: form.get('description') ? String(form.get('description')) : null,
-		responsibilities: form.get('responsibilities') ? String(form.get('responsibilities')) : null,
+		responsibilities: responsibilitiesStr || null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
+	
+	console.log('Parsed responsibilities:', parsed.responsibilities);
 
 	const supabase = getSupabaseServer();
 
@@ -70,12 +80,21 @@ export async function PUT(
 	// Agregar columnas nuevas solo si existen (se intentará actualizar, si falla se omitirán)
 	if (parsed.work_mode) updateData.work_mode = parsed.work_mode;
 	// Siempre incluir responsibilities (puede ser null o string vacío)
-	updateData.responsibilities = parsed.responsibilities?.trim() || null;
+	// Si es una cadena vacía después de trim, guardar como null, sino guardar el valor
+	updateData.responsibilities = parsed.responsibilities && parsed.responsibilities.trim() 
+		? parsed.responsibilities.trim() 
+		: null;
+	
+	console.log('Updating job with data:', JSON.stringify(updateData, null, 2));
 	
 	const { error } = await supabase
 		.from('jobs')
 		.update(updateData)
 		.eq('id', id);
+	
+	if (error) {
+		console.error('Error updating job:', error);
+	}
 
 	if (error) {
 		// Si falla por columnas inexistentes, intentar sin ellas
