@@ -29,6 +29,7 @@ type Candidate = {
 	name: string;
 	email: string;
 	phone: string | null;
+	provincia: string | null;
 	linkedin_url: string | null;
 	created_at: string;
 	applications: Application[];
