@@ -54,6 +54,16 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				return;
 			}
 
+			// Debug: mostrar información de responsibilities en la respuesta
+			if (responseData?.debug && isEditing) {
+				console.log('🔍 Debug response:', responseData.debug);
+				if (responseData.debug.responsibilitiesInDB) {
+					console.log('✅ Responsibilities guardadas en DB:', responseData.debug.responsibilitiesInDB);
+				} else {
+					console.warn('⚠️ Responsibilities NO guardadas en DB');
+				}
+			}
+
 			// Mostrar advertencia si existe
 			if (responseData?.warning) {
 				alert(responseData.warning);

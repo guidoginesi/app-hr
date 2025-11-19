@@ -132,7 +132,17 @@ export async function PUT(
 		}
 	}
 
-	console.log('[API] Job updated successfully. Responsibilities in DB:', updatedJob?.responsibilities);
-	return NextResponse.json({ ok: true, job: updatedJob });
+	// Incluir responsibilities en la respuesta para verificar
+	return NextResponse.json({ 
+		ok: true, 
+		job: updatedJob,
+		debug: {
+			responsibilitiesReceived: responsibilitiesValue,
+			responsibilitiesProcessed: responsibilitiesStr,
+			responsibilitiesParsed: parsed.responsibilities,
+			responsibilitiesInUpdateData: updateData.responsibilities,
+			responsibilitiesInDB: updatedJob?.responsibilities
+		}
+	});
 }
 
