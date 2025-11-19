@@ -33,33 +33,52 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 		setError(null);
 
 		const form = event.currentTarget;
-		if (!form) return;
+		if (!form) {
+			console.error('Form not found');
+			return;
+		}
 
 		const formData = new FormData(form);
+		
+		// Verificar que responsibilities esté en el formData
+		const responsibilitiesCheck = formData.get('responsibilities');
+		console.log('🔍 DEBUG: responsibilities value from form:', responsibilitiesCheck);
+		console.log('🔍 DEBUG: All form data:', Object.fromEntries(formData.entries()));
 
 		try {
 			const url = isEditing ? `/api/admin/jobs/${job.id}` : '/api/admin/jobs';
 			const method = isEditing ? 'PUT' : 'POST';
+
+			console.log('🔍 DEBUG: Sending request to:', url, 'Method:', method);
 
 			const res = await fetch(url, {
 				method,
 				body: formData
 			});
 
-			const responseData = await res.json().catch(() => null);
+			console.log('🔍 DEBUG: Response status:', res.status);
+
+			const responseData = await res.json().catch((err) => {
+				console.error('🔍 DEBUG: Error parsing response:', err);
+				return null;
+			});
+
+			console.log('🔍 DEBUG: Response data:', responseData);
 
 			if (!res.ok) {
 				const errorMsg = responseData?.error ?? `Error al ${isEditing ? 'actualizar' : 'crear'} la búsqueda`;
 				setError(errorMsg);
-				console.error('Error response:', errorMsg);
+				console.error('❌ Error response:', errorMsg);
 				return;
 			}
 
 			// Mostrar advertencia si existe
 			if (responseData?.warning) {
-				console.warn('Warning:', responseData.warning);
+				console.warn('⚠️ Warning:', responseData.warning);
 				alert(responseData.warning);
 			}
+			
+			console.log('✅ Success! Job saved');
 
 			// No resetear el formulario si estamos editando (para mantener los valores)
 			if (!isEditing && formRef.current) {
