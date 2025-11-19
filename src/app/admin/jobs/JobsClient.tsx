@@ -138,12 +138,13 @@ export function JobsClient({ jobs }: JobsClientProps) {
 			>
 				{editingJob && (
 					<JobForm
-						key={editingJob.id} // Forzar re-render cuando cambia el job
+						key={`edit-${editingJob.id}-${Date.now()}`}
 						job={editingJob}
 						onSuccess={() => {
 							setEditingJobId(null);
-							// Refrescar la página para obtener datos actualizados
-							window.location.reload();
+							setTimeout(() => {
+								window.location.reload();
+							}, 100);
 						}}
 						onCancel={() => setEditingJobId(null)}
 					/>
