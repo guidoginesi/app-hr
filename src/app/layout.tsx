@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "POW - Sistema de Gestión de CV",
+  title: "POW Apps - Sistema de Gestión de CV",
   description: "Plataforma de reclutamiento y selección de candidatos",
 };
 
