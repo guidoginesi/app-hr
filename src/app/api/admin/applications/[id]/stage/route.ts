@@ -11,6 +11,7 @@ import {
 	getFinalOutcomeFromOfferStatus,
 	getNextStage
 } from '@/lib/funnel';
+import { sendTemplatedEmail } from '@/lib/emailService';
 
 const UpdateStageSchema = z.object({
 	to_stage: z.nativeEnum(Stage),
@@ -39,10 +40,24 @@ export async function PUT(
 
 		const supabase = getSupabaseServer();
 
-		// Obtener la aplicación actual
+		// Obtener la aplicación actual con información del candidato y job
 		const { data: application, error: appError } = await supabase
 			.from('applications')
-			.select('current_stage, current_stage_status, offer_status, final_outcome')
+			.select(`
+				current_stage,
+				current_stage_status,
+				offer_status,
+				final_outcome,
+				candidate_id,
+				job_id,
+				candidates (
+					name,
+					email
+				),
+				jobs (
+					title
+				)
+			`)
 			.eq('id', applicationId)
 			.single();
 
@@ -184,6 +199,47 @@ export async function PUT(
 		if (historyError) {
 			console.error('Error creating stage history:', historyError);
 			// No fallamos si el historial falla, pero lo registramos
+		}
+
+		// TRIGGER 1: Email de descarte cuando status = DISCARDED_IN_STAGE
+		if (parsed.status === StageStatus.DISCARDED_IN_STAGE) {
+			const candidate = (application as any).candidates;
+			const job = (application as any).jobs;
+			
+			if (candidate?.email) {
+				await sendTemplatedEmail({
+					templateKey: 'candidate_rejected',
+					to: candidate.email,
+					variables: {
+						candidateName: candidate.name || 'Candidato',
+						jobTitle: job?.title || 'la posición',
+						stage: parsed.to_stage
+					},
+					applicationId
+				}).catch(err => {
+					console.error('Error sending rejection email:', err);
+				});
+			}
+		}
+
+		// TRIGGER 2: Email de coordinación de entrevista cuando HR_REVIEW está COMPLETED
+		if (parsed.to_stage === Stage.HR_REVIEW && parsed.status === StageStatus.COMPLETED) {
+			const candidate = (application as any).candidates;
+			const job = (application as any).jobs;
+			
+			if (candidate?.email) {
+				await sendTemplatedEmail({
+					templateKey: 'interview_coordination',
+					to: candidate.email,
+					variables: {
+						candidateName: candidate.name || 'Candidato',
+						jobTitle: job?.title || 'la posición'
+					},
+					applicationId
+				}).catch(err => {
+					console.error('Error sending interview coordination email:', err);
+				});
+			}
 		}
 
 		return NextResponse.json({ ok: true });

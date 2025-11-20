@@ -80,8 +80,8 @@ export function AdminShell({ children, active }: AdminShellProps) {
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
           </Link>
-          <button
-            type="button"
+          <Link
+            href="/admin/configuracion"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'configuracion'
                 ? 'bg-black text-white shadow-sm'
@@ -92,7 +92,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             {active === 'configuracion' && (
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
-          </button>
+          </Link>
         </nav>
         <div className="border-t border-zinc-200 px-3 py-3">
           <button

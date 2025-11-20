@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { Stage, StageStatus } from '@/types/funnel';
+import { sendTemplatedEmail } from '@/lib/emailService';
 
 const FormSchema = z.object({
 	name: z.string().min(1),
@@ -92,8 +93,12 @@ export async function POST(req: NextRequest) {
 			.single();
 		if (candErr) throw candErr;
 
+		// TRIGGER 3: Si provincia es OTRA, descartar automáticamente
+		const shouldAutoReject = provincia === 'OTRA';
+		
 		// Create application with new funnel model
-		// CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW
+		// Si provincia = OTRA, va directo a CV_RECEIVED con estado DISCARDED_IN_STAGE
+		// Sino, CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW
 		const { data: application, error: appErr } = await supabase
 			.from('applications')
 			.insert({
@@ -102,35 +107,63 @@ export async function POST(req: NextRequest) {
 				resume_url: resumeUrl,
 				salary_expectation: salaryExpectation,
 				english_level: englishLevel,
-				current_stage: Stage.HR_REVIEW,
-				current_stage_status: StageStatus.PENDING,
-				status: 'Recibido' // Legacy field for compatibility
+				current_stage: shouldAutoReject ? Stage.CV_RECEIVED : Stage.HR_REVIEW,
+				current_stage_status: shouldAutoReject ? StageStatus.DISCARDED_IN_STAGE : StageStatus.PENDING,
+				status: shouldAutoReject ? 'Descartado - Ubicación' : 'Recibido' // Legacy field for compatibility
 			})
 			.select('id,resume_url')
 			.single();
 		if (appErr) throw appErr;
 
-		// Create stage history: CV_RECEIVED (completed) -> HR_REVIEW (pending)
-		await supabase.from('stage_history').insert([
-			{
+		// Create stage history basado en si fue descartado o no
+		if (shouldAutoReject) {
+			// Si se descarta por provincia, solo crear el registro de CV_RECEIVED con DISCARDED
+			await supabase.from('stage_history').insert({
 				application_id: application.id,
 				from_stage: null,
 				to_stage: Stage.CV_RECEIVED,
-				status: StageStatus.COMPLETED,
+				status: StageStatus.DISCARDED_IN_STAGE,
 				changed_by_user_id: null,
-				notes: 'CV recibido automáticamente',
+				notes: 'Descartado automáticamente - Provincia fuera del rango requerido (CABA/GBA)',
 				changed_at: new Date().toISOString()
-			},
-			{
-				application_id: application.id,
-				from_stage: Stage.CV_RECEIVED,
-				to_stage: Stage.HR_REVIEW,
-				status: StageStatus.PENDING,
-				changed_by_user_id: null,
-				notes: 'Avance automático a revisión HR',
-				changed_at: new Date().toISOString()
-			}
-		]);
+			});
+			
+			// Enviar email de descarte por ubicación
+			await sendTemplatedEmail({
+				templateKey: 'candidate_rejected_location',
+				to: email,
+				variables: {
+					candidateName: name,
+					jobTitle: 'la posición',
+					provincia: provincia
+				},
+				applicationId: application.id
+			}).catch(err => {
+				console.error('Error sending location rejection email:', err);
+			});
+		} else {
+			// Flujo normal: CV_RECEIVED (completed) -> HR_REVIEW (pending)
+			await supabase.from('stage_history').insert([
+				{
+					application_id: application.id,
+					from_stage: null,
+					to_stage: Stage.CV_RECEIVED,
+					status: StageStatus.COMPLETED,
+					changed_by_user_id: null,
+					notes: 'CV recibido automáticamente',
+					changed_at: new Date().toISOString()
+				},
+				{
+					application_id: application.id,
+					from_stage: Stage.CV_RECEIVED,
+					to_stage: Stage.HR_REVIEW,
+					status: StageStatus.PENDING,
+					changed_by_user_id: null,
+					notes: 'Avance automático a revisión HR',
+					changed_at: new Date().toISOString()
+				}
+			]);
+		}
 
 		// Kick off AI pipelines sequentially for now (separate functions) [[memory:4421972]]
 		// 1) Extraction
@@ -149,18 +182,20 @@ export async function POST(req: NextRequest) {
 		});
 		const score = scoreRes.ok ? (await scoreRes.json()).result : null;
 
-		// Persist AI outputs if available
+		// Persist AI outputs if available (solo si no fue descartado automáticamente)
 		// Note: El análisis de IA no cambia la etapa, solo agrega información
-		await supabase
-			.from('applications')
-			.update({
-				ai_extracted: extracted || null,
-				ai_score: score?.score ?? null,
-				ai_reasons: score?.reasons ?? null,
-				ai_match_highlights: score?.matchHighlights ?? null,
-				status: 'Analizado por IA' // Legacy field
-			})
-			.eq('id', application.id);
+		if (!shouldAutoReject) {
+			await supabase
+				.from('applications')
+				.update({
+					ai_extracted: extracted || null,
+					ai_score: score?.score ?? null,
+					ai_reasons: score?.reasons ?? null,
+					ai_match_highlights: score?.matchHighlights ?? null,
+					status: 'Analizado por IA' // Legacy field
+				})
+				.eq('id', application.id);
+		}
 
 		if (wantsHtml) {
 			// Si viene desde un form del sitio, redirigimos a la landing con mensaje
