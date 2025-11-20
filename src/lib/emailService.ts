@@ -1,7 +1,19 @@
 import { Resend } from 'resend';
 import { getSupabaseServer } from './supabaseServer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization: solo crear la instancia cuando se use
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend {
+	if (!resendInstance) {
+		const apiKey = process.env.RESEND_API_KEY;
+		if (!apiKey) {
+			throw new Error('RESEND_API_KEY is not configured');
+		}
+		resendInstance = new Resend(apiKey);
+	}
+	return resendInstance;
+}
 
 type EmailTemplate = {
 	id: string;
@@ -129,6 +141,7 @@ export async function sendTemplatedEmail(params: SendEmailParams): Promise<{ suc
 
 		// Enviar email con Resend
 		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+		const resend = getResend();
 		
 		const { data, error } = await resend.emails.send({
 			from: fromEmail,
