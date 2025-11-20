@@ -52,7 +52,9 @@ export default async function ApplyPage({
         <ApplyForm jobId={job.id} jobTitle={job.title} />
 
         {/* Perks Section */}
-        <BenefitsSection />
+        <div className="mt-8">
+          <BenefitsSection />
+        </div>
 
         {/* Footer */}
         <footer className="border-t border-zinc-200 pt-8">

@@ -80,16 +80,13 @@ export default async function JobDetailPage({
         </section>
 
         {/* Call to Action */}
-        <div className="mb-12 flex flex-col items-center gap-4">
+        <div className="mb-8 flex justify-center">
           <Link
             href={`/jobs/${job.id}/apply`}
             className="rounded-lg bg-black px-8 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800"
           >
             Postularme
           </Link>
-          <button className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            Compartir oferta
-          </button>
         </div>
 
         {/* Perks Section */}
