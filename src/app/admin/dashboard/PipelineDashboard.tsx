@@ -15,6 +15,133 @@ type PipelineDashboardProps = {
 	stats: PipelineStats[];
 };
 
+// Componente de embudo visual mejorado
+function FunnelVisualization({ stats }: { stats: PipelineStats }) {
+	// Calculamos datos para cada etapa
+	const stageData = STAGE_ORDER.map((stage, index) => {
+		const count = stats.stage_counts[stage] || 0;
+		
+		let previousCount = stats.total;
+		if (index > 0) {
+			const previousStage = STAGE_ORDER[index - 1];
+			previousCount = stats.stage_counts[previousStage] || 0;
+		}
+		
+		const conversionRate = previousCount > 0 ? (count / previousCount) * 100 : 0;
+		const percentageOfTotal = stats.total > 0 ? (count / stats.total) * 100 : 0;
+		
+		return {
+			stage,
+			label: StageLabels[stage],
+			count,
+			previousCount,
+			conversionRate,
+			percentageOfTotal,
+			isFirst: index === 0,
+		};
+	});
+
+	const totalStages = stageData.length;
+
+	return (
+		<div className="space-y-8">
+			{/* Estadísticas superiores + Embudo integrado */}
+			<div>
+				{/* Estadísticas superiores - En una sola línea sin scroll */}
+				<div className="flex justify-between gap-2 w-full items-end">
+					{stageData.map((data, index) => (
+						<div key={data.stage} className="text-center flex-1 min-w-0 flex flex-col">
+							<div className="text-xs font-medium text-zinc-500 uppercase tracking-tight mb-2 h-8 flex items-start justify-center">
+								{data.label}
+							</div>
+							<div className="text-3xl font-bold text-zinc-900 leading-none">{data.count}</div>
+							<div className="h-6 mt-2 flex items-center justify-center">
+								{!data.isFirst && data.previousCount > 0 && (
+									<div className="text-sm font-medium text-red-600 flex items-center gap-1">
+										<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+										</svg>
+										{data.conversionRate.toFixed(0)}%
+									</div>
+								)}
+							</div>
+						</div>
+					))}
+				</div>
+
+				{/* Embudo visual - Alineado con las columnas */}
+				<div className="relative w-full mt-6" style={{ height: '150px' }}>
+					{/* SVG del embudo como background */}
+					<svg 
+						className="absolute top-0 left-0 w-full h-full pointer-events-none"
+						preserveAspectRatio="none"
+						viewBox="0 0 1000 100"
+					>
+						<path
+							d={(() => {
+								const points: string[] = [];
+								// Calculamos el ancho de cada columna en unidades del viewBox
+								const totalWidth = 1000;
+								const gap = 2; // gap-2 en porcentaje
+								const columnWidth = (totalWidth - (gap * (totalStages - 1))) / totalStages;
+								
+								// Línea superior (de izquierda a derecha)
+								stageData.forEach((data, index) => {
+									// Para la primera columna, empezar desde el borde izquierdo
+									// Para las demás, usar el centro de la columna
+									let x;
+									if (index === 0) {
+										x = 0; // Empieza desde el borde izquierdo
+									} else {
+										x = (columnWidth + gap) * index + columnWidth / 2;
+									}
+									const y = 50 - (data.percentageOfTotal / 3.5);
+									points.push(`${index === 0 ? 'M' : 'L'} ${x} ${y}`);
+								});
+								
+								// Línea inferior (de derecha a izquierda)
+								for (let i = stageData.length - 1; i >= 0; i--) {
+									const data = stageData[i];
+									let x;
+									if (i === 0) {
+										x = 0; // Termina en el borde izquierdo
+									} else {
+										x = (columnWidth + gap) * i + columnWidth / 2;
+									}
+									const y = 50 + (data.percentageOfTotal / 3.5);
+									points.push(`L ${x} ${y}`);
+								}
+								
+								points.push('Z');
+								return points.join(' ');
+							})()}
+							fill="#d4d4d8"
+						/>
+					</svg>
+					
+					{/* Porcentajes alineados con las columnas */}
+					<div className="relative flex justify-between gap-2 w-full h-full" style={{ zIndex: 10 }}>
+						{stageData.map((data, index) => (
+							<div key={`col-${data.stage}`} className="flex-1 min-w-0 flex items-center justify-center">
+								<span className="text-base font-bold text-zinc-900">
+									{data.percentageOfTotal.toFixed(0)}%
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+
+			{/* Nota explicativa */}
+			<div className="text-center">
+				<p className="text-sm text-zinc-500">
+					Los porcentajes dentro del embudo muestran la tasa de conversión respecto al total inicial
+				</p>
+			</div>
+		</div>
+	);
+}
+
 export function PipelineDashboard({ stats }: PipelineDashboardProps) {
 	const [selectedJobId, setSelectedJobId] = useState<string>(
 		stats.length > 0 ? stats[0].job_id : ''
@@ -53,71 +180,8 @@ export function PipelineDashboard({ stats }: PipelineDashboardProps) {
 			</div>
 
 			{/* Pipeline visual de la búsqueda seleccionada */}
-			<div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-				<div className="mb-4">
-					<h3 className="text-lg font-semibold text-zinc-900">{selectedStat.job_title}</h3>
-					{selectedStat.job_department && (
-						<p className="text-sm text-zinc-500 mt-1">{selectedStat.job_department}</p>
-					)}
-					<p className="text-xs text-zinc-400 mt-1">Total: {selectedStat.total} candidatos</p>
-				</div>
-
-				{/* Pipeline visual - Embudo real */}
-				<div className="overflow-x-auto pb-4 -mx-6 px-6">
-					<div className="flex gap-3 min-w-max">
-						{STAGE_ORDER.map((stage, index) => {
-							const count = selectedStat.stage_counts[stage] || 0;
-							
-							// Para la primera etapa, el "anterior" es el total de CVs recibidos
-							// Para las demás, es cuántos pasaron por la etapa anterior
-							let previousCount = selectedStat.total;
-							if (index > 0) {
-								const previousStage = STAGE_ORDER[index - 1];
-								previousCount = selectedStat.stage_counts[previousStage] || 0;
-							}
-							
-							// Porcentaje de conversión respecto a la etapa anterior
-							const conversionRate = previousCount > 0 ? (count / previousCount) * 100 : 0;
-							// Porcentaje respecto al total inicial (para la barra visual)
-							const percentageOfTotal = selectedStat.total > 0 ? (count / selectedStat.total) * 100 : 0;
-							const isLast = index === STAGE_ORDER.length - 1;
-
-							return (
-								<div key={stage} className="flex items-center">
-									{/* Etapa */}
-									<div className="flex flex-col items-center min-w-[140px]">
-										<div className="w-full rounded-lg px-3 py-2.5 text-center bg-zinc-50 border border-zinc-200">
-											<p className="text-xs font-semibold leading-tight text-zinc-900">
-												{StageLabels[stage]}
-											</p>
-											<p className="text-lg font-bold text-black mt-1">{count}</p>
-											{index > 0 && previousCount > 0 && (
-												<p className="text-xs text-zinc-600 mt-0.5">
-													{conversionRate.toFixed(0)}% de {previousCount}
-												</p>
-											)}
-											{selectedStat.total > 0 && (
-												<div className="mt-1.5 h-2 bg-zinc-200 rounded-full overflow-hidden">
-													<div
-														className="h-full bg-black transition-all"
-														style={{ width: `${percentageOfTotal}%` }}
-													/>
-												</div>
-											)}
-										</div>
-									</div>
-									{/* Flecha conectora */}
-									{!isLast && (
-										<div className="flex items-center mx-1">
-											<div className="h-0.5 w-8 bg-zinc-300" />
-											<div className="w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-zinc-300" />
-										</div>
-									)}
-								</div>
-							);
-						})}
-					</div>
-				</div>
+			<div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
+				<FunnelVisualization stats={selectedStat} />
 			</div>
 		</div>
 	);
