@@ -22,6 +22,20 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-6xl'
 		};
 	}, [isOpen]);
 
+	// Cerrar modal con tecla ESC
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				onClose();
+			}
+		};
+
+		document.addEventListener('keydown', handleEscape);
+		return () => document.removeEventListener('keydown', handleEscape);
+	}, [isOpen, onClose]);
+
 	if (!isOpen) return null;
 
 	return (
