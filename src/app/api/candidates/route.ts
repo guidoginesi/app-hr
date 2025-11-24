@@ -143,8 +143,10 @@ export async function POST(req: NextRequest) {
 			});
 		} else {
 			// Flujo normal: CV_RECEIVED (completed) -> HR_REVIEW (pending)
-			// Usar la misma fecha para ambas entradas (la fecha de creación de la aplicación)
-			const applicationDate = new Date().toISOString();
+			// Usar timestamps secuenciales para reflejar la progresión real
+			const cvReceivedDate = new Date();
+			const hrReviewDate = new Date(cvReceivedDate.getTime() + 100); // 100ms después
+			
 			await supabase.from('stage_history').insert([
 				{
 					application_id: application.id,
@@ -153,7 +155,7 @@ export async function POST(req: NextRequest) {
 					status: StageStatus.COMPLETED,
 					changed_by_user_id: null,
 					notes: 'CV recibido automáticamente',
-					changed_at: applicationDate
+					changed_at: cvReceivedDate.toISOString()
 				},
 				{
 					application_id: application.id,
@@ -162,7 +164,7 @@ export async function POST(req: NextRequest) {
 					status: StageStatus.PENDING,
 					changed_by_user_id: null,
 					notes: 'Avance automático a revisión HR',
-					changed_at: applicationDate
+					changed_at: hrReviewDate.toISOString()
 				}
 			]);
 		}

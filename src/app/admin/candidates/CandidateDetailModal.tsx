@@ -82,6 +82,7 @@ function getStageDuration(entryDate: string, nextEntryDate?: string): string {
 		return `${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
 	} else {
 		const diffMinutes = Math.floor(diffMs / (1000 * 60));
+		if (diffMinutes < 1) return '< 1 min';
 		return `${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
 	}
 }

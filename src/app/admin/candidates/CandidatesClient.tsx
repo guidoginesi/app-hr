@@ -284,7 +284,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 								<li key={application.id} className="px-6 py-4 transition-colors hover:bg-zinc-50">
 									<div className="flex items-center justify-between gap-4">
 										<div className="flex-1 min-w-0">
-											<div className="flex items-center gap-2.5">
+											<div className="flex items-center gap-2.5 flex-wrap">
 												<h3 className="text-base font-semibold text-zinc-900">{candidate.name}</h3>
 												<span className="text-sm text-zinc-400">·</span>
 												<span className="text-sm font-medium text-zinc-600">{application.job_title}</span>
@@ -292,6 +292,38 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 													<>
 														<span className="text-xs text-zinc-400">·</span>
 														<span className="text-xs text-zinc-500">{application.job_department}</span>
+													</>
+												)}
+												
+												{/* Badge de etapa y estado */}
+												<span className="text-xs text-zinc-400">·</span>
+												{application.current_stage && application.current_stage_status ? (
+													<span
+														className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+															application.current_stage_status === 'DISCARDED_IN_STAGE'
+																? 'bg-red-100 text-red-700'
+																: application.current_stage_status === 'COMPLETED'
+																? 'bg-green-100 text-green-700'
+																: application.current_stage_status === 'PENDING'
+																? 'bg-yellow-100 text-yellow-700'
+																: 'bg-zinc-100 text-zinc-700'
+														}`}
+													>
+														{StageLabels[application.current_stage]} - {StageStatusLabels[application.current_stage_status]}
+													</span>
+												) : (
+													<span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+														{application.status || 'Sin estado'}
+													</span>
+												)}
+												
+												{/* AI Score */}
+												{application.ai_score !== null && (
+													<>
+														<span className="text-xs text-zinc-400">·</span>
+														<span className="text-xs font-medium text-zinc-600">
+															Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
+														</span>
 													</>
 												)}
 											</div>
@@ -318,33 +350,6 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 															En etapa {getTimeInCurrentStage(application)}
 														</span>
 													</>
-												)}
-											</div>
-											
-											<div className="mt-2 flex items-center gap-2">
-												{application.current_stage && application.current_stage_status ? (
-													<span
-														className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-															application.current_stage_status === 'DISCARDED_IN_STAGE'
-																? 'bg-red-100 text-red-700'
-																: application.current_stage_status === 'COMPLETED'
-																? 'bg-green-100 text-green-700'
-																: application.current_stage_status === 'PENDING'
-																? 'bg-yellow-100 text-yellow-700'
-																: 'bg-zinc-100 text-zinc-700'
-														}`}
-													>
-														{StageLabels[application.current_stage]} - {StageStatusLabels[application.current_stage_status]}
-													</span>
-												) : (
-													<span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
-														{application.status || 'Sin estado'}
-													</span>
-												)}
-												{application.ai_score !== null && (
-													<span className="font-medium text-zinc-600">
-														Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
-													</span>
 												)}
 											</div>
 										</div>
