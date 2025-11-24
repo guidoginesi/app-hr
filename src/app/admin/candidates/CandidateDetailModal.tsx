@@ -109,6 +109,7 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 	const [notes, setNotes] = useState('');
 	const [savingNotes, setSavingNotes] = useState(false);
 	const [notesSaved, setNotesSaved] = useState(false);
+	const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set());
 
 	// Cargar datos actualizados cuando se abre el modal
 	useEffect(() => {
@@ -645,9 +646,30 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 												{/* Subject and Body combined */}
 												<div className="mt-2 space-y-1">
 													<p className="text-xs font-semibold text-green-900">{email.subject}</p>
-													<p className="text-xs text-green-800 leading-snug whitespace-pre-wrap">
-														{email.body}
-													</p>
+													<div>
+														<p className={`text-xs text-green-800 leading-snug whitespace-pre-wrap ${!expandedEmails.has(email.id) ? 'line-clamp-3' : ''}`}>
+															{email.body}
+														</p>
+														{email.body.length > 150 && (
+															<button
+																type="button"
+																onClick={() => {
+																	setExpandedEmails(prev => {
+																		const newSet = new Set(prev);
+																		if (newSet.has(email.id)) {
+																			newSet.delete(email.id);
+																		} else {
+																			newSet.add(email.id);
+																		}
+																		return newSet;
+																	});
+																}}
+																className="mt-1 text-xs font-medium text-green-700 hover:text-green-900 underline"
+															>
+																{expandedEmails.has(email.id) ? 'Ver menos' : 'Ver más'}
+															</button>
+														)}
+													</div>
 												</div>
 												
 												{/* Error message if any */}
