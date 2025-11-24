@@ -203,11 +203,13 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
 								>
 									<option value="ALL">Todas las etapas</option>
-									{Object.entries(StageLabels).map(([stage, label]) => (
-										<option key={stage} value={stage}>
-											{label}
-										</option>
-									))}
+									{Object.entries(StageLabels)
+										.filter(([stage]) => stage !== 'CV_RECEIVED')
+										.map(([stage, label]) => (
+											<option key={stage} value={stage}>
+												{label}
+											</option>
+										))}
 									<option value="DISCARDED">Descartados</option>
 								</select>
 							</div>
