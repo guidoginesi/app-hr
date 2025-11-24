@@ -642,16 +642,10 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 													</div>
 												</div>
 												
-												{/* Subject */}
-												<div className="mt-2">
-													<p className="text-xs font-medium text-green-800 mb-1">Asunto:</p>
-													<p className="text-sm text-green-900 font-semibold">{email.subject}</p>
-												</div>
-												
-												{/* Body preview */}
-												<div className="mt-2">
-													<p className="text-xs font-medium text-green-800 mb-1">Contenido:</p>
-													<p className="text-sm text-green-900 leading-relaxed whitespace-pre-wrap line-clamp-3">
+												{/* Subject and Body combined */}
+												<div className="mt-2 space-y-1">
+													<p className="text-xs font-semibold text-green-900">{email.subject}</p>
+													<p className="text-xs text-green-800 leading-snug whitespace-pre-wrap">
 														{email.body}
 													</p>
 												</div>
@@ -663,14 +657,6 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 														<p className="text-xs text-red-700">{email.error}</p>
 													</div>
 												)}
-												
-												{/* Template info */}
-												<div className="mt-2 flex items-center gap-2 text-xs text-green-700">
-													<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-													</svg>
-													<span>Template: {email.template_key}</span>
-												</div>
 											</div>
 										</div>
 									</div>
