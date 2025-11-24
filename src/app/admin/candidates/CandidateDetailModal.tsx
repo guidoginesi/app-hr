@@ -39,6 +39,15 @@ type EmailLog = {
 	metadata: Record<string, any>;
 };
 
+type RatingHistory = {
+	id: string;
+	application_id: string;
+	user_id: string;
+	rating: number;
+	note: string | null;
+	created_at: string;
+};
+
 type Application = {
 	id: string;
 	job_id: string;
@@ -61,6 +70,7 @@ type Application = {
 	stage_history?: StageHistory[];
 	recruiter_notes?: RecruiterNote[];
 	email_logs?: EmailLog[];
+	rating_history?: RatingHistory[];
 	recruiter_rating?: number | null;
 };
 
@@ -111,6 +121,7 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 	const [savingNotes, setSavingNotes] = useState(false);
 	const [notesSaved, setNotesSaved] = useState(false);
 	const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set());
+	const [ratingNote, setRatingNote] = useState('');
 
 	// Cargar datos actualizados cuando se abre el modal
 	useEffect(() => {
@@ -465,16 +476,18 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 				{activeTab === 'history' && (
 					<div className="space-y-3">
 						{(() => {
-							// Combinar historial de etapas, notas del reclutador y emails enviados
+							// Combinar historial de etapas, notas del reclutador, emails enviados y calificaciones
 							const stageHistory = mainApplication?.stage_history || [];
 							const notes = mainApplication?.recruiter_notes || [];
 							const emails = mainApplication?.email_logs || [];
+							const ratings = mainApplication?.rating_history || [];
 							
 							// Crear array combinado con tipo para diferenciar
 							const combinedHistory = [
 								...stageHistory.map(h => ({ type: 'stage' as const, data: h, date: h.changed_at })),
 								...notes.map(n => ({ type: 'note' as const, data: n, date: n.created_at })),
-								...emails.map(e => ({ type: 'email' as const, data: e, date: e.sent_at }))
+								...emails.map(e => ({ type: 'email' as const, data: e, date: e.sent_at })),
+								...ratings.map(r => ({ type: 'rating' as const, data: r, date: r.created_at }))
 							];
 							
 							// Ordenar por fecha descendente (más reciente primero)
@@ -698,6 +711,80 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 										</div>
 									</div>
 								);
+							} else if (item.type === 'rating') {
+								// Renderizar calificación
+								const rating = item.data as RatingHistory;
+								const ratingDate = new Date(rating.created_at);
+								const dateStr = ratingDate.toLocaleDateString('es-AR', {
+									day: 'numeric',
+									month: 'long',
+									year: 'numeric'
+								});
+								const timeStr = ratingDate.toLocaleTimeString('es-AR', {
+									hour: '2-digit',
+									minute: '2-digit'
+								});
+								
+								return (
+									<div key={`rating-${rating.id}`} className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4">
+										<div className="flex items-start gap-3">
+											<div className="flex-shrink-0 mt-0.5">
+												<div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center">
+													<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+														<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+													</svg>
+												</div>
+											</div>
+											<div className="flex-1 space-y-2">
+												{/* Título y fecha en la misma línea */}
+												<div className="flex items-center justify-between gap-4">
+													<div className="flex items-center gap-2">
+														<span className="text-sm font-semibold text-yellow-900">Calificación</span>
+														{/* Estrellas pequeñas */}
+														<div className="inline-flex items-center gap-0.5">
+															{[1, 2, 3, 4, 5].map((star) => (
+																<svg
+																	key={star}
+																	className={`w-3.5 h-3.5 ${
+																		rating.rating >= star
+																			? 'text-yellow-500 fill-yellow-500'
+																			: 'text-yellow-200'
+																	}`}
+																	fill={rating.rating >= star ? 'currentColor' : 'none'}
+																	stroke="currentColor"
+																	viewBox="0 0 24 24"
+																>
+																	<path
+																		strokeLinecap="round"
+																		strokeLinejoin="round"
+																		strokeWidth={1.5}
+																		d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+																	/>
+																</svg>
+															))}
+														</div>
+														<span className="text-sm font-bold text-yellow-900">({rating.rating}/5)</span>
+													</div>
+													<div className="flex items-center gap-1.5 text-xs text-yellow-700">
+														<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+														</svg>
+														<span className="whitespace-nowrap">{dateStr} - {timeStr}</span>
+													</div>
+												</div>
+												
+												{/* Nota si existe */}
+												{rating.note && (
+													<div className="mt-2">
+														<p className="text-sm text-yellow-900 leading-relaxed whitespace-pre-wrap">
+															{rating.note}
+														</p>
+													</div>
+												)}
+											</div>
+										</div>
+									</div>
+								);
 							}
 							return null;
 						});
@@ -780,119 +867,136 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 					</div>
 				)}
 
-				{activeTab === 'rating' && (
-					<div className="space-y-4">
-						<div className="rounded-lg border border-zinc-200 bg-white p-6">
-							<h4 className="text-sm font-semibold text-zinc-900 mb-3">Calificar Candidato</h4>
-							<p className="text-xs text-zinc-500 mb-6">
-								Evalúa al candidato con una calificación de 1 a 5 estrellas según tu criterio profesional.
-							</p>
-							
-							{/* Estrellas */}
-							<div className="flex flex-col items-center gap-4">
-								<div className="flex items-center gap-2">
-									{[1, 2, 3, 4, 5].map((star) => {
-										const isSelected = mainApplication?.recruiter_rating ? star <= mainApplication.recruiter_rating : false;
-										const isHovered = false; // We'll add hover state if needed
-										
-										return (
-											<button
-												key={star}
-												type="button"
-												onClick={async () => {
-													if (!mainApplication) return;
-													
-													try {
-														const res = await fetch(`/api/admin/applications/${mainApplication.id}/rating`, {
-															method: 'PUT',
-															headers: { 'Content-Type': 'application/json' },
-															body: JSON.stringify({ rating: star })
-														});
-
-														if (!res.ok) {
-															const error = await res.json();
-															throw new Error(error.error || 'Error al guardar la calificación');
-														}
-
-														// Recargar datos del candidato
-														const candidateRes = await fetch(`/api/admin/candidates/${candidate.id}`);
-														if (candidateRes.ok) {
-															const updatedCandidate = await candidateRes.json();
-															setCurrentCandidate(updatedCandidate);
-														}
-													} catch (error) {
-														console.error('Error saving rating:', error);
-														alert('Error al guardar la calificación. Por favor intenta nuevamente.');
-													}
-												}}
-												className="transition-all hover:scale-110"
-											>
-												<svg
-													className={`w-10 h-10 ${
-														isSelected
-															? 'text-yellow-400 fill-yellow-400'
-															: 'text-zinc-300 hover:text-yellow-400'
-													} transition-colors`}
-													fill={isSelected ? 'currentColor' : 'none'}
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={1.5}
-														d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-													/>
-												</svg>
-											</button>
-										);
-									})}
-								</div>
-								
-								{/* Rating display */}
-								{mainApplication?.recruiter_rating && (
-									<div className="text-center">
-										<p className="text-sm font-medium text-zinc-700">
-											Calificación actual: <span className="text-lg font-bold text-yellow-600">{mainApplication.recruiter_rating}</span> / 5
-										</p>
+			{activeTab === 'rating' && (
+				<div className="space-y-4">
+					<div className="rounded-lg border border-zinc-200 bg-white p-6">
+						<h4 className="text-sm font-semibold text-zinc-900 mb-3">Calificar Candidato</h4>
+						<p className="text-xs text-zinc-500 mb-6">
+							Evalúa al candidato con una calificación de 1 a 5 estrellas según tu criterio profesional. Opcionalmente, puedes agregar una nota.
+						</p>
+						
+						{/* Estrellas */}
+						<div className="flex flex-col items-center gap-4">
+							<div className="flex items-center gap-2">
+								{[1, 2, 3, 4, 5].map((star) => {
+									const isSelected = mainApplication?.recruiter_rating ? star <= mainApplication.recruiter_rating : false;
+									
+									return (
 										<button
+											key={star}
 											type="button"
 											onClick={async () => {
 												if (!mainApplication) return;
 												
-												if (!confirm('¿Estás seguro de que quieres eliminar la calificación?')) return;
-												
 												try {
 													const res = await fetch(`/api/admin/applications/${mainApplication.id}/rating`, {
-														method: 'DELETE'
+														method: 'PUT',
+														headers: { 'Content-Type': 'application/json' },
+														body: JSON.stringify({ 
+															rating: star,
+															note: ratingNote || undefined
+														})
 													});
 
 													if (!res.ok) {
 														const error = await res.json();
-														throw new Error(error.error || 'Error al eliminar la calificación');
+														throw new Error(error.error || 'Error al guardar la calificación');
 													}
 
-													// Recargar datos del candidato
+													// Limpiar nota y recargar datos del candidato
+													setRatingNote('');
 													const candidateRes = await fetch(`/api/admin/candidates/${candidate.id}`);
 													if (candidateRes.ok) {
 														const updatedCandidate = await candidateRes.json();
 														setCurrentCandidate(updatedCandidate);
 													}
 												} catch (error) {
-													console.error('Error deleting rating:', error);
-													alert('Error al eliminar la calificación. Por favor intenta nuevamente.');
+													console.error('Error saving rating:', error);
+													alert('Error al guardar la calificación. Por favor intenta nuevamente.');
 												}
 											}}
-											className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+											className="transition-all hover:scale-110"
 										>
-											Eliminar calificación
+											<svg
+												className={`w-10 h-10 ${
+													isSelected
+														? 'text-yellow-400 fill-yellow-400'
+														: 'text-zinc-300 hover:text-yellow-400'
+												} transition-colors`}
+												fill={isSelected ? 'currentColor' : 'none'}
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={1.5}
+													d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+												/>
+											</svg>
 										</button>
-									</div>
-								)}
+									);
+								})}
 							</div>
+							
+							{/* Nota opcional */}
+							<div className="w-full mt-2">
+								<label className="block text-xs font-medium text-zinc-700 mb-1">
+									Nota (opcional)
+								</label>
+								<textarea
+									value={ratingNote}
+									onChange={(e) => setRatingNote(e.target.value)}
+									placeholder="Agrega comentarios sobre la calificación..."
+									rows={3}
+									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+								/>
+							</div>
+							
+							{/* Rating display */}
+							{mainApplication?.recruiter_rating && (
+								<div className="text-center">
+									<p className="text-sm font-medium text-zinc-700">
+										Calificación actual: <span className="text-lg font-bold text-yellow-600">{mainApplication.recruiter_rating}</span> / 5
+									</p>
+									<button
+										type="button"
+										onClick={async () => {
+											if (!mainApplication) return;
+											
+											if (!confirm('¿Estás seguro de que quieres eliminar la calificación?')) return;
+											
+											try {
+												const res = await fetch(`/api/admin/applications/${mainApplication.id}/rating`, {
+													method: 'DELETE'
+												});
+
+												if (!res.ok) {
+													const error = await res.json();
+													throw new Error(error.error || 'Error al eliminar la calificación');
+												}
+
+												// Recargar datos del candidato
+												const candidateRes = await fetch(`/api/admin/candidates/${candidate.id}`);
+												if (candidateRes.ok) {
+													const updatedCandidate = await candidateRes.json();
+													setCurrentCandidate(updatedCandidate);
+												}
+											} catch (error) {
+												console.error('Error deleting rating:', error);
+												alert('Error al eliminar la calificación. Por favor intenta nuevamente.');
+											}
+										}}
+										className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+									>
+										Eliminar calificación
+									</button>
+								</div>
+							)}
 						</div>
 					</div>
-				)}
+				</div>
+			)}
 			</div>
 		</Modal>
 	);

@@ -45,6 +45,7 @@ export async function GET(
 	let stageHistory: any[] = [];
 	let recruiterNotes: any[] = [];
 	let emailLogs: any[] = [];
+	let ratingHistory: any[] = [];
 	
 	if (applicationIds.length > 0) {
 		const { data: historyData, error: historyError } = await supabase
@@ -81,6 +82,18 @@ export async function GET(
 			console.error('Error fetching email_logs:', emailError);
 		}
 		emailLogs = emailData || [];
+
+		// Obtener historial de calificaciones
+		const { data: ratingsData, error: ratingsError } = await supabase
+			.from('rating_history')
+			.select('*')
+			.in('application_id', applicationIds)
+			.order('created_at', { ascending: false });
+		
+		if (ratingsError) {
+			console.error('Error fetching rating_history:', ratingsError);
+		}
+		ratingHistory = ratingsData || [];
 	}
 
 		// Obtener los jobs
@@ -124,6 +137,15 @@ export async function GET(
 		emailsMap.get(appId)!.push(email);
 	}
 
+	const ratingsMap = new Map<string, any[]>();
+	for (const rating of ratingHistory) {
+		const appId = rating.application_id;
+		if (!ratingsMap.has(appId)) {
+			ratingsMap.set(appId, []);
+		}
+		ratingsMap.get(appId)!.push(rating);
+	}
+
 	const applicationsWithJobs = (applications || []).map((app: any) => {
 		const job = jobsMap.get(app.job_id);
 		return {
@@ -148,6 +170,7 @@ export async function GET(
 		stage_history: historyMap.get(app.id) || [],
 		recruiter_notes: notesMap.get(app.id) || [],
 		email_logs: emailsMap.get(app.id) || [],
+		rating_history: ratingsMap.get(app.id) || [],
 		recruiter_rating: app.recruiter_rating
 	};
 });

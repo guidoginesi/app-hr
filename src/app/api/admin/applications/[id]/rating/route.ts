@@ -4,7 +4,8 @@ import { requireAdmin } from '@/lib/checkAdmin';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdateRatingSchema = z.object({
-	rating: z.number().int().min(1).max(5)
+	rating: z.number().int().min(1).max(5),
+	note: z.string().optional()
 });
 
 export async function PUT(
@@ -22,6 +23,21 @@ export async function PUT(
 		const parsed = UpdateRatingSchema.parse(body);
 
 		const supabase = getSupabaseServer();
+
+		// Insertar en el historial de calificaciones
+		const { error: historyError } = await supabase
+			.from('rating_history')
+			.insert({
+				application_id: applicationId,
+				user_id: user.id,
+				rating: parsed.rating,
+				note: parsed.note || null
+			});
+
+		if (historyError) {
+			console.error('Error inserting rating history:', historyError);
+			return NextResponse.json({ error: historyError.message }, { status: 500 });
+		}
 
 		// Actualizar la calificación de la aplicación
 		const { data, error } = await supabase
