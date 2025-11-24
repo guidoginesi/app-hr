@@ -54,27 +54,30 @@ export default async function JobDetailPage({
           {job.description && (
             <div className="mb-6">
               <h3 className="mb-2 text-lg font-semibold text-zinc-900">La propuesta</h3>
-              <div className="prose prose-sm max-w-none text-zinc-700 whitespace-pre-wrap">
-                {job.description}
-              </div>
+              <div 
+                className="prose prose-sm max-w-none text-zinc-700"
+                dangerouslySetInnerHTML={{ __html: job.description }}
+              />
             </div>
           )}
 
           {job.responsibilities && (
             <div className="mb-6">
               <h3 className="mb-2 text-lg font-semibold text-zinc-900">Responsabilidades</h3>
-              <div className="prose prose-sm max-w-none text-zinc-700 whitespace-pre-wrap">
-                {job.responsibilities}
-              </div>
+              <div 
+                className="prose prose-sm max-w-none text-zinc-700"
+                dangerouslySetInnerHTML={{ __html: job.responsibilities }}
+              />
             </div>
           )}
 
           {job.requirements && (
             <div className="mt-6">
               <h3 className="mb-2 text-lg font-semibold text-zinc-900">Requisitos</h3>
-              <div className="prose prose-sm max-w-none text-zinc-700 whitespace-pre-wrap">
-                {job.requirements}
-              </div>
+              <div 
+                className="prose prose-sm max-w-none text-zinc-700"
+                dangerouslySetInnerHTML={{ __html: job.requirements }}
+              />
             </div>
           )}
         </section>

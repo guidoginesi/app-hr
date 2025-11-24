@@ -147,7 +147,7 @@ export async function sendTemplatedEmail(params: SendEmailParams): Promise<{ suc
 			from: fromEmail,
 			to: params.to,
 			subject,
-			text: body,
+			html: body,
 		});
 
 		if (error) {

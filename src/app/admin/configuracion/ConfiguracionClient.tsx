@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { RichTextEditor } from '../RichTextEditor';
 
 type EmailTemplate = {
 	id: string;
@@ -53,10 +54,23 @@ export function ConfiguracionClient() {
 		}
 	}
 
+	// Convierte texto plano con \n a HTML simple con <p>
+	function convertPlainTextToHTML(text: string): string {
+		// Si ya tiene etiquetas HTML, devolverlo tal cual
+		if (text.includes('<p>') || text.includes('<br') || text.includes('<ul>') || text.includes('<ol>')) {
+			return text;
+		}
+		
+		// Convertir saltos de línea a párrafos
+		const lines = text.split('\n').filter(line => line.trim());
+		return lines.map(line => `<p>${line}</p>`).join('');
+	}
+
 	function selectTemplate(template: EmailTemplate) {
 		setSelectedTemplate(template);
 		setEditedSubject(template.subject);
-		setEditedBody(template.body);
+		// Convertir a HTML si es texto plano
+		setEditedBody(convertPlainTextToHTML(template.body));
 		setEditedIsActive(template.is_active);
 		setMessage(null);
 	}
@@ -224,12 +238,10 @@ export function ConfiguracionClient() {
 								<label htmlFor="body" className="block text-sm font-medium text-zinc-900 mb-2">
 									Cuerpo del Email
 								</label>
-								<textarea
-									id="body"
-									value={editedBody}
-									onChange={(e) => setEditedBody(e.target.value)}
-									rows={16}
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 font-mono focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+								<RichTextEditor
+									content={editedBody}
+									onChange={setEditedBody}
+									placeholder="Escribe el contenido del email..."
 								/>
 							</div>
 
