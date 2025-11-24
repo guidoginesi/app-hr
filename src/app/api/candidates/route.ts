@@ -93,81 +93,131 @@ export async function POST(req: NextRequest) {
 			.single();
 		if (candErr) throw candErr;
 
-		// TRIGGER 3: Si provincia es OTRA, descartar automáticamente
-		const shouldAutoReject = provincia === 'OTRA';
-		
-		// Create application with new funnel model
-		// Si provincia = OTRA, va directo a CV_RECEIVED con estado DISCARDED_IN_STAGE
-		// Sino, CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW
-		const { data: application, error: appErr } = await supabase
-			.from('applications')
-			.insert({
-				candidate_id: candidate.id,
-				job_id: jobId,
-				resume_url: resumeUrl,
-				salary_expectation: salaryExpectation,
-				english_level: englishLevel,
-				current_stage: shouldAutoReject ? Stage.CV_RECEIVED : Stage.HR_REVIEW,
-				current_stage_status: shouldAutoReject ? StageStatus.DISCARDED_IN_STAGE : StageStatus.PENDING,
-				status: shouldAutoReject ? 'Descartado - Ubicación' : 'Recibido' // Legacy field for compatibility
-			})
-			.select('id,resume_url')
-			.single();
-		if (appErr) throw appErr;
+	// Obtener información del job para verificar triggers
+	const { data: job } = await supabase
+		.from('jobs')
+		.select('id,title,max_salary')
+		.eq('id', jobId)
+		.single();
 
-		// Create stage history basado en si fue descartado o no
-		if (shouldAutoReject) {
-			// Si se descarta por provincia, solo crear el registro de CV_RECEIVED con DISCARDED
-			await supabase.from('stage_history').insert({
+	const jobTitle = job?.title || 'la posición';
+	
+	// TRIGGER 3: Si provincia es OTRA, descartar automáticamente
+	let shouldAutoReject = provincia === 'OTRA';
+	let rejectionReason = '';
+	let rejectionEmailKey = '';
+	
+	if (shouldAutoReject) {
+		rejectionReason = 'Descartado automáticamente - Provincia fuera del rango requerido (CABA/GBA)';
+		rejectionEmailKey = 'candidate_rejected_location';
+	}
+	
+	// TRIGGER 4: Si el salario excede el máximo permitido, descartar automáticamente
+	if (!shouldAutoReject && job?.max_salary && salaryExpectation) {
+		// Convertir salaryExpectation a número (puede venir como string)
+		const candidateSalary = parseFloat(String(salaryExpectation).replace(/[^0-9.]/g, ''));
+		const maxSalary = parseFloat(String(job.max_salary));
+		
+		if (!isNaN(candidateSalary) && !isNaN(maxSalary) && candidateSalary > maxSalary) {
+			shouldAutoReject = true;
+			rejectionReason = `Descartado automáticamente - Expectativa salarial (${salaryExpectation}) excede el máximo de la posición`;
+			rejectionEmailKey = 'candidate_rejected_salary';
+		}
+	}
+	
+	// Create application with new funnel model
+	// Si hay rechazo automático, va directo a CV_RECEIVED con estado DISCARDED_IN_STAGE
+	// Sino, CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW
+	const { data: application, error: appErr } = await supabase
+		.from('applications')
+		.insert({
+			candidate_id: candidate.id,
+			job_id: jobId,
+			resume_url: resumeUrl,
+			salary_expectation: salaryExpectation,
+			english_level: englishLevel,
+			current_stage: shouldAutoReject ? Stage.CV_RECEIVED : Stage.HR_REVIEW,
+			current_stage_status: shouldAutoReject ? StageStatus.DISCARDED_IN_STAGE : StageStatus.PENDING,
+			status: shouldAutoReject ? `Descartado - ${rejectionEmailKey === 'candidate_rejected_location' ? 'Ubicación' : 'Sueldo'}` : 'Recibido' // Legacy field for compatibility
+		})
+		.select('id,resume_url')
+		.single();
+	if (appErr) throw appErr;
+
+	// Create stage history basado en si fue descartado o no
+	if (shouldAutoReject) {
+		// Si se descarta automáticamente, solo crear el registro de CV_RECEIVED con DISCARDED
+		await supabase.from('stage_history').insert({
+			application_id: application.id,
+			from_stage: null,
+			to_stage: Stage.CV_RECEIVED,
+			status: StageStatus.DISCARDED_IN_STAGE,
+			changed_by_user_id: null,
+			notes: rejectionReason,
+			changed_at: new Date().toISOString()
+		});
+		
+		// Enviar email de descarte correspondiente
+		const emailVariables: Record<string, string> = {
+			candidateName: name,
+			jobTitle: jobTitle
+		};
+		
+		// Agregar variables específicas según el tipo de rechazo
+		if (rejectionEmailKey === 'candidate_rejected_location') {
+			emailVariables.provincia = provincia;
+		} else if (rejectionEmailKey === 'candidate_rejected_salary') {
+			emailVariables.salaryExpectation = salaryExpectation || 'No especificado';
+		}
+		
+		await sendTemplatedEmail({
+			templateKey: rejectionEmailKey,
+			to: email,
+			variables: emailVariables,
+			applicationId: application.id
+		}).catch(err => {
+			console.error(`Error sending ${rejectionEmailKey} email:`, err);
+		});
+	} else {
+		// Flujo normal: CV_RECEIVED (completed) -> HR_REVIEW (pending)
+		// Usar timestamps secuenciales para reflejar la progresión real
+		const cvReceivedDate = new Date();
+		const hrReviewDate = new Date(cvReceivedDate.getTime() + 100); // 100ms después
+		
+		await supabase.from('stage_history').insert([
+			{
 				application_id: application.id,
 				from_stage: null,
 				to_stage: Stage.CV_RECEIVED,
-				status: StageStatus.DISCARDED_IN_STAGE,
+				status: StageStatus.COMPLETED,
 				changed_by_user_id: null,
-				notes: 'Descartado automáticamente - Provincia fuera del rango requerido (CABA/GBA)',
-				changed_at: new Date().toISOString()
-			});
-			
-			// Enviar email de descarte por ubicación
-			await sendTemplatedEmail({
-				templateKey: 'candidate_rejected_location',
-				to: email,
-				variables: {
-					candidateName: name,
-					jobTitle: 'la posición',
-					provincia: provincia
-				},
-				applicationId: application.id
-			}).catch(err => {
-				console.error('Error sending location rejection email:', err);
-			});
-		} else {
-			// Flujo normal: CV_RECEIVED (completed) -> HR_REVIEW (pending)
-			// Usar timestamps secuenciales para reflejar la progresión real
-			const cvReceivedDate = new Date();
-			const hrReviewDate = new Date(cvReceivedDate.getTime() + 100); // 100ms después
-			
-			await supabase.from('stage_history').insert([
-				{
-					application_id: application.id,
-					from_stage: null,
-					to_stage: Stage.CV_RECEIVED,
-					status: StageStatus.COMPLETED,
-					changed_by_user_id: null,
-					notes: 'CV recibido automáticamente',
-					changed_at: cvReceivedDate.toISOString()
-				},
-				{
-					application_id: application.id,
-					from_stage: Stage.CV_RECEIVED,
-					to_stage: Stage.HR_REVIEW,
-					status: StageStatus.PENDING,
-					changed_by_user_id: null,
-					notes: 'Avance automático a revisión HR',
-					changed_at: hrReviewDate.toISOString()
-				}
-			]);
-		}
+				notes: 'CV recibido automáticamente',
+				changed_at: cvReceivedDate.toISOString()
+			},
+			{
+				application_id: application.id,
+				from_stage: Stage.CV_RECEIVED,
+				to_stage: Stage.HR_REVIEW,
+				status: StageStatus.PENDING,
+				changed_by_user_id: null,
+				notes: 'Avance automático a revisión HR',
+				changed_at: hrReviewDate.toISOString()
+			}
+		]);
+		
+		// Enviar email de confirmación de aplicación (si está activo)
+		await sendTemplatedEmail({
+			templateKey: 'application_confirmation',
+			to: email,
+			variables: {
+				candidateName: name,
+				jobTitle: jobTitle
+			},
+			applicationId: application.id
+		}).catch(err => {
+			console.error('Error sending application confirmation email:', err);
+		});
+	}
 
 		// Kick off AI pipelines sequentially for now (separate functions) [[memory:4421972]]
 		// 1) Extraction

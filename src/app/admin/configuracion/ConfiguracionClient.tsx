@@ -14,9 +14,11 @@ type EmailTemplate = {
 };
 
 const TEMPLATE_NAMES: Record<string, string> = {
+	'application_confirmation': 'Email Confirmación de Aplicación',
 	'candidate_rejected': 'Email Candidato Descartado (General)',
-	'interview_coordination': 'Email Coordinación Entrevista',
-	'candidate_rejected_location': 'Email Candidato Descartado (Provincia OTRA)'
+	'candidate_rejected_location': 'Email Candidato Descartado (Provincia OTRA)',
+	'candidate_rejected_salary': 'Email Candidato Descartado (Sueldo)',
+	'interview_coordination': 'Email Coordinación Entrevista'
 };
 
 export function ConfiguracionClient() {

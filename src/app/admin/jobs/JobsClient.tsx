@@ -14,6 +14,7 @@ type Job = {
 	description?: string | null;
 	responsibilities?: string | null;
 	requirements?: string | null;
+	max_salary?: number | null;
 	is_published: boolean;
 	created_at: string;
 };

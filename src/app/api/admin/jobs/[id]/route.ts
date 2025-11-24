@@ -11,6 +11,11 @@ const UpdateJobSchema = z.object({
 	description: z.string().optional().nullable(),
 	responsibilities: z.string().optional().nullable(),
 	requirements: z.string().optional().nullable(),
+	max_salary: z.union([z.string(), z.number()]).optional().nullable().transform((v) => {
+		if (v === null || v === undefined || v === '') return null;
+		const num = typeof v === 'number' ? v : parseFloat(v);
+		return isNaN(num) ? null : num;
+	}),
 	is_published: z.union([z.string(), z.boolean()]).transform((v) => {
 		if (typeof v === 'boolean') return v;
 		return v === 'true';
@@ -52,6 +57,7 @@ export async function PUT(
 		description: form.get('description') ? String(form.get('description')) : null,
 		responsibilities: responsibilitiesStr || null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
+		max_salary: form.get('max_salary') ? String(form.get('max_salary')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
 	
@@ -91,6 +97,8 @@ export async function PUT(
 	updateData.responsibilities = parsed.responsibilities && parsed.responsibilities.trim() 
 		? parsed.responsibilities.trim() 
 		: null;
+	// Agregar max_salary (puede ser null)
+	updateData.max_salary = parsed.max_salary;
 	
 	console.log('[API] Update data being sent to DB:', JSON.stringify(updateData, null, 2));
 	

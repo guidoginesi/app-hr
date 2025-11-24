@@ -12,6 +12,7 @@ type Job = {
 	description?: string | null;
 	responsibilities?: string | null;
 	requirements?: string | null;
+	max_salary?: number | null;
 	is_published: boolean;
 };
 
@@ -117,17 +118,34 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 						<option value="Presencial">Presencial</option>
 					</select>
 				</div>
-				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Ubicación</label>
-					<input
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-						name="location"
-						placeholder="Ej: Buenos Aires"
-						defaultValue={job?.location || ''}
-					/>
-				</div>
-				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Estado</label>
+			<div>
+				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Ubicación</label>
+				<input
+					className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+					name="location"
+					placeholder="Ej: Buenos Aires"
+					defaultValue={job?.location || ''}
+				/>
+			</div>
+			<div>
+				<label className="mb-1.5 block text-xs font-medium text-zinc-700">
+					Salario Máximo (opcional)
+					<span className="ml-1.5 text-xs font-normal text-zinc-500">
+						· Si se completa, candidatos que excedan este monto serán descartados automáticamente
+					</span>
+				</label>
+				<input
+					className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+					name="max_salary"
+					type="number"
+					step="0.01"
+					min="0"
+					placeholder="Ej: 5000000 (sin puntos ni comas)"
+					defaultValue={job?.max_salary || ''}
+				/>
+			</div>
+			<div>
+				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Estado</label>
 					<select
 						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="is_published"

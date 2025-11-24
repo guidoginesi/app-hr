@@ -11,6 +11,11 @@ const CreateJobSchema = z.object({
 	description: z.string().optional().nullable(),
 	responsibilities: z.string().optional().nullable(),
 	requirements: z.string().optional().nullable(),
+	max_salary: z.union([z.string(), z.number()]).optional().nullable().transform((v) => {
+		if (v === null || v === undefined || v === '') return null;
+		const num = typeof v === 'number' ? v : parseFloat(v);
+		return isNaN(num) ? null : num;
+	}),
 	is_published: z.union([z.string(), z.boolean()]).transform((v) => {
 		if (typeof v === 'boolean') return v;
 		return v === 'true';
@@ -47,6 +52,7 @@ export async function POST(req: NextRequest) {
 		description: form.get('description') ? String(form.get('description')) : null,
 		responsibilities: form.get('responsibilities') ? String(form.get('responsibilities')) : null,
 		requirements: form.get('requirements') ? String(form.get('requirements')) : null,
+		max_salary: form.get('max_salary') ? String(form.get('max_salary')) : null,
 		is_published: String(form.get('is_published') ?? 'true')
 	});
 	const supabase = getSupabaseServer();
@@ -82,6 +88,8 @@ export async function POST(req: NextRequest) {
 	insertData.responsibilities = parsed.responsibilities && parsed.responsibilities.trim() 
 		? parsed.responsibilities.trim() 
 		: null;
+	// Agregar max_salary si tiene valor
+	if (parsed.max_salary !== null) insertData.max_salary = parsed.max_salary;
 	
 	const { error } = await supabase.from('jobs').insert(insertData);
 	if (error) {
