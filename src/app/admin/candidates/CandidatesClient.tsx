@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal } from '../Modal';
 import { CandidateDetailModal } from './CandidateDetailModal';
 import { AddCandidateModal } from './AddCandidateModal';
@@ -46,9 +46,97 @@ type CandidatesClientProps = {
 	jobs: Job[];
 };
 
+const ITEMS_PER_PAGE = 25;
+
 export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 	const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [stageFilter, setStageFilter] = useState<Stage | 'ALL' | 'DISCARDED'>('ALL');
+	const [jobFilter, setJobFilter] = useState<string>('ALL');
+	const [currentPage, setCurrentPage] = useState(1);
+
+	// Aplanar candidatos con sus aplicaciones para facilitar el filtrado
+	const flattenedApplications = useMemo(() => {
+		return candidates.flatMap((candidate) =>
+			candidate.applications.length > 0
+				? candidate.applications.map((app) => ({
+						candidate,
+						application: app,
+					}))
+				: []
+		);
+	}, [candidates]);
+
+	// Obtener lista única de búsquedas
+	const uniqueJobs = useMemo(() => {
+		const jobsMap = new Map<string, { id: string; title: string; department: string | null }>();
+		flattenedApplications.forEach(({ application }) => {
+			if (!jobsMap.has(application.job_id)) {
+				jobsMap.set(application.job_id, {
+					id: application.job_id,
+					title: application.job_title,
+					department: application.job_department,
+				});
+			}
+		});
+		return Array.from(jobsMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+	}, [flattenedApplications]);
+
+	// Filtrar aplicaciones
+	const filteredApplications = useMemo(() => {
+		let filtered = flattenedApplications;
+
+		// Filtro por búsqueda de texto
+		if (searchQuery.trim()) {
+			const query = searchQuery.toLowerCase();
+			filtered = filtered.filter(
+				({ candidate, application }) =>
+					candidate.name.toLowerCase().includes(query) ||
+					candidate.email.toLowerCase().includes(query) ||
+					application.job_title.toLowerCase().includes(query) ||
+					(application.job_department && application.job_department.toLowerCase().includes(query))
+			);
+		}
+
+		// Filtro por búsqueda/job
+		if (jobFilter !== 'ALL') {
+			filtered = filtered.filter(({ application }) => application.job_id === jobFilter);
+		}
+
+		// Filtro por etapa
+		if (stageFilter === 'DISCARDED') {
+			// Mostrar todos los descartados independientemente de la etapa
+			filtered = filtered.filter(({ application }) => application.current_stage_status === 'DISCARDED_IN_STAGE');
+		} else if (stageFilter !== 'ALL') {
+			filtered = filtered.filter(({ application }) => application.current_stage === stageFilter);
+		}
+
+		return filtered;
+	}, [flattenedApplications, searchQuery, jobFilter, stageFilter]);
+
+	// Calcular paginación
+	const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+	const paginatedApplications = useMemo(() => {
+		const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+		return filteredApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+	}, [filteredApplications, currentPage]);
+
+	// Reset página cuando cambian los filtros
+	const handleSearchChange = (value: string) => {
+		setSearchQuery(value);
+		setCurrentPage(1);
+	};
+
+	const handleJobFilterChange = (value: string) => {
+		setJobFilter(value);
+		setCurrentPage(1);
+	};
+
+	const handleStageFilterChange = (value: Stage | 'ALL' | 'DISCARDED') => {
+		setStageFilter(value);
+		setCurrentPage(1);
+	};
 
 	return (
 		<>
@@ -70,78 +158,162 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 				</div>
 
 				<div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-					<div className="border-b border-zinc-200 px-6 py-4">
-						<h2 className="text-base font-semibold text-zinc-900">Lista de candidatos</h2>
-						<p className="mt-1 text-xs text-zinc-500">
-							{candidates.reduce((acc, c) => acc + c.applications.length, 0)} aplicaciones totales
-						</p>
+					{/* Filtros */}
+					<div className="border-b border-zinc-200 px-6 py-4 space-y-4">
+						<div>
+							<h2 className="text-base font-semibold text-zinc-900">Lista de candidatos</h2>
+							<p className="mt-1 text-xs text-zinc-500">
+								{filteredApplications.length} de {flattenedApplications.length} aplicaciones
+							</p>
+						</div>
+						
+						<div className="flex flex-col lg:flex-row gap-3">
+							{/* Búsqueda de texto */}
+							<div className="flex-1">
+								<input
+									type="text"
+									placeholder="Buscar por nombre, email..."
+									value={searchQuery}
+									onChange={(e) => handleSearchChange(e.target.value)}
+									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+								/>
+							</div>
+
+							{/* Filtro por búsqueda/job */}
+							<div className="lg:w-64">
+								<select
+									value={jobFilter}
+									onChange={(e) => handleJobFilterChange(e.target.value)}
+									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+								>
+									<option value="ALL">Todas las búsquedas</option>
+									{uniqueJobs.map((job) => (
+										<option key={job.id} value={job.id}>
+											{job.title}
+										</option>
+									))}
+								</select>
+							</div>
+
+							{/* Filtro por etapa */}
+							<div className="lg:w-64">
+								<select
+									value={stageFilter}
+									onChange={(e) => handleStageFilterChange(e.target.value as Stage | 'ALL' | 'DISCARDED')}
+									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+								>
+									<option value="ALL">Todas las etapas</option>
+									{Object.entries(StageLabels).map(([stage, label]) => (
+										<option key={stage} value={stage}>
+											{label}
+										</option>
+									))}
+									<option value="DISCARDED">Descartados</option>
+								</select>
+							</div>
+						</div>
 					</div>
+
+					{/* Lista de candidatos */}
 					<ul className="divide-y divide-zinc-200">
-						{candidates.length > 0 ? (
-							candidates.flatMap((candidate) =>
-								candidate.applications.length > 0
-									? candidate.applications.map((app) => (
-											<li key={app.id} className="px-6 py-4 transition-colors hover:bg-zinc-50">
-												<div className="flex items-center justify-between gap-4">
-													<div className="flex-1 min-w-0">
-														<div className="flex items-center gap-2.5">
-															<h3 className="text-base font-semibold text-zinc-900">{candidate.name}</h3>
-															<span className="text-sm text-zinc-400">·</span>
-															<span className="text-sm font-medium text-zinc-600">{app.job_title}</span>
-															{app.job_department && (
-																<>
-																	<span className="text-xs text-zinc-400">·</span>
-																	<span className="text-xs text-zinc-500">{app.job_department}</span>
-																</>
-															)}
-														</div>
-														<div className="mt-1.5 flex items-center gap-3 text-xs text-zinc-500">
-															<span>{candidate.email}</span>
-															{app.current_stage && app.current_stage_status ? (
-																<span
-																	className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-																		app.current_stage_status === 'DISCARDED_IN_STAGE'
-																			? 'bg-red-100 text-red-700'
-																			: app.current_stage_status === 'COMPLETED'
-																			? 'bg-green-100 text-green-700'
-																			: app.current_stage_status === 'PENDING'
-																			? 'bg-yellow-100 text-yellow-700'
-																			: 'bg-zinc-100 text-zinc-700'
-																	}`}
-																>
-																	{StageLabels[app.current_stage]} - {StageStatusLabels[app.current_stage_status]}
-																</span>
-															) : (
-																<span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
-																	{app.status || 'Sin estado'}
-																</span>
-															)}
-															{app.ai_score !== null && (
-																<span className="font-medium text-zinc-600">
-																	Score: <span className="font-semibold text-black">{app.ai_score}/100</span>
-																</span>
-															)}
-														</div>
-													</div>
-													<button
-														type="button"
-														onClick={() => setSelectedCandidate(candidate)}
-														className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
+						{paginatedApplications.length > 0 ? (
+							paginatedApplications.map(({ candidate, application }) => (
+								<li key={application.id} className="px-6 py-4 transition-colors hover:bg-zinc-50">
+									<div className="flex items-center justify-between gap-4">
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2.5">
+												<h3 className="text-base font-semibold text-zinc-900">{candidate.name}</h3>
+												<span className="text-sm text-zinc-400">·</span>
+												<span className="text-sm font-medium text-zinc-600">{application.job_title}</span>
+												{application.job_department && (
+													<>
+														<span className="text-xs text-zinc-400">·</span>
+														<span className="text-xs text-zinc-500">{application.job_department}</span>
+													</>
+												)}
+											</div>
+											<div className="mt-1.5 flex items-center gap-3 text-xs text-zinc-500">
+												<span>{candidate.email}</span>
+												{application.current_stage && application.current_stage_status ? (
+													<span
+														className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+															application.current_stage_status === 'DISCARDED_IN_STAGE'
+																? 'bg-red-100 text-red-700'
+																: application.current_stage_status === 'COMPLETED'
+																? 'bg-green-100 text-green-700'
+																: application.current_stage_status === 'PENDING'
+																? 'bg-yellow-100 text-yellow-700'
+																: 'bg-zinc-100 text-zinc-700'
+														}`}
 													>
-														Ver candidato
-													</button>
-												</div>
-											</li>
-										))
-									: []
-							)
+														{StageLabels[application.current_stage]} - {StageStatusLabels[application.current_stage_status]}
+													</span>
+												) : (
+													<span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+														{application.status || 'Sin estado'}
+													</span>
+												)}
+												{application.ai_score !== null && (
+													<span className="font-medium text-zinc-600">
+														Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
+													</span>
+												)}
+											</div>
+										</div>
+										<button
+											type="button"
+											onClick={() => setSelectedCandidate(candidate)}
+											className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
+										>
+											Ver candidato
+										</button>
+									</div>
+								</li>
+							))
 						) : (
 							<li className="px-6 py-12 text-center">
-								<p className="text-sm font-medium text-zinc-500">No hay candidatos registrados todavía</p>
-								<p className="mt-1 text-xs text-zinc-400">Los candidatos aparecerán aquí cuando se postulen desde la landing</p>
+								<p className="text-sm font-medium text-zinc-500">
+									{flattenedApplications.length === 0
+										? 'No hay candidatos registrados todavía'
+										: 'No se encontraron candidatos con los filtros aplicados'}
+								</p>
+								<p className="mt-1 text-xs text-zinc-400">
+									{flattenedApplications.length === 0
+										? 'Los candidatos aparecerán aquí cuando se postulen desde la landing'
+										: 'Intenta cambiar los filtros de búsqueda'}
+								</p>
 							</li>
 						)}
 					</ul>
+
+					{/* Paginación inferior */}
+					{totalPages > 1 && (
+						<div className="border-t border-zinc-200 px-6 py-3 bg-zinc-50">
+							<div className="flex items-center justify-between">
+								<div className="text-sm text-zinc-600">
+									Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredApplications.length)} de {filteredApplications.length} resultados
+								</div>
+								<div className="flex gap-2">
+									<button
+										type="button"
+										onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+										disabled={currentPage === 1}
+										className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+									>
+										Anterior
+									</button>
+									<button
+										type="button"
+										onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+										disabled={currentPage === totalPages}
+										className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+									>
+										Siguiente
+									</button>
+								</div>
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 
