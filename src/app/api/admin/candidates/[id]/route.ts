@@ -147,7 +147,8 @@ export async function GET(
 		final_rejection_reason: app.final_rejection_reason,
 		stage_history: historyMap.get(app.id) || [],
 		recruiter_notes: notesMap.get(app.id) || [],
-		email_logs: emailsMap.get(app.id) || []
+		email_logs: emailsMap.get(app.id) || [],
+		recruiter_rating: app.recruiter_rating
 	};
 });
 
