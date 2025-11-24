@@ -27,6 +27,18 @@ type RecruiterNote = {
 	updated_at: string;
 };
 
+type EmailLog = {
+	id: string;
+	application_id: string;
+	candidate_email: string;
+	template_key: string;
+	subject: string;
+	body: string;
+	sent_at: string;
+	error: string | null;
+	metadata: Record<string, any>;
+};
+
 type Application = {
 	id: string;
 	job_id: string;
@@ -48,6 +60,7 @@ type Application = {
 	final_rejection_reason?: RejectionReason | null;
 	stage_history?: StageHistory[];
 	recruiter_notes?: RecruiterNote[];
+	email_logs?: EmailLog[];
 };
 
 type Candidate = {
@@ -436,14 +449,16 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 				{activeTab === 'history' && (
 					<div className="space-y-3">
 						{(() => {
-							// Combinar historial de etapas y notas del reclutador
+							// Combinar historial de etapas, notas del reclutador y emails enviados
 							const stageHistory = mainApplication?.stage_history || [];
 							const notes = mainApplication?.recruiter_notes || [];
+							const emails = mainApplication?.email_logs || [];
 							
 							// Crear array combinado con tipo para diferenciar
 							const combinedHistory = [
 								...stageHistory.map(h => ({ type: 'stage' as const, data: h, date: h.changed_at })),
-								...notes.map(n => ({ type: 'note' as const, data: n, date: n.created_at }))
+								...notes.map(n => ({ type: 'note' as const, data: n, date: n.created_at })),
+								...emails.map(e => ({ type: 'email' as const, data: e, date: e.sent_at }))
 							];
 							
 							// Ordenar por fecha descendente (más reciente primero)
@@ -542,7 +557,7 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 										</div>
 									</div>
 								);
-							} else {
+							} else if (item.type === 'note') {
 								// Renderizar nota del reclutador
 								const note = item.data as RecruiterNote;
 								const noteDate = new Date(note.created_at);
@@ -584,7 +599,84 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 										</div>
 									</div>
 								);
+							} else if (item.type === 'email') {
+								// Renderizar email enviado
+								const email = item.data as EmailLog;
+								const emailDate = new Date(email.sent_at);
+								const dateStr = emailDate.toLocaleDateString('es-AR', {
+									day: 'numeric',
+									month: 'long',
+									year: 'numeric'
+								});
+								const timeStr = emailDate.toLocaleTimeString('es-AR', {
+									hour: '2-digit',
+									minute: '2-digit'
+								});
+								
+								return (
+									<div key={`email-${email.id}`} className="rounded-lg border-2 border-green-200 bg-green-50 p-4">
+										<div className="flex items-start gap-3">
+											<div className="flex-shrink-0 mt-0.5">
+												<div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+													<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+													</svg>
+												</div>
+											</div>
+											<div className="flex-1 space-y-2">
+												{/* Título y fecha en la misma línea */}
+												<div className="flex items-center justify-between gap-4">
+													<div className="flex items-center gap-2">
+														<span className="text-sm font-semibold text-green-900">Email Enviado</span>
+														{email.error && (
+															<span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700">
+																Error
+															</span>
+														)}
+													</div>
+													<div className="flex items-center gap-1.5 text-xs text-green-700">
+														<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+														</svg>
+														<span className="whitespace-nowrap">{dateStr} - {timeStr}</span>
+													</div>
+												</div>
+												
+												{/* Subject */}
+												<div className="mt-2">
+													<p className="text-xs font-medium text-green-800 mb-1">Asunto:</p>
+													<p className="text-sm text-green-900 font-semibold">{email.subject}</p>
+												</div>
+												
+												{/* Body preview */}
+												<div className="mt-2">
+													<p className="text-xs font-medium text-green-800 mb-1">Contenido:</p>
+													<p className="text-sm text-green-900 leading-relaxed whitespace-pre-wrap line-clamp-3">
+														{email.body}
+													</p>
+												</div>
+												
+												{/* Error message if any */}
+												{email.error && (
+													<div className="mt-2 p-2 rounded bg-red-100 border border-red-200">
+														<p className="text-xs font-medium text-red-800 mb-1">Error:</p>
+														<p className="text-xs text-red-700">{email.error}</p>
+													</div>
+												)}
+												
+												{/* Template info */}
+												<div className="mt-2 flex items-center gap-2 text-xs text-green-700">
+													<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+													</svg>
+													<span>Template: {email.template_key}</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								);
 							}
+							return null;
 						});
 						})()}
 					</div>

@@ -44,6 +44,7 @@ export async function GET(
 	const applicationIds = (applications || []).map((app: any) => app.id);
 	let stageHistory: any[] = [];
 	let recruiterNotes: any[] = [];
+	let emailLogs: any[] = [];
 	
 	if (applicationIds.length > 0) {
 		const { data: historyData, error: historyError } = await supabase
@@ -62,12 +63,24 @@ export async function GET(
 			.from('recruiter_notes')
 			.select('*')
 			.in('application_id', applicationIds)
-			.order('created_at', { ascending: false });
+			.order('created_at', { ascending: false});
 		
 		if (notesError) {
 			console.error('Error fetching recruiter_notes:', notesError);
 		}
 		recruiterNotes = notesData || [];
+
+		// Obtener emails enviados
+		const { data: emailData, error: emailError } = await supabase
+			.from('email_logs')
+			.select('*')
+			.in('application_id', applicationIds)
+			.order('sent_at', { ascending: false });
+		
+		if (emailError) {
+			console.error('Error fetching email_logs:', emailError);
+		}
+		emailLogs = emailData || [];
 	}
 
 		// Obtener los jobs
@@ -102,6 +115,15 @@ export async function GET(
 		notesMap.get(appId)!.push(note);
 	}
 
+	const emailsMap = new Map<string, any[]>();
+	for (const email of emailLogs) {
+		const appId = email.application_id;
+		if (!emailsMap.has(appId)) {
+			emailsMap.set(appId, []);
+		}
+		emailsMap.get(appId)!.push(email);
+	}
+
 	const applicationsWithJobs = (applications || []).map((app: any) => {
 		const job = jobsMap.get(app.job_id);
 		return {
@@ -121,12 +143,13 @@ export async function GET(
 			current_stage: app.current_stage,
 			current_stage_status: app.current_stage_status,
 			offer_status: app.offer_status,
-			final_outcome: app.final_outcome,
-			final_rejection_reason: app.final_rejection_reason,
-			stage_history: historyMap.get(app.id) || [],
-			recruiter_notes: notesMap.get(app.id) || []
-		};
-	});
+		final_outcome: app.final_outcome,
+		final_rejection_reason: app.final_rejection_reason,
+		stage_history: historyMap.get(app.id) || [],
+		recruiter_notes: notesMap.get(app.id) || [],
+		email_logs: emailsMap.get(app.id) || []
+	};
+});
 
 		// Agrupar por job_id y mantener solo la más reciente
 		const applicationsByJob = new Map<string, typeof applicationsWithJobs[0]>();
