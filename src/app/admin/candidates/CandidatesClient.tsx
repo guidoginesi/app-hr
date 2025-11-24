@@ -6,6 +6,17 @@ import { CandidateDetailModal } from './CandidateDetailModal';
 import { AddCandidateModal } from './AddCandidateModal';
 import { Stage, StageStatus, StageLabels, StageStatusLabels } from '@/types/funnel';
 
+type StageHistory = {
+	id: string;
+	application_id: string;
+	from_stage: Stage | null;
+	to_stage: Stage;
+	status: StageStatus;
+	changed_by_user_id: string | null;
+	changed_at: string;
+	notes: string | null;
+};
+
 type Application = {
 	id: string;
 	job_id: string;
@@ -22,6 +33,7 @@ type Application = {
 	ai_match_highlights?: string[] | null;
 	current_stage?: Stage;
 	current_stage_status?: StageStatus;
+	stage_history?: StageHistory[];
 };
 
 type Candidate = {
@@ -47,6 +59,55 @@ type CandidatesClientProps = {
 };
 
 const ITEMS_PER_PAGE = 25;
+
+// Función para calcular el tiempo transcurrido de forma legible
+function getTimeAgo(dateString: string): string {
+	const date = new Date(dateString);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+	const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+	const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+	if (diffDays > 30) {
+		const months = Math.floor(diffDays / 30);
+		return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+	} else if (diffDays > 0) {
+		return `${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
+	} else if (diffHours > 0) {
+		return `${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+	} else if (diffMinutes > 0) {
+		return `${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
+	} else {
+		return 'recién';
+	}
+}
+
+// Función para obtener el tiempo en la etapa actual
+function getTimeInCurrentStage(application: Application): string {
+	if (!application.current_stage || !application.stage_history || application.stage_history.length === 0) {
+		// Si no hay historial, usar created_at como referencia
+		return getTimeAgo(application.created_at);
+	}
+
+	// El historial está ordenado DESC (más reciente primero)
+	// Buscar la ÚLTIMA entrada (más antigua) donde llegó a la etapa actual
+	// Esto nos da cuándo entró por primera vez a esta etapa
+	let currentStageEntry = null;
+	for (let i = application.stage_history.length - 1; i >= 0; i--) {
+		if (application.stage_history[i].to_stage === application.current_stage) {
+			currentStageEntry = application.stage_history[i];
+			break;
+		}
+	}
+
+	if (currentStageEntry) {
+		return getTimeAgo(currentStageEntry.changed_at);
+	}
+
+	// Si no se encuentra, usar created_at
+	return getTimeAgo(application.created_at);
+}
 
 export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 	const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -234,8 +295,33 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 													</>
 												)}
 											</div>
-											<div className="mt-1.5 flex items-center gap-3 text-xs text-zinc-500">
+											<div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
 												<span>{candidate.email}</span>
+												<span className="text-zinc-300">·</span>
+												
+												{/* Tiempo desde que aplicó */}
+												<span className="inline-flex items-center gap-1">
+													<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+													</svg>
+													Aplicó hace {getTimeAgo(application.created_at)}
+												</span>
+												
+												{/* Tiempo en etapa actual */}
+												{application.current_stage && (
+													<>
+														<span className="text-zinc-300">·</span>
+														<span className="inline-flex items-center gap-1">
+															<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+															</svg>
+															En etapa {getTimeInCurrentStage(application)}
+														</span>
+													</>
+												)}
+											</div>
+											
+											<div className="mt-2 flex items-center gap-2">
 												{application.current_stage && application.current_stage_status ? (
 													<span
 														className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${

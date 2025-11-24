@@ -40,21 +40,35 @@ export async function GET(
 			.eq('candidate_id', candidateId)
 			.order('created_at', { ascending: false });
 
-		// Obtener el historial de etapas para cada aplicación
-		const applicationIds = (applications || []).map((app: any) => app.id);
-		let stageHistory: any[] = [];
-		if (applicationIds.length > 0) {
-			const { data: historyData, error: historyError } = await supabase
-				.from('stage_history')
-				.select('*')
-				.in('application_id', applicationIds)
-				.order('changed_at', { ascending: false });
-			
-			if (historyError) {
-				console.error('Error fetching stage_history:', historyError);
-			}
-			stageHistory = historyData || [];
+	// Obtener el historial de etapas para cada aplicación
+	const applicationIds = (applications || []).map((app: any) => app.id);
+	let stageHistory: any[] = [];
+	let recruiterNotes: any[] = [];
+	
+	if (applicationIds.length > 0) {
+		const { data: historyData, error: historyError } = await supabase
+			.from('stage_history')
+			.select('*')
+			.in('application_id', applicationIds)
+			.order('changed_at', { ascending: false });
+		
+		if (historyError) {
+			console.error('Error fetching stage_history:', historyError);
 		}
+		stageHistory = historyData || [];
+
+		// Obtener notas del reclutador
+		const { data: notesData, error: notesError } = await supabase
+			.from('recruiter_notes')
+			.select('*')
+			.in('application_id', applicationIds)
+			.order('created_at', { ascending: false });
+		
+		if (notesError) {
+			console.error('Error fetching recruiter_notes:', notesError);
+		}
+		recruiterNotes = notesData || [];
+	}
 
 		// Obtener los jobs
 		const jobIds = [...new Set((applications || []).map((app: any) => app.job_id))];
@@ -69,40 +83,50 @@ export async function GET(
 
 		const jobsMap = new Map(jobs.map((job: any) => [job.id, job]));
 
-		// Mapear aplicaciones con información de jobs y historial
-		const historyMap = new Map<string, any[]>();
-		for (const history of stageHistory) {
-			const appId = history.application_id;
-			if (!historyMap.has(appId)) {
-				historyMap.set(appId, []);
-			}
-			historyMap.get(appId)!.push(history);
+	// Mapear aplicaciones con información de jobs, historial y notas
+	const historyMap = new Map<string, any[]>();
+	for (const history of stageHistory) {
+		const appId = history.application_id;
+		if (!historyMap.has(appId)) {
+			historyMap.set(appId, []);
 		}
+		historyMap.get(appId)!.push(history);
+	}
 
-		const applicationsWithJobs = (applications || []).map((app: any) => {
-			const job = jobsMap.get(app.job_id);
-			return {
-				id: app.id,
-				job_id: app.job_id,
-				job_title: job?.title || 'Búsqueda eliminada',
-				job_department: job?.department || null,
-				status: app.status,
-				ai_score: app.ai_score,
-				resume_url: app.resume_url,
-				created_at: app.created_at,
-				salary_expectation: app.salary_expectation,
-				english_level: app.english_level,
-				ai_extracted: app.ai_extracted,
-				ai_reasons: app.ai_reasons,
-				ai_match_highlights: app.ai_match_highlights,
-				current_stage: app.current_stage,
-				current_stage_status: app.current_stage_status,
-				offer_status: app.offer_status,
-				final_outcome: app.final_outcome,
-				final_rejection_reason: app.final_rejection_reason,
-				stage_history: historyMap.get(app.id) || []
-			};
-		});
+	const notesMap = new Map<string, any[]>();
+	for (const note of recruiterNotes) {
+		const appId = note.application_id;
+		if (!notesMap.has(appId)) {
+			notesMap.set(appId, []);
+		}
+		notesMap.get(appId)!.push(note);
+	}
+
+	const applicationsWithJobs = (applications || []).map((app: any) => {
+		const job = jobsMap.get(app.job_id);
+		return {
+			id: app.id,
+			job_id: app.job_id,
+			job_title: job?.title || 'Búsqueda eliminada',
+			job_department: job?.department || null,
+			status: app.status,
+			ai_score: app.ai_score,
+			resume_url: app.resume_url,
+			created_at: app.created_at,
+			salary_expectation: app.salary_expectation,
+			english_level: app.english_level,
+			ai_extracted: app.ai_extracted,
+			ai_reasons: app.ai_reasons,
+			ai_match_highlights: app.ai_match_highlights,
+			current_stage: app.current_stage,
+			current_stage_status: app.current_stage_status,
+			offer_status: app.offer_status,
+			final_outcome: app.final_outcome,
+			final_rejection_reason: app.final_rejection_reason,
+			stage_history: historyMap.get(app.id) || [],
+			recruiter_notes: notesMap.get(app.id) || []
+		};
+	});
 
 		// Agrupar por job_id y mantener solo la más reciente
 		const applicationsByJob = new Map<string, typeof applicationsWithJobs[0]>();

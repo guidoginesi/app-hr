@@ -18,6 +18,15 @@ type StageHistory = {
 	notes: string | null;
 };
 
+type RecruiterNote = {
+	id: string;
+	application_id: string;
+	user_id: string;
+	content: string;
+	created_at: string;
+	updated_at: string;
+};
+
 type Application = {
 	id: string;
 	job_id: string;
@@ -38,6 +47,7 @@ type Application = {
 	final_outcome?: FinalOutcome | null;
 	final_rejection_reason?: RejectionReason | null;
 	stage_history?: StageHistory[];
+	recruiter_notes?: RecruiterNote[];
 };
 
 type Candidate = {
@@ -58,6 +68,24 @@ type CandidateDetailModalProps = {
 
 type Tab = 'ai' | 'history' | 'cv' | 'notes';
 
+// Función para calcular duración en una etapa
+function getStageDuration(entryDate: string, nextEntryDate?: string): string {
+	const start = new Date(entryDate);
+	const end = nextEntryDate ? new Date(nextEntryDate) : new Date();
+	const diffMs = end.getTime() - start.getTime();
+	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+	const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+	if (diffDays > 0) {
+		return `${diffDays} ${diffDays === 1 ? 'día' : 'días'}${diffHours > 0 ? ` ${diffHours}h` : ''}`;
+	} else if (diffHours > 0) {
+		return `${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+	} else {
+		const diffMinutes = Math.floor(diffMs / (1000 * 60));
+		return `${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
+	}
+}
+
 export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModalProps) {
 	const router = useRouter();
 	const [refreshKey, setRefreshKey] = useState(0);
@@ -65,6 +93,8 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 	const [loading, setLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState<Tab>('history');
 	const [notes, setNotes] = useState('');
+	const [savingNotes, setSavingNotes] = useState(false);
+	const [notesSaved, setNotesSaved] = useState(false);
 
 	// Cargar datos actualizados cuando se abre el modal
 	useEffect(() => {
@@ -78,6 +108,7 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 					console.log('Aplicaciones:', updatedCandidate.applications);
 					if (updatedCandidate.applications.length > 0) {
 						console.log('Historial:', updatedCandidate.applications[0].stage_history);
+						// No pre-cargar notas en el textarea, solo mostrarlas en el historial
 					}
 				}
 			} catch (error) {
@@ -106,6 +137,7 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 			if (res.ok) {
 				const updatedCandidate = await res.json();
 				setCurrentCandidate(updatedCandidate);
+				// No actualizar el textarea con las notas, mantenerlo limpio para nuevas entradas
 			}
 		} catch (error) {
 			console.error('Error reloading candidate:', error);
@@ -116,14 +148,40 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 	}
 
 	async function handleSaveNotes() {
-		if (!mainApplication) return;
+		if (!mainApplication || !notes.trim()) return;
+		
+		setSavingNotes(true);
+		setNotesSaved(false);
 		
 		try {
-			// TODO: Implementar endpoint para guardar notas del reclutador
-			// Por ahora solo mostramos un mensaje
-			alert('Funcionalidad de notas próximamente disponible');
+			const res = await fetch(`/api/admin/applications/${mainApplication.id}/notes`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ content: notes.trim() })
+			});
+
+			if (!res.ok) {
+				const error = await res.json();
+				throw new Error(error.error || 'Error al guardar las notas');
+			}
+
+			setNotesSaved(true);
+			setTimeout(() => setNotesSaved(false), 3000);
+			
+			// Limpiar el textarea después de guardar
+			setNotes('');
+			
+			// Recargar datos del candidato para actualizar el historial
+			const candidateRes = await fetch(`/api/admin/candidates/${candidate.id}`);
+			if (candidateRes.ok) {
+				const updatedCandidate = await candidateRes.json();
+				setCurrentCandidate(updatedCandidate);
+			}
 		} catch (error) {
 			console.error('Error saving notes:', error);
+			alert('Error al guardar las notas. Por favor intenta nuevamente.');
+		} finally {
+			setSavingNotes(false);
 		}
 	}
 
@@ -228,13 +286,18 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 									<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 									</svg>
-									<span className="text-sm text-zinc-700">
-										{new Date(mainApplication.created_at).toLocaleDateString('es-AR', {
-											day: 'numeric',
-											month: 'long',
-											year: 'numeric'
-										})}
-									</span>
+									<div className="flex flex-col">
+										<span className="text-sm text-zinc-700">
+											{new Date(mainApplication.created_at).toLocaleDateString('es-AR', {
+												day: 'numeric',
+												month: 'long',
+												year: 'numeric'
+											})}
+										</span>
+										<span className="text-xs text-zinc-500">
+											Hace {getStageDuration(mainApplication.created_at)}
+										</span>
+									</div>
 								</div>
 								{mainApplication.salary_expectation && (
 									<div className="flex items-center gap-2">
@@ -311,7 +374,8 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 							current_stage_status: mainApplication.current_stage_status!,
 							offer_status: mainApplication.offer_status || null,
 							final_outcome: mainApplication.final_outcome || null,
-							final_rejection_reason: mainApplication.final_rejection_reason || null
+							final_rejection_reason: mainApplication.final_rejection_reason || null,
+							stage_history: mainApplication.stage_history || []
 						}}
 						onUpdate={handlePipelineUpdate}
 					/>
@@ -370,65 +434,158 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 			<div className="min-h-[300px]">
 				{activeTab === 'history' && (
 					<div className="space-y-3">
-						{mainApplication?.stage_history && mainApplication.stage_history.length > 0 ? (
-							mainApplication.stage_history.map((entry) => {
-								const changedDate = new Date(entry.changed_at);
-								const dateStr = changedDate.toLocaleDateString('es-AR', {
+						{(() => {
+							// Combinar historial de etapas y notas del reclutador
+							const stageHistory = mainApplication?.stage_history || [];
+							const notes = mainApplication?.recruiter_notes || [];
+							
+							// Crear array combinado con tipo para diferenciar
+							const combinedHistory = [
+								...stageHistory.map(h => ({ type: 'stage' as const, data: h, date: h.changed_at })),
+								...notes.map(n => ({ type: 'note' as const, data: n, date: n.created_at }))
+							];
+							
+							// Ordenar por fecha descendente (más reciente primero)
+							combinedHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+							
+							if (combinedHistory.length === 0) {
+								return (
+									<div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
+										<p className="text-sm text-zinc-500">No hay historial disponible</p>
+									</div>
+								);
+							}
+							
+							return combinedHistory.map((item, index) => {
+								if (item.type === 'stage') {
+									const entry = item.data as StageHistory;
+									const changedDate = new Date(entry.changed_at);
+									const dateStr = changedDate.toLocaleDateString('es-AR', {
+										day: 'numeric',
+										month: 'long',
+										year: 'numeric'
+									});
+									const timeStr = changedDate.toLocaleTimeString('es-AR', {
+										hour: '2-digit',
+										minute: '2-digit'
+									});
+									
+									// Calcular duración en la etapa (desde esta entrada hasta la siguiente del mismo tipo)
+									const nextStageEntry = stageHistory.find((h, i) => 
+										new Date(h.changed_at) < new Date(entry.changed_at) && 
+										h.from_stage === entry.to_stage
+									);
+									const duration = nextStageEntry 
+										? getStageDuration(entry.changed_at, nextStageEntry.changed_at)
+										: getStageDuration(entry.changed_at); // Etapa actual
+									
+									return (
+										<div key={`stage-${entry.id}`} className="rounded-lg border border-zinc-200 bg-white p-4">
+										<div className="flex items-start justify-between gap-4">
+											<div className="flex-1 space-y-2">
+												{/* Título y fecha en la misma línea */}
+												<div className="flex items-center justify-between gap-4">
+													<div className="flex items-center gap-2">
+														{entry.from_stage && (
+															<>
+																<span className="text-sm text-zinc-500">
+																	{StageLabels[entry.from_stage]}
+																</span>
+																<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																</svg>
+															</>
+														)}
+														<span className="text-sm font-semibold text-zinc-900">
+															{StageLabels[entry.to_stage]}
+														</span>
+														<span className="text-xs text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-100">
+															{StageStatusLabels[entry.status]}
+														</span>
+													</div>
+													
+													{/* Fecha y duración alineadas a la derecha */}
+													<div className="flex items-center gap-3 text-xs text-zinc-500">
+														<div className="flex items-center gap-1.5">
+															<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+															</svg>
+															<span className="whitespace-nowrap">{dateStr} - {timeStr}</span>
+														</div>
+														<span className="text-zinc-300">·</span>
+														<div className="flex items-center gap-1.5">
+															<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+															</svg>
+															<span className="font-medium text-zinc-600 whitespace-nowrap">
+																{nextStageEntry ? `Duración: ${duration}` : `Lleva: ${duration}`}
+															</span>
+														</div>
+													</div>
+												</div>
+												
+												{entry.notes && entry.notes.trim() !== '' && (
+													<div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+														<div className="flex items-start gap-2">
+															<svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+															</svg>
+															<div className="flex-1">
+																<p className="text-xs font-semibold text-amber-900 mb-1">Notas:</p>
+																<p className="text-sm text-amber-800 leading-relaxed">{entry.notes}</p>
+															</div>
+														</div>
+													</div>
+												)}
+											</div>
+										</div>
+									</div>
+								);
+							} else {
+								// Renderizar nota del reclutador
+								const note = item.data as RecruiterNote;
+								const noteDate = new Date(note.created_at);
+								const dateStr = noteDate.toLocaleDateString('es-AR', {
 									day: 'numeric',
 									month: 'long',
 									year: 'numeric'
 								});
-								const timeStr = changedDate.toLocaleTimeString('es-AR', {
+								const timeStr = noteDate.toLocaleTimeString('es-AR', {
 									hour: '2-digit',
 									minute: '2-digit'
 								});
 								
 								return (
-									<div key={entry.id} className="rounded-lg border border-zinc-200 bg-white p-4">
-										<div className="flex items-center justify-between gap-4">
-											<div className="flex-1 flex items-center gap-3">
-												<div className="flex items-center gap-2">
-													{entry.from_stage && (
-														<>
-															<span className="text-sm text-zinc-500">
-																{StageLabels[entry.from_stage]}
-															</span>
-															<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-															</svg>
-														</>
-													)}
-													<span className="text-sm font-semibold text-zinc-900">
-														{StageLabels[entry.to_stage]}
-													</span>
-													<span className="text-xs text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-100">
-														{StageStatusLabels[entry.status]}
-													</span>
-												</div>
-												<div className="flex items-center gap-2 text-xs text-zinc-500">
-													<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+									<div key={`note-${note.id}`} className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+										<div className="flex items-start gap-3">
+											<div className="flex-shrink-0 mt-0.5">
+												<div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+													<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
 													</svg>
-													<span className="font-medium">{dateStr}</span>
-													<span>a las</span>
-													<span className="font-medium">{timeStr}</span>
 												</div>
 											</div>
-											{entry.notes && (
-												<div className="flex-shrink-0 text-right">
-													<p className="text-xs font-medium text-zinc-500 mb-0.5">Notas:</p>
-													<p className="text-sm text-zinc-700 max-w-xs">{entry.notes}</p>
+											<div className="flex-1 space-y-2">
+												{/* Título y fecha en la misma línea */}
+												<div className="flex items-center justify-between gap-4">
+													<span className="text-sm font-semibold text-blue-900">Nota del Reclutador</span>
+													<div className="flex items-center gap-1.5 text-xs text-blue-700">
+														<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+														</svg>
+														<span className="whitespace-nowrap">{dateStr} - {timeStr}</span>
+													</div>
 												</div>
-											)}
+												<div className="mt-1 text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">
+													{note.content}
+												</div>
+											</div>
 										</div>
 									</div>
 								);
-							})
-						) : (
-							<div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
-								<p className="text-sm text-zinc-500">No hay historial disponible</p>
-							</div>
-						)}
+							}
+						});
+						})()}
 					</div>
 				)}
 
@@ -459,25 +616,49 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 				{activeTab === 'notes' && (
 					<div className="space-y-4">
 						<div className="rounded-lg border border-zinc-200 bg-white p-4">
-							<h4 className="text-sm font-semibold text-zinc-900 mb-3">Notas del Reclutador</h4>
+							<h4 className="text-sm font-semibold text-zinc-900 mb-3">Agregar Nueva Nota</h4>
+							<p className="text-xs text-zinc-500 mb-3">
+								Agrega una nota interna sobre este candidato. Cada nota se guardará en el historial con fecha y hora. Las notas son privadas y solo visibles para el equipo de reclutamiento.
+							</p>
 							<textarea
 								value={notes}
 								onChange={(e) => setNotes(e.target.value)}
 								rows={8}
-								className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-								placeholder="Escribe tus notas sobre este candidato..."
+								disabled={savingNotes}
+								className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+								placeholder="Escribe tus notas sobre este candidato...&#10;&#10;Por ejemplo:&#10;- Impresiones de la entrevista&#10;- Skills destacadas&#10;- Observaciones sobre fit cultural&#10;- Próximos pasos"
 							/>
-							<div className="mt-4">
+							<div className="mt-4 flex items-center gap-3">
 								<button
 									type="button"
 									onClick={handleSaveNotes}
-									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+									disabled={savingNotes || !notes.trim()}
+									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
 								>
-									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-									</svg>
-									Guardar Notas
+									{savingNotes ? (
+										<>
+											<svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+											</svg>
+											Guardando...
+										</>
+									) : (
+										<>
+											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+											</svg>
+											Agregar Nota
+										</>
+									)}
 								</button>
+								{notesSaved && (
+									<span className="inline-flex items-center gap-1.5 text-sm text-green-600">
+										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+										</svg>
+										Nota agregada al historial
+									</span>
+								)}
 							</div>
 						</div>
 					</div>

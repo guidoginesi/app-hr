@@ -20,6 +20,7 @@ type Application = {
 	ai_extracted?: any;
 	ai_reasons?: string[] | null;
 	ai_match_highlights?: string[] | null;
+	stage_history?: any[];
 };
 
 type Candidate = {
@@ -60,6 +61,28 @@ export default async function AdminCandidatesPage() {
 		.select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason')
 		.order('created_at', { ascending: false });
 
+	// Obtener el historial de etapas para todas las aplicaciones
+	const applicationIds = (applications || []).map((app: any) => app.id);
+	let stageHistoryMap = new Map<string, any[]>();
+	
+	if (applicationIds.length > 0) {
+		const { data: stageHistory } = await supabase
+			.from('stage_history')
+			.select('*')
+			.in('application_id', applicationIds)
+			.order('changed_at', { ascending: false });
+		
+		// Agrupar por application_id
+		if (stageHistory) {
+			stageHistory.forEach((history: any) => {
+				if (!stageHistoryMap.has(history.application_id)) {
+					stageHistoryMap.set(history.application_id, []);
+				}
+				stageHistoryMap.get(history.application_id)!.push(history);
+			});
+		}
+	}
+
 	// Obtener todos los jobs para hacer el join
 	const jobIds = [...new Set((applications || []).map((app: any) => app.job_id))];
 	let jobs: any[] = [];
@@ -81,6 +104,7 @@ export default async function AdminCandidatesPage() {
 			.filter((app: any) => app.candidate_id === candidate.id)
 			.map((app: any) => {
 				const job = jobsMap.get(app.job_id);
+				const stageHistory = stageHistoryMap.get(app.id) || [];
 				return {
 					id: app.id,
 					job_id: app.job_id,
@@ -99,7 +123,8 @@ export default async function AdminCandidatesPage() {
 					current_stage_status: app.current_stage_status,
 					offer_status: app.offer_status,
 					final_outcome: app.final_outcome,
-					final_rejection_reason: app.final_rejection_reason
+					final_rejection_reason: app.final_rejection_reason,
+					stage_history: stageHistory
 				};
 			});
 

@@ -21,6 +21,17 @@ import {
 	getValidRejectionReasons
 } from '@/lib/funnel';
 
+type StageHistory = {
+	id: string;
+	application_id: string;
+	from_stage: Stage | null;
+	to_stage: Stage;
+	status: StageStatus;
+	changed_by_user_id: string | null;
+	changed_at: string;
+	notes: string | null;
+};
+
 type ApplicationWithPipeline = {
 	id: string;
 	current_stage: Stage;
@@ -28,12 +39,58 @@ type ApplicationWithPipeline = {
 	offer_status: OfferStatus | null;
 	final_outcome: FinalOutcome | null;
 	final_rejection_reason: RejectionReason | null;
+	stage_history?: StageHistory[];
 };
 
 type PipelineViewProps = {
 	application: ApplicationWithPipeline;
 	onUpdate: () => void;
 };
+
+// Función para calcular tiempo en una etapa
+function getTimeInStage(stageHistory: StageHistory[], stage: Stage): string | null {
+	if (!stageHistory || stageHistory.length === 0) return null;
+	
+	// El historial está ordenado DESC (más reciente primero, index 0)
+	// Convertir a array ordenado ASC para facilitar el procesamiento
+	const historyAsc = [...stageHistory].reverse();
+	
+	// Buscar cuando entró a esta etapa
+	const entryIndex = historyAsc.findIndex(h => h.to_stage === stage);
+	if (entryIndex === -1) return null;
+	
+	const entry = historyAsc[entryIndex];
+	const entryDate = new Date(entry.changed_at);
+	
+	// Buscar cuando salió de esta etapa
+	// La salida es la siguiente entrada en el historial (donde from_stage === stage)
+	let exitDate = new Date(); // Por defecto: ahora (aún está en esta etapa)
+	
+	for (let i = entryIndex + 1; i < historyAsc.length; i++) {
+		if (historyAsc[i].from_stage === stage) {
+			exitDate = new Date(historyAsc[i].changed_at);
+			break;
+		}
+	}
+	
+	// Calcular duración
+	const diffMs = exitDate.getTime() - entryDate.getTime();
+	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+	const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+	
+	if (diffDays > 30) {
+		const months = Math.floor(diffDays / 30);
+		return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+	} else if (diffDays > 0) {
+		return diffHours > 0 ? `${diffDays}d ${diffHours}h` : `${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
+	} else if (diffHours > 0) {
+		return `${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+	} else {
+		const diffMinutes = Math.floor(diffMs / (1000 * 60));
+		if (diffMinutes < 1) return '< 1 min';
+		return `${diffMinutes} ${diffMinutes === 1 ? 'min' : 'mins'}`;
+	}
+}
 
 export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 	const [isEditing, setIsEditing] = useState(false);
@@ -144,6 +201,7 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 						const isCurrent = index === currentStageIndex;
 						const isFuture = index > currentStageIndex;
 						const isFutureAndDiscarded = isFuture && isDiscarded;
+						const timeInStage = application.stage_history ? getTimeInStage(application.stage_history, stage) : null;
 
 						return (
 							<div key={stage} className="flex items-center">
@@ -173,6 +231,18 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 											</p>
 										)}
 									</div>
+									
+									{/* Tiempo en la etapa */}
+									{(isPast || isCurrent) && timeInStage && (
+										<div className="mt-1.5 flex items-center gap-1">
+											<svg className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+											</svg>
+											<span className="text-[10px] text-zinc-500 font-medium">
+												{timeInStage}
+											</span>
+										</div>
+									)}
 								</div>
 								{/* Flecha conectora */}
 								{index < STAGE_ORDER.length - 1 && (
