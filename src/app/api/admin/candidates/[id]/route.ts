@@ -32,13 +32,13 @@ export async function GET(
 		}
 
 		// Obtener todas las aplicaciones del candidato
-		const { data: applications } = await supabase
-			.from('applications')
-			.select(
-				'id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason'
-			)
-			.eq('candidate_id', candidateId)
-			.order('created_at', { ascending: false });
+	const { data: applications } = await supabase
+		.from('applications')
+		.select(
+			'id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason,recruiter_rating'
+		)
+		.eq('candidate_id', candidateId)
+		.order('created_at', { ascending: false });
 
 	// Obtener el historial de etapas para cada aplicación
 	const applicationIds = (applications || []).map((app: any) => app.id);

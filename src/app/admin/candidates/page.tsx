@@ -21,6 +21,7 @@ type Application = {
 	ai_reasons?: string[] | null;
 	ai_match_highlights?: string[] | null;
 	stage_history?: any[];
+	recruiter_rating?: number | null;
 };
 
 type Candidate = {
@@ -58,7 +59,7 @@ export default async function AdminCandidatesPage() {
 	// Obtener todas las aplicaciones con información de IA y funnel
 	const { data: applications } = await supabase
 		.from('applications')
-		.select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason')
+		.select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason,recruiter_rating')
 		.order('created_at', { ascending: false });
 
 	// Obtener el historial de etapas para todas las aplicaciones
@@ -124,7 +125,8 @@ export default async function AdminCandidatesPage() {
 					offer_status: app.offer_status,
 					final_outcome: app.final_outcome,
 					final_rejection_reason: app.final_rejection_reason,
-					stage_history: stageHistory
+					stage_history: stageHistory,
+					recruiter_rating: app.recruiter_rating
 				};
 			});
 

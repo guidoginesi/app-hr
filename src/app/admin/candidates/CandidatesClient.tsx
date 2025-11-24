@@ -34,6 +34,7 @@ type Application = {
 	current_stage?: Stage;
 	current_stage_status?: StageStatus;
 	stage_history?: StageHistory[];
+	recruiter_rating?: number | null;
 };
 
 type Candidate = {
