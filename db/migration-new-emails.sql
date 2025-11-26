@@ -16,7 +16,7 @@ INSERT INTO public.email_templates (template_key, subject, body, description, va
 (
   'application_confirmation',
   '¡Recibimos tu postulación en POW!',
-  E'Hola {{candidateName}},\n\n¡Gracias por postularte a la posición de {{jobTitle}} en POW!\n\nHemos recibido tu CV y estamos revisando tu perfil. Nuestro equipo de Recursos Humanos evaluará tu postulación y nos pondremos en contacto contigo en caso de que tu perfil avance en el proceso de selección.\n\nTe mantendremos informado sobre el estado de tu aplicación.\n\nApreciamos tu interés en formar parte de nuestro equipo.\n\nSaludos cordiales,\nEquipo de Recursos Humanos\nPOW',
+  E'<p>Hola {{candidateName}},</p>\n\n<p>¡Gracias por postularte a la posición de <strong>{{jobTitle}}</strong> en POW!</p>\n\n<p>Hemos recibido tu CV y estamos revisando tu perfil. Nuestro equipo de Recursos Humanos evaluará tu postulación y nos pondremos en contacto contigo en caso de que tu perfil avance en el proceso de selección.</p>\n\n<p>Te mantendremos informado sobre el estado de tu aplicación.</p>\n\n<p>Apreciamos tu interés en formar parte de nuestro equipo.</p>\n\n<p>Saludos cordiales,<br>Equipo de Recursos Humanos<br>POW</p>',
   'Email de confirmación enviado automáticamente cuando un candidato aplica a una posición',
   '["candidateName", "jobTitle"]'::jsonb,
   true
@@ -29,6 +29,11 @@ INSERT INTO public.email_templates (template_key, subject, body, description, va
   '["candidateName", "jobTitle", "salaryExpectation"]'::jsonb,
   true
 )
-ON CONFLICT (template_key) DO NOTHING;
+ON CONFLICT (template_key) DO UPDATE SET
+  subject = EXCLUDED.subject,
+  body = EXCLUDED.body,
+  description = EXCLUDED.description,
+  variables = EXCLUDED.variables,
+  is_active = EXCLUDED.is_active;
 
 
