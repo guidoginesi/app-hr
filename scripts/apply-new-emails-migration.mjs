@@ -51,3 +51,5 @@ SELECT template_key, is_active FROM email_templates ORDER BY template_key;
 
 applyNewEmailsMigration();
 
+
+

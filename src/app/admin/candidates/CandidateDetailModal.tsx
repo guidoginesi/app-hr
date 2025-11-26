@@ -87,6 +87,7 @@ type Candidate = {
 
 type CandidateDetailModalProps = {
 	candidate: Candidate;
+	applicationId?: string | null;
 	onClose: () => void;
 };
 
@@ -111,7 +112,7 @@ function getStageDuration(entryDate: string, nextEntryDate?: string): string {
 	}
 }
 
-export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModalProps) {
+export function CandidateDetailModal({ candidate, applicationId, onClose }: CandidateDetailModalProps) {
 	const router = useRouter();
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [currentCandidate, setCurrentCandidate] = useState(candidate);
@@ -146,7 +147,11 @@ export function CandidateDetailModal({ candidate, onClose }: CandidateDetailModa
 	}, [candidate.id]);
 
 	const displayCandidate = currentCandidate || candidate;
-	const mainApplication = displayCandidate.applications.length > 0 ? displayCandidate.applications[0] : null;
+	// Si se especificó un applicationId, buscar esa aplicación específica
+	// Si no, usar la primera aplicación (comportamiento por defecto)
+	const mainApplication = applicationId
+		? displayCandidate.applications.find(app => app.id === applicationId) || displayCandidate.applications[0] || null
+		: displayCandidate.applications.length > 0 ? displayCandidate.applications[0] : null;
 	
 	// Debug log
 	if (mainApplication) {

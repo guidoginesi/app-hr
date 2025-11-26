@@ -112,6 +112,7 @@ function getTimeInCurrentStage(application: Application): string {
 
 export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 	const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+	const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [stageFilter, setStageFilter] = useState<Stage | 'ALL' | 'DISCARDED'>('ALL');
@@ -385,7 +386,10 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 										</div>
 										<button
 											type="button"
-											onClick={() => setSelectedCandidate(candidate)}
+											onClick={() => {
+												setSelectedCandidate(candidate);
+												setSelectedApplicationId(application.id);
+											}}
 											className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
 										>
 											Ver candidato
@@ -444,7 +448,11 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 			{selectedCandidate && (
 				<CandidateDetailModal
 					candidate={selectedCandidate}
-					onClose={() => setSelectedCandidate(null)}
+					applicationId={selectedApplicationId}
+					onClose={() => {
+						setSelectedCandidate(null);
+						setSelectedApplicationId(null);
+					}}
 				/>
 			)}
 

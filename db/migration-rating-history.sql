@@ -18,3 +18,5 @@ comment on table public.rating_history is 'Historial de calificaciones del reclu
 comment on column public.rating_history.rating is 'Calificación de 1 a 5 estrellas';
 comment on column public.rating_history.note is 'Nota opcional del reclutador al calificar';
 
+
+

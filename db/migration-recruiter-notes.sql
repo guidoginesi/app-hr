@@ -22,3 +22,4 @@ create trigger update_recruiter_notes_updated_at
 -- Solo un admin puede tener múltiples notas por aplicación (histórico)
 -- Pero solo mostramos la más reciente como "nota actual"
 
+

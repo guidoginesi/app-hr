@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
 		// Flujo normal: CV_RECEIVED (completed) -> HR_REVIEW (pending)
 		// Usar timestamps secuenciales para reflejar la progresión real
 		const cvReceivedDate = new Date();
-		const hrReviewDate = new Date(cvReceivedDate.getTime() + 100); // 100ms después
+		const hrReviewDate = new Date(cvReceivedDate.getTime() + 1000); // 1 segundo después para evitar "0 minutos"
 		
 		await supabase.from('stage_history').insert([
 			{

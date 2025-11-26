@@ -6,3 +6,4 @@ add column if not exists recruiter_rating integer check (recruiter_rating >= 1 a
 
 comment on column public.applications.recruiter_rating is 'Calificación del reclutador de 1 a 5 estrellas';
 
+

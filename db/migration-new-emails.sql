@@ -31,3 +31,4 @@ INSERT INTO public.email_templates (template_key, subject, body, description, va
 )
 ON CONFLICT (template_key) DO NOTHING;
 
+
