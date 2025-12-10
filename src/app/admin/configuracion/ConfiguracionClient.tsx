@@ -19,7 +19,8 @@ const TEMPLATE_NAMES: Record<string, string> = {
 	'candidate_rejected': 'Email Candidato Descartado (General)',
 	'candidate_rejected_location': 'Email Candidato Descartado (Provincia OTRA)',
 	'candidate_rejected_salary': 'Email Candidato Descartado (Sueldo)',
-	'interview_coordination': 'Email Coordinación Entrevista'
+	'interview_coordination': 'Email Coordinación Entrevista HR',
+	'lead_interview_coordination': 'Email Coordinación Entrevista con Líder'
 };
 
 export function ConfiguracionClient() {
