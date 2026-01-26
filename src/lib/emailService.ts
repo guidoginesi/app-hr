@@ -241,7 +241,13 @@ export async function sendSimpleEmail(params: {
 		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 		const resend = getResend();
 		
-		const { error } = await resend.emails.send({
+		console.log('[sendSimpleEmail] Sending email:', {
+			from: fromEmail,
+			to: params.to,
+			subject: params.subject,
+		});
+		
+		const { data, error } = await resend.emails.send({
 			from: fromEmail,
 			to: params.to,
 			subject: params.subject,
@@ -249,13 +255,14 @@ export async function sendSimpleEmail(params: {
 		});
 
 		if (error) {
-			console.error('Error sending email with Resend:', error);
+			console.error('[sendSimpleEmail] Error sending email with Resend:', error);
 			return { success: false, error: error.message };
 		}
 
+		console.log('[sendSimpleEmail] Email sent successfully, Resend ID:', data?.id);
 		return { success: true };
 	} catch (error: any) {
-		console.error('Error in sendSimpleEmail:', error);
+		console.error('[sendSimpleEmail] Exception:', error);
 		return { success: false, error: error.message };
 	}
 }

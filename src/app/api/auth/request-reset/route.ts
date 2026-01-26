@@ -25,12 +25,17 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Check if user exists
-    const { data: user } = await supabase.auth.admin.listUsers();
-    const userExists = user?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase());
+    // Check if user exists - use getUserByEmail for accuracy (listUsers has pagination limits)
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    
+    console.log('[Password Reset] User lookup for:', email, {
+      found: !!userData?.user,
+      error: userError?.message || null
+    });
 
-    if (!userExists) {
+    if (!userData?.user) {
       // Don't reveal if user exists - always return success
+      console.log('[Password Reset] User not found, returning silent success');
       return NextResponse.json({ success: true });
     }
 
@@ -64,6 +69,9 @@ export async function POST(request: NextRequest) {
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
     // Send email via Resend
+    console.log('[Password Reset] Attempting to send email to:', email);
+    console.log('[Password Reset] RESEND_FROM_EMAIL:', process.env.RESEND_FROM_EMAIL || 'NOT SET (using fallback)');
+    
     const { success, error } = await sendSimpleEmail({
       to: email,
       subject: 'Restablecer tu contraseña - HR App',
