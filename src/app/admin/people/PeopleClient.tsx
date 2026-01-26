@@ -177,10 +177,16 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
     setIsFormModalOpen(true);
   };
 
-  // Get available managers (all active employees except the one being edited)
-  const availableManagers = employees.filter(
-    (emp) => emp.status === 'active' && (!editingEmployee || emp.id !== editingEmployee.id)
-  );
+  // Get available managers (active employees with seniority >= 3.1, except the one being edited)
+  const availableManagers = employees.filter((emp) => {
+    if (emp.status !== 'active') return false;
+    if (editingEmployee && emp.id === editingEmployee.id) return false;
+    
+    // Only include employees with seniority level >= 3.1
+    if (!emp.seniority_level) return false;
+    const seniorityNum = parseFloat(emp.seniority_level);
+    return !isNaN(seniorityNum) && seniorityNum >= 3.1;
+  });
 
   // Invite employee to portal
   const handleInvite = async (employeeId: string) => {
