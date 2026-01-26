@@ -15,7 +15,7 @@ export default async function OrganigramaPage() {
   const supabase = getSupabaseServer();
 
   // Fetch all active employees with their manager relationships
-  const { data: employees } = await supabase
+  const { data: rawEmployees } = await supabase
     .from('employees')
     .select(`
       id,
@@ -30,9 +30,25 @@ export default async function OrganigramaPage() {
     .eq('status', 'active')
     .order('last_name', { ascending: true });
 
+  // Transform data: Supabase returns arrays for joins, but we need single objects
+  const employees = (rawEmployees || []).map(emp => ({
+    id: emp.id as string,
+    first_name: emp.first_name as string,
+    last_name: emp.last_name as string,
+    job_title: emp.job_title as string | null,
+    photo_url: emp.photo_url as string | null,
+    manager_id: emp.manager_id as string | null,
+    department: Array.isArray(emp.department) 
+      ? (emp.department[0] as { id: string; name: string } | undefined) || null 
+      : emp.department as { id: string; name: string } | null,
+    legal_entity: Array.isArray(emp.legal_entity) 
+      ? (emp.legal_entity[0] as { id: string; name: string } | undefined) || null 
+      : emp.legal_entity as { id: string; name: string } | null,
+  }));
+
   return (
     <PeopleShell active="organigrama">
-      <OrgChart employees={employees || []} />
+      <OrgChart employees={employees} />
     </PeopleShell>
   );
 }
