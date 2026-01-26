@@ -761,9 +761,9 @@ export function TeamMemberProfileClient({
                     {recatData?.evaluation ? 'Completada' : 'Pendiente'}
                   </p>
                 </div>
-                <div className={`rounded-lg border p-4 ${recatData?.objectives?.evaluated === recatData?.objectives?.total && recatData?.objectives?.total > 0 ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                <div className={`rounded-lg border p-4 ${recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
                   <div className="flex items-center gap-2">
-                    {recatData?.objectives?.evaluated === recatData?.objectives?.total && recatData?.objectives?.total > 0 ? (
+                    {recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? (
                       <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
