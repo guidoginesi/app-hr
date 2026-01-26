@@ -281,7 +281,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
               <input
                 type="number"
                 value={billingForm.gate_percentage}
-                onChange={(e) => setBillingForm(prev => ({ ...prev, gate_percentage: e.target.value }))}
+                onChange={(e) => setBillingForm(prev => ({ ...prev, gate_percentage: Number(e.target.value) }))}
                 min={0}
                 max={100}
                 className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
@@ -292,7 +292,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
               <input
                 type="number"
                 value={billingForm.cap_percentage}
-                onChange={(e) => setBillingForm(prev => ({ ...prev, cap_percentage: e.target.value }))}
+                onChange={(e) => setBillingForm(prev => ({ ...prev, cap_percentage: Number(e.target.value) }))}
                 min={100}
                 max={200}
                 className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
