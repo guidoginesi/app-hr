@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateLocal } from '@/lib/dateUtils';
 import type { EmployeeStatus } from '@/types/employee';
 
 type EmployeeWithRelations = {
@@ -170,7 +171,7 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
                   <p className="text-xs text-zinc-500">Fecha de ingreso</p>
                   <p className="text-sm font-medium text-zinc-900">
                     {employee.hire_date
-                      ? new Date(employee.hire_date).toLocaleDateString('es-AR')
+                      ? formatDateLocal(employee.hire_date)
                       : '-'}
                   </p>
                 </div>
@@ -178,7 +179,7 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
                   <div>
                     <p className="text-xs text-zinc-500">Fecha de desvinculación</p>
                     <p className="text-sm font-medium text-zinc-900">
-                      {new Date(employee.termination_date).toLocaleDateString('es-AR')}
+                      {formatDateLocal(employee.termination_date)}
                     </p>
                   </div>
                 )}

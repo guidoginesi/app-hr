@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { EmployeeModal } from './EmployeeModal';
 import { EmployeeFormModal } from './EmployeeFormModal';
+import { formatDateLocal } from '@/lib/dateUtils';
 import type { LegalEntity, Department, EmployeeStatus } from '@/types/employee';
 
 type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
@@ -357,7 +358,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
                           <>
                             <span className="text-zinc-300">·</span>
                             <span>
-                              Ingreso: {new Date(employee.hire_date).toLocaleDateString('es-AR')}
+                              Ingreso: {formatDateLocal(employee.hire_date)}
                             </span>
                           </>
                         )}
