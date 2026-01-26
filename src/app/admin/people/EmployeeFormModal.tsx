@@ -191,6 +191,12 @@ export function EmployeeFormModal({
     }
   };
 
+  // Helper to validate UUID format
+  const isValidUuid = (val: string | null | undefined): boolean => {
+    if (!val) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -201,6 +207,9 @@ export function EmployeeFormModal({
         ? `/api/admin/employees/${employee.id}`
         : '/api/admin/employees';
       const method = isEditing ? 'PUT' : 'POST';
+
+      // Clean UUID fields - only send if valid UUID, otherwise null
+      const cleanUuid = (val: string) => isValidUuid(val) ? val : null;
 
       const payload = {
         first_name: formData.first_name,
@@ -226,9 +235,9 @@ export function EmployeeFormModal({
         emergency_contact_last_name: formData.emergency_contact_last_name || null,
         emergency_contact_address: formData.emergency_contact_address || null,
         emergency_contact_phone: formData.emergency_contact_phone || null,
-        legal_entity_id: formData.legal_entity_id || null,
-        department_id: formData.department_id || null,
-        manager_id: formData.manager_id || null,
+        legal_entity_id: cleanUuid(formData.legal_entity_id),
+        department_id: cleanUuid(formData.department_id),
+        manager_id: cleanUuid(formData.manager_id),
         job_title: formData.job_title || null,
         seniority_level: formData.seniority_level || null,
         status: formData.status,
