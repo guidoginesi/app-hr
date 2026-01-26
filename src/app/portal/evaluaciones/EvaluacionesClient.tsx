@@ -110,19 +110,6 @@ export function EvaluacionesClient({
         <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
       )}
 
-      {/* Scale Reference */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6">
-        <h3 className="text-sm font-semibold text-zinc-900 mb-3">Escala de evaluación</h3>
-        <div className="flex flex-wrap gap-2">
-          {SCALE_DEFINITIONS.map((def) => (
-            <div key={def.min} className="inline-flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-1.5">
-              <span className="text-sm font-semibold text-zinc-700">{def.min}-{def.max}</span>
-              <span className="text-xs text-zinc-500">{def.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Self Evaluation Section */}
       <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-200 px-6 py-4">
