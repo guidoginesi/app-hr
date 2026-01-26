@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { BenefitsSection } from "../BenefitsSection";
 
-export const dynamic = "force-dynamic";
+// Revalidate every 60 seconds - job details don't change frequently
+export const revalidate = 60;
 
 export default async function JobDetailPage({
   params,

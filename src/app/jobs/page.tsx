@@ -4,7 +4,8 @@ import { Suspense } from "react";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { JobMessages } from "./JobMessages";
 
-export const dynamic = "force-dynamic";
+// Revalidate every 60 seconds - jobs don't change that frequently
+export const revalidate = 60;
 
 export default async function JobsPage() {
   let jobs: {

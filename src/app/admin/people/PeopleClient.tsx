@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { EmployeeModal } from './EmployeeModal';
-import { EmployeeFormModal } from './EmployeeFormModal';
+import { useState, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { formatDateLocal } from '@/lib/dateUtils';
+import { useDebounce } from '@/lib/useDebounce';
 import type { LegalEntity, Department, EmployeeStatus } from '@/types/employee';
+
+// Lazy load modals for better initial load performance
+const EmployeeModal = dynamic(() => import('./EmployeeModal').then(mod => mod.EmployeeModal), {
+  loading: () => null,
+});
+const EmployeeFormModal = dynamic(() => import('./EmployeeFormModal').then(mod => mod.EmployeeFormModal), {
+  loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div className="animate-pulse text-white">Cargando...</div></div>,
+});
 
 type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
 type EducationLevel = 'primary' | 'secondary' | 'tertiary' | 'university' | 'postgraduate';
@@ -88,13 +96,16 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
   const [inviting, setInviting] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Filter employees
+  // Debounce search query for better performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Filter employees using debounced search
   const filteredEmployees = useMemo(() => {
     let filtered = employees;
 
-    // Text search
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Text search (using debounced value)
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(
         (emp) =>
           emp.first_name.toLowerCase().includes(query) ||
@@ -120,7 +131,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
     }
 
     return filtered;
-  }, [employees, searchQuery, statusFilter, legalEntityFilter, departmentFilter]);
+  }, [employees, debouncedSearchQuery, statusFilter, legalEntityFilter, departmentFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE);
@@ -129,26 +140,26 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
     return filteredEmployees.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredEmployees, currentPage]);
 
-  // Reset page when filters change
-  const handleSearchChange = (value: string) => {
+  // Reset page when debounced search changes
+  const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleStatusFilterChange = (value: EmployeeStatus | 'ALL') => {
+  const handleStatusFilterChange = useCallback((value: EmployeeStatus | 'ALL') => {
     setStatusFilter(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleLegalEntityFilterChange = (value: string) => {
+  const handleLegalEntityFilterChange = useCallback((value: string) => {
     setLegalEntityFilter(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleDepartmentFilterChange = (value: string) => {
+  const handleDepartmentFilterChange = useCallback((value: string) => {
     setDepartmentFilter(value);
     setCurrentPage(1);
-  };
+  }, []);
 
   const handleEmployeeCreated = (newEmployee: EmployeeWithRelations) => {
     setEmployees((prev) => [...prev, newEmployee].sort((a, b) => a.last_name.localeCompare(b.last_name)));

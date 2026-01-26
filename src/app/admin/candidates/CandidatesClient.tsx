@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Modal } from '../Modal';
-import { CandidateDetailModal } from './CandidateDetailModal';
-import { AddCandidateModal } from './AddCandidateModal';
 import { Stage, StageStatus, StageLabels, StageStatusLabels } from '@/types/funnel';
+import { useDebounce } from '@/lib/useDebounce';
+
+// Lazy load heavy modals for better initial load performance
+const CandidateDetailModal = dynamic(() => import('./CandidateDetailModal').then(mod => mod.CandidateDetailModal), {
+	loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div className="animate-pulse text-white">Cargando...</div></div>,
+});
+const AddCandidateModal = dynamic(() => import('./AddCandidateModal').then(mod => mod.AddCandidateModal), {
+	loading: () => null,
+});
 
 type StageHistory = {
 	id: string;
@@ -119,6 +127,9 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 	const [jobFilter, setJobFilter] = useState<string>('ALL');
 	const [currentPage, setCurrentPage] = useState(1);
 
+	// Debounce search query for better performance
+	const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
 	// Aplanar candidatos con sus aplicaciones para facilitar el filtrado
 	const flattenedApplications = useMemo(() => {
 		return candidates.flatMap((candidate) =>
@@ -146,13 +157,13 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 		return Array.from(jobsMap.values()).sort((a, b) => a.title.localeCompare(b.title));
 	}, [flattenedApplications]);
 
-	// Filtrar aplicaciones
+	// Filtrar aplicaciones (usando búsqueda con debounce)
 	const filteredApplications = useMemo(() => {
 		let filtered = flattenedApplications;
 
-		// Filtro por búsqueda de texto
-		if (searchQuery.trim()) {
-			const query = searchQuery.toLowerCase();
+		// Filtro por búsqueda de texto (usando valor con debounce)
+		if (debouncedSearchQuery.trim()) {
+			const query = debouncedSearchQuery.toLowerCase();
 			filtered = filtered.filter(
 				({ candidate, application }) =>
 					candidate.name.toLowerCase().includes(query) ||
@@ -176,7 +187,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 		}
 
 		return filtered;
-	}, [flattenedApplications, searchQuery, jobFilter, stageFilter]);
+	}, [flattenedApplications, debouncedSearchQuery, jobFilter, stageFilter]);
 
 	// Calcular paginación
 	const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
@@ -186,20 +197,20 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 	}, [filteredApplications, currentPage]);
 
 	// Reset página cuando cambian los filtros
-	const handleSearchChange = (value: string) => {
+	const handleSearchChange = useCallback((value: string) => {
 		setSearchQuery(value);
 		setCurrentPage(1);
-	};
+	}, []);
 
-	const handleJobFilterChange = (value: string) => {
+	const handleJobFilterChange = useCallback((value: string) => {
 		setJobFilter(value);
 		setCurrentPage(1);
-	};
+	}, []);
 
-	const handleStageFilterChange = (value: Stage | 'ALL' | 'DISCARDED') => {
+	const handleStageFilterChange = useCallback((value: Stage | 'ALL' | 'DISCARDED') => {
 		setStageFilter(value);
 		setCurrentPage(1);
-	};
+	}, []);
 
 	return (
 		<>
