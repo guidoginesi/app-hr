@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal } from '../Modal';
 import { PipelineView } from './PipelineView';
+import { ConvertToEmployeeModal } from './ConvertToEmployeeModal';
 import { Stage, StageStatus, OfferStatus, FinalOutcome, RejectionReason, StageLabels, StageStatusLabels } from '@/types/funnel';
 import { formatCurrency } from '@/lib/formatCurrency';
 
@@ -123,6 +124,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 	const [notesSaved, setNotesSaved] = useState(false);
 	const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set());
 	const [ratingNote, setRatingNote] = useState('');
+	const [showConvertModal, setShowConvertModal] = useState(false);
 
 	// Cargar datos actualizados cuando se abre el modal
 	useEffect(() => {
@@ -411,6 +413,28 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 						}}
 						onUpdate={handlePipelineUpdate}
 					/>
+					
+					{/* Convert to Employee button - only show when HIRED */}
+					{mainApplication.final_outcome === FinalOutcome.HIRED && (
+						<div className="mt-4 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+							<div className="flex-shrink-0">
+								<svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+								</svg>
+							</div>
+							<div className="flex-1">
+								<p className="text-sm font-semibold text-green-800">Candidato contratado</p>
+								<p className="text-xs text-green-700">Este candidato fue seleccionado para el puesto</p>
+							</div>
+							<button
+								type="button"
+								onClick={() => setShowConvertModal(true)}
+								className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+							>
+								Convertir a Empleado
+							</button>
+						</div>
+					)}
 				</div>
 			)}
 
@@ -1003,6 +1027,20 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 				</div>
 			)}
 			</div>
+
+			{/* Convert to Employee Modal */}
+			{showConvertModal && mainApplication && (
+				<ConvertToEmployeeModal
+					applicationId={mainApplication.id}
+					candidateName={displayCandidate.name}
+					candidateEmail={displayCandidate.email}
+					onClose={() => setShowConvertModal(false)}
+					onSuccess={() => {
+						setShowConvertModal(false);
+						handlePipelineUpdate();
+					}}
+				/>
+			)}
 		</Modal>
 	);
 }

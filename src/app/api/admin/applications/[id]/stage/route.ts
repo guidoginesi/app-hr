@@ -242,26 +242,6 @@ export async function PUT(
 			}
 		}
 
-		// TRIGGER 3: Email de coordinación de entrevista con líder cuando se avanza a LEAD_INTERVIEW
-		if (targetStage === Stage.LEAD_INTERVIEW && targetStatus === StageStatus.PENDING) {
-			const candidate = (application as any).candidates;
-			const job = (application as any).jobs;
-			
-			if (candidate?.email) {
-				await sendTemplatedEmail({
-					templateKey: 'lead_interview_coordination',
-					to: candidate.email,
-					variables: {
-						candidateName: candidate.name || 'Candidato',
-						jobTitle: job?.title || 'la posición'
-					},
-					applicationId
-				}).catch(err => {
-					console.error('Error sending lead interview coordination email:', err);
-				});
-			}
-		}
-
 		return NextResponse.json({ ok: true });
 	} catch (error: any) {
 		console.error('Error updating application stage:', error);

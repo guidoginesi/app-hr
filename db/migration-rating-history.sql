@@ -20,3 +20,10 @@ comment on column public.rating_history.note is 'Nota opcional del reclutador al
 
 
 
+
+
+
+
+
+
+

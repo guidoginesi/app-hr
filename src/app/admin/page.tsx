@@ -1,167 +1,178 @@
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/checkAdmin';
+import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { AdminShell } from './AdminShell';
-import { PipelineDashboard } from './dashboard/PipelineDashboard';
-import { STAGE_ORDER } from '@/types/funnel';
+import Link from 'next/link';
+import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
-	const { isAdmin } = await requireAdmin();
-	if (!isAdmin) {
-		redirect('/admin/login');
-	}
+  const { isAdmin } = await requireAdmin();
+  if (!isAdmin) {
+    redirect('/admin/login');
+  }
 
-	try {
+  const supabase = getSupabaseServer();
 
-		const supabase = getSupabaseServer();
-		const { data: jobs, error: jobsError } = await supabase
-			.from('jobs')
-			.select('id,title,department,location,is_published,created_at')
-			.order('created_at', { ascending: false });
+  // Get quick stats for modules
+  const [jobsResult, employeesResult, evaluationPeriodsResult] = await Promise.all([
+    supabase.from('jobs').select('id', { count: 'exact' }).eq('is_published', true),
+    supabase.from('employees').select('id', { count: 'exact' }).eq('status', 'active'),
+    supabase.from('evaluation_periods').select('id', { count: 'exact' }).eq('status', 'open'),
+  ]);
 
-		if (jobsError) {
-			console.error('Error fetching jobs:', jobsError);
-		}
+  const activeJobs = jobsResult.count || 0;
+  const activeEmployees = employeesResult.count || 0;
+  const activeEvaluationPeriods = evaluationPeriodsResult.count || 0;
 
-		// Obtener estadísticas del pipeline (usando historial para el embudo real)
-		const publishedJobIds = (jobs || []).filter((j) => j.is_published).map((j) => j.id);
-		let pipelineStats: any[] = [];
-		
-		if (publishedJobIds.length > 0) {
-			// Obtener todas las aplicaciones para estas búsquedas
-			const { data: applications, error: appsError } = await supabase
-				.from('applications')
-				.select('id, job_id')
-				.in('job_id', publishedJobIds);
+  const modules = [
+    {
+      id: 'recruiting',
+      name: 'Reclutamiento',
+      description: 'Gestión de búsquedas, candidatos y proceso de selección',
+      href: '/admin/recruiting',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+      stats: `${activeJobs} búsquedas activas`,
+      color: 'bg-blue-600',
+      bgLight: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      available: true,
+    },
+    {
+      id: 'people',
+      name: 'People',
+      description: 'Gestión de empleados, sociedades y estructura organizacional',
+      href: '/admin/people',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      stats: `${activeEmployees} empleados activos`,
+      color: 'bg-emerald-600',
+      bgLight: 'bg-emerald-50',
+      textColor: 'text-emerald-600',
+      available: true,
+    },
+    {
+      id: 'time-off',
+      name: 'Time Off',
+      description: 'Gestión de vacaciones, licencias y días libres',
+      href: '/admin/time-off',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      stats: 'Próximamente',
+      color: 'bg-amber-600',
+      bgLight: 'bg-amber-50',
+      textColor: 'text-amber-600',
+      available: false,
+    },
+    {
+      id: 'evaluations',
+      name: 'Evaluaciones',
+      description: 'Evaluaciones de desempeño y feedback 360°',
+      href: '/admin/evaluations',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      stats: activeEvaluationPeriods > 0 ? `${activeEvaluationPeriods} período${activeEvaluationPeriods > 1 ? 's' : ''} activo${activeEvaluationPeriods > 1 ? 's' : ''}` : 'Sin períodos activos',
+      color: 'bg-purple-600',
+      bgLight: 'bg-purple-50',
+      textColor: 'text-purple-600',
+      available: true,
+    },
+    {
+      id: 'objectives',
+      name: 'Objetivos',
+      description: 'OKRs y objetivos anuales por equipo y empleado',
+      href: '/admin/objectives',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+        </svg>
+      ),
+      stats: 'Sin objetivos activos',
+      color: 'bg-rose-600',
+      bgLight: 'bg-rose-50',
+      textColor: 'text-rose-600',
+      available: true,
+    },
+  ];
 
-			if (appsError) {
-				console.error('Error fetching applications:', appsError);
-			}
+  return (
+    <div className="min-h-screen bg-zinc-50">
+      {/* Header */}
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-zinc-900">HR Admin</h1>
+              <p className="mt-1 text-sm text-zinc-500">Sistema de Recursos Humanos</p>
+            </div>
+            <AdminProfileDropdown />
+          </div>
+        </div>
+      </header>
 
-			const applicationIds = (applications || []).map((app: any) => app.id);
+      {/* Main content */}
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-zinc-900">Módulos</h2>
+          <p className="mt-1 text-sm text-zinc-500">Selecciona un módulo para comenzar</p>
+        </div>
 
-			// Obtener el historial de etapas para calcular el embudo real
-			let stageHistory: any[] = [];
-			if (applicationIds.length > 0) {
-				const { data: historyData, error: historyError } = await supabase
-					.from('stage_history')
-					.select('application_id, to_stage, status')
-					.in('application_id', applicationIds)
-					.order('changed_at', { ascending: true });
-				
-				if (historyError) {
-					console.error('Error fetching stage history:', historyError);
-				}
-				stageHistory = historyData || [];
-			}
-
-		// Crear un mapa de aplicaciones por job
-		const applicationsByJob = new Map<string, any[]>();
-		(applications || []).forEach((app: any) => {
-			if (!applicationsByJob.has(app.job_id)) {
-				applicationsByJob.set(app.job_id, []);
-			}
-			applicationsByJob.get(app.job_id)!.push(app.id);
-		});
-
-		// Agrupar por job y calcular el embudo
-		pipelineStats = (jobs || [])
-			.filter((j) => j.is_published)
-			.map((job) => {
-				const jobApplicationIds = applicationsByJob.get(job.id) || [];
-				
-				// Inicializar contadores para todas las etapas (cuántos pasaron por cada etapa)
-				const stage_counts: Record<string, number> = {};
-				STAGE_ORDER.forEach((stage) => {
-					stage_counts[stage] = 0;
-				});
-
-				// El total es el número de aplicaciones (CVs recibidos)
-				const total = jobApplicationIds.length;
-				
-				// CV_RECEIVED siempre es igual al total (todos los CVs recibidos pasan por esa etapa)
-				stage_counts[STAGE_ORDER[0]] = total;
-
-				// Contar cuántos candidatos pasaron por cada etapa usando el historial
-				jobApplicationIds.forEach((appId) => {
-					const appHistory = stageHistory.filter((h) => h.application_id === appId);
-					// Para cada etapa después de CV_RECEIVED, verificar si el candidato pasó por ella
-					STAGE_ORDER.slice(1).forEach((stage) => {
-						const passedThrough = appHistory.some((h) => h.to_stage === stage);
-						if (passedThrough) {
-							stage_counts[stage] = (stage_counts[stage] || 0) + 1;
-						}
-					});
-				});
-
-				return {
-					job_id: job.id,
-					job_title: job.title,
-					job_department: job.department,
-					stage_counts,
-					total
-				};
-			})
-			.filter((stat) => stat.total > 0);
-		}
-
-		return (
-		<AdminShell active="dashboard">
-			<div className="space-y-8">
-				<div>
-					<h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard</h1>
-					<p className="mt-1 text-sm text-zinc-500">
-						Resumen general del sistema de gestión de CV
-					</p>
-				</div>
-
-				<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-					<div className="group rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-						<p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Candidatos activos</p>
-						<p className="mt-3 text-4xl font-bold text-zinc-900">—</p>
-						<p className="mt-2 text-xs text-zinc-500">Pronto mostraremos estos datos</p>
-					</div>
-					<div className="group rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-						<p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Búsquedas abiertas</p>
-						<p className="mt-3 text-4xl font-bold text-black">{jobs?.filter((j) => j.is_published).length ?? 0}</p>
-						<p className="mt-2 text-xs text-zinc-500">Publicadas en la landing</p>
-					</div>
-					<div className="group rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-						<p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">CVs procesados</p>
-						<p className="mt-3 text-4xl font-bold text-zinc-900">—</p>
-						<p className="mt-2 text-xs text-zinc-500">Integraremos el análisis con IA en el próximo paso</p>
-					</div>
-				</div>
-
-				{/* Pipeline Dashboard */}
-				<div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-					<h2 className="text-lg font-semibold text-zinc-900 mb-4">Pipeline por Búsqueda</h2>
-					<PipelineDashboard stats={pipelineStats} />
-				</div>
-			</div>
-		</AdminShell>
-		);
-	} catch (error: any) {
-		// Ignorar NEXT_REDIRECT que es lanzado por redirect()
-		if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message === 'NEXT_REDIRECT') {
-			throw error; // Re-lanzar redirect para que Next.js lo maneje
-		}
-		console.error('Error in AdminHome:', error);
-		return (
-			<AdminShell active="dashboard">
-				<div className="space-y-8">
-					<div className="rounded-xl border border-red-200 bg-red-50 p-6">
-						<h2 className="text-lg font-semibold text-red-900">Error al cargar el dashboard</h2>
-						<p className="mt-2 text-sm text-red-700">
-							{error?.message || 'Ocurrió un error inesperado. Por favor intenta recargar la página.'}
-						</p>
-					</div>
-				</div>
-			</AdminShell>
-		);
-	}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {modules.map((module) => (
+            <div key={module.id} className="relative">
+              {module.available ? (
+                <Link
+                  href={module.href}
+                  className="group block rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-zinc-300 hover:shadow-md"
+                >
+                  <div className={`inline-flex rounded-lg ${module.bgLight} p-3`}>
+                    <span className={module.textColor}>{module.icon}</span>
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold text-zinc-900 group-hover:text-black">
+                    {module.name}
+                  </h3>
+                  <p className="mt-2 text-sm text-zinc-500">{module.description}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-sm font-medium text-zinc-600">{module.stats}</span>
+                    <span className={`inline-flex items-center gap-1 text-sm font-medium ${module.textColor}`}>
+                      Ir al módulo
+                      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              ) : (
+                <div className="block rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
+                  <div className={`inline-flex rounded-lg bg-zinc-100 p-3`}>
+                    <span className="text-zinc-400">{module.icon}</span>
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold text-zinc-500">{module.name}</h3>
+                  <p className="mt-2 text-sm text-zinc-400">{module.description}</p>
+                  <div className="mt-4">
+                    <span className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500">
+                      Próximamente
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
 }
-
-

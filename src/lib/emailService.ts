@@ -229,3 +229,34 @@ export async function updateEmailTemplate(
 	}
 }
 
+/**
+ * Envía un email simple (sin template de BD)
+ */
+export async function sendSimpleEmail(params: {
+	to: string;
+	subject: string;
+	html: string;
+}): Promise<{ success: boolean; error?: string }> {
+	try {
+		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+		const resend = getResend();
+		
+		const { error } = await resend.emails.send({
+			from: fromEmail,
+			to: params.to,
+			subject: params.subject,
+			html: params.html,
+		});
+
+		if (error) {
+			console.error('Error sending email with Resend:', error);
+			return { success: false, error: error.message };
+		}
+
+		return { success: true };
+	} catch (error: any) {
+		console.error('Error in sendSimpleEmail:', error);
+		return { success: false, error: error.message };
+	}
+}
+
