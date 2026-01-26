@@ -178,9 +178,10 @@ export function OrgChart({ employees }: OrgChartProps) {
     if (!searchQuery && !selectedDepartment) return orgTree;
     
     const matchesFilter = (node: OrgNode): boolean => {
+      const searchLower = searchQuery.toLowerCase();
       const matchesSearch = !searchQuery || 
-        `${node.first_name} ${node.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (node.job_title?.toLowerCase().includes(searchQuery.toLowerCase()));
+        `${node.first_name} ${node.last_name}`.toLowerCase().includes(searchLower) ||
+        (node.job_title?.toLowerCase().includes(searchLower) ?? false);
       
       const matchesDept = !selectedDepartment || node.department?.id === selectedDepartment;
       
