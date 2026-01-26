@@ -115,3 +115,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/objectives/periods?id=xxx - Delete period
+export async function DELETE(request: NextRequest) {
+  try {
+    const { isAdmin } = await requireAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseServer();
+
+    const { error } = await supabase
+      .from('objectives_periods')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting period:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error in DELETE /api/admin/objectives/periods:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
