@@ -4,35 +4,25 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // Helper to transform empty strings to null
-const stringToNull = z.preprocess(
-  (val) => (val === '' || val === undefined || val === null ? null : val),
-  z.string().nullable()
-);
+const stringToNull = z.any().transform((val) => {
+  if (val === '' || val === undefined || val === null) return null;
+  return String(val);
+});
 
-// Helper for optional UUID fields that can be empty string or null
-const optionalUuid = z.preprocess(
-  (val) => {
-    if (val === '' || val === undefined || val === null) return null;
-    // Check if it looks like a valid UUID before passing to validation
-    if (typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)) {
-      return val;
-    }
-    return null; // Invalid UUID format, treat as null
-  },
-  z.string().uuid().nullable()
-);
+// Helper for optional UUID fields - accepts any value and transforms to valid UUID or null
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const optionalUuid = z.any().transform((val) => {
+  if (val === '' || val === undefined || val === null) return null;
+  if (typeof val === 'string' && UUID_REGEX.test(val)) return val;
+  return null; // Invalid UUID format, treat as null
+});
 
-// Helper for optional enum fields
-const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) => z.preprocess(
-  (val) => {
-    if (val === '' || val === undefined || val === null) return null;
-    if (typeof val === 'string' && (values as readonly string[]).includes(val)) {
-      return val;
-    }
-    return null; // Invalid enum value, treat as null
-  },
-  z.enum(values).nullable()
-);
+// Helper for optional enum fields - accepts any value and transforms to valid enum or null
+const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) => z.any().transform((val) => {
+  if (val === '' || val === undefined || val === null) return null;
+  if (typeof val === 'string' && (values as readonly string[]).includes(val)) return val;
+  return null; // Invalid enum value, treat as null
+});
 
 const UpdateEmployeeSchema = z.object({
   first_name: z.string().min(1).optional(),
