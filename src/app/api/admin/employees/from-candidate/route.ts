@@ -64,12 +64,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const candidate = application.candidate as {
+    const candidateData = application.candidate as unknown as {
       id: string;
       name: string;
       email: string;
       phone: string | null;
-    };
+    }[] | { id: string; name: string; email: string; phone: string | null };
+    
+    const candidate = Array.isArray(candidateData) ? candidateData[0] : candidateData;
 
     // Check if an employee already exists for this application
     const { data: existingEmployee } = await supabase
