@@ -110,19 +110,6 @@ export function EvaluacionesClient({
         <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
       )}
 
-      {/* Period Info */}
-      <div className="rounded-xl border border-purple-200 bg-purple-50 p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
-            Período activo
-          </span>
-        </div>
-        <h2 className="text-lg font-semibold text-purple-900">{activePeriod.name}</h2>
-        <p className="text-sm text-purple-700 mt-1">
-          Período: {new Date(activePeriod.start_date).toLocaleDateString('es-AR')} - {new Date(activePeriod.end_date).toLocaleDateString('es-AR')}
-        </p>
-      </div>
-
       {/* Scale Reference */}
       <div className="rounded-xl border border-zinc-200 bg-white p-6">
         <h3 className="text-sm font-semibold text-zinc-900 mb-3">Escala de evaluación</h3>
