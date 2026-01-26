@@ -6,7 +6,7 @@ import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 
 type EvaluationsShellProps = {
   children: ReactNode;
-  active: 'dashboard' | 'periods' | 'dimensions' | 'open_questions' | 'all';
+  active: 'dashboard' | 'periods' | 'dimensions' | 'open_questions' | 'all' | 'recategorizations';
 };
 
 export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
@@ -92,6 +92,19 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
           >
             <span>Todas las evaluaciones</span>
             {active === 'all' && (
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            )}
+          </Link>
+          <Link
+            href="/admin/evaluations/recategorizations"
+            className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+              active === 'recategorizations'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+            }`}
+          >
+            <span>Recategorizaciones</span>
+            {active === 'recategorizations' && (
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
           </Link>
