@@ -5,6 +5,9 @@ import { EmployeeModal } from './EmployeeModal';
 import { EmployeeFormModal } from './EmployeeFormModal';
 import type { LegalEntity, Department, EmployeeStatus } from '@/types/employee';
 
+type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
+type EducationLevel = 'primary' | 'secondary' | 'tertiary' | 'university' | 'postgraduate';
+
 type EmployeeWithRelations = {
   id: string;
   user_id: string | null;
@@ -13,13 +16,29 @@ type EmployeeWithRelations = {
   personal_email: string;
   work_email: string | null;
   nationality: string | null;
+  birth_date: string | null;
+  phone: string | null;
+  marital_status: MaritalStatus | null;
+  photo_url: string | null;
+  cuil: string | null;
+  dni: string | null;
   address: string | null;
   city: string | null;
   postal_code: string | null;
   country: string | null;
+  education_level: EducationLevel | null;
+  education_title: string | null;
+  languages: string | null;
+  emergency_contact_relationship: string | null;
+  emergency_contact_first_name: string | null;
+  emergency_contact_last_name: string | null;
+  emergency_contact_address: string | null;
+  emergency_contact_phone: string | null;
   legal_entity_id: string | null;
   department_id: string | null;
   manager_id: string | null;
+  job_title: string | null;
+  seniority_level: string | null;
   application_id: string | null;
   status: EmployeeStatus;
   hire_date: string | null;
