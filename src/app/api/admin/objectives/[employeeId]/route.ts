@@ -121,7 +121,7 @@ export async function GET(
       corporate_objectives: corporateObjectives || [],
       area_objectives: areaObjectives || [],
       weights,
-      seniority_level: seniorityLevel,
+      seniority_level: employee.seniority_level,
       total_weighted_progress: totalWeightedProgress,
       billing_gate_met: billingGateMet,
       year,
