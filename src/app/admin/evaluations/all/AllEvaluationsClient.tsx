@@ -164,74 +164,75 @@ export function AllEvaluationsClient({ evaluations, periods }: Props) {
         <div className="rounded-xl border border-zinc-200 bg-white">
           <ul className="divide-y divide-zinc-200">
             {groupedByEmployee.map(({ employee, evaluations: empEvaluations }) => (
-              <li key={employee.id} className="p-4 hover:bg-zinc-50 transition-colors">
-                <div className="flex items-start gap-4">
-                  {/* Avatar */}
-                  {employee.photo_url ? (
-                    <img
-                      src={employee.photo_url}
-                      alt={`${employee.first_name} ${employee.last_name}`}
-                      className="h-12 w-12 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 flex-shrink-0">
-                      <span className="text-sm font-semibold text-purple-700">
-                        {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900">
-                          {employee.first_name} {employee.last_name}
-                        </p>
-                        <p className="text-xs text-zinc-500">
-                          {employee.job_title || 'Sin puesto'} 
-                          {employee.department && ` • ${employee.department.name}`}
-                        </p>
+              <li key={employee.id}>
+                <Link
+                  href={`/admin/evaluations/employee/${employee.id}`}
+                  className="block p-4 hover:bg-zinc-50 transition-colors"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
+                    {employee.photo_url ? (
+                      <img
+                        src={employee.photo_url}
+                        alt={`${employee.first_name} ${employee.last_name}`}
+                        className="h-12 w-12 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 flex-shrink-0">
+                        <span className="text-sm font-semibold text-purple-700">
+                          {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
+                        </span>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Evaluations list */}
-                    <div className="mt-3 space-y-2">
-                      {empEvaluations.map((evaluation) => (
-                        <div 
-                          key={evaluation.id} 
-                          className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900">
+                            {employee.first_name} {employee.last_name}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            {employee.job_title || 'Sin puesto'} 
+                            {employee.department && ` • ${employee.department.name}`}
+                          </p>
+                        </div>
+                        <svg className="h-5 w-5 text-zinc-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+
+                      {/* Evaluations summary */}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {empEvaluations.slice(0, 3).map((evaluation) => (
+                          <div 
+                            key={evaluation.id} 
+                            className="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50 px-2 py-1"
+                          >
+                            <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ${
                               evaluation.type === 'self'
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'bg-purple-100 text-purple-700'
                             }`}>
                               {evaluation.type === 'self' ? 'Auto' : 'Líder'}
                             </span>
-                            <span className="text-xs text-zinc-500">
-                              {evaluation.period?.name}
-                            </span>
-                            {evaluation.type === 'leader' && (
-                              <span className="text-xs text-zinc-400">
-                                por {evaluation.evaluator?.first_name} {evaluation.evaluator?.last_name}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3">
                             {evaluation.total_score !== null && (
-                              <span className="text-sm font-semibold text-zinc-700">
+                              <span className="text-xs font-semibold text-zinc-700">
                                 {evaluation.total_score.toFixed(1)}
                               </span>
                             )}
                             {getStatusBadge(evaluation.status)}
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                        {empEvaluations.length > 3 && (
+                          <span className="text-xs text-zinc-400 self-center">
+                            +{empEvaluations.length - 3} más
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>
