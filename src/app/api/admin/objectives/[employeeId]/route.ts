@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { OBJECTIVE_WEIGHT_DISTRIBUTION, SeniorityLevel } from '@/types/corporate-objectives';
+import { OBJECTIVE_WEIGHT_DISTRIBUTION, getSeniorityCategory } from '@/types/corporate-objectives';
 
 // GET /api/admin/objectives/[employeeId] - Get objectives for a specific employee
 export async function GET(
@@ -57,8 +57,8 @@ export async function GET(
       .order('objective_number', { ascending: true });
 
     // Calculate weights based on seniority
-    const seniorityLevel = (employee.seniority_level as SeniorityLevel) || 1;
-    const weights = OBJECTIVE_WEIGHT_DISTRIBUTION[seniorityLevel] || OBJECTIVE_WEIGHT_DISTRIBUTION[1];
+    const seniorityCategory = getSeniorityCategory(employee.seniority_level as string | null) || 1;
+    const weights = OBJECTIVE_WEIGHT_DISTRIBUTION[seniorityCategory];
 
     // Calculate total progress
     let totalWeightedProgress: number | null = null;
