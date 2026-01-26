@@ -71,7 +71,26 @@ export default async function PortalEvaluacionesPage() {
 
     if (directReports && directReports.length > 0) {
       const evaluatedIds = leaderEvaluations.map(e => e.employee_id);
-      pendingTeamEvaluations = directReports.filter(dr => !evaluatedIds.includes(dr.id));
+      const pendingReports = directReports.filter(dr => !evaluatedIds.includes(dr.id));
+      
+      // Get self-evaluations status for each pending team member
+      if (pendingReports.length > 0) {
+        const { data: teamSelfEvals } = await supabase
+          .from('evaluations')
+          .select('employee_id, status')
+          .eq('period_id', activePeriod.id)
+          .eq('type', 'self')
+          .in('employee_id', pendingReports.map(r => r.id));
+
+        const selfEvalMap = new Map(
+          (teamSelfEvals || []).map(e => [e.employee_id, e.status])
+        );
+
+        pendingTeamEvaluations = pendingReports.map(dr => ({
+          ...dr,
+          selfEvaluationStatus: selfEvalMap.get(dr.id) || null,
+        }));
+      }
     }
   }
 

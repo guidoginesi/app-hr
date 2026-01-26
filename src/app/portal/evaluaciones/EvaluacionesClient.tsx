@@ -184,21 +184,43 @@ export function EvaluacionesClient({
               <div>
                 <h3 className="text-sm font-medium text-zinc-700 mb-3">Pendientes de evaluar</h3>
                 <div className="space-y-2">
-                  {pendingTeamEvaluations.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between rounded-lg border border-zinc-200 p-4">
-                      <div>
-                        <p className="font-medium text-zinc-900">{member.first_name} {member.last_name}</p>
-                        <p className="text-sm text-zinc-500">{member.job_title || 'Sin puesto'}</p>
+                  {pendingTeamEvaluations.map((member) => {
+                    const selfEvalCompleted = member.selfEvaluationStatus === 'submitted';
+                    const isDisabled = loading || !activePeriod.leader_evaluation_enabled || !selfEvalCompleted;
+                    
+                    return (
+                      <div key={member.id} className="flex items-center justify-between rounded-lg border border-zinc-200 p-4">
+                        <div>
+                          <p className="font-medium text-zinc-900">{member.first_name} {member.last_name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-zinc-500">{member.job_title || 'Sin puesto'}</p>
+                            {!selfEvalCompleted && (
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                Autoevaluación pendiente
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <button
+                            onClick={() => startLeaderEvaluation(member.id)}
+                            disabled={isDisabled}
+                            className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Evaluar
+                          </button>
+                          {!selfEvalCompleted && (
+                            <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-10">
+                              <div className="rounded-lg bg-zinc-900 px-3 py-2 text-xs text-white whitespace-nowrap shadow-lg">
+                                Autoevaluación pendiente
+                                <div className="absolute top-full right-4 border-4 border-transparent border-t-zinc-900"></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => startLeaderEvaluation(member.id)}
-                        disabled={loading || !activePeriod.leader_evaluation_enabled}
-                        className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
-                      >
-                        Evaluar
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
