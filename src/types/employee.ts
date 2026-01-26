@@ -79,6 +79,9 @@ export interface Employee {
   hire_date: string | null;
   termination_date: string | null;
   
+  // Time-off related
+  is_studying: boolean;
+  
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -122,6 +125,7 @@ export interface EmployeeFormData {
   seniority_level?: string;
   status: EmployeeStatus;
   hire_date?: string;
+  is_studying?: boolean;
 }
 
 export interface CreateEmployeeFromCandidateData {

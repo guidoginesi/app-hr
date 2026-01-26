@@ -83,43 +83,54 @@ export default async function PortalTeamPage() {
           </div>
         )}
 
-        {/* Placeholder for future features */}
+        {/* Quick actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Time Off Approvals - Coming Soon */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
+          {/* Time Off Approvals */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-base font-semibold text-zinc-900">Aprobación de Vacaciones</h3>
+                <h3 className="text-base font-semibold text-zinc-900">Aprobación de Time Off</h3>
                 <p className="text-sm text-zinc-500">Aprobar solicitudes de tu equipo</p>
               </div>
             </div>
-            <span className="mt-4 inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-              Próximamente
-            </span>
+            <Link
+              href="/portal/team/time-off"
+              className="mt-4 inline-flex items-center text-sm font-medium text-amber-600 hover:text-amber-700"
+            >
+              Ver solicitudes
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
 
-          {/* Performance Reviews - Coming Soon */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
+          {/* Team Evaluations */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
                 <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-base font-semibold text-zinc-900">Evaluaciones de Desempeño</h3>
+                <h3 className="text-base font-semibold text-zinc-900">Evaluaciones del Equipo</h3>
                 <p className="text-sm text-zinc-500">Evaluar a tu equipo</p>
               </div>
             </div>
-            <span className="mt-4 inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-              Próximamente
-            </span>
+            <Link
+              href="/portal/evaluaciones"
+              className="mt-4 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700"
+            >
+              Ver evaluaciones
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </div>
       </div>
