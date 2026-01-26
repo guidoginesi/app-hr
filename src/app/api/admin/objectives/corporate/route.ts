@@ -126,3 +126,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/objectives/corporate?id=xxx - Delete corporate objective
+export async function DELETE(req: NextRequest) {
+  try {
+    const { isAdmin } = await requireAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseServer();
+
+    const { error } = await supabase
+      .from('corporate_objectives')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting corporate objective:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error in DELETE /api/admin/objectives/corporate:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
