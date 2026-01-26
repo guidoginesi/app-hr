@@ -772,7 +772,7 @@ export function TeamMemberProfileClient({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     )}
-                    <span className={`text-sm font-medium ${recatData?.objectives?.evaluated === recatData?.objectives?.total && recatData?.objectives?.total > 0 ? 'text-emerald-700' : 'text-zinc-600'}`}>
+                    <span className={`text-sm font-medium ${recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? 'text-emerald-700' : 'text-zinc-600'}`}>
                       Evaluación de objetivos
                     </span>
                   </div>
