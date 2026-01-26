@@ -6,7 +6,7 @@ import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 
 type PeopleShellProps = {
   children: ReactNode;
-  active: 'empleados' | 'organizacion' | 'organigrama';
+  active: 'dashboard' | 'empleados' | 'organizacion' | 'organigrama';
 };
 
 export function PeopleShell({ children, active }: PeopleShellProps) {
@@ -29,6 +29,19 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 px-3 py-4">
+          <Link
+            href="/admin/people/dashboard"
+            className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+              active === 'dashboard'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+            }`}
+          >
+            <span>Dashboard</span>
+            {active === 'dashboard' && (
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            )}
+          </Link>
           <Link
             href="/admin/people"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
