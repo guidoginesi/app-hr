@@ -73,9 +73,9 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
       <EmployeeObjectivesDetailClient
         employee={{
           ...employee,
-          department_name: employee.department?.name || null,
-          manager_name: employee.manager 
-            ? `${employee.manager.first_name} ${employee.manager.last_name}`
+          department_name: (employee.department as any)?.[0]?.name || (employee.department as any)?.name || null,
+          manager_name: (employee.manager as any)
+            ? `${(employee.manager as any).first_name || (employee.manager as any)[0]?.first_name} ${(employee.manager as any).last_name || (employee.manager as any)[0]?.last_name}`
             : null,
         }}
         corporateObjectives={corporateObjectives || []}
