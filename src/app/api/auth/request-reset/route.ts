@@ -25,15 +25,17 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Check if user exists - use getUserByEmail for accuracy (listUsers has pagination limits)
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    // Check if user exists in auth.users
+    const { data: allUsers, error: userError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    const user = allUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
     
     console.log('[Password Reset] User lookup for:', email, {
-      found: !!userData?.user,
+      found: !!user,
+      totalUsers: allUsers?.users?.length || 0,
       error: userError?.message || null
     });
 
-    if (!userData?.user) {
+    if (!user) {
       // Don't reveal if user exists - always return success
       console.log('[Password Reset] User not found, returning silent success');
       return NextResponse.json({ success: true });
