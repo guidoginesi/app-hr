@@ -136,10 +136,30 @@ export function AutoevaluacionWizard({
     }
   };
 
+  // Validate current dimension has all explanations filled
+  const validateCurrentDimension = (): boolean => {
+    if (!currentDimension) return true;
+    
+    for (const item of currentDimension.items) {
+      const response = responses[item.id];
+      if (response?.score && !response?.explanation?.trim()) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const goNext = () => {
     if (currentStep === 'instructions') {
       goToStep('dimension_1');
     } else if (currentStep.startsWith('dimension_')) {
+      // Validate explanations before advancing
+      if (!validateCurrentDimension()) {
+        setError('Por favor completá la explicación de todas las respuestas antes de continuar.');
+        return;
+      }
+      setError(null);
+      
       const dimIndex = parseInt(currentStep.split('_')[1]);
       if (dimIndex < dimensions.length) {
         goToStep(`dimension_${dimIndex + 1}`);
@@ -295,15 +315,23 @@ export function AutoevaluacionWizard({
                     />
                     <div>
                       <label className="block text-xs font-medium text-zinc-500 mb-1">
-                        Explicá tu puntuación (opcional)
+                        Explicá tu puntuación <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         value={responses[item.id]?.explanation || ''}
                         onChange={(e) => handleResponseChange(item.id, 'explanation', e.target.value)}
                         rows={2}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                        placeholder="Comentarios o ejemplos..."
+                        required
+                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 ${
+                          responses[item.id]?.score && !responses[item.id]?.explanation?.trim() 
+                            ? 'border-red-300 bg-red-50' 
+                            : 'border-zinc-300'
+                        }`}
+                        placeholder="Comentarios o ejemplos (obligatorio)..."
                       />
+                      {responses[item.id]?.score && !responses[item.id]?.explanation?.trim() && (
+                        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                      )}
                     </div>
                   </div>
                 ))}
