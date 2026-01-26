@@ -4,41 +4,61 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // Helper to transform empty strings to null
-const emptyToNull = z.string().transform(v => v === '' ? null : v);
-const emptyToNullOrUndefined = z.union([z.string(), z.null(), z.undefined()]).transform(v => v === '' ? null : v);
+const stringToNull = z.preprocess(
+  (val) => (val === '' || val === undefined ? null : val),
+  z.string().nullable()
+);
+
+// Helper for optional UUID fields that can be empty string or null
+const optionalUuid = z.preprocess(
+  (val) => (val === '' || val === undefined ? null : val),
+  z.string().uuid().nullable()
+);
+
+// Helper for optional enum fields
+const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) => z.preprocess(
+  (val) => (val === '' || val === undefined ? null : val),
+  z.enum(values).nullable()
+);
 
 const UpdateEmployeeSchema = z.object({
   first_name: z.string().min(1).optional(),
   last_name: z.string().min(1).optional(),
   personal_email: z.string().email().optional(),
-  work_email: z.union([z.string().email(), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  nationality: emptyToNullOrUndefined.optional(),
-  birth_date: emptyToNullOrUndefined.optional(),
-  phone: emptyToNullOrUndefined.optional(),
-  marital_status: z.union([z.enum(['single', 'married', 'divorced', 'widowed', 'other']), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  photo_url: z.union([z.string().url(), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  cuil: emptyToNullOrUndefined.optional(),
-  dni: emptyToNullOrUndefined.optional(),
-  address: emptyToNullOrUndefined.optional(),
-  city: emptyToNullOrUndefined.optional(),
-  postal_code: emptyToNullOrUndefined.optional(),
-  country: emptyToNullOrUndefined.optional(),
-  education_level: z.union([z.enum(['primary', 'secondary', 'tertiary', 'university', 'postgraduate']), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  education_title: emptyToNullOrUndefined.optional(),
-  languages: emptyToNullOrUndefined.optional(),
-  emergency_contact_relationship: emptyToNullOrUndefined.optional(),
-  emergency_contact_first_name: emptyToNullOrUndefined.optional(),
-  emergency_contact_last_name: emptyToNullOrUndefined.optional(),
-  emergency_contact_address: emptyToNullOrUndefined.optional(),
-  emergency_contact_phone: emptyToNullOrUndefined.optional(),
-  legal_entity_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  department_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  manager_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform(v => v === '' ? null : v),
-  job_title: emptyToNullOrUndefined.optional(),
-  seniority_level: emptyToNullOrUndefined.optional(),
+  work_email: z.preprocess(
+    (val) => (val === '' || val === undefined ? null : val),
+    z.string().email().nullable()
+  ).optional(),
+  nationality: stringToNull.optional(),
+  birth_date: stringToNull.optional(),
+  phone: stringToNull.optional(),
+  marital_status: optionalEnum(['single', 'married', 'divorced', 'widowed', 'other']).optional(),
+  photo_url: z.preprocess(
+    (val) => (val === '' || val === undefined ? null : val),
+    z.string().url().nullable().or(z.null())
+  ).optional(),
+  cuil: stringToNull.optional(),
+  dni: stringToNull.optional(),
+  address: stringToNull.optional(),
+  city: stringToNull.optional(),
+  postal_code: stringToNull.optional(),
+  country: stringToNull.optional(),
+  education_level: optionalEnum(['primary', 'secondary', 'tertiary', 'university', 'postgraduate']).optional(),
+  education_title: stringToNull.optional(),
+  languages: stringToNull.optional(),
+  emergency_contact_relationship: stringToNull.optional(),
+  emergency_contact_first_name: stringToNull.optional(),
+  emergency_contact_last_name: stringToNull.optional(),
+  emergency_contact_address: stringToNull.optional(),
+  emergency_contact_phone: stringToNull.optional(),
+  legal_entity_id: optionalUuid.optional(),
+  department_id: optionalUuid.optional(),
+  manager_id: optionalUuid.optional(),
+  job_title: stringToNull.optional(),
+  seniority_level: stringToNull.optional(),
   status: z.enum(['active', 'inactive', 'terminated']).optional(),
-  hire_date: emptyToNullOrUndefined.optional(),
-  termination_date: emptyToNullOrUndefined.optional(),
+  hire_date: stringToNull.optional(),
+  termination_date: stringToNull.optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
