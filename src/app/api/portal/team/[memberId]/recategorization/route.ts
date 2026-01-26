@@ -156,7 +156,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Validate body
     const parsed = RecategorizationSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Datos inválidos', details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Datos inválidos', details: parsed.error.issues }, { status: 400 });
     }
 
     const { evaluation_id, level_recategorization, position_recategorization, recommended_level, notes } = parsed.data;
