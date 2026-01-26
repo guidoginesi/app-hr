@@ -136,15 +136,15 @@ export default async function AdminHome() {
               {module.available ? (
                 <Link
                   href={module.href}
-                  className="group block rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-zinc-300 hover:shadow-md"
+                  className="group flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-zinc-300 hover:shadow-md"
                 >
-                  <div className={`inline-flex rounded-lg ${module.bgLight} p-3`}>
+                  <div className={`inline-flex rounded-lg ${module.bgLight} p-3 self-start`}>
                     <span className={module.textColor}>{module.icon}</span>
                   </div>
                   <h3 className="mt-4 text-lg font-semibold text-zinc-900 group-hover:text-black">
                     {module.name}
                   </h3>
-                  <p className="mt-2 text-sm text-zinc-500">{module.description}</p>
+                  <p className="mt-2 flex-1 text-sm text-zinc-500">{module.description}</p>
                   <div className="mt-4 flex items-center justify-between">
                     <span className="text-sm font-medium text-zinc-600">{module.stats}</span>
                     <span className={`inline-flex items-center gap-1 text-sm font-medium ${module.textColor}`}>
@@ -156,12 +156,12 @@ export default async function AdminHome() {
                   </div>
                 </Link>
               ) : (
-                <div className="block rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
-                  <div className={`inline-flex rounded-lg bg-zinc-100 p-3`}>
+                <div className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
+                  <div className={`inline-flex rounded-lg bg-zinc-100 p-3 self-start`}>
                     <span className="text-zinc-400">{module.icon}</span>
                   </div>
                   <h3 className="mt-4 text-lg font-semibold text-zinc-500">{module.name}</h3>
-                  <p className="mt-2 text-sm text-zinc-400">{module.description}</p>
+                  <p className="mt-2 flex-1 text-sm text-zinc-400">{module.description}</p>
                   <div className="mt-4">
                     <span className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500">
                       Próximamente
