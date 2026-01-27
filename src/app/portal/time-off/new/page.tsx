@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
 
+// Parse date string as local date to avoid timezone issues
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export default function NewTimeOffRequestPage() {
   const router = useRouter();
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
@@ -47,8 +53,8 @@ export default function NewTimeOffRequestPage() {
   function calculateDays(): number {
     if (!startDate || !endDate) return 0;
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
 
     if (end < start) return 0;
 
@@ -103,8 +109,8 @@ export default function NewTimeOffRequestPage() {
 
     // Validate remote work weeks
     if (selectedLeaveType?.code === 'remote_work') {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      const start = parseLocalDate(startDate);
+      const end = parseLocalDate(endDate);
 
       if (start.getDay() !== 1) {
         setError('Las semanas de trabajo remoto deben comenzar un lunes');
