@@ -3,6 +3,12 @@ import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
+// Parse date string as local date to avoid timezone issues
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 const CreateRequestSchema = z.object({
   leave_type_id: z.string().uuid('Tipo de licencia inválido'),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de inicio inválida'),
@@ -98,7 +104,7 @@ export async function POST(req: NextRequest) {
     // Validate advance notice
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const startDate = new Date(parsed.data.start_date);
+    const startDate = parseLocalDate(parsed.data.start_date);
     const daysUntilStart = Math.floor(
       (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -131,7 +137,7 @@ export async function POST(req: NextRequest) {
     // Validate remote work weeks
     if (leaveType.code === 'remote_work') {
       const startDay = startDate.getDay();
-      const endDate = new Date(parsed.data.end_date);
+      const endDate = parseLocalDate(parsed.data.end_date);
       const endDay = endDate.getDay();
 
       // Monday is 1, Sunday is 0
@@ -151,7 +157,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check balance
-    const startYear = new Date(parsed.data.start_date).getFullYear();
+    const startYear = parseLocalDate(parsed.data.start_date).getFullYear();
     const { data: balance } = await supabase
       .from('leave_balances')
       .select('*')
@@ -225,10 +231,10 @@ export async function POST(req: NextRequest) {
     // Handle remote work weeks
     if (leaveType.code === 'remote_work') {
       const weeks = [];
-      let currentDate = new Date(parsed.data.start_date);
-      const endDate = new Date(parsed.data.end_date);
+      let currentDate = parseLocalDate(parsed.data.start_date);
+      const endDateForWeeks = parseLocalDate(parsed.data.end_date);
 
-      while (currentDate <= endDate) {
+      while (currentDate <= endDateForWeeks) {
         const weekNumber = getISOWeek(currentDate);
         const weekStart = new Date(currentDate);
         const weekEnd = new Date(currentDate);
