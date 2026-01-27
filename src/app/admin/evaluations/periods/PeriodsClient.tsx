@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { EvaluationPeriod, PeriodStatus } from '@/types/evaluation';
 
+// Helper to format date without timezone issues
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('es-AR');
+}
+
 type PeriodsClientProps = {
   periods: EvaluationPeriod[];
 };
@@ -387,11 +394,11 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                       )}
                     </div>
                     <p className="mt-1 text-sm text-zinc-500">
-                      Período: {new Date(period.start_date).toLocaleDateString('es-AR')} - {new Date(period.end_date).toLocaleDateString('es-AR')}
+                      Período: {formatDate(period.start_date)} - {formatDate(period.end_date)}
                     </p>
                     {period.evaluation_start_date && period.evaluation_end_date && (
                       <p className="text-xs text-purple-600">
-                        Ventana: {new Date(period.evaluation_start_date).toLocaleDateString('es-AR')} - {new Date(period.evaluation_end_date).toLocaleDateString('es-AR')}
+                        Ventana: {formatDate(period.evaluation_start_date)} - {formatDate(period.evaluation_end_date)}
                       </p>
                     )}
                   </div>

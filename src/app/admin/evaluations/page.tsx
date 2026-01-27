@@ -6,6 +6,12 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
+// Helper to format date without timezone issues
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('es-AR');
+}
+
 export default async function EvaluationsDashboardPage() {
   const { isAdmin } = await requireAdmin();
   if (!isAdmin) {
@@ -52,7 +58,7 @@ export default async function EvaluationsDashboardPage() {
                   <h2 className="text-lg font-semibold text-purple-900">{activePeriod.name}</h2>
                 </div>
                 <p className="mt-1 text-sm text-purple-700">
-                  {new Date(activePeriod.start_date).toLocaleDateString('es-AR')} - {new Date(activePeriod.end_date).toLocaleDateString('es-AR')}
+                  {formatDate(activePeriod.start_date)} - {formatDate(activePeriod.end_date)}
                 </p>
               </div>
               <Link
@@ -153,7 +159,7 @@ export default async function EvaluationsDashboardPage() {
                     <div>
                       <p className="font-medium text-zinc-900">{period.name}</p>
                       <p className="text-sm text-zinc-500">
-                        {new Date(period.start_date).toLocaleDateString('es-AR')} - {new Date(period.end_date).toLocaleDateString('es-AR')}
+                        {formatDate(period.start_date)} - {formatDate(period.end_date)}
                       </p>
                     </div>
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
