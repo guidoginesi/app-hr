@@ -186,12 +186,50 @@ export function LeaderEvaluationWizard({
     return 'open_questions';
   };
 
+  // Validate current dimension has all scores and explanations filled (required)
+  const validateCurrentDimension = (): { valid: boolean; missingScore: boolean; missingExplanation: boolean } => {
+    const dimIndex = currentStep.startsWith('dimension_') ? parseInt(currentStep.split('_')[1]) - 1 : -1;
+    const currentDim = dimIndex >= 0 ? dimensions[dimIndex] : null;
+    if (!currentDim) return { valid: true, missingScore: false, missingExplanation: false };
+    
+    let missingScore = false;
+    let missingExplanation = false;
+    
+    for (const item of currentDim.items) {
+      const response = responses[item.id];
+      if (!response?.score) {
+        missingScore = true;
+      }
+      if (response?.score && !response?.explanation?.trim()) {
+        missingExplanation = true;
+      }
+    }
+    
+    return { 
+      valid: !missingScore && !missingExplanation, 
+      missingScore, 
+      missingExplanation 
+    };
+  };
+
   const goNext = () => {
     if (currentStep === 'preview') {
       goToStep('instructions');
     } else if (currentStep === 'instructions') {
       goToStep('dimension_1');
     } else if (currentStep.startsWith('dimension_')) {
+      // Validate scores and explanations before advancing
+      const validation = validateCurrentDimension();
+      if (!validation.valid) {
+        if (validation.missingScore) {
+          setError('Por favor seleccioná una puntuación para todas las afirmaciones antes de continuar.');
+        } else if (validation.missingExplanation) {
+          setError('Por favor completá la explicación de todas las respuestas antes de continuar.');
+        }
+        return;
+      }
+      setError(null);
+      
       const dimIndex = parseInt(currentStep.split('_')[1]);
       if (dimIndex < dimensions.length) {
         goToStep(`dimension_${dimIndex + 1}`);
@@ -418,25 +456,45 @@ export function LeaderEvaluationWizard({
 
               <div className="space-y-8">
                 {currentDimension.items.map((item, idx) => (
-                  <div key={item.id} className="space-y-4 p-4 rounded-lg bg-zinc-50 border border-zinc-200">
+                  <div key={item.id} className={`space-y-4 p-4 rounded-lg border ${
+                    !responses[item.id]?.score && error?.includes('puntuación')
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-zinc-50 border-zinc-200'
+                  }`}>
                     <p className="font-medium text-zinc-800">
                       {idx + 1}. {item.statement}
                     </p>
-                    <ScaleInput
-                      value={responses[item.id]?.score || null}
-                      onChange={(score) => handleResponseChange(item.id, 'score', score)}
-                    />
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-medium text-zinc-500">Puntuación <span className="text-red-500">*</span></span>
+                        {!responses[item.id]?.score && error?.includes('puntuación') && (
+                          <span className="text-xs text-red-500">Requerido</span>
+                        )}
+                      </div>
+                      <ScaleInput
+                        value={responses[item.id]?.score || null}
+                        onChange={(score) => handleResponseChange(item.id, 'score', score)}
+                      />
+                    </div>
                     <div>
                       <label className="block text-xs font-medium text-zinc-500 mb-1">
-                        Explicá tu puntuación (opcional)
+                        Explicá tu puntuación <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         value={responses[item.id]?.explanation || ''}
                         onChange={(e) => handleResponseChange(item.id, 'explanation', e.target.value)}
                         rows={2}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                        placeholder="Comentarios o ejemplos..."
+                        required
+                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 ${
+                          responses[item.id]?.score && !responses[item.id]?.explanation?.trim() 
+                            ? 'border-red-300 bg-red-50' 
+                            : 'border-zinc-300'
+                        }`}
+                        placeholder="Comentarios o ejemplos (obligatorio)..."
                       />
+                      {responses[item.id]?.score && !responses[item.id]?.explanation?.trim() && (
+                        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                      )}
                     </div>
                   </div>
                 ))}

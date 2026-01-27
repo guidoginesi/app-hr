@@ -136,26 +136,42 @@ export function AutoevaluacionWizard({
     }
   };
 
-  // Validate current dimension has all explanations filled
-  const validateCurrentDimension = (): boolean => {
-    if (!currentDimension) return true;
+  // Validate current dimension has all scores and explanations filled
+  const validateCurrentDimension = (): { valid: boolean; missingScore: boolean; missingExplanation: boolean } => {
+    if (!currentDimension) return { valid: true, missingScore: false, missingExplanation: false };
+    
+    let missingScore = false;
+    let missingExplanation = false;
     
     for (const item of currentDimension.items) {
       const response = responses[item.id];
+      if (!response?.score) {
+        missingScore = true;
+      }
       if (response?.score && !response?.explanation?.trim()) {
-        return false;
+        missingExplanation = true;
       }
     }
-    return true;
+    
+    return { 
+      valid: !missingScore && !missingExplanation, 
+      missingScore, 
+      missingExplanation 
+    };
   };
 
   const goNext = () => {
     if (currentStep === 'instructions') {
       goToStep('dimension_1');
     } else if (currentStep.startsWith('dimension_')) {
-      // Validate explanations before advancing
-      if (!validateCurrentDimension()) {
-        setError('Por favor completá la explicación de todas las respuestas antes de continuar.');
+      // Validate scores and explanations before advancing
+      const validation = validateCurrentDimension();
+      if (!validation.valid) {
+        if (validation.missingScore) {
+          setError('Por favor seleccioná una puntuación para todas las afirmaciones antes de continuar.');
+        } else if (validation.missingExplanation) {
+          setError('Por favor completá la explicación de todas las respuestas antes de continuar.');
+        }
         return;
       }
       setError(null);
@@ -305,14 +321,26 @@ export function AutoevaluacionWizard({
 
               <div className="space-y-8">
                 {currentDimension.items.map((item, idx) => (
-                  <div key={item.id} className="space-y-4 p-4 rounded-lg bg-zinc-50 border border-zinc-200">
+                  <div key={item.id} className={`space-y-4 p-4 rounded-lg border ${
+                    !responses[item.id]?.score && error?.includes('puntuación')
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-zinc-50 border-zinc-200'
+                  }`}>
                     <p className="font-medium text-zinc-800">
                       {idx + 1}. {item.statement}
                     </p>
-                    <ScaleInput
-                      value={responses[item.id]?.score || null}
-                      onChange={(score) => handleResponseChange(item.id, 'score', score)}
-                    />
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-medium text-zinc-500">Puntuación <span className="text-red-500">*</span></span>
+                        {!responses[item.id]?.score && error?.includes('puntuación') && (
+                          <span className="text-xs text-red-500">Requerido</span>
+                        )}
+                      </div>
+                      <ScaleInput
+                        value={responses[item.id]?.score || null}
+                        onChange={(score) => handleResponseChange(item.id, 'score', score)}
+                      />
+                    </div>
                     <div>
                       <label className="block text-xs font-medium text-zinc-500 mb-1">
                         Explicá tu puntuación <span className="text-red-500">*</span>
