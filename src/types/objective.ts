@@ -1,6 +1,6 @@
 // Objectives Module Types
 
-export type ObjectivePeriodType = 'annual' | 'q1' | 'q2' | 'q3' | 'q4';
+export type ObjectivePeriodType = 'annual' | 's1' | 's2' | 'q1' | 'q2' | 'q3' | 'q4';
 export type ObjectiveStatus = 'not_started' | 'in_progress' | 'completed';
 export type ObjectivesPeriodType = 'definition' | 'evaluation';
 
@@ -76,6 +76,8 @@ export interface ObjectiveFormData {
 
 export const PERIOD_TYPE_LABELS: Record<ObjectivePeriodType, string> = {
   annual: 'Anual',
+  s1: '1° Semestre',
+  s2: '2° Semestre',
   q1: '1° Trimestre',
   q2: '2° Trimestre',
   q3: '3° Trimestre',

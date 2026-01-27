@@ -12,7 +12,7 @@ const CreateObjectiveSchema = z.object({
     { message: 'Debes seleccionar un colaborador válido' }
   ),
   year: z.number().int().min(2020).max(2100),
-  period_type: z.enum(['annual', 'q1', 'q2', 'q3', 'q4']),
+  period_type: z.enum(['annual', 's1', 's2', 'q1', 'q2', 'q3', 'q4']),
   title: z.string().min(1, 'El título es requerido'),
   description: z.string().optional(),
   progress_percentage: z.number().int().min(0).max(100).optional().default(0),

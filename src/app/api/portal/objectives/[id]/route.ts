@@ -5,7 +5,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdateObjectiveSchema = z.object({
   year: z.number().int().min(2020).max(2100).optional(),
-  period_type: z.enum(['annual', 'q1', 'q2', 'q3', 'q4']).optional(),
+  period_type: z.enum(['annual', 's1', 's2', 'q1', 'q2', 'q3', 'q4']).optional(),
   title: z.string().min(1).optional(),
   description: z.union([z.string(), z.null()]).optional(),
   progress_percentage: z.number().int().min(0).max(100).optional(),
