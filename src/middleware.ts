@@ -50,10 +50,13 @@ export async function middleware(request: NextRequest) {
         return request.cookies.get(name)?.value;
       },
       set(name: string, value: string, options) {
+        // Set cookie with extended expiration for better session persistence
         response.cookies.set({
           name,
           value,
           ...options,
+          // Ensure cookies persist for 7 days
+          maxAge: options?.maxAge ?? 60 * 60 * 24 * 7,
         });
       },
       remove(name: string, options) {
@@ -61,12 +64,29 @@ export async function middleware(request: NextRequest) {
           name,
           value: '',
           ...options,
+          maxAge: 0,
         });
       },
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // getUser() will automatically refresh the token if needed
+  // and update the cookies through the set() callback above
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  // If there's an auth error, try to refresh the session
+  if (error && error.message?.includes('token')) {
+    const { data: { session } } = await supabase.auth.refreshSession();
+    if (!session) {
+      // Clear role cache on auth failure
+      const pathname = request.nextUrl.pathname;
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
+      } else if (pathname.startsWith('/portal')) {
+        return NextResponse.redirect(new URL('/portal/login', request.url));
+      }
+    }
+  }
   const pathname = request.nextUrl.pathname;
 
   // Admin routes protection
