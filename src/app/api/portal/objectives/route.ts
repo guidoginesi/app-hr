@@ -3,8 +3,14 @@ import { z } from 'zod';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const CreateObjectiveSchema = z.object({
-  employee_id: z.string().uuid(),
+  employee_id: z.string().refine(
+    (val) => val && UUID_REGEX.test(val),
+    { message: 'Debes seleccionar un colaborador válido' }
+  ),
   year: z.number().int().min(2020).max(2100),
   period_type: z.enum(['annual', 'q1', 'q2', 'q3', 'q4']),
   title: z.string().min(1, 'El título es requerido'),
