@@ -139,7 +139,10 @@ export default async function TimeOffDashboardPage() {
                         </p>
                       </div>
                       <span className="text-sm font-medium text-amber-600">
-                        {request.days_requested} día{request.days_requested > 1 ? 's' : ''}
+                        {request.days_requested}{' '}
+                        {request.count_type === 'weeks' 
+                          ? `semana${request.days_requested > 1 ? 's' : ''}`
+                          : `día${request.days_requested > 1 ? 's' : ''}`}
                       </span>
                     </div>
                   </li>

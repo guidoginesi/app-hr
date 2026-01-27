@@ -162,7 +162,10 @@ export default function TimeOffRequestsHistoryPage() {
                         })}
                       </p>
                       <p className="mt-1 text-sm text-zinc-500">
-                        {request.days_requested} día{request.days_requested > 1 ? 's' : ''}
+                        {request.days_requested}{' '}
+                        {request.count_type === 'weeks' 
+                          ? `semana${request.days_requested > 1 ? 's' : ''}`
+                          : `día${request.days_requested > 1 ? 's' : ''}`}
                         {request.notes && ` • ${request.notes}`}
                       </p>
                       {request.status === 'rejected' && request.rejection_reason && (

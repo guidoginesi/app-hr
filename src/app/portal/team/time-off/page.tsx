@@ -203,8 +203,10 @@ export default function TeamTimeOffPage() {
                           </span>
                         </div>
                         <p className="mt-1 text-sm font-medium text-zinc-700">
-                          {request.leave_type_name} • {request.days_requested} día
-                          {request.days_requested > 1 ? 's' : ''}
+                          {request.leave_type_name} • {request.days_requested}{' '}
+                          {request.count_type === 'weeks' 
+                            ? `semana${request.days_requested > 1 ? 's' : ''}`
+                            : `día${request.days_requested > 1 ? 's' : ''}`}
                         </p>
                         <p className="text-sm text-zinc-500">
                           {new Date(request.start_date).toLocaleDateString('es-AR', {

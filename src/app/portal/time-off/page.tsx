@@ -185,7 +185,10 @@ export default async function TimeOffPortalPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-zinc-600">
-                        {request.days_requested} día{request.days_requested > 1 ? 's' : ''}
+                        {request.days_requested}{' '}
+                        {request.count_type === 'weeks' 
+                          ? `semana${request.days_requested > 1 ? 's' : ''}`
+                          : `día${request.days_requested > 1 ? 's' : ''}`}
                       </span>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
