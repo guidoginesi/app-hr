@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
+import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const RejectSchema = z.object({
   rejection_reason: z.string().min(1, 'El motivo de rechazo es requerido'),
 });
 
-// PUT /api/portal/team/time-off/requests/[id]/reject - Reject a team member's leave request
+// PUT /api/admin/time-off/requests/[id]/reject - HR Admin rejects a leave request
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = await requirePortalAccess();
-    if (!auth?.employee || !auth.isLeader) {
+    const auth = await getAuthResult();
+    if (!auth?.isAdmin || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -42,33 +42,29 @@ export async function PUT(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // Verify the employee is a direct report
-    const directReports = await getDirectReports(auth.employee.id);
-    const directReportIds = directReports.map((e) => e.id);
-
-    if (!directReportIds.includes(request.employee_id)) {
+    // HR can only reject requests that are pending_hr (already approved by leader)
+    if (request.status !== 'pending_hr') {
+      if (request.status === 'pending_leader' || request.status === 'pending') {
+        return NextResponse.json(
+          { error: 'Esta solicitud aún está pendiente de aprobación del líder' },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
-        { error: 'No tienes permiso para rechazar esta solicitud' },
-        { status: 403 }
-      );
-    }
-
-    // Can only reject pending_leader requests (or legacy 'pending')
-    if (request.status !== 'pending_leader' && request.status !== 'pending') {
-      return NextResponse.json(
-        { error: 'Solo se pueden rechazar solicitudes pendientes de aprobación del líder' },
+        { error: 'Solo se pueden rechazar solicitudes pendientes de HR' },
         { status: 400 }
       );
     }
 
-    // Update the request - set to rejected_leader (final state)
+    // Update the request - rejected by HR (final state)
     const { data, error } = await supabase
       .from('leave_requests')
       .update({
-        status: 'rejected_leader',
-        leader_rejection_reason: parsed.data.rejection_reason,
+        status: 'rejected_hr',
+        hr_approved_by: auth.employee.id,
+        hr_approved_at: new Date().toISOString(),
+        hr_rejection_reason: parsed.data.rejection_reason,
         // Also update legacy fields for backward compatibility
-        approved_by: auth.employee.id,
         approved_at: new Date().toISOString(),
         rejection_reason: parsed.data.rejection_reason,
       })
@@ -107,7 +103,7 @@ export async function PUT(
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error('Error in PUT /api/portal/team/time-off/requests/[id]/reject:', error);
+    console.error('Error in PUT /api/admin/time-off/requests/[id]/reject:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

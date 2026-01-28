@@ -177,13 +177,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check for overlapping requests
+    // Check for overlapping requests (exclude final rejected/cancelled statuses)
     const { data: overlapping } = await supabase
       .from('leave_requests')
       .select('id')
       .eq('employee_id', auth.employee.id)
-      .neq('status', 'cancelled')
-      .neq('status', 'rejected')
+      .not('status', 'in', '("cancelled","rejected","rejected_leader","rejected_hr")')
       .lte('start_date', parsed.data.end_date)
       .gte('end_date', parsed.data.start_date)
       .limit(1);
@@ -195,11 +194,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create the request
+    // Get employee's manager for two-level approval flow
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('manager_id')
+      .eq('id', auth.employee.id)
+      .single();
+
+    if (!employee?.manager_id) {
+      return NextResponse.json(
+        { error: 'No tienes un líder asignado. Contacta a HR para configurar tu manager.' },
+        { status: 400 }
+      );
+    }
+
+    // Create the request with pending_leader status and assigned leader
     const { data, error } = await supabase
       .from('leave_requests')
       .insert({
         employee_id: auth.employee.id,
+        status: 'pending_leader',
+        leader_id: employee.manager_id,
         ...parsed.data,
       })
       .select()

@@ -38,21 +38,23 @@ export async function PUT(
       );
     }
 
-    // Can only approve pending requests
-    if (request.status !== 'pending') {
+    // Can only approve pending_leader requests (or legacy 'pending')
+    if (request.status !== 'pending_leader' && request.status !== 'pending') {
       return NextResponse.json(
-        { error: 'Solo se pueden aprobar solicitudes pendientes' },
+        { error: 'Solo se pueden aprobar solicitudes pendientes de aprobación del líder' },
         { status: 400 }
       );
     }
 
-    // Update the request
+    // Update the request - move to pending_hr (awaiting HR approval)
+    // Note: We DON'T move days to used_days yet - that happens when HR approves
     const { data, error } = await supabase
       .from('leave_requests')
       .update({
-        status: 'approved',
+        status: 'pending_hr',
+        leader_approved_at: new Date().toISOString(),
+        // Also update legacy fields for backward compatibility
         approved_by: auth.employee.id,
-        approved_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
@@ -63,27 +65,8 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update balance: move from pending to used
-    const startYear = new Date(request.start_date).getFullYear();
-    const { data: balance } = await supabase
-      .from('leave_balances')
-      .select('pending_days, used_days')
-      .eq('employee_id', request.employee_id)
-      .eq('leave_type_id', request.leave_type_id)
-      .eq('year', startYear)
-      .single();
-
-    if (balance) {
-      await supabase
-        .from('leave_balances')
-        .update({
-          pending_days: Math.max(0, balance.pending_days - request.days_requested),
-          used_days: balance.used_days + request.days_requested,
-        })
-        .eq('employee_id', request.employee_id)
-        .eq('leave_type_id', request.leave_type_id)
-        .eq('year', startYear);
-    }
+    // Note: Balance stays in pending_days until HR approves
+    // No balance update needed at this stage
 
     return NextResponse.json(data);
   } catch (error: any) {

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import type { LeaveRequestWithDetails } from '@/types/time-off';
+import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
+import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS, CANCELLABLE_STATUSES } from '@/types/time-off';
 
 export default function TimeOffRequestsHistoryPage() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
@@ -51,34 +52,17 @@ export default function TimeOffRequestsHistoryPage() {
     }
   }
 
-  function getStatusBadge(status: string) {
-    switch (status) {
-      case 'pending':
-        return 'bg-amber-100 text-amber-700';
-      case 'approved':
-        return 'bg-green-100 text-green-700';
-      case 'rejected':
-        return 'bg-red-100 text-red-700';
-      case 'cancelled':
-        return 'bg-zinc-100 text-zinc-600';
-      default:
-        return 'bg-zinc-100 text-zinc-600';
-    }
+  function getStatusBadge(status: LeaveRequestStatus) {
+    const colors = LEAVE_STATUS_COLORS[status] || LEAVE_STATUS_COLORS.pending;
+    return `${colors.bg} ${colors.text}`;
   }
 
-  function getStatusText(status: string) {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'approved':
-        return 'Aprobada';
-      case 'rejected':
-        return 'Rechazada';
-      case 'cancelled':
-        return 'Cancelada';
-      default:
-        return status;
-    }
+  function getStatusText(status: LeaveRequestStatus) {
+    return LEAVE_STATUS_LABELS[status] || status;
+  }
+
+  function canCancel(status: LeaveRequestStatus) {
+    return CANCELLABLE_STATUSES.includes(status);
   }
 
   return (
@@ -115,9 +99,11 @@ export default function TimeOffRequestsHistoryPage() {
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           >
             <option value="">Todos los estados</option>
-            <option value="pending">Pendientes</option>
+            <option value="pending_leader">Pendiente Líder</option>
+            <option value="pending_hr">Pendiente HR</option>
             <option value="approved">Aprobadas</option>
-            <option value="rejected">Rechazadas</option>
+            <option value="rejected_leader">Rechazadas por Líder</option>
+            <option value="rejected_hr">Rechazadas por HR</option>
             <option value="cancelled">Canceladas</option>
           </select>
         </div>
@@ -140,10 +126,10 @@ export default function TimeOffRequestsHistoryPage() {
                         <h3 className="font-semibold text-zinc-900">{request.leave_type_name}</h3>
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(
-                            request.status
+                            request.status as LeaveRequestStatus
                           )}`}
                         >
-                          {getStatusText(request.status)}
+                          {getStatusText(request.status as LeaveRequestStatus)}
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-zinc-600">
@@ -168,19 +154,83 @@ export default function TimeOffRequestsHistoryPage() {
                           : `día${request.days_requested > 1 ? 's' : ''}`}
                         {request.notes && ` • ${request.notes}`}
                       </p>
-                      {request.status === 'rejected' && request.rejection_reason && (
+                      
+                      {/* Two-level approval timeline */}
+                      <div className="mt-3 flex flex-wrap items-center gap-4">
+                        {/* Leader approval status */}
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                            request.leader_approved_at 
+                              ? 'bg-green-100 text-green-600' 
+                              : request.status === 'rejected_leader'
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-zinc-100 text-zinc-400'
+                          }`}>
+                            {request.leader_approved_at ? (
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            ) : request.status === 'rejected_leader' ? (
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            ) : '1'}
+                          </span>
+                          <span className="text-zinc-600">
+                            Líder: {request.leader_name || 'Pendiente'}
+                            {request.leader_approved_at && (
+                              <span className="text-zinc-400"> ({new Date(request.leader_approved_at).toLocaleDateString('es-AR')})</span>
+                            )}
+                          </span>
+                        </div>
+                        
+                        {/* HR approval status */}
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                            request.hr_approved_at && request.status === 'approved'
+                              ? 'bg-green-100 text-green-600' 
+                              : request.status === 'rejected_hr'
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-zinc-100 text-zinc-400'
+                          }`}>
+                            {request.hr_approved_at && request.status === 'approved' ? (
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            ) : request.status === 'rejected_hr' ? (
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            ) : '2'}
+                          </span>
+                          <span className="text-zinc-600">
+                            HR: {request.hr_approver_name || 'Pendiente'}
+                            {request.hr_approved_at && (
+                              <span className="text-zinc-400"> ({new Date(request.hr_approved_at).toLocaleDateString('es-AR')})</span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Rejection reasons */}
+                      {request.leader_rejection_reason && (
+                        <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                          <strong>Motivo (Líder):</strong> {request.leader_rejection_reason}
+                        </p>
+                      )}
+                      {request.hr_rejection_reason && (
+                        <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                          <strong>Motivo (HR):</strong> {request.hr_rejection_reason}
+                        </p>
+                      )}
+                      {/* Legacy rejection reason fallback */}
+                      {request.rejection_reason && !request.leader_rejection_reason && !request.hr_rejection_reason && (
                         <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
                           <strong>Motivo:</strong> {request.rejection_reason}
                         </p>
                       )}
-                      {request.status === 'approved' && request.approver_name && (
-                        <p className="mt-2 text-xs text-zinc-500">
-                          Aprobado por {request.approver_name} el{' '}
-                          {new Date(request.approved_at!).toLocaleDateString('es-AR')}
-                        </p>
-                      )}
                     </div>
-                    {request.status === 'pending' && (
+                    {canCancel(request.status as LeaveRequestStatus) && (
                       <button
                         onClick={() => handleCancel(request.id)}
                         disabled={cancellingId === request.id}

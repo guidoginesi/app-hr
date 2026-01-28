@@ -60,10 +60,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // Can only cancel pending requests
-    if (request.status !== 'pending') {
+    // Can only cancel requests that are not in a final state
+    const cancellableStatuses = ['pending', 'pending_leader', 'pending_hr'];
+    if (!cancellableStatuses.includes(request.status)) {
       return NextResponse.json(
-        { error: 'Solo se pueden cancelar solicitudes pendientes' },
+        { error: 'Solo se pueden cancelar solicitudes que aún no han sido aprobadas o rechazadas' },
         { status: 400 }
       );
     }
