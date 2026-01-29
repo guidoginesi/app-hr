@@ -115,6 +115,7 @@ export interface LeaveBalance {
   used_days: number;
   pending_days: number;
   carried_over: number;
+  bonus_days: number;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +129,7 @@ export interface LeaveBalanceWithDetails extends LeaveBalance {
   hire_date: string | null;
   is_studying: boolean;
   available_days: number;
+  // bonus_days is inherited from LeaveBalance
 }
 
 export interface RemoteWorkWeek {

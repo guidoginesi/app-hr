@@ -19,11 +19,29 @@ interface EmployeeWithBalances {
   };
 }
 
+interface BonusModalState {
+  isOpen: boolean;
+  employeeId: string;
+  employeeName: string;
+  leaveTypeId: string;
+  leaveTypeName: string;
+}
+
 export default function TimeOffBalancesPage() {
   const [employees, setEmployees] = useState<EmployeeWithBalances[]>([]);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [bonusModal, setBonusModal] = useState<BonusModalState>({
+    isOpen: false,
+    employeeId: '',
+    employeeName: '',
+    leaveTypeId: '',
+    leaveTypeName: '',
+  });
+  const [bonusDays, setBonusDays] = useState<string>('1');
+  const [bonusReason, setBonusReason] = useState('');
+  const [addingBonus, setAddingBonus] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth(); // 0-indexed, October = 9
@@ -109,6 +127,72 @@ export default function TimeOffBalancesPage() {
       console.error('Error recalculating balances:', error);
     } finally {
       setRecalculating(false);
+    }
+  }
+
+  function openBonusModal(employeeId: string, employeeName: string, leaveTypeId: string, leaveTypeName: string) {
+    setBonusModal({
+      isOpen: true,
+      employeeId,
+      employeeName,
+      leaveTypeId,
+      leaveTypeName,
+    });
+    setBonusDays('1');
+    setBonusReason('');
+  }
+
+  function closeBonusModal() {
+    setBonusModal({
+      isOpen: false,
+      employeeId: '',
+      employeeName: '',
+      leaveTypeId: '',
+      leaveTypeName: '',
+    });
+  }
+
+  async function handleAddBonus() {
+    const daysValue = parseFloat(bonusDays);
+    
+    if (!bonusDays || isNaN(daysValue) || daysValue < 0.5) {
+      alert('Por favor ingresa una cantidad válida (mínimo 0.5)');
+      return;
+    }
+    
+    if (!bonusReason.trim()) {
+      alert('Por favor ingresa un motivo');
+      return;
+    }
+
+    setAddingBonus(true);
+    try {
+      const res = await fetch('/api/admin/time-off/balances/bonus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_id: bonusModal.employeeId,
+          leave_type_id: bonusModal.leaveTypeId,
+          year: currentYear,
+          days: daysValue,
+          reason: bonusReason,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert(result.message);
+        closeBonusModal();
+        fetchData();
+      } else {
+        alert(result.error || 'Error al agregar días');
+      }
+    } catch (error) {
+      console.error('Error adding bonus days:', error);
+      alert('Error al agregar días');
+    } finally {
+      setAddingBonus(false);
     }
   }
 
@@ -318,21 +402,35 @@ export default function TimeOffBalancesPage() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           {pow ? (
-                            <div>
-                              <span className="text-xl font-bold text-purple-600">
-                                {pow.available_days}
-                              </span>
-                              {(pow.entitled_days > 0 || pow.carried_over > 0) && (
-                                <span className="text-sm text-zinc-400">
-                                  {' '}/ {pow.entitled_days + pow.carried_over}
+                            <div className="flex items-center justify-center gap-2">
+                              <div>
+                                <span className="text-xl font-bold text-purple-600">
+                                  {pow.available_days}
                                 </span>
-                              )}
-                              {pow.carried_over > 0 && pow.entitled_days === 0 && (
-                                <p className="text-[10px] text-green-600">solo acum. período anterior</p>
-                              )}
-                              {pow.carried_over > 0 && pow.entitled_days > 0 && (
-                                <p className="text-[10px] text-green-600">+{pow.carried_over} acum.</p>
-                              )}
+                                {(pow.entitled_days > 0 || pow.carried_over > 0 || pow.bonus_days > 0) && (
+                                  <span className="text-sm text-zinc-400">
+                                    {' '}/ {pow.entitled_days + pow.carried_over + (pow.bonus_days || 0)}
+                                  </span>
+                                )}
+                                {pow.carried_over > 0 && pow.entitled_days === 0 && (
+                                  <p className="text-[10px] text-green-600">solo acum. período anterior</p>
+                                )}
+                                {pow.carried_over > 0 && pow.entitled_days > 0 && (
+                                  <p className="text-[10px] text-green-600">+{pow.carried_over} acum.</p>
+                                )}
+                                {pow.bonus_days > 0 && (
+                                  <p className="text-[10px] text-purple-600">+{pow.bonus_days} bonus</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => openBonusModal(emp.id, emp.name, pow.leave_type_id, 'Días Pow')}
+                                className="rounded-full bg-purple-100 p-1 text-purple-600 hover:bg-purple-200"
+                                title="Agregar días bonus"
+                              >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                              </button>
                             </div>
                           ) : (
                             <div className="text-sm text-zinc-400">
@@ -388,6 +486,66 @@ export default function TimeOffBalancesPage() {
           </div>
         )}
       </div>
+
+      {/* Modal para agregar días bonus */}
+      {bonusModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-zinc-900">
+              Agregar {bonusModal.leaveTypeName}
+            </h3>
+            <p className="mt-1 text-sm text-zinc-500">
+              Agregar días bonus a <strong>{bonusModal.employeeName}</strong>
+            </p>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700">
+                  Cantidad de días
+                </label>
+                <input
+                  type="number"
+                  min="0.5"
+                  max="30"
+                  step="0.5"
+                  value={bonusDays}
+                  onChange={(e) => setBonusDays(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-700">
+                  Motivo <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={bonusReason}
+                  onChange={(e) => setBonusReason(e.target.value)}
+                  placeholder="Ej: Premio por desempeño Q4 2025"
+                  rows={3}
+                  className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={handleAddBonus}
+                disabled={addingBonus || !bonusReason.trim()}
+                className="flex-1 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                {addingBonus ? 'Agregando...' : `Agregar ${bonusDays || '0'} día${parseFloat(bonusDays) !== 1 ? 's' : ''}`}
+              </button>
+              <button
+                onClick={closeBonusModal}
+                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </TimeOffShell>
   );
 }
