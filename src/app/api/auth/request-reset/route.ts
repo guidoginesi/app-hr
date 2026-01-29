@@ -66,8 +66,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error interno' }, { status: 500 });
     }
 
-    // Build reset URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000';
+    // Build reset URL - APP_URL for server-side (runtime), NEXT_PUBLIC_APP_URL for client (build time)
+    const baseUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000';
+    console.log('[Password Reset] Base URL:', baseUrl, {
+      APP_URL: process.env.APP_URL || 'NOT SET',
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET',
+      origin: request.headers.get('origin') || 'NOT SET',
+    });
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
     // Send email via Resend

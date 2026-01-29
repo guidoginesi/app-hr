@@ -121,7 +121,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
         // Non-fatal, user was created but email won't be sent
       } else {
         // Build setup URL (uses same reset-password page)
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'http://localhost:3000';
+        // APP_URL for server-side (runtime), NEXT_PUBLIC_APP_URL for client (build time)
+        const baseUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || 'http://localhost:3000';
         const setupUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
         // Send welcome email via Resend
