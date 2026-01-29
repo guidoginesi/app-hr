@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthResult } from '@/lib/checkAuth';
+import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const RejectSchema = z.object({
@@ -13,10 +13,18 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = await getAuthResult();
-    if (!auth?.isAdmin || !auth.employee) {
+    const { isAdmin, user } = await requireAdmin();
+    if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    
+    // Get admin's employee record (optional - may be null)
+    const supabaseForEmployee = getSupabaseServer();
+    const { data: adminEmployee } = await supabaseForEmployee
+      .from('employees')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
     const { id } = await params;
     const body = await req.json();
@@ -42,16 +50,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // HR can only reject requests that are pending_hr (already approved by leader)
-    if (request.status !== 'pending_hr') {
-      if (request.status === 'pending_leader' || request.status === 'pending') {
-        return NextResponse.json(
-          { error: 'Esta solicitud aún está pendiente de aprobación del líder' },
-          { status: 400 }
-        );
-      }
+    // HR can reject any pending request (pending, pending_leader, or pending_hr)
+    const pendingStatuses = ['pending', 'pending_leader', 'pending_hr'];
+    if (!pendingStatuses.includes(request.status)) {
       return NextResponse.json(
-        { error: 'Solo se pueden rechazar solicitudes pendientes de HR' },
+        { error: 'Solo se pueden rechazar solicitudes pendientes' },
         { status: 400 }
       );
     }
@@ -61,7 +64,7 @@ export async function PUT(
       .from('leave_requests')
       .update({
         status: 'rejected_hr',
-        hr_approved_by: auth.employee.id,
+        hr_approved_by: adminEmployee?.id || null,
         hr_approved_at: new Date().toISOString(),
         hr_rejection_reason: parsed.data.rejection_reason,
         // Also update legacy fields for backward compatibility

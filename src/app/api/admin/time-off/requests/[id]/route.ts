@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdateRequestSchema = z.object({
-  status: z.enum(['pending', 'approved', 'rejected', 'cancelled']).optional(),
+  status: z.enum(['pending', 'pending_leader', 'pending_hr', 'approved', 'rejected', 'rejected_leader', 'rejected_hr', 'cancelled']).optional(),
   rejection_reason: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
@@ -76,13 +76,17 @@ export async function PUT(
     const supabase = getSupabaseServer();
 
     // Get the current request
+    console.log('Fetching leave request with ID:', id);
     const { data: currentRequest, error: fetchError } = await supabase
       .from('leave_requests')
-      .select('*, employee:employees(id, user_id)')
+      .select('*')
       .eq('id', id)
       .single();
 
+    console.log('Fetch result:', { currentRequest, fetchError });
+
     if (fetchError || !currentRequest) {
+      console.log('Request not found or error:', fetchError);
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
@@ -102,16 +106,34 @@ export async function PUT(
     if (parsed.data.status) {
       const oldStatus = currentRequest.status;
       const newStatus = parsed.data.status;
+      const isPendingStatus = ['pending', 'pending_leader', 'pending_hr'].includes(oldStatus);
+      const isRejectedStatus = ['rejected', 'rejected_leader', 'rejected_hr'].includes(newStatus);
 
-      if (newStatus === 'approved' || newStatus === 'rejected') {
+      // HR approving - set HR fields
+      if (newStatus === 'approved') {
+        updateData.hr_approved_by = adminEmployee?.id || null;
+        updateData.hr_approved_at = new Date().toISOString();
         updateData.approved_by = adminEmployee?.id || null;
         updateData.approved_at = new Date().toISOString();
+        
+        // If skipping leader approval, also set leader fields
+        if (oldStatus === 'pending_leader' || oldStatus === 'pending') {
+          updateData.leader_id = adminEmployee?.id || null;
+          updateData.leader_approved_at = new Date().toISOString();
+        }
+      }
+
+      // HR rejecting - set HR rejection fields
+      if (isRejectedStatus) {
+        updateData.status = 'rejected_hr';
+        updateData.hr_approved_by = adminEmployee?.id || null;
+        updateData.hr_rejection_reason = parsed.data.rejection_reason || null;
       }
 
       // Update balance based on status change
       const startYear = new Date(currentRequest.start_date).getFullYear();
 
-      if (oldStatus === 'pending' && newStatus === 'approved') {
+      if (isPendingStatus && newStatus === 'approved') {
         // Move from pending to used
         const { data: balance, error: balanceFetchError } = await supabase
           .from('leave_balances')
@@ -140,7 +162,7 @@ export async function PUT(
         } else {
           console.log('No balance found for this request - skipping balance update');
         }
-      } else if (oldStatus === 'pending' && (newStatus === 'rejected' || newStatus === 'cancelled')) {
+      } else if (isPendingStatus && (isRejectedStatus || newStatus === 'cancelled')) {
         // Remove from pending
         const { data: balance } = await supabase
           .from('leave_balances')
@@ -214,8 +236,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // If pending, restore the balance
-    if (request.status === 'pending') {
+    // If pending (any pending status), restore the balance
+    if (['pending', 'pending_leader', 'pending_hr'].includes(request.status)) {
       const startYear = new Date(request.start_date).getFullYear();
       const { data: balance } = await supabase
         .from('leave_balances')

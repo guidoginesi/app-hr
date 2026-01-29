@@ -13,6 +13,8 @@ export default function TimeOffRequestsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -98,10 +100,15 @@ export default function TimeOffRequestsPage() {
   function getStatusBadge(status: string) {
     switch (status) {
       case 'pending':
+      case 'pending_leader':
         return 'bg-amber-100 text-amber-700';
+      case 'pending_hr':
+        return 'bg-blue-100 text-blue-700';
       case 'approved':
         return 'bg-green-100 text-green-700';
       case 'rejected':
+      case 'rejected_leader':
+      case 'rejected_hr':
         return 'bg-red-100 text-red-700';
       case 'cancelled':
         return 'bg-zinc-100 text-zinc-600';
@@ -114,14 +121,63 @@ export default function TimeOffRequestsPage() {
     switch (status) {
       case 'pending':
         return 'Pendiente';
+      case 'pending_leader':
+        return 'Pend. Líder';
+      case 'pending_hr':
+        return 'Pend. HR';
       case 'approved':
         return 'Aprobada';
       case 'rejected':
         return 'Rechazada';
+      case 'rejected_leader':
+        return 'Rech. Líder';
+      case 'rejected_hr':
+        return 'Rech. HR';
       case 'cancelled':
         return 'Cancelada';
       default:
         return status;
+    }
+  }
+
+  // Check if HR can take action on this request
+  function canHRApprove(status: string) {
+    return ['pending', 'pending_leader', 'pending_hr'].includes(status);
+  }
+
+  // Check if HR can cancel an approved request (before it starts)
+  function canCancel(request: LeaveRequestWithDetails): boolean {
+    if (request.status !== 'approved') return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(request.start_date);
+    return startDate > today;
+  }
+
+  async function handleCancel(id: string) {
+    if (!cancelReason.trim()) return;
+
+    setActionLoading(id);
+    try {
+      const res = await fetch(`/api/admin/time-off/requests/${id}/cancel`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancellation_reason: cancelReason }),
+      });
+
+      if (res.ok) {
+        setCancellingId(null);
+        setCancelReason('');
+        fetchData();
+      } else {
+        const errorData = await res.json();
+        alert(`Error al cancelar: ${errorData.error || 'Error desconocido'}`);
+      }
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      alert('Error de conexión al cancelar la solicitud');
+    } finally {
+      setActionLoading(null);
     }
   }
 
@@ -143,9 +199,11 @@ export default function TimeOffRequestsPage() {
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
           >
             <option value="">Todos los estados</option>
-            <option value="pending">Pendientes</option>
+            <option value="pending_leader">Pendiente Líder</option>
+            <option value="pending_hr">Pendiente HR</option>
             <option value="approved">Aprobadas</option>
-            <option value="rejected">Rechazadas</option>
+            <option value="rejected_leader">Rechazadas por Líder</option>
+            <option value="rejected_hr">Rechazadas por HR</option>
             <option value="cancelled">Canceladas</option>
           </select>
           <select
@@ -204,13 +262,10 @@ export default function TimeOffRequestsPage() {
                       >
                         {getStatusText(request.status)}
                       </span>
-                      {request.rejection_reason && (
-                        <p className="mt-1 text-xs text-red-600">{request.rejection_reason}</p>
-                      )}
                     </td>
                     <td className="px-6 py-4">
-                      {request.status === 'pending' && (
-                        <div className="flex gap-2">
+                      {canHRApprove(request.status) && (
+                        <div className="flex flex-col gap-2">
                           {rejectingId === request.id ? (
                             <div className="flex items-center gap-2">
                               <input
@@ -239,26 +294,86 @@ export default function TimeOffRequestsPage() {
                             </div>
                           ) : (
                             <>
-                              <button
-                                onClick={() => handleApprove(request.id)}
-                                disabled={actionLoading === request.id}
-                                className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                              >
-                                {actionLoading === request.id ? '...' : 'Aprobar'}
-                              </button>
-                              <button
-                                onClick={() => setRejectingId(request.id)}
-                                className="rounded border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
-                              >
-                                Rechazar
-                              </button>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleApprove(request.id)}
+                                  disabled={actionLoading === request.id}
+                                  className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                                >
+                                  {actionLoading === request.id ? '...' : 'Aprobar'}
+                                </button>
+                                <button
+                                  onClick={() => setRejectingId(request.id)}
+                                  className="rounded border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                                >
+                                  Rechazar
+                                </button>
+                              </div>
+                              {request.status === 'pending_leader' && (
+                                <span className="text-xs text-amber-600">Saltar aprobación líder</span>
+                              )}
                             </>
                           )}
                         </div>
                       )}
-                      {request.status === 'approved' && request.approver_name && (
-                        <span className="text-xs text-zinc-500">
-                          por {request.approver_name}
+                      {request.status === 'approved' && (
+                        <div className="flex flex-col gap-2">
+                          <div className="text-xs text-zinc-500">
+                            {request.hr_approver_name && <p>HR: {request.hr_approver_name}</p>}
+                            {request.leader_name && <p>Líder: {request.leader_name}</p>}
+                          </div>
+                          {canCancel(request) && (
+                            <>
+                              {cancellingId === request.id ? (
+                                <div className="flex flex-col gap-2">
+                                  <input
+                                    type="text"
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="Motivo de cancelación"
+                                    className="w-48 rounded border border-zinc-300 px-2 py-1 text-sm"
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleCancel(request.id)}
+                                      disabled={!cancelReason.trim() || actionLoading === request.id}
+                                      className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                    >
+                                      {actionLoading === request.id ? '...' : 'Confirmar'}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setCancellingId(null);
+                                        setCancelReason('');
+                                      }}
+                                      className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setCancellingId(request.id)}
+                                  className="rounded border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                                >
+                                  Cancelar solicitud
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {(request.status === 'rejected_leader' || request.status === 'rejected_hr') && (
+                        <span className="text-xs text-zinc-500 flex items-start gap-1">
+                          <span>💬</span>
+                          <span className="italic">"{request.leader_rejection_reason || request.hr_rejection_reason || request.rejection_reason}"</span>
+                        </span>
+                      )}
+                      {request.status === 'cancelled' && request.rejection_reason && (
+                        <span className="text-xs text-zinc-500 flex items-start gap-1">
+                          <span>💬</span>
+                          <span className="italic">"{request.rejection_reason}"</span>
                         </span>
                       )}
                     </td>

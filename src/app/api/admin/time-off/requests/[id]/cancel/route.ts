@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
-// PUT /api/admin/time-off/requests/[id]/approve - HR Admin approves a leave request
+const CancelSchema = z.object({
+  cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido'),
+});
+
+// PUT /api/admin/time-off/requests/[id]/cancel - HR Admin cancels an approved leave request
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,6 +19,16 @@ export async function PUT(
     }
 
     const { id } = await params;
+    const body = await req.json();
+    const parsed = CancelSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues.map((e) => e.message).join(', ') },
+        { status: 400 }
+      );
+    }
+
     const supabase = getSupabaseServer();
 
     // Get admin's employee record (optional - may be null)
@@ -34,66 +49,76 @@ export async function PUT(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // HR can approve any pending request (pending, pending_leader, or pending_hr)
-    const pendingStatuses = ['pending', 'pending_leader', 'pending_hr'];
-    if (!pendingStatuses.includes(request.status)) {
+    // Can only cancel approved requests
+    if (request.status !== 'approved') {
       return NextResponse.json(
-        { error: 'Solo se pueden aprobar solicitudes pendientes' },
+        { error: 'Solo se pueden cancelar solicitudes aprobadas' },
         { status: 400 }
       );
     }
 
-    // Update the request - final approval
-    const updateData: Record<string, unknown> = {
-      status: 'approved',
-      hr_approved_by: adminEmployee?.id || null,
-      hr_approved_at: new Date().toISOString(),
-      approved_at: new Date().toISOString(),
-    };
-
-    // If skipping leader approval, also set leader fields
-    if (request.status === 'pending_leader' || request.status === 'pending') {
-      updateData.leader_id = adminEmployee?.id || null;
-      updateData.leader_approved_at = new Date().toISOString();
+    // Check that the request hasn't started yet
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(request.start_date);
+    
+    if (startDate <= today) {
+      return NextResponse.json(
+        { error: 'No se pueden cancelar solicitudes que ya iniciaron o están en curso' },
+        { status: 400 }
+      );
     }
 
+    // Update the request to cancelled
     const { data, error } = await supabase
       .from('leave_requests')
-      .update(updateData)
+      .update({
+        status: 'cancelled',
+        rejection_reason: parsed.data.cancellation_reason,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error approving leave request:', error);
+      console.error('Error cancelling leave request:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update balance: move from pending to used
+    // Update balance: restore used days back to available
     const startYear = new Date(request.start_date).getFullYear();
     const { data: balance } = await supabase
       .from('leave_balances')
-      .select('pending_days, used_days')
+      .select('used_days')
       .eq('employee_id', request.employee_id)
       .eq('leave_type_id', request.leave_type_id)
       .eq('year', startYear)
       .single();
 
     if (balance) {
-      await supabase
+      const { error: balanceError } = await supabase
         .from('leave_balances')
         .update({
-          pending_days: Math.max(0, balance.pending_days - request.days_requested),
-          used_days: balance.used_days + request.days_requested,
+          used_days: Math.max(0, balance.used_days - request.days_requested),
         })
         .eq('employee_id', request.employee_id)
         .eq('leave_type_id', request.leave_type_id)
         .eq('year', startYear);
+
+      if (balanceError) {
+        console.error('Error restoring balance:', balanceError);
+      } else {
+        console.log(`Balance restored: ${request.days_requested} days returned to employee ${request.employee_id}`);
+      }
     }
+
+    // Delete remote work weeks if applicable
+    await supabase.from('remote_work_weeks').delete().eq('leave_request_id', id);
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error('Error in PUT /api/admin/time-off/requests/[id]/approve:', error);
+    console.error('Error in PUT /api/admin/time-off/requests/[id]/cancel:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

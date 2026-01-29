@@ -6,7 +6,17 @@ export function getSupabaseBrowser() {
 	if (!url || !anonKey) {
 		throw new Error('Supabase URL or Anon Key not configured');
 	}
-	return createBrowserClient(url, anonKey);
+	
+	return createBrowserClient(url, anonKey, {
+		auth: {
+			// Persist session in localStorage for longer-lived sessions
+			persistSession: true,
+			// Automatically refresh tokens before they expire
+			autoRefreshToken: true,
+			// Detect OAuth redirects
+			detectSessionInUrl: true,
+		},
+	});
 }
 
 

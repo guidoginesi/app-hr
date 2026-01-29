@@ -27,6 +27,58 @@ export default async function PortalTeamPage() {
           </p>
         </div>
 
+        {/* Quick actions - Moved to top */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Time Off Approvals */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-900">Aprobación de Time Off</h3>
+                <p className="text-sm text-zinc-500">Aprobar solicitudes de tu equipo</p>
+              </div>
+            </div>
+            <Link
+              href="/portal/team/time-off"
+              className="mt-4 inline-flex items-center text-sm font-medium text-amber-600 hover:text-amber-700"
+            >
+              Ver solicitudes
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
+          {/* Team Evaluations */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+                <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-900">Evaluaciones del Equipo</h3>
+                <p className="text-sm text-zinc-500">Evaluar a tu equipo</p>
+              </div>
+            </div>
+            <Link
+              href="/portal/evaluaciones"
+              className="mt-4 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700"
+            >
+              Ver evaluaciones
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+
+        {/* Team members list */}
         {directReports.length > 0 ? (
           <div className="rounded-xl border border-zinc-200 bg-white">
             <ul className="divide-y divide-zinc-200">
@@ -82,57 +134,6 @@ export default async function PortalTeamPage() {
             <p className="mt-4 text-sm text-zinc-500">No tienes personas a tu cargo</p>
           </div>
         )}
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Time Off Approvals */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-                <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-zinc-900">Aprobación de Time Off</h3>
-                <p className="text-sm text-zinc-500">Aprobar solicitudes de tu equipo</p>
-              </div>
-            </div>
-            <Link
-              href="/portal/team/time-off"
-              className="mt-4 inline-flex items-center text-sm font-medium text-amber-600 hover:text-amber-700"
-            >
-              Ver solicitudes
-              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* Team Evaluations */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-                <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-zinc-900">Evaluaciones del Equipo</h3>
-                <p className="text-sm text-zinc-500">Evaluar a tu equipo</p>
-              </div>
-            </div>
-            <Link
-              href="/portal/evaluaciones"
-              className="mt-4 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700"
-            >
-              Ver evaluaciones
-              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </div>
       </div>
     </PortalShell>
   );

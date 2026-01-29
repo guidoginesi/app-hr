@@ -70,23 +70,19 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // getUser() will automatically refresh the token if needed
-  // and update the cookies through the set() callback above
-  const { data: { user }, error } = await supabase.auth.getUser();
+  // getUser() validates the token and refreshes if needed
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
   
-  // If there's an auth error, try to refresh the session
-  if (error && error.message?.includes('token')) {
+  // If there's a token error, try to refresh the session
+  if (userError && userError.message?.includes('token')) {
+    console.log('[Middleware] Token error, attempting refresh...');
     const { data: { session } } = await supabase.auth.refreshSession();
-    if (!session) {
-      // Clear role cache on auth failure
-      const pathname = request.nextUrl.pathname;
-      if (pathname.startsWith('/admin')) {
-        return NextResponse.redirect(new URL('/admin/login', request.url));
-      } else if (pathname.startsWith('/portal')) {
-        return NextResponse.redirect(new URL('/portal/login', request.url));
-      }
+    if (session) {
+      console.log('[Middleware] Session refreshed successfully');
+      // Continue with the refreshed session - cookies are updated via set() callback
     }
   }
+  
   const pathname = request.nextUrl.pathname;
 
   // Admin routes protection
