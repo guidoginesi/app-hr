@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Employee } from '@/types/employee';
-import type { Objective, ObjectiveFormData, ObjectivePeriodType, ObjectiveStatus, ObjectivesPeriod } from '@/types/objective';
-import { PERIOD_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS } from '@/types/objective';
+import type { Objective, ObjectiveFormData, ObjectivePeriodType, ObjectiveStatus, ObjectivesPeriod, ObjectivePeriodicity } from '@/types/objective';
+import { PERIOD_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS, PERIODICITY_LABELS, SUB_OBJECTIVES_COUNT, SUB_OBJECTIVE_LABELS } from '@/types/objective';
 
 type ObjetivosClientProps = {
   employee: Employee;
@@ -62,6 +62,8 @@ export function ObjetivosClient({
     description: '',
     progress_percentage: 0,
     status: 'not_started',
+    periodicity: 'annual',
+    weight_pct: 50,
   });
 
   // Maximum 2 area objectives per employee per year
@@ -79,6 +81,8 @@ export function ObjetivosClient({
       description: '',
       progress_percentage: 0,
       status: 'not_started',
+      periodicity: 'annual',
+      weight_pct: 50,
     });
     setEditingObjective(null);
     setShowForm(false);
@@ -112,6 +116,8 @@ export function ObjetivosClient({
       description: '',
       progress_percentage: 0,
       status: 'not_started',
+      periodicity: 'annual',
+      weight_pct: 50,
     });
     setEditingObjective(null);
     setShowForm(true);
@@ -126,6 +132,8 @@ export function ObjetivosClient({
       description: objective.description || '',
       progress_percentage: objective.progress_percentage,
       status: objective.status,
+      periodicity: objective.periodicity || 'annual',
+      weight_pct: objective.weight_pct ?? 50,
     });
     setEditingObjective(objective);
     setShowForm(true);
@@ -526,6 +534,40 @@ export function ObjetivosClient({
                     />
                   </div>
 
+                  {/* Periodicity and Weight - New fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1">Periodicidad *</label>
+                      <select
+                        value={formData.periodicity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, periodicity: e.target.value as ObjectivePeriodicity }))}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      >
+                        {Object.entries(PERIODICITY_LABELS).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {formData.periodicity === 'semestral' && 'Requerirá 2 sub-objetivos'}
+                        {formData.periodicity === 'trimestral' && 'Requerirá 4 sub-objetivos'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1">Peso (%) *</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={formData.weight_pct}
+                        onChange={(e) => setFormData(prev => ({ ...prev, weight_pct: parseInt(e.target.value) || 0 }))}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      />
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Los pesos de ambos objetivos deben sumar 100%
+                      </p>
+                    </div>
+                  </div>
+
                   {editingObjective && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -663,14 +705,35 @@ function ObjectiveCard({
 }) {
   const statusColor = STATUS_COLORS[objective.status];
   const hasAchievement = objective.achievement_percentage !== null && objective.achievement_percentage !== undefined;
+  const hasSubObjectives = objective.sub_objectives && objective.sub_objectives.length > 0;
+  const requiredSubObjectives = SUB_OBJECTIVES_COUNT[objective.periodicity] || 0;
+  const actualSubObjectives = objective.sub_objectives?.length || 0;
+  const subObjectivesComplete = actualSubObjectives >= requiredSubObjectives;
+  
+  // Use calculated_progress for objectives with sub-objectives
+  const displayProgress = objective.calculated_progress ?? objective.progress_percentage;
 
   return (
     <div className="rounded-lg border border-zinc-200 p-4 hover:border-zinc-300 transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
+            {/* Objective Number */}
+            {objective.objective_number && (
+              <span className="text-xs font-bold text-white bg-purple-600 px-2 py-0.5 rounded">
+                #{objective.objective_number}
+              </span>
+            )}
             <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
-              {objective.year} - {PERIOD_TYPE_LABELS[objective.period_type]}
+              {objective.year}
+            </span>
+            {/* Periodicity badge */}
+            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+              {PERIODICITY_LABELS[objective.periodicity]?.split(' ')[0] || 'Anual'}
+            </span>
+            {/* Weight badge */}
+            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+              Peso: {objective.weight_pct ?? 50}%
             </span>
             <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor.bg} ${statusColor.text}`}>
               {STATUS_LABELS[objective.status]}
@@ -694,20 +757,64 @@ function ObjectiveCard({
           {/* Progress Bar */}
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
-              <span>Progreso</span>
-              <span>{objective.progress_percentage}%</span>
+              <span>Progreso {hasSubObjectives ? '(calculado)' : ''}</span>
+              <span>{displayProgress}%</span>
             </div>
             <div className="h-2 w-full rounded-full bg-zinc-100">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  objective.progress_percentage === 100 ? 'bg-green-500' :
-                  objective.progress_percentage >= 50 ? 'bg-purple-500' :
+                  displayProgress === 100 ? 'bg-green-500' :
+                  displayProgress >= 50 ? 'bg-purple-500' :
                   'bg-yellow-500'
                 }`}
-                style={{ width: `${Math.min(objective.progress_percentage, 100)}%` }}
+                style={{ width: `${Math.min(displayProgress, 100)}%` }}
               />
             </div>
           </div>
+
+          {/* Sub-objectives section */}
+          {requiredSubObjectives > 0 && (
+            <div className="mt-4 border-t border-zinc-100 pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-zinc-700">
+                  Sub-objetivos ({actualSubObjectives}/{requiredSubObjectives})
+                </span>
+                {!subObjectivesComplete && (
+                  <span className="text-xs text-amber-600">
+                    Faltan {requiredSubObjectives - actualSubObjectives} sub-objetivo(s)
+                  </span>
+                )}
+              </div>
+              
+              {hasSubObjectives ? (
+                <div className="space-y-2">
+                  {objective.sub_objectives!.map((sub, idx) => (
+                    <div key={sub.id} className="flex items-center gap-3 rounded-lg bg-zinc-50 p-2">
+                      <span className="text-xs font-medium text-zinc-500 w-8">
+                        {SUB_OBJECTIVE_LABELS[objective.periodicity]?.[idx] || `#${idx + 1}`}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm text-zinc-700">{sub.title}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 rounded-full bg-zinc-200">
+                          <div 
+                            className="h-1.5 rounded-full bg-purple-500"
+                            style={{ width: `${sub.progress_percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-zinc-500 w-8">{sub.progress_percentage}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-400 italic">
+                  Agrega sub-objetivos para este objetivo {objective.periodicity}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Achievement Notes */}
           {hasAchievement && objective.achievement_notes && (
@@ -727,7 +834,7 @@ function ObjectiveCard({
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Evaluar cumplimiento
+              Evaluar
             </button>
           )}
           {canEdit && (

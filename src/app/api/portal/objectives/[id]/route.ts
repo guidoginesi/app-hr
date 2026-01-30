@@ -10,6 +10,9 @@ const UpdateObjectiveSchema = z.object({
   description: z.union([z.string(), z.null()]).optional(),
   progress_percentage: z.number().int().min(0).max(100).optional(),
   status: z.enum(['not_started', 'in_progress', 'completed']).optional(),
+  // New fields for periodicity and weight
+  periodicity: z.enum(['annual', 'semestral', 'trimestral']).optional(),
+  weight_pct: z.number().int().min(0).max(100).optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -52,6 +55,27 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (!canAccess) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
+
+    // If main objective, fetch sub-objectives
+    if (!data.parent_objective_id && data.periodicity !== 'annual') {
+      const { data: subObjectives } = await supabase
+        .from('objectives')
+        .select('*')
+        .eq('parent_objective_id', id)
+        .order('sub_objective_number', { ascending: true });
+
+      // Calculate progress from sub-objectives
+      const subObjs = subObjectives || [];
+      const calculatedProgress = subObjs.length > 0
+        ? Math.round(subObjs.reduce((sum, sub) => sum + (sub.progress_percentage || 0), 0) / subObjs.length)
+        : data.progress_percentage;
+
+      return NextResponse.json({
+        ...data,
+        sub_objectives: subObjs,
+        calculated_progress: calculatedProgress,
+      });
     }
 
     return NextResponse.json(data);
