@@ -457,7 +457,7 @@ export function ObjetivosClient({
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/50" onClick={resetForm} />
-            <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
+            <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl">
               <div className="border-b border-zinc-200 px-6 py-4">
                 <h2 className="text-lg font-semibold text-zinc-900">
                   {editingObjective ? 'Editar objetivo' : 'Nuevo objetivo'}
