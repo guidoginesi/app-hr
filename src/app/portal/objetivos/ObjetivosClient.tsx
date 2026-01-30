@@ -66,6 +66,16 @@ export function ObjetivosClient({
     weight_pct: 50,
   });
 
+  // Sub-objectives state for semestral/trimestral
+  const [subObjectives, setSubObjectives] = useState<{ title: string; description: string }[]>([]);
+
+  // Update sub-objectives when periodicity changes
+  const handlePeriodicityChange = (newPeriodicity: ObjectivePeriodicity) => {
+    setFormData(prev => ({ ...prev, periodicity: newPeriodicity }));
+    const count = SUB_OBJECTIVES_COUNT[newPeriodicity] || 0;
+    setSubObjectives(Array(count).fill(null).map(() => ({ title: '', description: '' })));
+  };
+
   // Maximum 2 area objectives per employee per year
   const MAX_OBJECTIVES_PER_EMPLOYEE = 2;
 
@@ -84,6 +94,7 @@ export function ObjetivosClient({
       periodicity: 'annual',
       weight_pct: 50,
     });
+    setSubObjectives([]);
     setEditingObjective(null);
     setShowForm(false);
     setError(null);
@@ -119,6 +130,7 @@ export function ObjetivosClient({
       periodicity: 'annual',
       weight_pct: 50,
     });
+    setSubObjectives([]);
     setEditingObjective(null);
     setShowForm(true);
   };
@@ -135,6 +147,13 @@ export function ObjetivosClient({
       periodicity: objective.periodicity || 'annual',
       weight_pct: objective.weight_pct ?? 50,
     });
+    // Load existing sub-objectives or create empty slots
+    const count = SUB_OBJECTIVES_COUNT[objective.periodicity] || 0;
+    if (objective.sub_objectives && objective.sub_objectives.length > 0) {
+      setSubObjectives(objective.sub_objectives.map(s => ({ title: s.title, description: s.description || '' })));
+    } else {
+      setSubObjectives(Array(count).fill(null).map(() => ({ title: '', description: '' })));
+    }
     setEditingObjective(objective);
     setShowForm(true);
   };
@@ -143,6 +162,17 @@ export function ObjetivosClient({
     e.preventDefault();
     setSaving(true);
     setError(null);
+
+    // Validate sub-objectives if required
+    const requiredCount = SUB_OBJECTIVES_COUNT[formData.periodicity] || 0;
+    if (requiredCount > 0) {
+      const filledSubObjectives = subObjectives.filter(s => s.title.trim() !== '');
+      if (filledSubObjectives.length < requiredCount) {
+        setError(`Debe completar los ${requiredCount} sub-objetivos para periodicidad ${PERIODICITY_LABELS[formData.periodicity]}`);
+        setSaving(false);
+        return;
+      }
+    }
 
     try {
       const url = editingObjective
@@ -161,6 +191,32 @@ export function ObjetivosClient({
       if (!res.ok) {
         setError(data.error || 'Error al guardar');
         return;
+      }
+
+      // Create sub-objectives for non-annual periodicities
+      if (!editingObjective && subObjectives.length > 0) {
+        for (let i = 0; i < subObjectives.length; i++) {
+          const sub = subObjectives[i];
+          if (sub.title.trim()) {
+            await fetch('/api/portal/objectives', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                employee_id: formData.employee_id,
+                year: formData.year,
+                period_type: formData.period_type,
+                title: sub.title,
+                description: sub.description,
+                progress_percentage: 0,
+                status: 'not_started',
+                periodicity: formData.periodicity,
+                weight_pct: formData.weight_pct,
+                parent_objective_id: data.id,
+                sub_objective_number: i + 1,
+              }),
+            });
+          }
+        }
       }
 
       // Update local state
@@ -501,17 +557,13 @@ export function ObjetivosClient({
                       <label className="block text-sm font-medium text-zinc-700 mb-1">Periodicidad *</label>
                       <select
                         value={formData.periodicity}
-                        onChange={(e) => setFormData(prev => ({ ...prev, periodicity: e.target.value as ObjectivePeriodicity }))}
+                        onChange={(e) => handlePeriodicityChange(e.target.value as ObjectivePeriodicity)}
                         className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                       >
                         {Object.entries(PERIODICITY_LABELS).map(([key, label]) => (
                           <option key={key} value={key}>{label}</option>
                         ))}
                       </select>
-                      <p className="mt-1 text-xs text-zinc-500">
-                        {formData.periodicity === 'semestral' && '2 sub-objetivos'}
-                        {formData.periodicity === 'trimestral' && '4 sub-objetivos'}
-                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-zinc-700 mb-1">Peso (%) *</label>
@@ -544,12 +596,42 @@ export function ObjetivosClient({
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      rows={3}
+                      rows={2}
                       className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                       placeholder="Detalles del objetivo..."
                     />
                   </div>
 
+                  {/* Sub-objectives for semestral/trimestral */}
+                  {subObjectives.length > 0 && (
+                    <div className="border-t border-zinc-200 pt-4">
+                      <h3 className="text-sm font-medium text-zinc-700 mb-3">
+                        Sub-objetivos ({subObjectives.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {subObjectives.map((sub, idx) => (
+                          <div key={idx} className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                                {SUB_OBJECTIVE_LABELS[formData.periodicity]?.[idx] || `#${idx + 1}`}
+                              </span>
+                            </div>
+                            <input
+                              type="text"
+                              value={sub.title}
+                              onChange={(e) => {
+                                const updated = [...subObjectives];
+                                updated[idx] = { ...updated[idx], title: e.target.value };
+                                setSubObjectives(updated);
+                              }}
+                              placeholder={`Título del sub-objetivo ${idx + 1}`}
+                              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {editingObjective && (
                     <div className="grid grid-cols-2 gap-4">
