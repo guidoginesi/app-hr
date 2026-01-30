@@ -601,8 +601,8 @@ export function ObjetivosClient({
                         type="number"
                         min={0}
                         max={100}
-                        value={formData.weight_pct}
-                        onChange={(e) => setFormData(prev => ({ ...prev, weight_pct: parseInt(e.target.value) || 0 }))}
+                        value={formData.weight_pct ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, weight_pct: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
                         className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                       />
                       <p className="mt-1 text-xs text-zinc-500">Suma = 100%</p>
@@ -694,8 +694,8 @@ export function ObjetivosClient({
                           type="number"
                           min={0}
                           max={100}
-                          value={formData.progress_percentage}
-                          onChange={(e) => setFormData(prev => ({ ...prev, progress_percentage: parseInt(e.target.value) || 0 }))}
+                          value={formData.progress_percentage ?? ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, progress_percentage: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
                           className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                         />
                       </div>
@@ -758,8 +758,8 @@ export function ObjetivosClient({
                     type="number"
                     min={0}
                     max={200}
-                    value={achievementData.percentage}
-                    onChange={(e) => setAchievementData(prev => ({ ...prev, percentage: parseInt(e.target.value) || 0 }))}
+                    value={achievementData.percentage ?? ''}
+                    onChange={(e) => setAchievementData(prev => ({ ...prev, percentage: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                   />
                   <p className="mt-1 text-xs text-zinc-500">
