@@ -641,11 +641,14 @@ export function ObjetivosClient({
                   {/* Sub-objetivos para semestral/trimestral */}
                   {subObjectives.length > 0 && (
                     <div className="space-y-4">
-                      {subObjectives.map((sub, idx) => (
+                      {subObjectives.map((sub, idx) => {
+                        const periodicityKey = formData.periodicity || 'annual';
+                        const subLabel = SUB_OBJECTIVE_LABELS[periodicityKey]?.[idx] || `Objetivo ${idx + 1}`;
+                        return (
                         <div key={idx} className="rounded-lg border border-purple-200 bg-purple-50/50 p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <span className="text-sm font-semibold text-purple-700 bg-purple-100 px-2.5 py-1 rounded">
-                              {SUB_OBJECTIVE_LABELS[formData.periodicity]?.[idx] || `Objetivo ${idx + 1}`}
+                              {subLabel}
                             </span>
                           </div>
                           <div className="space-y-3">
@@ -659,7 +662,7 @@ export function ObjetivosClient({
                                   updated[idx] = { ...updated[idx], title: e.target.value };
                                   setSubObjectives(updated);
                                 }}
-                                placeholder={`Título del objetivo ${SUB_OBJECTIVE_LABELS[formData.periodicity]?.[idx] || idx + 1}`}
+                                placeholder={`Título del objetivo ${subLabel}`}
                                 className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
                               />
                             </div>
@@ -679,7 +682,7 @@ export function ObjetivosClient({
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );})}
                     </div>
                   )}
 
