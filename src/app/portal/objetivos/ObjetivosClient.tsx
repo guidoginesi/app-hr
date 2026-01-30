@@ -484,7 +484,7 @@ export function ObjetivosClient({
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-zinc-700 mb-1">Año *</label>
                       <select
@@ -498,16 +498,32 @@ export function ObjetivosClient({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Período *</label>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1">Periodicidad *</label>
                       <select
-                        value={formData.period_type}
-                        onChange={(e) => setFormData(prev => ({ ...prev, period_type: e.target.value as ObjectivePeriodType }))}
+                        value={formData.periodicity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, periodicity: e.target.value as ObjectivePeriodicity }))}
                         className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                       >
-                        {Object.entries(PERIOD_TYPE_LABELS).map(([key, label]) => (
+                        {Object.entries(PERIODICITY_LABELS).map(([key, label]) => (
                           <option key={key} value={key}>{label}</option>
                         ))}
                       </select>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {formData.periodicity === 'semestral' && '2 sub-objetivos'}
+                        {formData.periodicity === 'trimestral' && '4 sub-objetivos'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1">Peso (%) *</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={formData.weight_pct}
+                        onChange={(e) => setFormData(prev => ({ ...prev, weight_pct: parseInt(e.target.value) || 0 }))}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      />
+                      <p className="mt-1 text-xs text-zinc-500">Suma = 100%</p>
                     </div>
                   </div>
 
@@ -534,39 +550,6 @@ export function ObjetivosClient({
                     />
                   </div>
 
-                  {/* Periodicity and Weight - New fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Periodicidad *</label>
-                      <select
-                        value={formData.periodicity}
-                        onChange={(e) => setFormData(prev => ({ ...prev, periodicity: e.target.value as ObjectivePeriodicity }))}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      >
-                        {Object.entries(PERIODICITY_LABELS).map(([key, label]) => (
-                          <option key={key} value={key}>{label}</option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-xs text-zinc-500">
-                        {formData.periodicity === 'semestral' && 'Requerirá 2 sub-objetivos'}
-                        {formData.periodicity === 'trimestral' && 'Requerirá 4 sub-objetivos'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Peso (%) *</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={formData.weight_pct}
-                        onChange={(e) => setFormData(prev => ({ ...prev, weight_pct: parseInt(e.target.value) || 0 }))}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      />
-                      <p className="mt-1 text-xs text-zinc-500">
-                        Los pesos de ambos objetivos deben sumar 100%
-                      </p>
-                    </div>
-                  </div>
 
                   {editingObjective && (
                     <div className="grid grid-cols-2 gap-4">
