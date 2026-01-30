@@ -163,18 +163,34 @@ export function ObjetivosClient({
     setSaving(true);
     setError(null);
 
-    // Validate sub-objectives if required
+    const isAnnual = formData.periodicity === 'annual';
     const requiredCount = SUB_OBJECTIVES_COUNT[formData.periodicity] || 0;
-    if (requiredCount > 0) {
+
+    // Validate based on periodicity
+    if (isAnnual) {
+      if (!formData.title.trim()) {
+        setError('El título es requerido');
+        setSaving(false);
+        return;
+      }
+    } else {
+      // Validate all sub-objectives have titles
       const filledSubObjectives = subObjectives.filter(s => s.title.trim() !== '');
       if (filledSubObjectives.length < requiredCount) {
-        setError(`Debe completar los ${requiredCount} sub-objetivos para periodicidad ${PERIODICITY_LABELS[formData.periodicity]}`);
+        setError(`Debe completar los ${requiredCount} objetivos para periodicidad ${PERIODICITY_LABELS[formData.periodicity]}`);
         setSaving(false);
         return;
       }
     }
 
     try {
+      // For semestral/trimestral, generate a parent title from first sub-objective
+      const submitData = { ...formData };
+      if (!isAnnual && subObjectives.length > 0) {
+        submitData.title = `Objetivo ${PERIODICITY_LABELS[formData.periodicity]}`;
+        submitData.description = '';
+      }
+
       const url = editingObjective
         ? `/api/portal/objectives/${editingObjective.id}`
         : '/api/portal/objectives';
@@ -183,7 +199,7 @@ export function ObjetivosClient({
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await res.json();
@@ -579,57 +595,76 @@ export function ObjetivosClient({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Título *</label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      placeholder="Ej: Completar certificación de liderazgo"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Descripción</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      rows={2}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      placeholder="Detalles del objetivo..."
-                    />
-                  </div>
-
-                  {/* Sub-objectives for semestral/trimestral */}
-                  {subObjectives.length > 0 && (
-                    <div className="border-t border-zinc-200 pt-4">
-                      <h3 className="text-sm font-medium text-zinc-700 mb-3">
-                        Sub-objetivos ({subObjectives.length})
-                      </h3>
-                      <div className="space-y-3">
-                        {subObjectives.map((sub, idx) => (
-                          <div key={idx} className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
-                                {SUB_OBJECTIVE_LABELS[formData.periodicity]?.[idx] || `#${idx + 1}`}
-                              </span>
-                            </div>
-                            <input
-                              type="text"
-                              value={sub.title}
-                              onChange={(e) => {
-                                const updated = [...subObjectives];
-                                updated[idx] = { ...updated[idx], title: e.target.value };
-                                setSubObjectives(updated);
-                              }}
-                              placeholder={`Título del sub-objetivo ${idx + 1}`}
-                              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                            />
-                          </div>
-                        ))}
+                  {/* Título y descripción solo para objetivos anuales */}
+                  {formData.periodicity === 'annual' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1">Título *</label>
+                        <input
+                          type="text"
+                          value={formData.title}
+                          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                          required
+                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          placeholder="Ej: Completar certificación de liderazgo"
+                        />
                       </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1">Descripción</label>
+                        <textarea
+                          value={formData.description}
+                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                          rows={2}
+                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          placeholder="Detalles del objetivo..."
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Sub-objetivos para semestral/trimestral */}
+                  {subObjectives.length > 0 && (
+                    <div className="space-y-4">
+                      {subObjectives.map((sub, idx) => (
+                        <div key={idx} className="rounded-lg border border-purple-200 bg-purple-50/50 p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-sm font-semibold text-purple-700 bg-purple-100 px-2.5 py-1 rounded">
+                              {SUB_OBJECTIVE_LABELS[formData.periodicity]?.[idx] || `Objetivo ${idx + 1}`}
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-zinc-600 mb-1">Título *</label>
+                              <input
+                                type="text"
+                                value={sub.title}
+                                onChange={(e) => {
+                                  const updated = [...subObjectives];
+                                  updated[idx] = { ...updated[idx], title: e.target.value };
+                                  setSubObjectives(updated);
+                                }}
+                                placeholder={`Título del objetivo ${SUB_OBJECTIVE_LABELS[formData.periodicity]?.[idx] || idx + 1}`}
+                                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-zinc-600 mb-1">Descripción</label>
+                              <textarea
+                                value={sub.description}
+                                onChange={(e) => {
+                                  const updated = [...subObjectives];
+                                  updated[idx] = { ...updated[idx], description: e.target.value };
+                                  setSubObjectives(updated);
+                                }}
+                                rows={2}
+                                placeholder="Detalles del objetivo..."
+                                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
 
