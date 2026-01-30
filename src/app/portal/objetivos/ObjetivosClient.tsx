@@ -173,13 +173,26 @@ export function ObjetivosClient({
         setSaving(false);
         return;
       }
-    } else {
-      // Validate all sub-objectives have titles
-      const filledSubObjectives = subObjectives.filter(s => s.title.trim() !== '');
-      if (filledSubObjectives.length < requiredCount) {
-        setError(`Debe completar los ${requiredCount} objetivos para periodicidad ${PERIODICITY_LABELS[formData.periodicity]}`);
+      if (!formData.description.trim()) {
+        setError('La descripción es requerida');
         setSaving(false);
         return;
+      }
+    } else {
+      // Validate all sub-objectives have titles and descriptions
+      for (let i = 0; i < requiredCount; i++) {
+        const sub = subObjectives[i];
+        const label = SUB_OBJECTIVE_LABELS[formData.periodicity]?.[i] || `#${i + 1}`;
+        if (!sub?.title.trim()) {
+          setError(`El título del objetivo ${label} es requerido`);
+          setSaving(false);
+          return;
+        }
+        if (!sub?.description.trim()) {
+          setError(`La descripción del objetivo ${label} es requerida`);
+          setSaving(false);
+          return;
+        }
       }
     }
 
@@ -611,11 +624,12 @@ export function ObjetivosClient({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Descripción</label>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1">Descripción *</label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                           rows={2}
+                          required
                           className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                           placeholder="Detalles del objetivo..."
                         />
@@ -649,7 +663,7 @@ export function ObjetivosClient({
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-zinc-600 mb-1">Descripción</label>
+                              <label className="block text-xs font-medium text-zinc-600 mb-1">Descripción *</label>
                               <textarea
                                 value={sub.description}
                                 onChange={(e) => {
