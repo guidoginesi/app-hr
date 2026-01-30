@@ -174,7 +174,7 @@ export function ObjetivosClient({
         setSaving(false);
         return;
       }
-      if (!formData.description.trim()) {
+      if (!formData.description?.trim()) {
         setError('La descripción es requerida');
         setSaving(false);
         return;
@@ -189,7 +189,7 @@ export function ObjetivosClient({
           setSaving(false);
           return;
         }
-        if (!sub?.description.trim()) {
+        if (!sub?.description?.trim()) {
           setError(`La descripción del objetivo ${label} es requerida`);
           setSaving(false);
           return;
