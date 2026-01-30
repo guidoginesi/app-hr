@@ -57,28 +57,71 @@ export default async function PortalObjetivosPage() {
     directReports = data || [];
   }
 
-  // Get own objectives
-  const { data: ownObjectives } = await supabase
+  // Get own MAIN objectives (not sub-objectives)
+  const { data: ownMainObjectives } = await supabase
     .from('objectives')
     .select('*')
     .eq('employee_id', employeeId)
+    .is('parent_objective_id', null)
     .order('year', { ascending: false })
-    .order('period_type');
+    .order('objective_number', { ascending: true });
 
-  // Get team objectives if leader
+  // Fetch sub-objectives for own objectives
+  const ownObjectives = await Promise.all(
+    (ownMainObjectives || []).map(async (obj) => {
+      if (obj.periodicity && obj.periodicity !== 'annual') {
+        const { data: subObjectives } = await supabase
+          .from('objectives')
+          .select('*')
+          .eq('parent_objective_id', obj.id)
+          .order('sub_objective_number', { ascending: true });
+        
+        const subs = subObjectives || [];
+        const calculatedProgress = subs.length > 0
+          ? Math.round(subs.reduce((sum, sub) => sum + (sub.progress_percentage || 0), 0) / subs.length)
+          : obj.progress_percentage;
+        
+        return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
+      }
+      return { ...obj, sub_objectives: [], calculated_progress: obj.progress_percentage };
+    })
+  );
+
+  // Get team MAIN objectives if leader
   let teamObjectives: any[] = [];
   if (isLeader && directReports.length > 0) {
     const directReportIds = directReports.map(e => e.id);
-    const { data } = await supabase
+    const { data: teamMainObjectives } = await supabase
       .from('objectives')
       .select(`
         *,
         employee:employees!employee_id(id, first_name, last_name, job_title)
       `)
       .in('employee_id', directReportIds)
+      .is('parent_objective_id', null)
       .order('year', { ascending: false })
-      .order('period_type');
-    teamObjectives = data || [];
+      .order('objective_number', { ascending: true });
+    
+    // Fetch sub-objectives for team objectives
+    teamObjectives = await Promise.all(
+      (teamMainObjectives || []).map(async (obj) => {
+        if (obj.periodicity && obj.periodicity !== 'annual') {
+          const { data: subObjectives } = await supabase
+            .from('objectives')
+            .select('*')
+            .eq('parent_objective_id', obj.id)
+            .order('sub_objective_number', { ascending: true });
+          
+          const subs = subObjectives || [];
+          const calculatedProgress = subs.length > 0
+            ? Math.round(subs.reduce((sum, sub) => sum + (sub.progress_percentage || 0), 0) / subs.length)
+            : obj.progress_percentage;
+          
+          return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
+        }
+        return { ...obj, sub_objectives: [], calculated_progress: obj.progress_percentage };
+      })
+    );
   }
 
   return (
