@@ -37,7 +37,7 @@ export function ObjetivosClient({
   const [error, setError] = useState<string | null>(null);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [evaluatingObjective, setEvaluatingObjective] = useState<Objective | null>(null);
-  const [achievementData, setAchievementData] = useState({ percentage: 0, notes: '' });
+  const [achievementData, setAchievementData] = useState({ percentage: '', notes: '' });
 
   // Helper functions to check periods
   const isPeriodOpen = (year: number, type: 'definition' | 'evaluation'): boolean => {
@@ -65,6 +65,10 @@ export function ObjetivosClient({
     periodicity: 'annual',
     weight_pct: 50,
   });
+
+  // String states for number inputs (to allow clearing)
+  const [weightPctStr, setWeightPctStr] = useState('50');
+  const [progressStr, setProgressStr] = useState('0');
 
   // Sub-objectives state for semestral/trimestral
   const [subObjectives, setSubObjectives] = useState<{ title: string; description: string }[]>([]);
@@ -94,6 +98,8 @@ export function ObjetivosClient({
       periodicity: 'annual',
       weight_pct: 50,
     });
+    setWeightPctStr('50');
+    setProgressStr('0');
     setSubObjectives([]);
     setEditingObjective(null);
     setShowForm(false);
@@ -130,6 +136,8 @@ export function ObjetivosClient({
       periodicity: 'annual',
       weight_pct: 50,
     });
+    setWeightPctStr('50');
+    setProgressStr('0');
     setSubObjectives([]);
     setEditingObjective(null);
     setShowForm(true);
@@ -147,6 +155,8 @@ export function ObjetivosClient({
       periodicity: objective.periodicity || 'annual',
       weight_pct: objective.weight_pct ?? 50,
     });
+    setWeightPctStr(String(objective.weight_pct ?? 50));
+    setProgressStr(String(objective.progress_percentage ?? 0));
     // Load existing sub-objectives or create empty slots
     const count = SUB_OBJECTIVES_COUNT[objective.periodicity] || 0;
     if (objective.sub_objectives && objective.sub_objectives.length > 0) {
@@ -198,8 +208,16 @@ export function ObjetivosClient({
     }
 
     try {
+      // Parse string values to numbers
+      const parsedWeightPct = parseFloat(weightPctStr) || 50;
+      const parsedProgress = parseFloat(progressStr) || 0;
+
       // For semestral/trimestral, generate a parent title from first sub-objective
-      const submitData = { ...formData };
+      const submitData = { 
+        ...formData,
+        weight_pct: parsedWeightPct,
+        progress_percentage: parsedProgress,
+      };
       if (!isAnnual && subObjectives.length > 0) {
         submitData.title = `Objetivo ${PERIODICITY_LABELS[periodicity]}`;
         submitData.description = '';
@@ -305,7 +323,7 @@ export function ObjetivosClient({
   const openAchievementModal = (objective: Objective) => {
     setEvaluatingObjective(objective);
     setAchievementData({
-      percentage: objective.achievement_percentage ?? objective.progress_percentage,
+      percentage: String(objective.achievement_percentage ?? objective.progress_percentage ?? 0),
       notes: objective.achievement_notes || '',
     });
     setShowAchievementModal(true);
@@ -316,12 +334,14 @@ export function ObjetivosClient({
     setSaving(true);
     setError(null);
 
+    const percentageValue = parseFloat(achievementData.percentage) || 0;
+
     try {
       const res = await fetch(`/api/portal/objectives/${evaluatingObjective.id}/achievement`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          achievement_percentage: achievementData.percentage,
+          achievement_percentage: percentageValue,
           achievement_notes: achievementData.notes,
         }),
       });
@@ -601,8 +621,8 @@ export function ObjetivosClient({
                         type="number"
                         min={0}
                         max={100}
-                        value={formData.weight_pct ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, weight_pct: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
+                        value={weightPctStr}
+                        onChange={(e) => setWeightPctStr(e.target.value)}
                         className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                       />
                       <p className="mt-1 text-xs text-zinc-500">Suma = 100%</p>
@@ -694,8 +714,8 @@ export function ObjetivosClient({
                           type="number"
                           min={0}
                           max={100}
-                          value={formData.progress_percentage ?? ''}
-                          onChange={(e) => setFormData(prev => ({ ...prev, progress_percentage: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
+                          value={progressStr}
+                          onChange={(e) => setProgressStr(e.target.value)}
                           className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                         />
                       </div>
@@ -758,8 +778,8 @@ export function ObjetivosClient({
                     type="number"
                     min={0}
                     max={200}
-                    value={achievementData.percentage ?? ''}
-                    onChange={(e) => setAchievementData(prev => ({ ...prev, percentage: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
+                    value={achievementData.percentage}
+                    onChange={(e) => setAchievementData(prev => ({ ...prev, percentage: e.target.value }))}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                   />
                   <p className="mt-1 text-xs text-zinc-500">
