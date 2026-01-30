@@ -163,8 +163,9 @@ export function ObjetivosClient({
     setSaving(true);
     setError(null);
 
-    const isAnnual = formData.periodicity === 'annual';
-    const requiredCount = SUB_OBJECTIVES_COUNT[formData.periodicity] || 0;
+    const periodicity = formData.periodicity || 'annual';
+    const isAnnual = periodicity === 'annual';
+    const requiredCount = SUB_OBJECTIVES_COUNT[periodicity] || 0;
 
     // Validate based on periodicity
     if (isAnnual) {
@@ -182,7 +183,7 @@ export function ObjetivosClient({
       // Validate all sub-objectives have titles and descriptions
       for (let i = 0; i < requiredCount; i++) {
         const sub = subObjectives[i];
-        const label = SUB_OBJECTIVE_LABELS[formData.periodicity]?.[i] || `#${i + 1}`;
+        const label = SUB_OBJECTIVE_LABELS[periodicity]?.[i] || `#${i + 1}`;
         if (!sub?.title.trim()) {
           setError(`El título del objetivo ${label} es requerido`);
           setSaving(false);
@@ -200,7 +201,7 @@ export function ObjetivosClient({
       // For semestral/trimestral, generate a parent title from first sub-objective
       const submitData = { ...formData };
       if (!isAnnual && subObjectives.length > 0) {
-        submitData.title = `Objetivo ${PERIODICITY_LABELS[formData.periodicity]}`;
+        submitData.title = `Objetivo ${PERIODICITY_LABELS[periodicity]}`;
         submitData.description = '';
       }
 
