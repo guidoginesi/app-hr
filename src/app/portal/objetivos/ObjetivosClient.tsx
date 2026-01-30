@@ -335,6 +335,7 @@ export function ObjetivosClient({
     setError(null);
 
     const percentageValue = parseFloat(achievementData.percentage) || 0;
+    const isSubObjective = !!evaluatingObjective.parent_objective_id;
 
     try {
       const res = await fetch(`/api/portal/objectives/${evaluatingObjective.id}/achievement`, {
@@ -351,8 +352,13 @@ export function ObjetivosClient({
         throw new Error(data.error || 'Error al guardar');
       }
 
-      const data = await res.json();
-      setTeamObjectives(prev => prev.map(o => o.id === data.id ? data : o));
+      // For sub-objectives, we need to refresh to get updated parent with recalculated progress
+      // For main objectives, we can update the local state directly
+      if (!isSubObjective) {
+        const data = await res.json();
+        setTeamObjectives(prev => prev.map(o => o.id === data.id ? data : o));
+      }
+      
       setShowAchievementModal(false);
       setEvaluatingObjective(null);
       router.refresh();
@@ -519,6 +525,7 @@ export function ObjetivosClient({
                           onDelete={() => handleDelete(obj)}
                           onUpdateProgress={handleUpdateProgress}
                           onEvaluate={() => openAchievementModal(obj)}
+                          onEvaluateSubObjective={(subObj) => openAchievementModal(subObj)}
                           canEdit={canEditObjectives(obj.year)}
                           canEvaluate={canEvaluateObjectives(obj.year)}
                         />
@@ -763,7 +770,9 @@ export function ObjetivosClient({
             <div className="fixed inset-0 bg-black/50" onClick={() => setShowAchievementModal(false)} />
             <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
               <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">Evaluar cumplimiento</h2>
+                <h2 className="text-lg font-semibold text-zinc-900">
+                  Evaluar cumplimiento {evaluatingObjective.parent_objective_id ? '(Sub-objetivo)' : ''}
+                </h2>
                 <p className="mt-1 text-sm text-zinc-500">{evaluatingObjective.title}</p>
               </div>
               <div className="p-6 space-y-4">
@@ -830,6 +839,7 @@ function ObjectiveCard({
   onDelete,
   onUpdateProgress,
   onEvaluate,
+  onEvaluateSubObjective,
   canEdit = false,
   canEvaluate = false,
 }: {
@@ -838,6 +848,7 @@ function ObjectiveCard({
   onDelete?: () => void;
   onUpdateProgress?: (obj: Objective, progress: number, status: ObjectiveStatus) => void;
   onEvaluate?: () => void;
+  onEvaluateSubObjective?: (subObjective: Objective) => void;
   canEdit?: boolean;
   canEvaluate?: boolean;
 }) {
@@ -926,25 +937,55 @@ function ObjectiveCard({
               
               {hasSubObjectives ? (
                 <div className="space-y-2">
-                  {objective.sub_objectives!.map((sub, idx) => (
-                    <div key={sub.id} className="flex items-center gap-3 rounded-lg bg-zinc-50 p-2">
-                      <span className="text-xs font-medium text-zinc-500 w-8">
-                        {SUB_OBJECTIVE_LABELS[objective.periodicity]?.[idx] || `#${idx + 1}`}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm text-zinc-700">{sub.title}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 rounded-full bg-zinc-200">
-                          <div 
-                            className="h-1.5 rounded-full bg-purple-500"
-                            style={{ width: `${sub.progress_percentage}%` }}
-                          />
+                  {objective.sub_objectives!.map((sub, idx) => {
+                    const subHasAchievement = sub.achievement_percentage !== null && sub.achievement_percentage !== undefined;
+                    return (
+                    <div key={sub.id} className="rounded-lg bg-zinc-50 p-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                          {SUB_OBJECTIVE_LABELS[objective.periodicity]?.[idx] || `#${idx + 1}`}
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-zinc-700">{sub.title}</p>
+                          {sub.description && (
+                            <p className="text-xs text-zinc-500 mt-0.5">{sub.description}</p>
+                          )}
                         </div>
-                        <span className="text-xs text-zinc-500 w-8">{sub.progress_percentage}%</span>
+                        <div className="flex items-center gap-3">
+                          {subHasAchievement ? (
+                            <span className="text-xs font-medium px-2 py-1 rounded bg-emerald-100 text-emerald-700">
+                              {sub.achievement_percentage}%
+                            </span>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-1.5 rounded-full bg-zinc-200">
+                                  <div 
+                                    className="h-1.5 rounded-full bg-purple-500"
+                                    style={{ width: `${sub.progress_percentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-zinc-500">{sub.progress_percentage}%</span>
+                              </div>
+                            </>
+                          )}
+                          {canEvaluate && onEvaluateSubObjective && (
+                            <button
+                              onClick={() => onEvaluateSubObjective(sub)}
+                              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                            >
+                              {subHasAchievement ? 'Editar' : 'Evaluar'}
+                            </button>
+                          )}
+                        </div>
                       </div>
+                      {subHasAchievement && sub.achievement_notes && (
+                        <div className="mt-2 text-xs text-emerald-600 bg-emerald-50 rounded p-2">
+                          {sub.achievement_notes}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  );})}
                 </div>
               ) : (
                 <p className="text-sm text-zinc-400 italic">
