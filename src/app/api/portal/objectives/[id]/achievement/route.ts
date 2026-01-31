@@ -43,19 +43,19 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Objetivo no encontrado' }, { status: 404 });
     }
 
-    // Check if user can evaluate: must be the creator OR have direct reports
+    // Check if user can evaluate: must be the direct manager of the employee
+    // Note: We intentionally don't allow the creator to evaluate if they're not the manager,
+    // because an admin could have created the objective but shouldn't evaluate it
     const { data: directReports } = await supabase
       .from('employees')
       .select('id')
       .eq('manager_id', auth.employee.id);
     
-    const isLeader = directReports && directReports.length > 0;
-    const isCreator = objective.created_by === auth.employee.id;
     const isManagerOfEmployee = directReports?.some(r => r.id === objective.employee_id);
 
-    if (!isCreator && !isManagerOfEmployee) {
+    if (!isManagerOfEmployee) {
       return NextResponse.json(
-        { error: 'Solo el líder del empleado puede evaluar este objetivo' },
+        { error: 'Solo el líder directo del empleado puede evaluar este objetivo' },
         { status: 403 }
       );
     }
