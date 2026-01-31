@@ -124,11 +124,28 @@ export function ObjetivosClient({
 
   // Check if employee already has max objectives for the year
   const getObjectivesCountForEmployee = (employeeId: string, year: number) => {
-    return teamObjectives.filter(o => o.employee_id === employeeId && o.year === year).length;
+    return teamObjectives.filter(o => o.employee_id === employeeId && o.year === year && !o.parent_objective_id).length;
   };
 
   const canAddObjective = (employeeId: string, year: number) => {
     return getObjectivesCountForEmployee(employeeId, year) < MAX_OBJECTIVES_PER_EMPLOYEE;
+  };
+
+  // Get total weight already assigned to an employee for a year (excluding a specific objective when editing)
+  const getAssignedWeight = (employeeId: string, year: number, excludeObjectiveId?: string) => {
+    return teamObjectives
+      .filter(o => 
+        o.employee_id === employeeId && 
+        o.year === year && 
+        !o.parent_objective_id &&
+        o.id !== excludeObjectiveId
+      )
+      .reduce((sum, o) => sum + (o.weight_pct ?? 0), 0);
+  };
+
+  // Get remaining weight available for new objective
+  const getRemainingWeight = (employeeId: string, year: number, excludeObjectiveId?: string) => {
+    return 100 - getAssignedWeight(employeeId, year, excludeObjectiveId);
   };
 
   const openCreateForm = (memberId?: string) => {
@@ -141,6 +158,9 @@ export function ObjetivosClient({
       return;
     }
 
+    // Calculate remaining weight for this employee
+    const remainingWeight = targetMemberId ? getRemainingWeight(targetMemberId, formYear) : 50;
+
     setFormData({
       employee_id: targetMemberId,
       year: formYear,
@@ -150,9 +170,9 @@ export function ObjetivosClient({
       progress_percentage: 0,
       status: 'not_started',
       periodicity: 'annual',
-      weight_pct: 50,
+      weight_pct: remainingWeight,
     });
-    setWeightPctStr('50');
+    setWeightPctStr(String(remainingWeight));
     setProgressStr('0');
     setSubObjectives([]);
     setEditingObjective(null);
@@ -238,6 +258,23 @@ export function ObjetivosClient({
       // Parse string values to numbers
       const parsedWeightPct = parseFloat(weightPctStr) || 50;
       const parsedProgress = parseFloat(progressStr) || 0;
+
+      // Validate weight doesn't exceed available
+      const maxWeight = getRemainingWeight(formData.employee_id, formData.year, editingObjective?.id);
+      if (parsedWeightPct > maxWeight) {
+        setError(`El peso no puede exceder ${maxWeight}% (ya asignado: ${100 - maxWeight}%)`);
+        setSaving(false);
+        return;
+      }
+
+      // For the second objective, check that total will be 100%
+      const currentObjectivesCount = getObjectivesCountForEmployee(formData.employee_id, formData.year);
+      const isSecondObjective = !editingObjective && currentObjectivesCount === 1;
+      if (isSecondObjective && parsedWeightPct !== maxWeight) {
+        setError(`El segundo objetivo debe tener peso de ${maxWeight}% para que sumen 100%`);
+        setSaving(false);
+        return;
+      }
 
       // For semestral/trimestral, generate a parent title from first sub-objective
       const submitData = { 
@@ -757,15 +794,36 @@ export function ObjetivosClient({
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-zinc-700 mb-1">Peso (%) *</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={weightPctStr}
-                        onChange={(e) => setWeightPctStr(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      />
-                      <p className="mt-1 text-xs text-zinc-500">Suma = 100%</p>
+                      {(() => {
+                        const maxWeight = formData.employee_id 
+                          ? getRemainingWeight(formData.employee_id, formData.year, editingObjective?.id)
+                          : 100;
+                        const assignedWeight = formData.employee_id
+                          ? getAssignedWeight(formData.employee_id, formData.year, editingObjective?.id)
+                          : 0;
+                        return (
+                          <>
+                            <input
+                              type="number"
+                              min={1}
+                              max={maxWeight}
+                              value={weightPctStr}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                if (val <= maxWeight) {
+                                  setWeightPctStr(e.target.value);
+                                }
+                              }}
+                              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                            />
+                            <p className="mt-1 text-xs text-zinc-500">
+                              {assignedWeight > 0 
+                                ? `Ya asignado: ${assignedWeight}% | Disponible: ${maxWeight}%`
+                                : 'Los pesos deben sumar 100%'}
+                            </p>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 
