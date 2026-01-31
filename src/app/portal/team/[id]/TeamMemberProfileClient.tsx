@@ -1277,14 +1277,24 @@ export function TeamMemberProfileClient({
                 </div>
               </div>
 
-              {/* Weights Info - Single line */}
-              <div className="flex items-center justify-center gap-2 text-sm text-zinc-600 bg-zinc-50 rounded-lg py-2 px-4">
-                <span>Pesos:</span>
-                <span className="font-semibold text-purple-600">{bonusData.weights.company}%</span>
-                <span className="text-zinc-400">corporativo</span>
+              {/* Weights Info - Single line with bars */}
+              <div className="flex items-center gap-3 bg-zinc-50 rounded-lg py-3 px-4">
+                <span className="text-sm text-zinc-500">Pesos:</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-2 rounded-full bg-zinc-200">
+                    <div className="h-2 rounded-full bg-purple-500" style={{ width: `${bonusData.weights.company}%` }} />
+                  </div>
+                  <span className="text-sm font-semibold text-purple-600">{bonusData.weights.company}%</span>
+                  <span className="text-xs text-zinc-400">corp.</span>
+                </div>
                 <span className="text-zinc-300">+</span>
-                <span className="font-semibold text-blue-600">{bonusData.weights.area}%</span>
-                <span className="text-zinc-400">personal</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-2 rounded-full bg-zinc-200">
+                    <div className="h-2 rounded-full bg-blue-500" style={{ width: `${bonusData.weights.area}%` }} />
+                  </div>
+                  <span className="text-sm font-semibold text-blue-600">{bonusData.weights.area}%</span>
+                  <span className="text-xs text-zinc-400">personal</span>
+                </div>
               </div>
 
               {/* Corporate Objectives */}
