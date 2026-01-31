@@ -66,25 +66,24 @@ export default async function PortalObjetivosPage() {
     .order('year', { ascending: false })
     .order('objective_number', { ascending: true });
 
-  // Fetch sub-objectives for own objectives
+  // Fetch sub-objectives for ALL own objectives
   const ownObjectives = await Promise.all(
     (ownMainObjectives || []).map(async (obj) => {
-      if (obj.periodicity && obj.periodicity !== 'annual') {
-        const { data: subObjectives } = await supabase
-          .from('objectives')
-          .select('*')
-          .eq('parent_objective_id', obj.id)
-          .order('sub_objective_number', { ascending: true });
-        
-        const subs = subObjectives || [];
-        // Use achievement_percentage if evaluated, otherwise progress_percentage
-        const calculatedProgress = subs.length > 0
-          ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
-          : (obj.achievement_percentage ?? obj.progress_percentage);
-        
-        return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
-      }
-      return { ...obj, sub_objectives: [], calculated_progress: obj.achievement_percentage ?? obj.progress_percentage };
+      // Always try to fetch sub-objectives for any objective
+      const { data: subObjectives } = await supabase
+        .from('objectives')
+        .select('*')
+        .eq('parent_objective_id', obj.id)
+        .order('sub_objective_number', { ascending: true });
+      
+      const subs = subObjectives || [];
+      
+      // Use achievement_percentage if evaluated, otherwise progress_percentage
+      const calculatedProgress = subs.length > 0
+        ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
+        : (obj.achievement_percentage ?? obj.progress_percentage);
+      
+      return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
     })
   );
 
@@ -103,25 +102,24 @@ export default async function PortalObjetivosPage() {
       .order('year', { ascending: false })
       .order('objective_number', { ascending: true });
     
-    // Fetch sub-objectives for team objectives
+    // Fetch sub-objectives for ALL team objectives (check by querying, not just by periodicity)
     teamObjectives = await Promise.all(
       (teamMainObjectives || []).map(async (obj) => {
-        if (obj.periodicity && obj.periodicity !== 'annual') {
-          const { data: subObjectives } = await supabase
-            .from('objectives')
-            .select('*')
-            .eq('parent_objective_id', obj.id)
-            .order('sub_objective_number', { ascending: true });
-          
-          const subs = subObjectives || [];
-          // Use achievement_percentage if evaluated, otherwise progress_percentage
-          const calculatedProgress = subs.length > 0
-            ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
-            : (obj.achievement_percentage ?? obj.progress_percentage);
-          
-          return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
-        }
-        return { ...obj, sub_objectives: [], calculated_progress: obj.achievement_percentage ?? obj.progress_percentage };
+        // Always try to fetch sub-objectives for any objective
+        const { data: subObjectives } = await supabase
+          .from('objectives')
+          .select('*')
+          .eq('parent_objective_id', obj.id)
+          .order('sub_objective_number', { ascending: true });
+        
+        const subs = subObjectives || [];
+        
+        // Use achievement_percentage if evaluated, otherwise progress_percentage
+        const calculatedProgress = subs.length > 0
+          ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
+          : (obj.achievement_percentage ?? obj.progress_percentage);
+        
+        return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
       })
     );
   }
