@@ -77,13 +77,14 @@ export default async function PortalObjetivosPage() {
           .order('sub_objective_number', { ascending: true });
         
         const subs = subObjectives || [];
+        // Use achievement_percentage if evaluated, otherwise progress_percentage
         const calculatedProgress = subs.length > 0
-          ? Math.round(subs.reduce((sum, sub) => sum + (sub.progress_percentage || 0), 0) / subs.length)
-          : obj.progress_percentage;
+          ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
+          : (obj.achievement_percentage ?? obj.progress_percentage);
         
         return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
       }
-      return { ...obj, sub_objectives: [], calculated_progress: obj.progress_percentage };
+      return { ...obj, sub_objectives: [], calculated_progress: obj.achievement_percentage ?? obj.progress_percentage };
     })
   );
 
@@ -113,13 +114,14 @@ export default async function PortalObjetivosPage() {
             .order('sub_objective_number', { ascending: true });
           
           const subs = subObjectives || [];
+          // Use achievement_percentage if evaluated, otherwise progress_percentage
           const calculatedProgress = subs.length > 0
-            ? Math.round(subs.reduce((sum, sub) => sum + (sub.progress_percentage || 0), 0) / subs.length)
-            : obj.progress_percentage;
+            ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
+            : (obj.achievement_percentage ?? obj.progress_percentage);
           
           return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
         }
-        return { ...obj, sub_objectives: [], calculated_progress: obj.progress_percentage };
+        return { ...obj, sub_objectives: [], calculated_progress: obj.achievement_percentage ?? obj.progress_percentage };
       })
     );
   }
