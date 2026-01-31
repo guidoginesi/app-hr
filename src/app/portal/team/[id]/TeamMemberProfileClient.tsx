@@ -1277,35 +1277,14 @@ export function TeamMemberProfileClient({
                 </div>
               </div>
 
-              {/* Weights Info */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                <h3 className="text-base font-semibold text-zinc-900 mb-4">Distribución de pesos según nivel</h3>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-zinc-500">Objetivos corporativos</span>
-                      <span className="font-semibold text-purple-600">{bonusData.weights.company}%</span>
-                    </div>
-                    <div className="h-3 w-full rounded-full bg-zinc-100">
-                      <div 
-                        className="h-3 rounded-full bg-purple-500" 
-                        style={{ width: `${bonusData.weights.company}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-zinc-500">Objetivos personales</span>
-                      <span className="font-semibold text-blue-600">{bonusData.weights.area}%</span>
-                    </div>
-                    <div className="h-3 w-full rounded-full bg-zinc-100">
-                      <div 
-                        className="h-3 rounded-full bg-blue-500" 
-                        style={{ width: `${bonusData.weights.area}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
+              {/* Weights Info - Single line */}
+              <div className="flex items-center justify-center gap-2 text-sm text-zinc-600 bg-zinc-50 rounded-lg py-2 px-4">
+                <span>Pesos:</span>
+                <span className="font-semibold text-purple-600">{bonusData.weights.company}%</span>
+                <span className="text-zinc-400">corporativo</span>
+                <span className="text-zinc-300">+</span>
+                <span className="font-semibold text-blue-600">{bonusData.weights.area}%</span>
+                <span className="text-zinc-400">personal</span>
               </div>
 
               {/* Corporate Objectives */}
