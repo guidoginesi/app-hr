@@ -124,6 +124,22 @@ export default async function PortalObjetivosPage() {
     );
   }
 
+  // Get available years from corporate objectives (years that admins have configured)
+  let availableYears: number[] = [];
+  try {
+    const { data } = await supabase
+      .from('corporate_objectives')
+      .select('year')
+      .order('year', { ascending: false });
+    
+    if (data) {
+      // Get unique years
+      availableYears = [...new Set(data.map(d => d.year))];
+    }
+  } catch {
+    // Table might not exist
+  }
+
   return (
     <PortalShell employee={auth.employee} isLeader={isLeader} active="objetivos">
       <ObjetivosClient
@@ -134,6 +150,7 @@ export default async function PortalObjetivosPage() {
         teamObjectives={teamObjectives}
         periods={periods}
         today={today}
+        availableYears={availableYears}
       />
     </PortalShell>
   );

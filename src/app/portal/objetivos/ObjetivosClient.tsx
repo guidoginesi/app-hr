@@ -15,6 +15,7 @@ type ObjetivosClientProps = {
   teamObjectives: Objective[];
   periods: ObjectivesPeriod[];
   today: string;
+  availableYears: number[];
 };
 
 export function ObjetivosClient({
@@ -25,6 +26,7 @@ export function ObjetivosClient({
   teamObjectives: initialTeamObjectives,
   periods,
   today,
+  availableYears,
 }: ObjetivosClientProps) {
   const router = useRouter();
   const [ownObjectives, setOwnObjectives] = useState<Objective[]>(initialOwnObjectives);
@@ -101,7 +103,8 @@ export function ObjetivosClient({
   const MAX_OBJECTIVES_PER_EMPLOYEE = 2;
 
   const currentYear = new Date().getFullYear();
-  const years = [currentYear - 1, currentYear, currentYear + 1];
+  // Use availableYears from corporate objectives for filtering, fallback to current year
+  const years = availableYears.length > 0 ? availableYears : [currentYear];
 
   const resetForm = () => {
     setFormData({
