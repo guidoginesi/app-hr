@@ -1028,7 +1028,12 @@ export function ObjetivosClient({
                     min={0}
                     max={100}
                     value={achievementData.percentage}
-                    onChange={(e) => setAchievementData(prev => ({ ...prev, percentage: e.target.value }))}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (e.target.value === '' || (val >= 0 && val <= 100)) {
+                        setAchievementData(prev => ({ ...prev, percentage: e.target.value }));
+                      }
+                    }}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                   />
                   <p className="mt-1 text-xs text-zinc-500">
@@ -1115,13 +1120,16 @@ export function ObjetivosClient({
                             max={100}
                             value={evalData.percentage}
                             onChange={(e) => {
-                              setSubObjectivesEvalData(prev => 
-                                prev.map(item => 
-                                  item.id === sub.id 
-                                    ? { ...item, percentage: e.target.value }
-                                    : item
-                                )
-                              );
+                              const val = parseInt(e.target.value);
+                              if (e.target.value === '' || (val >= 0 && val <= 100)) {
+                                setSubObjectivesEvalData(prev => 
+                                  prev.map(item => 
+                                    item.id === sub.id 
+                                      ? { ...item, percentage: e.target.value }
+                                      : item
+                                  )
+                                );
+                              }
                             }}
                             className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
                           />
