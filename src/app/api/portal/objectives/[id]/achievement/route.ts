@@ -4,7 +4,7 @@ import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const AchievementSchema = z.object({
-  achievement_percentage: z.number().int().min(0).max(200),
+  achievement_percentage: z.number().int().min(0).max(100),
   achievement_notes: z.string().optional().nullable(),
 });
 

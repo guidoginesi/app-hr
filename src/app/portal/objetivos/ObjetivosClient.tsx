@@ -439,7 +439,7 @@ export function ObjetivosClient({
     setSaving(true);
     setError(null);
 
-    const percentageValue = Math.round(parseFloat(achievementData.percentage) || 0);
+    const percentageValue = Math.min(100, Math.max(0, Math.round(parseFloat(achievementData.percentage) || 0)));
 
     try {
       const res = await fetch(`/api/portal/objectives/${evaluatingObjective.id}/achievement`, {
@@ -490,7 +490,7 @@ export function ObjetivosClient({
       
       for (let i = 0; i < subObjectivesEvalData.length; i++) {
         const subEval = subObjectivesEvalData[i];
-        const percentageValue = Math.round(parseFloat(subEval.percentage) || 0);
+        const percentageValue = Math.min(100, Math.max(0, Math.round(parseFloat(subEval.percentage) || 0)));
         const subLabel = SUB_OBJECTIVE_LABELS[evaluatingParentObjective.periodicity]?.[i] || `#${i + 1}`;
         
         const res = await fetch(`/api/portal/objectives/${subEval.id}/achievement`, {
@@ -1026,13 +1026,13 @@ export function ObjetivosClient({
                   <input
                     type="number"
                     min={0}
-                    max={200}
+                    max={100}
                     value={achievementData.percentage}
                     onChange={(e) => setAchievementData(prev => ({ ...prev, percentage: e.target.value }))}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
                   />
                   <p className="mt-1 text-xs text-zinc-500">
-                    0-100% normal, 101-200% sobrecumplimiento
+                    Ingresá un valor entre 0 y 100
                   </p>
                 </div>
                 <div>
@@ -1112,7 +1112,7 @@ export function ObjetivosClient({
                           <input
                             type="number"
                             min={0}
-                            max={200}
+                            max={100}
                             value={evalData.percentage}
                             onChange={(e) => {
                               setSubObjectivesEvalData(prev => 
