@@ -65,7 +65,31 @@ export async function GET(req: NextRequest, context: RouteContext) {
       }
     }
 
-    const seniorityCategory = getSeniorityCategory(member.seniority_level);
+    // Get the seniority level that was in effect at the end of the bonus year
+    // This ensures the bonus calculation is "locked" once the period closes
+    let effectiveSeniorityLevel = member.seniority_level;
+    const isCurrentYear = currentYear === new Date().getFullYear();
+    
+    if (!isCurrentYear) {
+      // For past years, find the seniority level that was in effect at Dec 31 of that year
+      const yearEndDate = `${currentYear}-12-31`;
+      
+      const { data: seniorityAtYearEnd } = await supabase
+        .from('seniority_history')
+        .select('new_level')
+        .eq('employee_id', memberId)
+        .lte('effective_date', yearEndDate)
+        .order('effective_date', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (seniorityAtYearEnd) {
+        effectiveSeniorityLevel = seniorityAtYearEnd.new_level;
+      }
+      // If no history found, use current level (backwards compatibility for employees without history)
+    }
+
+    const seniorityCategory = getSeniorityCategory(effectiveSeniorityLevel);
     const weights = seniorityCategory ? SENIORITY_WEIGHTS[seniorityCategory] : SENIORITY_WEIGHTS[1];
     const detailedWeights = seniorityCategory ? OBJECTIVE_WEIGHT_DISTRIBUTION[seniorityCategory] : OBJECTIVE_WEIGHT_DISTRIBUTION[1];
 
@@ -218,10 +242,12 @@ export async function GET(req: NextRequest, context: RouteContext) {
       member: {
         id: member.id,
         name: `${member.first_name} ${member.last_name}`,
-        seniority_level: member.seniority_level,
+        seniority_level: member.seniority_level, // Current level
+        effective_seniority_level: effectiveSeniorityLevel, // Level used for this bonus calculation
         hire_date: member.hire_date,
       },
       year: currentYear,
+      isCurrentYear,
       weights: {
         company: weights.company,
         area: weights.area,

@@ -100,8 +100,15 @@ type SeniorityHistoryItem = {
 };
 
 type BonusData = {
-  member: { id: string; name: string; seniority_level: string | null; hire_date: string | null };
+  member: { 
+    id: string; 
+    name: string; 
+    seniority_level: string | null; 
+    effective_seniority_level: string | null; // Level used for this bonus calculation
+    hire_date: string | null;
+  };
   year: number;
+  isCurrentYear: boolean;
   weights: {
     company: number;
     area: number;
@@ -1225,6 +1232,25 @@ export function TeamMemberProfileClient({
                       <p className="font-medium text-amber-800">Bono proporcional</p>
                       <p className="text-sm text-amber-700">
                         El empleado ingresó durante {bonusData.year}, por lo que el bono se calcula proporcionalmente ({bonusData.proRata.months} meses trabajados).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Seniority Level Info - Show when using historical level */}
+              {bonusData.member.effective_seniority_level && 
+               bonusData.member.effective_seniority_level !== bonusData.member.seniority_level && (
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-blue-800">Nivel de seniority histórico</p>
+                      <p className="text-sm text-blue-700">
+                        El bono de {bonusData.year} se calcula con el nivel <strong>{bonusData.member.effective_seniority_level}</strong> (vigente al cierre del período).
+                        El nivel actual es <strong>{bonusData.member.seniority_level}</strong>.
                       </p>
                     </div>
                   </div>
