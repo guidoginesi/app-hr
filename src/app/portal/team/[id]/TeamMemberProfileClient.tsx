@@ -1426,17 +1426,35 @@ export function TeamMemberProfileClient({
                 </h3>
                 {bonusData.personal.objectives.length > 0 ? (
                   <div className="space-y-2">
-                    {bonusData.personal.objectives.map((obj, index) => (
-                      <div key={index} className="flex items-center justify-between py-2 border-b border-zinc-100 last:border-0">
-                        <span className="text-sm text-zinc-700">{obj.title}</span>
-                        <span className={`font-semibold ${
-                          obj.achievement === null ? 'text-zinc-400' :
-                          obj.achievement >= 100 ? 'text-emerald-600' :
-                          obj.achievement >= 75 ? 'text-blue-600' :
-                          'text-amber-600'
-                        }`}>
-                          {obj.achievement !== null ? `${obj.achievement}%` : 'Sin evaluar'}
-                        </span>
+                    {bonusData.personal.objectives.map((obj: any, index: number) => (
+                      <div key={index} className="py-2 border-b border-zinc-100 last:border-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-zinc-700">{obj.title}</span>
+                          <span className={`font-semibold ${
+                            obj.achievement === null ? 'text-zinc-400' :
+                            obj.achievement >= 100 ? 'text-emerald-600' :
+                            obj.achievement >= 75 ? 'text-blue-600' :
+                            'text-amber-600'
+                          }`}>
+                            {obj.achievement !== null ? `${obj.achievement}%` : 'Sin evaluar'}
+                          </span>
+                        </div>
+                        {obj.subObjectives && obj.subObjectives.length > 0 && (
+                          <div className="mt-2 ml-4 space-y-1">
+                            {obj.subObjectives.map((sub: any, subIdx: number) => (
+                              <div key={subIdx} className="flex items-center justify-between text-xs">
+                                <span className="text-zinc-500">{sub.title}</span>
+                                <span className={
+                                  sub.achievement === null ? 'text-zinc-400' :
+                                  sub.achievement >= 100 ? 'text-emerald-600' :
+                                  'text-zinc-600'
+                                }>
+                                  {sub.achievement !== null ? `${sub.achievement}%` : '-'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

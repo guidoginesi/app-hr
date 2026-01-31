@@ -83,12 +83,28 @@ export async function GET(req: NextRequest, context: RouteContext) {
       // Table might not exist
     }
 
-    // Get personal objectives for this employee
+    // Get personal objectives for this employee (only main objectives, not sub-objectives)
     const { data: personalObjectives } = await supabase
       .from('objectives')
       .select('*')
       .eq('employee_id', memberId)
-      .eq('year', currentYear);
+      .eq('year', currentYear)
+      .is('parent_objective_id', null);
+
+    // Fetch sub-objectives for objectives that have them
+    const objectivesWithSubs = await Promise.all(
+      (personalObjectives || []).map(async (obj) => {
+        if (obj.periodicity && obj.periodicity !== 'annual') {
+          const { data: subObjectives } = await supabase
+            .from('objectives')
+            .select('*')
+            .eq('parent_objective_id', obj.id)
+            .order('sub_objective_number', { ascending: true });
+          return { ...obj, sub_objectives: subObjectives || [] };
+        }
+        return { ...obj, sub_objectives: [] };
+      })
+    );
 
     // Calculate corporate objectives completion
     const billingObjective = corporateObjectives.find(o => o.objective_type === 'billing');
@@ -139,18 +155,41 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
     // Calculate personal objectives completion
     let personalCompletion = 0;
-    const personalResults: { title: string; achievement: number | null }[] = [];
+    const personalResults: { title: string; achievement: number | null; subObjectives?: { title: string; achievement: number | null }[] }[] = [];
     
-    if (personalObjectives && personalObjectives.length > 0) {
+    if (objectivesWithSubs && objectivesWithSubs.length > 0) {
       let totalPersonal = 0;
       let personalCount = 0;
       
-      for (const obj of personalObjectives) {
-        const achievement = obj.achievement_percentage ?? null;
+      for (const obj of objectivesWithSubs) {
+        let achievement: number | null = null;
+        let subResults: { title: string; achievement: number | null }[] | undefined;
+        
+        // For objectives with sub-objectives, calculate average from sub-objectives
+        if (obj.sub_objectives && obj.sub_objectives.length > 0) {
+          const subAchievements = obj.sub_objectives
+            .map((sub: any) => sub.achievement_percentage)
+            .filter((a: number | null) => a !== null) as number[];
+          
+          subResults = obj.sub_objectives.map((sub: any) => ({
+            title: sub.title,
+            achievement: sub.achievement_percentage ?? null,
+          }));
+          
+          if (subAchievements.length > 0) {
+            achievement = Math.round(subAchievements.reduce((sum, a) => sum + a, 0) / subAchievements.length);
+          }
+        } else {
+          // For annual objectives, use direct achievement
+          achievement = obj.achievement_percentage ?? null;
+        }
+        
         personalResults.push({
           title: obj.title,
           achievement,
+          subObjectives: subResults,
         });
+        
         if (achievement !== null) {
           totalPersonal += Math.min(achievement, 100); // Cap at 100%
           personalCount++;
