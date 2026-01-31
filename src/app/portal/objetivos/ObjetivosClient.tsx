@@ -390,14 +390,14 @@ export function ObjetivosClient({
     setSaving(true);
     setError(null);
 
-    const percentageValue = parseFloat(achievementData.percentage) || 0;
+    const percentageValue = Math.round(parseFloat(achievementData.percentage) || 0);
 
     try {
       const res = await fetch(`/api/portal/objectives/${evaluatingObjective.id}/achievement`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          achievement_percentage: Math.round(percentageValue),
+          achievement_percentage: percentageValue,
           achievement_notes: achievementData.notes,
         }),
       });
@@ -406,6 +406,19 @@ export function ObjetivosClient({
         const data = await res.json();
         throw new Error(data.error || 'Error al guardar');
       }
+
+      // Update local state immediately for better UX
+      setTeamObjectives(prev => prev.map(obj => {
+        if (obj.id === evaluatingObjective.id) {
+          return { 
+            ...obj, 
+            achievement_percentage: percentageValue,
+            achievement_notes: achievementData.notes,
+            calculated_progress: percentageValue,
+          };
+        }
+        return obj;
+      }));
 
       setShowAchievementModal(false);
       setEvaluatingObjective(null);
@@ -424,37 +437,65 @@ export function ObjetivosClient({
 
     try {
       // Save each sub-objective evaluation
+      const savedEvaluations: { id: string; percentage: number; notes: string }[] = [];
+      
       for (let i = 0; i < subObjectivesEvalData.length; i++) {
         const subEval = subObjectivesEvalData[i];
-        const percentageValue = parseFloat(subEval.percentage) || 0;
+        const percentageValue = Math.round(parseFloat(subEval.percentage) || 0);
         const subLabel = SUB_OBJECTIVE_LABELS[evaluatingParentObjective.periodicity]?.[i] || `#${i + 1}`;
-        
-        console.log(`Saving sub-objective ${subLabel}:`, { id: subEval.id, percentage: percentageValue });
         
         const res = await fetch(`/api/portal/objectives/${subEval.id}/achievement`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            achievement_percentage: Math.round(percentageValue),
+            achievement_percentage: percentageValue,
             achievement_notes: subEval.notes,
           }),
         });
 
         if (!res.ok) {
           const data = await res.json();
-          console.error(`Error saving ${subLabel}:`, data);
           throw new Error(`Error en ${subLabel}: ${data.error || 'Error desconocido'}`);
         }
         
-        console.log(`Saved ${subLabel} successfully`);
+        savedEvaluations.push({ id: subEval.id, percentage: percentageValue, notes: subEval.notes });
       }
+
+      // Calculate new average for parent objective
+      const avgAchievement = Math.round(
+        savedEvaluations.reduce((sum, e) => sum + e.percentage, 0) / savedEvaluations.length
+      );
+
+      // Update local state immediately for better UX
+      setTeamObjectives(prev => prev.map(obj => {
+        if (obj.id === evaluatingParentObjective.id) {
+          // Update sub-objectives with new achievements
+          const updatedSubObjectives = obj.sub_objectives?.map(sub => {
+            const savedSub = savedEvaluations.find(e => e.id === sub.id);
+            if (savedSub) {
+              return {
+                ...sub,
+                achievement_percentage: savedSub.percentage,
+                achievement_notes: savedSub.notes,
+              };
+            }
+            return sub;
+          });
+          
+          return { 
+            ...obj, 
+            sub_objectives: updatedSubObjectives,
+            calculated_progress: avgAchievement,
+          };
+        }
+        return obj;
+      }));
 
       setShowSubObjectivesEvalModal(false);
       setEvaluatingParentObjective(null);
       setSubObjectivesEvalData([]);
       router.refresh();
     } catch (err: any) {
-      console.error('Error saving achievements:', err);
       setError(err.message);
     } finally {
       setSaving(false);
