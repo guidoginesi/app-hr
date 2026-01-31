@@ -1277,26 +1277,20 @@ export function TeamMemberProfileClient({
                 </div>
               </div>
 
-              {/* Weights Info - Single combined bar */}
-              <div className="flex items-center gap-3 bg-zinc-50 rounded-lg py-2 px-4">
-                <span className="text-sm text-zinc-500">Pesos:</span>
-                <div className="flex-1 flex h-3 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-purple-500 flex items-center justify-center"
-                    style={{ width: `${bonusData.weights.company}%` }}
-                  />
-                  <div 
-                    className="bg-blue-500 flex items-center justify-center"
-                    style={{ width: `${bonusData.weights.area}%` }}
-                  />
+              {/* Weights Info - Single combined bar with centered labels */}
+              <div className="flex h-8 rounded-lg overflow-hidden">
+                <div 
+                  className="bg-purple-500 flex items-center justify-center"
+                  style={{ width: `${bonusData.weights.company}%` }}
+                >
+                  <span className="text-xs font-semibold text-white">Corporativo {bonusData.weights.company}%</span>
                 </div>
-                <span className="text-sm">
-                  <span className="font-semibold text-purple-600">{bonusData.weights.company}%</span>
-                  <span className="text-zinc-400"> corp.</span>
-                  <span className="text-zinc-300 mx-1">+</span>
-                  <span className="font-semibold text-blue-600">{bonusData.weights.area}%</span>
-                  <span className="text-zinc-400"> personal</span>
-                </span>
+                <div 
+                  className="bg-blue-500 flex items-center justify-center"
+                  style={{ width: `${bonusData.weights.area}%` }}
+                >
+                  <span className="text-xs font-semibold text-white">Personal {bonusData.weights.area}%</span>
+                </div>
               </div>
 
               {/* Corporate Objectives */}
