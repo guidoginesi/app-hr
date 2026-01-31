@@ -307,12 +307,13 @@ export function ObjetivosClient({
 
       // Create or update sub-objectives for non-annual periodicities
       if (subObjectives.length > 0) {
+        console.log('Creating/updating sub-objectives:', subObjectives.length);
         for (let i = 0; i < subObjectives.length; i++) {
           const sub = subObjectives[i];
           if (sub.title.trim()) {
             if (sub.id) {
               // Update existing sub-objective
-              await fetch(`/api/portal/objectives/${sub.id}`, {
+              const updateRes = await fetch(`/api/portal/objectives/${sub.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -322,9 +323,14 @@ export function ObjetivosClient({
                   status: sub.status,
                 }),
               });
+              if (!updateRes.ok) {
+                const errData = await updateRes.json();
+                console.error(`Error updating sub-objective ${i + 1}:`, errData);
+              }
             } else {
               // Create new sub-objective
-              await fetch('/api/portal/objectives', {
+              console.log(`Creating sub-objective ${i + 1} for parent ${data.id}`);
+              const createRes = await fetch('/api/portal/objectives', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -341,6 +347,12 @@ export function ObjetivosClient({
                   sub_objective_number: i + 1,
                 }),
               });
+              if (!createRes.ok) {
+                const errData = await createRes.json();
+                console.error(`Error creating sub-objective ${i + 1}:`, errData);
+                throw new Error(`Error al crear sub-objetivo ${i + 1}: ${errData.error}`);
+              }
+              console.log(`Sub-objective ${i + 1} created successfully`);
             }
           }
         }

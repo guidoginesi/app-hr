@@ -162,33 +162,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if definition period is open for this year
-    const today = new Date().toISOString().split('T')[0];
-    const { data: defPeriod } = await supabase
-      .from('objectives_periods')
-      .select('*')
-      .eq('year', parsed.data.year)
-      .eq('period_type', 'definition')
-      .eq('is_active', true)
-      .single();
-
-    if (!defPeriod) {
-      return NextResponse.json(
-        { error: `No hay período de definición configurado para ${parsed.data.year}` },
-        { status: 400 }
-      );
-    }
-
-    if (today < defPeriod.start_date || today > defPeriod.end_date) {
-      return NextResponse.json(
-        { error: 'El período de definición de objetivos no está abierto actualmente' },
-        { status: 400 }
-      );
-    }
-
-    // Check if this is a sub-objective
+    // Check if this is a sub-objective (check early to skip period validation for sub-objectives)
     const isSubObjective = !!parsed.data.parent_objective_id;
 
+    // Check if definition period is open for this year (only for main objectives)
+    // Sub-objectives can be created if the parent exists (parent was created during valid period)
+    if (!isSubObjective) {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: defPeriod } = await supabase
+        .from('objectives_periods')
+        .select('*')
+        .eq('year', parsed.data.year)
+        .eq('period_type', 'definition')
+        .eq('is_active', true)
+        .single();
+
+      if (!defPeriod) {
+        return NextResponse.json(
+          { error: `No hay período de definición configurado para ${parsed.data.year}` },
+          { status: 400 }
+        );
+      }
+
+      if (today < defPeriod.start_date || today > defPeriod.end_date) {
+        return NextResponse.json(
+          { error: 'El período de definición de objetivos no está abierto actualmente' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Handle sub-objective creation
     if (isSubObjective) {
       // Validate parent objective exists and belongs to the same employee
       const { data: parentObj } = await supabase
