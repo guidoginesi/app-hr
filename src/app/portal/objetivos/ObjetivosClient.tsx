@@ -76,13 +76,24 @@ export function ObjetivosClient({
   const [progressStr, setProgressStr] = useState('0');
 
   // Sub-objectives state for semestral/trimestral
-  const [subObjectives, setSubObjectives] = useState<{ title: string; description: string }[]>([]);
+  const [subObjectives, setSubObjectives] = useState<{ 
+    id?: string; 
+    title: string; 
+    description: string; 
+    progress_percentage: number;
+    status: ObjectiveStatus;
+  }[]>([]);
 
   // Update sub-objectives when periodicity changes
   const handlePeriodicityChange = (newPeriodicity: ObjectivePeriodicity) => {
     setFormData(prev => ({ ...prev, periodicity: newPeriodicity }));
     const count = SUB_OBJECTIVES_COUNT[newPeriodicity] || 0;
-    setSubObjectives(Array(count).fill(null).map(() => ({ title: '', description: '' })));
+    setSubObjectives(Array(count).fill(null).map(() => ({ 
+      title: '', 
+      description: '', 
+      progress_percentage: 0,
+      status: 'not_started' as ObjectiveStatus,
+    })));
   };
 
   // Maximum 2 area objectives per employee per year
@@ -165,9 +176,20 @@ export function ObjetivosClient({
     // Load existing sub-objectives or create empty slots
     const count = SUB_OBJECTIVES_COUNT[objective.periodicity] || 0;
     if (objective.sub_objectives && objective.sub_objectives.length > 0) {
-      setSubObjectives(objective.sub_objectives.map(s => ({ title: s.title, description: s.description || '' })));
+      setSubObjectives(objective.sub_objectives.map(s => ({ 
+        id: s.id,
+        title: s.title, 
+        description: s.description || '',
+        progress_percentage: s.progress_percentage ?? 0,
+        status: s.status ?? 'not_started',
+      })));
     } else {
-      setSubObjectives(Array(count).fill(null).map(() => ({ title: '', description: '' })));
+      setSubObjectives(Array(count).fill(null).map(() => ({ 
+        title: '', 
+        description: '',
+        progress_percentage: 0,
+        status: 'not_started' as ObjectiveStatus,
+      })));
     }
     setEditingObjective(objective);
     setShowForm(true);
@@ -246,28 +268,43 @@ export function ObjetivosClient({
         return;
       }
 
-      // Create sub-objectives for non-annual periodicities
-      if (!editingObjective && subObjectives.length > 0) {
+      // Create or update sub-objectives for non-annual periodicities
+      if (subObjectives.length > 0) {
         for (let i = 0; i < subObjectives.length; i++) {
           const sub = subObjectives[i];
           if (sub.title.trim()) {
-            await fetch('/api/portal/objectives', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                employee_id: formData.employee_id,
-                year: formData.year,
-                period_type: formData.period_type,
-                title: sub.title,
-                description: sub.description,
-                progress_percentage: 0,
-                status: 'not_started',
-                periodicity: formData.periodicity,
-                weight_pct: formData.weight_pct,
-                parent_objective_id: data.id,
-                sub_objective_number: i + 1,
-              }),
-            });
+            if (sub.id) {
+              // Update existing sub-objective
+              await fetch(`/api/portal/objectives/${sub.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  title: sub.title,
+                  description: sub.description,
+                  progress_percentage: sub.progress_percentage,
+                  status: sub.status,
+                }),
+              });
+            } else {
+              // Create new sub-objective
+              await fetch('/api/portal/objectives', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  employee_id: formData.employee_id,
+                  year: formData.year,
+                  period_type: formData.period_type,
+                  title: sub.title,
+                  description: sub.description,
+                  progress_percentage: sub.progress_percentage || 0,
+                  status: sub.status || 'not_started',
+                  periodicity: formData.periodicity,
+                  weight_pct: formData.weight_pct,
+                  parent_objective_id: data.id,
+                  sub_objective_number: i + 1,
+                }),
+              });
+            }
           }
         }
       }
@@ -762,13 +799,50 @@ export function ObjetivosClient({
                                 className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
                               />
                             </div>
+                            {/* Progress and Status for each sub-objective when editing */}
+                            {editingObjective && (
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-zinc-600 mb-1">Progreso %</label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    value={sub.progress_percentage}
+                                    onChange={(e) => {
+                                      const updated = [...subObjectives];
+                                      updated[idx] = { ...updated[idx], progress_percentage: parseInt(e.target.value) || 0 };
+                                      setSubObjectives(updated);
+                                    }}
+                                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-zinc-600 mb-1">Estado</label>
+                                  <select
+                                    value={sub.status}
+                                    onChange={(e) => {
+                                      const updated = [...subObjectives];
+                                      updated[idx] = { ...updated[idx], status: e.target.value as ObjectiveStatus };
+                                      setSubObjectives(updated);
+                                    }}
+                                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                                  >
+                                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                                      <option key={key} value={key}>{label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );})}
                     </div>
                   )}
 
-                  {editingObjective && (
+                  {/* Progress and Status for annual objectives only (no sub-objectives) */}
+                  {editingObjective && subObjectives.length === 0 && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1">Progreso %</label>
