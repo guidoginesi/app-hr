@@ -209,6 +209,7 @@ type TeamMemberProfileClientProps = {
   evaluations: Evaluation[];
   objectives: Objective[];
   seniorityHistory: SeniorityHistoryItem[];
+  availableBonusYears: number[];
 };
 
 export function TeamMemberProfileClient({
@@ -216,6 +217,7 @@ export function TeamMemberProfileClient({
   evaluations,
   objectives,
   seniorityHistory,
+  availableBonusYears,
 }: TeamMemberProfileClientProps) {
   const [activeTab, setActiveTab] = useState<'objectives' | 'evaluations' | 'recategorization' | 'bonus' | 'history'>('objectives');
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
@@ -238,7 +240,8 @@ export function TeamMemberProfileClient({
   const currentYear = new Date().getFullYear();
   const [bonusData, setBonusData] = useState<BonusData | null>(null);
   const [loadingBonus, setLoadingBonus] = useState(false);
-  const [bonusYear, setBonusYear] = useState(currentYear - 1); // Default to previous year
+  // Default to most recent year with corporate objectives, or current year if none
+  const [bonusYear, setBonusYear] = useState(availableBonusYears[0] || currentYear);
 
   // Load recategorization data when tab is selected
   useEffect(() => {
@@ -1207,17 +1210,21 @@ export function TeamMemberProfileClient({
               <h3 className="text-lg font-semibold text-zinc-900">Cálculo de Bono</h3>
               <p className="text-sm text-zinc-500">Seleccioná el año para ver el bono correspondiente</p>
             </div>
-            <select
-              value={bonusYear}
-              onChange={(e) => setBonusYear(Number(e.target.value))}
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {[currentYear, currentYear - 1, currentYear - 2].map(year => (
-                <option key={year} value={year}>
-                  {year} {year === currentYear ? '(en curso)' : ''}
-                </option>
-              ))}
-            </select>
+            {availableBonusYears.length > 0 ? (
+              <select
+                value={bonusYear}
+                onChange={(e) => setBonusYear(Number(e.target.value))}
+                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {availableBonusYears.map(year => (
+                  <option key={year} value={year}>
+                    {year} {year === currentYear ? '(en curso)' : ''}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-zinc-500">Sin objetivos corporativos configurados</span>
+            )}
           </div>
 
           {loadingBonus ? (

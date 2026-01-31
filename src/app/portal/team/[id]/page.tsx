@@ -70,6 +70,22 @@ export default async function TeamMemberProfilePage({ params }: PageProps) {
     // Table might not exist
   }
 
+  // Get available years from corporate objectives (years that admins have configured)
+  let availableBonusYears: number[] = [];
+  try {
+    const { data } = await supabase
+      .from('corporate_objectives')
+      .select('year')
+      .order('year', { ascending: false });
+    
+    if (data) {
+      // Get unique years
+      availableBonusYears = [...new Set(data.map(d => d.year))];
+    }
+  } catch {
+    // Table might not exist
+  }
+
   return (
     <PortalShell employee={employee} isLeader={isLeader} active="team">
       <TeamMemberProfileClient
@@ -77,6 +93,7 @@ export default async function TeamMemberProfilePage({ params }: PageProps) {
         evaluations={evaluations || []}
         objectives={objectives || []}
         seniorityHistory={seniorityHistory}
+        availableBonusYears={availableBonusYears}
       />
     </PortalShell>
   );
