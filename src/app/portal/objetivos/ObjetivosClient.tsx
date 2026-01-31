@@ -38,6 +38,11 @@ export function ObjetivosClient({
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [evaluatingObjective, setEvaluatingObjective] = useState<Objective | null>(null);
   const [achievementData, setAchievementData] = useState({ percentage: '', notes: '' });
+  
+  // For evaluating objectives with sub-objectives
+  const [showSubObjectivesEvalModal, setShowSubObjectivesEvalModal] = useState(false);
+  const [evaluatingParentObjective, setEvaluatingParentObjective] = useState<Objective | null>(null);
+  const [subObjectivesEvalData, setSubObjectivesEvalData] = useState<{ id: string; percentage: string; notes: string }[]>([]);
 
   // Helper functions to check periods
   const isPeriodOpen = (year: number, type: 'definition' | 'evaluation'): boolean => {
@@ -321,12 +326,26 @@ export function ObjetivosClient({
   };
 
   const openAchievementModal = (objective: Objective) => {
-    setEvaluatingObjective(objective);
-    setAchievementData({
-      percentage: String(objective.achievement_percentage ?? objective.progress_percentage ?? 0),
-      notes: objective.achievement_notes || '',
-    });
-    setShowAchievementModal(true);
+    // If objective has sub-objectives, open the sub-objectives evaluation modal
+    if (objective.sub_objectives && objective.sub_objectives.length > 0) {
+      setEvaluatingParentObjective(objective);
+      setSubObjectivesEvalData(
+        objective.sub_objectives.map(sub => ({
+          id: sub.id,
+          percentage: String(sub.achievement_percentage ?? sub.progress_percentage ?? 0),
+          notes: sub.achievement_notes || '',
+        }))
+      );
+      setShowSubObjectivesEvalModal(true);
+    } else {
+      // Regular objective - open simple modal
+      setEvaluatingObjective(objective);
+      setAchievementData({
+        percentage: String(objective.achievement_percentage ?? objective.progress_percentage ?? 0),
+        notes: objective.achievement_notes || '',
+      });
+      setShowAchievementModal(true);
+    }
   };
 
   const handleSaveAchievement = async () => {
@@ -335,14 +354,13 @@ export function ObjetivosClient({
     setError(null);
 
     const percentageValue = parseFloat(achievementData.percentage) || 0;
-    const isSubObjective = !!evaluatingObjective.parent_objective_id;
 
     try {
       const res = await fetch(`/api/portal/objectives/${evaluatingObjective.id}/achievement`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          achievement_percentage: percentageValue,
+          achievement_percentage: Math.round(percentageValue),
           achievement_notes: achievementData.notes,
         }),
       });
@@ -352,15 +370,44 @@ export function ObjetivosClient({
         throw new Error(data.error || 'Error al guardar');
       }
 
-      // For sub-objectives, we need to refresh to get updated parent with recalculated progress
-      // For main objectives, we can update the local state directly
-      if (!isSubObjective) {
-        const data = await res.json();
-        setTeamObjectives(prev => prev.map(o => o.id === data.id ? data : o));
-      }
-      
       setShowAchievementModal(false);
       setEvaluatingObjective(null);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAllSubObjectivesAchievements = async () => {
+    if (!evaluatingParentObjective) return;
+    setSaving(true);
+    setError(null);
+
+    try {
+      // Save each sub-objective evaluation
+      for (const subEval of subObjectivesEvalData) {
+        const percentageValue = parseFloat(subEval.percentage) || 0;
+        
+        const res = await fetch(`/api/portal/objectives/${subEval.id}/achievement`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            achievement_percentage: Math.round(percentageValue),
+            achievement_notes: subEval.notes,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || `Error al guardar sub-objetivo`);
+        }
+      }
+
+      setShowSubObjectivesEvalModal(false);
+      setEvaluatingParentObjective(null);
+      setSubObjectivesEvalData([]);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -822,6 +869,122 @@ export function ObjetivosClient({
                   className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : 'Guardar evaluación'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-objectives Evaluation Modal */}
+      {showSubObjectivesEvalModal && evaluatingParentObjective && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setShowSubObjectivesEvalModal(false)} />
+            <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="border-b border-zinc-200 px-6 py-4">
+                <h2 className="text-lg font-semibold text-zinc-900">
+                  Evaluar Sub-objetivos
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {evaluatingParentObjective.title} - {PERIODICITY_LABELS[evaluatingParentObjective.periodicity]}
+                </p>
+              </div>
+              <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                {error && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+                )}
+                
+                {evaluatingParentObjective.sub_objectives?.map((sub, idx) => {
+                  const evalData = subObjectivesEvalData.find(e => e.id === sub.id);
+                  if (!evalData) return null;
+                  
+                  return (
+                    <div key={sub.id} className="rounded-lg border border-purple-200 bg-purple-50/50 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-sm font-semibold text-purple-700 bg-purple-100 px-2.5 py-1 rounded">
+                          {SUB_OBJECTIVE_LABELS[evaluatingParentObjective.periodicity]?.[idx] || `#${idx + 1}`}
+                        </span>
+                      </div>
+                      <p className="font-medium text-zinc-800 mb-1">{sub.title}</p>
+                      {sub.description && (
+                        <p className="text-sm text-zinc-500 mb-3">{sub.description}</p>
+                      )}
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-600 mb-1">
+                            Cumplimiento (%) *
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={200}
+                            value={evalData.percentage}
+                            onChange={(e) => {
+                              setSubObjectivesEvalData(prev => 
+                                prev.map(item => 
+                                  item.id === sub.id 
+                                    ? { ...item, percentage: e.target.value }
+                                    : item
+                                )
+                              );
+                            }}
+                            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-600 mb-1">
+                            Notas
+                          </label>
+                          <input
+                            type="text"
+                            value={evalData.notes}
+                            onChange={(e) => {
+                              setSubObjectivesEvalData(prev => 
+                                prev.map(item => 
+                                  item.id === sub.id 
+                                    ? { ...item, notes: e.target.value }
+                                    : item
+                                )
+                              );
+                            }}
+                            placeholder="Comentarios..."
+                            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Calculated total */}
+                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-emerald-800">Cumplimiento promedio calculado:</span>
+                    <span className="text-xl font-bold text-emerald-700">
+                      {Math.round(
+                        subObjectivesEvalData.reduce((sum, e) => sum + (parseFloat(e.percentage) || 0), 0) / 
+                        (subObjectivesEvalData.length || 1)
+                      )}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setShowSubObjectivesEvalModal(false)}
+                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveAllSubObjectivesAchievements}
+                  disabled={saving}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {saving ? 'Guardando...' : 'Guardar todas las evaluaciones'}
                 </button>
               </div>
             </div>
