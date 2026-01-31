@@ -387,8 +387,12 @@ export function ObjetivosClient({
 
     try {
       // Save each sub-objective evaluation
-      for (const subEval of subObjectivesEvalData) {
+      for (let i = 0; i < subObjectivesEvalData.length; i++) {
+        const subEval = subObjectivesEvalData[i];
         const percentageValue = parseFloat(subEval.percentage) || 0;
+        const subLabel = SUB_OBJECTIVE_LABELS[evaluatingParentObjective.periodicity]?.[i] || `#${i + 1}`;
+        
+        console.log(`Saving sub-objective ${subLabel}:`, { id: subEval.id, percentage: percentageValue });
         
         const res = await fetch(`/api/portal/objectives/${subEval.id}/achievement`, {
           method: 'PUT',
@@ -401,8 +405,11 @@ export function ObjetivosClient({
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error || `Error al guardar sub-objetivo`);
+          console.error(`Error saving ${subLabel}:`, data);
+          throw new Error(`Error en ${subLabel}: ${data.error || 'Error desconocido'}`);
         }
+        
+        console.log(`Saved ${subLabel} successfully`);
       }
 
       setShowSubObjectivesEvalModal(false);
@@ -410,6 +417,7 @@ export function ObjetivosClient({
       setSubObjectivesEvalData([]);
       router.refresh();
     } catch (err: any) {
+      console.error('Error saving achievements:', err);
       setError(err.message);
     } finally {
       setSaving(false);

@@ -43,10 +43,19 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Objetivo no encontrado' }, { status: 404 });
     }
 
-    // Only the creator (leader) can evaluate
-    if (objective.created_by !== auth.employee.id) {
+    // Check if user can evaluate: must be the creator OR have direct reports
+    const { data: directReports } = await supabase
+      .from('employees')
+      .select('id')
+      .eq('manager_id', auth.employee.id);
+    
+    const isLeader = directReports && directReports.length > 0;
+    const isCreator = objective.created_by === auth.employee.id;
+    const isManagerOfEmployee = directReports?.some(r => r.id === objective.employee_id);
+
+    if (!isCreator && !isManagerOfEmployee) {
       return NextResponse.json(
-        { error: 'Solo el líder que creó el objetivo puede evaluarlo' },
+        { error: 'Solo el líder del empleado puede evaluar este objetivo' },
         { status: 403 }
       );
     }
@@ -59,7 +68,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check if evaluation period is open for this year
+    // Check if evaluation period is open for this year (but allow if no period is configured)
     const { data: evalPeriod } = await supabase
       .from('objectives_periods')
       .select('*')
@@ -68,19 +77,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       .eq('is_active', true)
       .single();
 
-    if (!evalPeriod) {
-      return NextResponse.json(
-        { error: `No hay período de evaluación configurado para ${objective.year}` },
-        { status: 400 }
-      );
+    // If there's an active evaluation period, check if we're within dates
+    if (evalPeriod) {
+      if (today < evalPeriod.start_date || today > evalPeriod.end_date) {
+        return NextResponse.json(
+          { error: `El período de evaluación para ${objective.year} va del ${evalPeriod.start_date} al ${evalPeriod.end_date}` },
+          { status: 400 }
+        );
+      }
     }
-
-    if (today < evalPeriod.start_date || today > evalPeriod.end_date) {
-      return NextResponse.json(
-        { error: 'El período de evaluación no está abierto actualmente' },
-        { status: 400 }
-      );
-    }
+    // If no evaluation period is configured, allow evaluation anyway (more flexible)
 
     // Update the objective with achievement data
     const { data, error } = await supabase
