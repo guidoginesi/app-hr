@@ -1262,21 +1262,6 @@ export function TeamMemberProfileClient({
                 </div>
               )}
 
-              {/* Final Bonus Result */}
-              <div className="rounded-xl border p-6 border-emerald-200 bg-emerald-50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-zinc-900">Bono Final</h3>
-                    <p className="text-sm text-zinc-500 mt-1">Año {bonusData.year}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-4xl font-bold text-emerald-600">
-                      {bonusData.bonus.finalPercentage.toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Weights Info - Single combined bar with centered labels */}
               <div className="flex h-8 rounded-lg overflow-hidden">
                 <div 
