@@ -1245,23 +1245,6 @@ export function TeamMemberProfileClient({
                 </div>
               )}
 
-              {/* Gate Status Info Banner */}
-              {bonusData.corporate.billing.target && !bonusData.bonus.gateMet && (
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <svg className="h-5 w-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="font-medium text-zinc-700">Gate de facturación no alcanzado</p>
-                      <p className="text-sm text-zinc-500">
-                        No se alcanzó el {bonusData.corporate.billing.gatePercentage}% de facturación, por lo que el componente de facturación es 0%.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Pro-rata Info Banner */}
               {bonusData.proRata.applies && (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
