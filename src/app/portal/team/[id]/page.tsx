@@ -49,13 +49,34 @@ export default async function TeamMemberProfilePage({ params }: PageProps) {
     .eq('employee_id', memberId)
     .order('created_at', { ascending: false });
 
-  // Get objectives for this employee
-  const { data: objectives } = await supabase
+  // Get MAIN objectives for this employee (not sub-objectives)
+  const { data: mainObjectives } = await supabase
     .from('objectives')
     .select('*')
     .eq('employee_id', memberId)
+    .is('parent_objective_id', null)
     .order('year', { ascending: false })
-    .order('period_type');
+    .order('objective_number', { ascending: true });
+
+  // Fetch sub-objectives for each main objective
+  const objectives = await Promise.all(
+    (mainObjectives || []).map(async (obj) => {
+      const { data: subObjectives } = await supabase
+        .from('objectives')
+        .select('*')
+        .eq('parent_objective_id', obj.id)
+        .order('sub_objective_number', { ascending: true });
+      
+      const subs = subObjectives || [];
+      
+      // Calculate progress from sub-objectives if they exist
+      const calculatedProgress = subs.length > 0
+        ? Math.round(subs.reduce((sum, sub) => sum + (sub.achievement_percentage ?? sub.progress_percentage ?? 0), 0) / subs.length)
+        : (obj.achievement_percentage ?? obj.progress_percentage);
+      
+      return { ...obj, sub_objectives: subs, calculated_progress: calculatedProgress };
+    })
+  );
 
   // Get seniority history
   let seniorityHistory: any[] = [];

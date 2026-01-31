@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Employee } from '@/types/employee';
 import type { Objective } from '@/types/objective';
-import { PERIOD_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS } from '@/types/objective';
+import { PERIOD_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS, PERIODICITY_LABELS, SUB_OBJECTIVE_LABELS } from '@/types/objective';
 import { 
   getSeniorityLabel, 
   getSeniorityCategory, 
@@ -556,44 +556,96 @@ export function TeamMemberProfileClient({
                 <div className="divide-y divide-zinc-100">
                   {objectivesByYear[year].map(obj => {
                     const statusColor = STATUS_COLORS[obj.status];
-                    const hasAchievement = obj.achievement_percentage !== null && obj.achievement_percentage !== undefined;
+                    const periodicity = obj.periodicity || 'annual';
+                    const subObjectives = obj.sub_objectives || [];
+                    const hasSubObjectives = subObjectives.length > 0;
+                    
+                    // Use calculated progress for objectives with sub-objectives
+                    const displayProgress = hasSubObjectives 
+                      ? (obj.calculated_progress ?? obj.progress_percentage)
+                      : obj.progress_percentage;
+                    
+                    // For objectives with sub-objectives, check if any sub has achievement
+                    const hasAchievement = hasSubObjectives
+                      ? subObjectives.some((s: any) => s.achievement_percentage !== null && s.achievement_percentage !== undefined)
+                      : (obj.achievement_percentage !== null && obj.achievement_percentage !== undefined);
+                    
+                    const displayAchievement = hasSubObjectives
+                      ? Math.round(subObjectives.reduce((sum: number, s: any) => sum + (s.achievement_percentage ?? 0), 0) / subObjectives.length)
+                      : obj.achievement_percentage;
+                    
                     return (
                       <div key={obj.id} className="p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
-                                {PERIOD_TYPE_LABELS[obj.period_type]}
+                                {PERIODICITY_LABELS[periodicity]} {obj.weight_pct ? `(${obj.weight_pct}%)` : ''}
                               </span>
                               <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor.bg} ${statusColor.text}`}>
                                 {STATUS_LABELS[obj.status]}
                               </span>
                               {hasAchievement && (
                                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
-                                  Cumplimiento: {obj.achievement_percentage}%
+                                  Cumplimiento: {displayAchievement}%
                                 </span>
                               )}
                             </div>
-                            <h4 className="font-medium text-zinc-900">{obj.title}</h4>
+                            <h4 className="font-medium text-zinc-900">
+                              {obj.objective_number ? `Objetivo #${obj.objective_number}: ` : ''}{obj.title}
+                            </h4>
                             {obj.description && (
                               <p className="mt-1 text-sm text-zinc-500">{obj.description}</p>
                             )}
+                            
+                            {/* Progress bar */}
                             <div className="mt-3">
                               <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
                                 <span>Progreso</span>
-                                <span>{obj.progress_percentage}%</span>
+                                <span>{displayProgress}%</span>
                               </div>
                               <div className="h-2 w-full rounded-full bg-zinc-100">
                                 <div
                                   className={`h-2 rounded-full transition-all ${
-                                    obj.progress_percentage === 100 ? 'bg-green-500' :
-                                    obj.progress_percentage >= 50 ? 'bg-purple-500' :
+                                    displayProgress === 100 ? 'bg-green-500' :
+                                    displayProgress >= 50 ? 'bg-purple-500' :
                                     'bg-yellow-500'
                                   }`}
-                                  style={{ width: `${Math.min(obj.progress_percentage, 100)}%` }}
+                                  style={{ width: `${Math.min(displayProgress, 100)}%` }}
                                 />
                               </div>
                             </div>
+                            
+                            {/* Sub-objectives */}
+                            {hasSubObjectives && (
+                              <div className="mt-4 border-t border-zinc-100 pt-3">
+                                <p className="text-xs font-medium text-zinc-500 mb-2">
+                                  Sub-objetivos ({subObjectives.length})
+                                </p>
+                                <div className="space-y-2">
+                                  {subObjectives.map((sub: any, idx: number) => {
+                                    const subLabel = SUB_OBJECTIVE_LABELS[periodicity]?.[idx] || `#${idx + 1}`;
+                                    const subHasAchievement = sub.achievement_percentage !== null && sub.achievement_percentage !== undefined;
+                                    return (
+                                      <div key={sub.id} className="rounded-lg bg-zinc-50 p-3">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-xs font-medium text-zinc-600">{subLabel}</span>
+                                          {subHasAchievement && (
+                                            <span className="text-xs font-medium px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                                              {sub.achievement_percentage}%
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-sm text-zinc-800">{sub.title}</p>
+                                        {sub.description && (
+                                          <p className="text-xs text-zinc-500 mt-1">{sub.description}</p>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
