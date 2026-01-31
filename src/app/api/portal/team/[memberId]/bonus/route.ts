@@ -200,11 +200,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     // Calculate weighted bonus
-    // Company component = (billing * billingWeight + nps * npsWeight) / (billingWeight + npsWeight)
-    const companyWeightTotal = detailedWeights.billing + detailedWeights.nps;
-    const companyScore = companyWeightTotal > 0 
-      ? (billingCompletion * detailedWeights.billing + npsCompletion * detailedWeights.nps) / companyWeightTotal
-      : 0;
+    // Corporate objectives have FIXED weights: Billing 70%, NPS 30% (rule applies to everyone)
+    const CORPORATE_BILLING_WEIGHT = 70;
+    const CORPORATE_NPS_WEIGHT = 30;
+    const companyScore = (billingCompletion * CORPORATE_BILLING_WEIGHT + npsCompletion * CORPORATE_NPS_WEIGHT) / 100;
 
     // Personal/Area component
     const personalScore = personalCompletion;
@@ -226,8 +225,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
       weights: {
         company: weights.company,
         area: weights.area,
-        billing: detailedWeights.billing,
-        nps: detailedWeights.nps,
+        // Corporate objective weights are fixed for everyone
+        billing: CORPORATE_BILLING_WEIGHT,
+        nps: CORPORATE_NPS_WEIGHT,
+        // Personal objective weights vary by seniority
         area1: detailedWeights.area1,
         area2: detailedWeights.area2,
       },
