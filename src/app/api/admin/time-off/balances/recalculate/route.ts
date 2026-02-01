@@ -199,20 +199,22 @@ export async function POST(req: NextRequest) {
         }
 
         // Get previous year balance for carry over (only if accumulative)
+        // Include bonus_days in the carryover calculation so they persist across years
         let carriedOver = 0;
         if (leaveType.is_accumulative && year > 2020) {
           const { data: prevBalance } = await supabase
             .from('leave_balances')
-            .select('entitled_days, used_days, carried_over')
+            .select('entitled_days, used_days, carried_over, bonus_days')
             .eq('employee_id', employee.id)
             .eq('leave_type_id', leaveType.id)
             .eq('year', year - 1)
             .single();
 
           if (prevBalance) {
+            // Include bonus_days in what gets carried over
             carriedOver = Math.max(
               0,
-              prevBalance.entitled_days + prevBalance.carried_over - prevBalance.used_days
+              Number(prevBalance.entitled_days) + Number(prevBalance.carried_over) + Number(prevBalance.bonus_days || 0) - Number(prevBalance.used_days)
             );
           }
         }
