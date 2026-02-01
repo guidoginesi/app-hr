@@ -371,21 +371,21 @@ export default function TimeOffBalancesPage() {
                           {vac ? (
                             <div>
                               <span className="text-xl font-bold text-blue-600">
-                                {vac.available_days}
+                                {Number(vac.available_days)}
                               </span>
-                              {(vac.entitled_days > 0 || vac.carried_over > 0 || vac.bonus_days > 0) && (
+                              {(Number(vac.entitled_days) > 0 || Number(vac.carried_over) > 0 || Number(vac.bonus_days) > 0) && (
                                 <span className="text-sm text-zinc-400">
-                                  {' '}/ {vac.entitled_days + vac.carried_over + (vac.bonus_days || 0)}
+                                  {' '}/ {Number(vac.entitled_days) + Number(vac.carried_over) + Number(vac.bonus_days || 0)}
                                 </span>
                               )}
-                              {vac.carried_over > 0 && vac.entitled_days === 0 && !vac.bonus_days && (
+                              {Number(vac.carried_over) > 0 && Number(vac.entitled_days) === 0 && !Number(vac.bonus_days) && (
                                 <p className="text-[10px] text-green-600">solo acum. período anterior</p>
                               )}
-                              {vac.carried_over > 0 && vac.entitled_days > 0 && (
-                                <p className="text-[10px] text-green-600">+{vac.carried_over} acum.</p>
+                              {Number(vac.carried_over) > 0 && Number(vac.entitled_days) > 0 && (
+                                <p className="text-[10px] text-green-600">+{Number(vac.carried_over)} acum.</p>
                               )}
-                              {vac.bonus_days > 0 && (
-                                <p className="text-[10px] text-blue-600">+{vac.bonus_days} bonus</p>
+                              {Number(vac.bonus_days) > 0 && (
+                                <p className="text-[10px] text-blue-600">+{Number(vac.bonus_days)} bonus</p>
                               )}
                             </div>
                           ) : (
@@ -408,21 +408,21 @@ export default function TimeOffBalancesPage() {
                             <div className="flex items-center justify-center gap-2">
                               <div>
                                 <span className="text-xl font-bold text-purple-600">
-                                  {pow.available_days}
+                                  {Number(pow.available_days)}
                                 </span>
-                                {(pow.entitled_days > 0 || pow.carried_over > 0 || pow.bonus_days > 0) && (
+                                {(Number(pow.entitled_days) > 0 || Number(pow.carried_over) > 0 || Number(pow.bonus_days) > 0) && (
                                   <span className="text-sm text-zinc-400">
-                                    {' '}/ {pow.entitled_days + pow.carried_over + (pow.bonus_days || 0)}
+                                    {' '}/ {Number(pow.entitled_days) + Number(pow.carried_over) + Number(pow.bonus_days || 0)}
                                   </span>
                                 )}
-                                {pow.carried_over > 0 && pow.entitled_days === 0 && !pow.bonus_days && (
+                                {Number(pow.carried_over) > 0 && Number(pow.entitled_days) === 0 && !Number(pow.bonus_days) && (
                                   <p className="text-[10px] text-green-600">solo acum. período anterior</p>
                                 )}
-                                {pow.carried_over > 0 && pow.entitled_days > 0 && (
-                                  <p className="text-[10px] text-green-600">+{pow.carried_over} acum.</p>
+                                {Number(pow.carried_over) > 0 && Number(pow.entitled_days) > 0 && (
+                                  <p className="text-[10px] text-green-600">+{Number(pow.carried_over)} acum.</p>
                                 )}
-                                {pow.bonus_days > 0 && (
-                                  <p className="text-[10px] text-purple-600">+{pow.bonus_days} bonus</p>
+                                {Number(pow.bonus_days) > 0 && (
+                                  <p className="text-[10px] text-purple-600">+{Number(pow.bonus_days)} bonus</p>
                                 )}
                               </div>
                               <button
