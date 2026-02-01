@@ -73,7 +73,7 @@ export default async function TimeOffPortalPage() {
                 <p className="mt-0.5 text-2xl font-bold text-zinc-900">
                   {balancesByType['vacation']?.available_days ?? 0}
                   <span className="text-sm font-normal text-zinc-500">
-                    {' '}/ {(balancesByType['vacation']?.entitled_days ?? 0) + (balancesByType['vacation']?.carried_over ?? 0)} días
+                    {' '}/ {(balancesByType['vacation']?.entitled_days ?? 0) + (balancesByType['vacation']?.carried_over ?? 0) + (balancesByType['vacation']?.bonus_days ?? 0)} días
                   </span>
                 </p>
               </div>
@@ -93,7 +93,7 @@ export default async function TimeOffPortalPage() {
                 <p className="mt-0.5 text-2xl font-bold text-zinc-900">
                   {balancesByType['pow_days']?.available_days ?? 0}
                   <span className="text-sm font-normal text-zinc-500">
-                    {' '}/ {(balancesByType['pow_days']?.entitled_days ?? 0) + (balancesByType['pow_days']?.carried_over ?? 0)} días
+                    {' '}/ {(balancesByType['pow_days']?.entitled_days ?? 0) + (balancesByType['pow_days']?.carried_over ?? 0) + (balancesByType['pow_days']?.bonus_days ?? 0)} días
                   </span>
                 </p>
               </div>
