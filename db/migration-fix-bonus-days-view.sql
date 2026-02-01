@@ -1,10 +1,23 @@
 -- Migration: Corregir vista para incluir bonus_days en el cálculo de días disponibles
 -- El campo bonus_days no estaba siendo sumado a available_days
 
--- Actualizar la vista leave_balances_with_details
-CREATE OR REPLACE VIEW public.leave_balances_with_details AS
+-- Primero eliminar la vista existente (necesario por cambio de estructura)
+DROP VIEW IF EXISTS public.leave_balances_with_details;
+
+-- Recrear la vista con la fórmula correcta
+CREATE VIEW public.leave_balances_with_details AS
 SELECT 
-  lb.*,
+  lb.id,
+  lb.employee_id,
+  lb.leave_type_id,
+  lb.year,
+  lb.entitled_days,
+  lb.used_days,
+  lb.pending_days,
+  lb.carried_over,
+  lb.bonus_days,
+  lb.created_at,
+  lb.updated_at,
   lt.code AS leave_type_code,
   lt.name AS leave_type_name,
   lt.count_type,
