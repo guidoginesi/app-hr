@@ -19,6 +19,7 @@ type Employee = {
   seniority_level: string | null;
   department_id: string | null;
   legal_entity_id: string | null;
+  employment_type: string | null;
   created_at: string;
   department: { id: string; name: string } | null;
   legal_entity: { id: string; name: string } | null;
@@ -122,6 +123,22 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       else tenureRanges['Más de 10 años']++;
     });
 
+    // Distribution by employment type
+    const byEmploymentType = {
+      'Relación de dependencia': 0,
+      'Monotributo': 0,
+      'Sin asignar': 0,
+    };
+    activeEmployees.forEach(e => {
+      if (e.employment_type === 'dependency') {
+        byEmploymentType['Relación de dependencia']++;
+      } else if (e.employment_type === 'monotributista') {
+        byEmploymentType['Monotributo']++;
+      } else {
+        byEmploymentType['Sin asignar']++;
+      }
+    });
+
     return {
       totalActive,
       totalTerminated,
@@ -134,6 +151,7 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       withoutSeniority: withoutSeniority.length,
       byLegalEntity,
       tenureRanges,
+      byEmploymentType,
     };
   }, [employees]);
 
@@ -327,6 +345,174 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
                   </div>
                 );
               })}
+          </div>
+        </div>
+      </div>
+
+      {/* Third Row - Employment Type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* By Employment Type - Donut Chart */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Condición Laboral</h3>
+          <div className="flex items-center gap-8">
+            {/* Donut Chart */}
+            <div className="relative w-40 h-40 flex-shrink-0">
+              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                {(() => {
+                  const total = metrics.byEmploymentType['Relación de dependencia'] + 
+                               metrics.byEmploymentType['Monotributo'] + 
+                               metrics.byEmploymentType['Sin asignar'];
+                  if (total === 0) return null;
+                  
+                  const dependency = metrics.byEmploymentType['Relación de dependencia'];
+                  const monotributo = metrics.byEmploymentType['Monotributo'];
+                  const sinAsignar = metrics.byEmploymentType['Sin asignar'];
+                  
+                  const dependencyPct = (dependency / total) * 100;
+                  const monotributoPct = (monotributo / total) * 100;
+                  const sinAsignarPct = (sinAsignar / total) * 100;
+                  
+                  let offset = 0;
+                  const segments = [];
+                  
+                  if (dependency > 0) {
+                    segments.push(
+                      <circle
+                        key="dependency"
+                        cx="18"
+                        cy="18"
+                        r="15.915"
+                        fill="transparent"
+                        stroke="#10b981"
+                        strokeWidth="3.5"
+                        strokeDasharray={`${dependencyPct} ${100 - dependencyPct}`}
+                        strokeDashoffset={-offset}
+                        className="transition-all duration-500"
+                      />
+                    );
+                    offset += dependencyPct;
+                  }
+                  
+                  if (monotributo > 0) {
+                    segments.push(
+                      <circle
+                        key="monotributo"
+                        cx="18"
+                        cy="18"
+                        r="15.915"
+                        fill="transparent"
+                        stroke="#f59e0b"
+                        strokeWidth="3.5"
+                        strokeDasharray={`${monotributoPct} ${100 - monotributoPct}`}
+                        strokeDashoffset={-offset}
+                        className="transition-all duration-500"
+                      />
+                    );
+                    offset += monotributoPct;
+                  }
+                  
+                  if (sinAsignar > 0) {
+                    segments.push(
+                      <circle
+                        key="sinAsignar"
+                        cx="18"
+                        cy="18"
+                        r="15.915"
+                        fill="transparent"
+                        stroke="#d4d4d8"
+                        strokeWidth="3.5"
+                        strokeDasharray={`${sinAsignarPct} ${100 - sinAsignarPct}`}
+                        strokeDashoffset={-offset}
+                        className="transition-all duration-500"
+                      />
+                    );
+                  }
+                  
+                  return segments;
+                })()}
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-zinc-900">{metrics.totalActive}</div>
+                  <div className="text-xs text-zinc-500">Total</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Legend */}
+            <div className="space-y-3 flex-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <span className="text-sm text-zinc-600">Relación de dependencia</span>
+                </div>
+                <span className="text-sm font-semibold text-zinc-900">
+                  {metrics.byEmploymentType['Relación de dependencia']}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                  <span className="text-sm text-zinc-600">Monotributo</span>
+                </div>
+                <span className="text-sm font-semibold text-zinc-900">
+                  {metrics.byEmploymentType['Monotributo']}
+                </span>
+              </div>
+              {metrics.byEmploymentType['Sin asignar'] > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-zinc-300" />
+                    <span className="text-sm text-zinc-400">Sin asignar</span>
+                  </div>
+                  <span className="text-sm font-semibold text-zinc-400">
+                    {metrics.byEmploymentType['Sin asignar']}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Placeholder or additional chart */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Resumen de Condiciones</h3>
+          <div className="space-y-4">
+            {(() => {
+              const total = metrics.byEmploymentType['Relación de dependencia'] + 
+                           metrics.byEmploymentType['Monotributo'];
+              const dependencyPct = total > 0 
+                ? ((metrics.byEmploymentType['Relación de dependencia'] / total) * 100).toFixed(1)
+                : '0';
+              const monotributoPct = total > 0 
+                ? ((metrics.byEmploymentType['Monotributo'] / total) * 100).toFixed(1)
+                : '0';
+              
+              return (
+                <>
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-emerald-50">
+                    <div>
+                      <p className="text-sm font-medium text-emerald-900">Relación de dependencia</p>
+                      <p className="text-xs text-emerald-600">Empleados en nómina</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-emerald-600">{dependencyPct}%</p>
+                      <p className="text-xs text-emerald-600">{metrics.byEmploymentType['Relación de dependencia']} personas</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50">
+                    <div>
+                      <p className="text-sm font-medium text-amber-900">Monotributo</p>
+                      <p className="text-xs text-amber-600">Contratistas independientes</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-amber-600">{monotributoPct}%</p>
+                      <p className="text-xs text-amber-600">{metrics.byEmploymentType['Monotributo']} personas</p>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>

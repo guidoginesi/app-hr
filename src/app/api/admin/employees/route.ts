@@ -34,6 +34,7 @@ const CreateEmployeeSchema = z.object({
   seniority_level: z.string().optional().nullable(),
   status: z.enum(['active', 'inactive', 'terminated']).default('active'),
   hire_date: z.string().optional().nullable(),
+  employment_type: z.enum(['monotributista', 'dependency']).optional().nullable(),
 });
 
 // GET /api/admin/employees - List all employees

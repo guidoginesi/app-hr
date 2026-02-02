@@ -62,6 +62,7 @@ const UpdateEmployeeSchema = z.object({
   status: z.enum(['active', 'inactive', 'terminated']).optional(),
   hire_date: stringToNull.optional(),
   termination_date: stringToNull.optional(),
+  employment_type: optionalEnum(['monotributista', 'dependency']).optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };

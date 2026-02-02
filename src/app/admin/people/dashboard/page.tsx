@@ -27,6 +27,7 @@ export default async function PeopleDashboardPage() {
       seniority_level,
       department_id,
       legal_entity_id,
+      employment_type,
       created_at,
       department:departments(id, name),
       legal_entity:legal_entities(id, name)
