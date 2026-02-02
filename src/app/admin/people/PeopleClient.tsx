@@ -52,6 +52,7 @@ type EmployeeWithRelations = {
   status: EmployeeStatus;
   hire_date: string | null;
   termination_date: string | null;
+  employment_type: string | null;
   created_at: string;
   updated_at: string;
   legal_entity: { id: string; name: string } | null;
