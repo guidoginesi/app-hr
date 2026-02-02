@@ -43,6 +43,7 @@ type EmployeeWithRelations = {
   status: EmployeeStatus;
   hire_date: string | null;
   termination_date: string | null;
+  employment_type: string | null;
   created_at: string;
   updated_at: string;
   legal_entity: { id: string; name: string } | null;
@@ -111,6 +112,7 @@ export function EmployeeFormModal({
     seniority_level: employee?.seniority_level || '',
     status: employee?.status || 'active',
     hire_date: employee?.hire_date || '',
+    employment_type: employee?.employment_type || '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -242,6 +244,7 @@ export function EmployeeFormModal({
         seniority_level: formData.seniority_level || null,
         status: formData.status,
         hire_date: formData.hire_date || null,
+        employment_type: formData.employment_type || null,
       };
 
       const response = await fetch(url, {
@@ -674,6 +677,19 @@ export function EmployeeFormModal({
                           })}
                         </optgroup>
                       ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">Condición laboral</label>
+                    <select
+                      name="employment_type"
+                      value={formData.employment_type}
+                      onChange={handleInputChange}
+                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="dependency">Relación de dependencia</option>
+                      <option value="monotributista">Monotributista</option>
                     </select>
                   </div>
                   <div>

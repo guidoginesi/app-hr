@@ -26,6 +26,7 @@ export interface Department {
 
 export type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
 export type EducationLevel = 'primary' | 'secondary' | 'tertiary' | 'university' | 'postgraduate';
+export type EmploymentType = 'monotributista' | 'dependency';
 
 export interface Employee {
   id: string;
@@ -78,6 +79,7 @@ export interface Employee {
   status: EmployeeStatus;
   hire_date: string | null;
   termination_date: string | null;
+  employment_type: EmploymentType | null;
   
   // Time-off related
   is_studying: boolean;
@@ -126,6 +128,7 @@ export interface EmployeeFormData {
   status: EmployeeStatus;
   hire_date?: string;
   is_studying?: boolean;
+  employment_type?: EmploymentType;
 }
 
 export interface CreateEmployeeFromCandidateData {
