@@ -293,11 +293,12 @@ export async function POST(req: NextRequest) {
       tipo_licencia: leaveType.name,
     };
 
-    // Email to employee: request submitted
-    if (auth.employee.personal_email) {
+    // Email to employee: request submitted (prefer work_email)
+    const employeeEmail = auth.employee.work_email || auth.employee.personal_email;
+    if (employeeEmail) {
       sendTimeOffEmail({
         templateKey: 'time_off_request_submitted',
-        to: auth.employee.personal_email,
+        to: employeeEmail,
         variables: emailVariables,
         leaveRequestId: data.id,
       }).catch((err) => console.error('Error sending request submitted email:', err));
