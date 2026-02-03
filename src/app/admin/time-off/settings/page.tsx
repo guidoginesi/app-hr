@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TimeOffShell } from '../TimeOffShell';
+import { TimeOffEmailTemplates } from './TimeOffEmailTemplates';
 import type { LeaveType } from '@/types/time-off';
 import type { Employee } from '@/types/employee';
 
@@ -257,6 +258,19 @@ export default function TimeOffSettingsPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Email Templates */}
+            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+              <div className="border-b border-zinc-200 px-6 py-4">
+                <h2 className="text-lg font-semibold text-zinc-900">Plantillas de Email</h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Configura los emails automáticos que se envían durante el proceso de solicitudes
+                </p>
+              </div>
+              <div className="p-6">
+                <TimeOffEmailTemplates />
               </div>
             </div>
 

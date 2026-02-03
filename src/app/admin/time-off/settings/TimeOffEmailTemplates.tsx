@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { RichTextEditor } from '../../RichTextEditor';
 
 type EmailTemplate = {
@@ -14,16 +13,6 @@ type EmailTemplate = {
   is_active: boolean;
 };
 
-const TEMPLATE_NAMES: Record<string, string> = {
-  'application_confirmation': 'Email Confirmación de Aplicación',
-  'candidate_rejected': 'Email Candidato Descartado (General)',
-  'candidate_rejected_location': 'Email Candidato Descartado (Provincia OTRA)',
-  'candidate_rejected_salary': 'Email Candidato Descartado (Sueldo)',
-  'interview_coordination': 'Email Coordinación Entrevista',
-  'interview_leader': 'Email Entrevista con Líder',
-};
-
-// Templates de time-off se gestionan en /admin/time-off/settings
 const TIME_OFF_TEMPLATE_KEYS = [
   'time_off_request_submitted',
   'time_off_approved_leader',
@@ -34,8 +23,17 @@ const TIME_OFF_TEMPLATE_KEYS = [
   'time_off_hr_notification',
 ];
 
-export function EmailTemplatesClient() {
-  const router = useRouter();
+const TEMPLATE_NAMES: Record<string, string> = {
+  'time_off_request_submitted': '📌 Solicitud Recibida',
+  'time_off_approved_leader': '✅ Aprobada por Líder',
+  'time_off_approved_hr': '✅ Aprobada (Final)',
+  'time_off_rejected': '❌ Rechazada',
+  'time_off_modified': '🔄 Modificada/Cancelada',
+  'time_off_leader_notification': '📩 Notificación a Líder',
+  'time_off_hr_notification': '📩 Notificación a HR',
+};
+
+export function TimeOffEmailTemplates() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,13 +52,13 @@ export function EmailTemplatesClient() {
       const res = await fetch('/api/admin/email-templates');
       if (res.ok) {
         const data = await res.json();
-        // Filter out time-off templates (managed in /admin/time-off/settings)
-        const recruitingTemplates = (data.templates || []).filter(
-          (t: EmailTemplate) => !TIME_OFF_TEMPLATE_KEYS.includes(t.template_key)
+        // Filter only time-off templates
+        const timeOffTemplates = (data.templates || []).filter((t: EmailTemplate) =>
+          TIME_OFF_TEMPLATE_KEYS.includes(t.template_key)
         );
-        setTemplates(recruitingTemplates);
-        if (recruitingTemplates.length > 0) {
-          selectTemplate(recruitingTemplates[0]);
+        setTemplates(timeOffTemplates);
+        if (timeOffTemplates.length > 0) {
+          selectTemplate(timeOffTemplates[0]);
         }
       }
     } catch (error) {
@@ -107,7 +105,6 @@ export function EmailTemplatesClient() {
       if (res.ok) {
         setMessage({ type: 'success', text: 'Plantilla guardada correctamente' });
         await loadTemplates();
-        router.refresh();
       } else {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error || 'Error al guardar' });
@@ -122,7 +119,7 @@ export function EmailTemplatesClient() {
   function handleReset() {
     if (selectedTemplate) {
       setEditedSubject(selectedTemplate.subject);
-      setEditedBody(selectedTemplate.body);
+      setEditedBody(convertPlainTextToHTML(selectedTemplate.body));
       setEditedIsActive(selectedTemplate.is_active);
       setMessage(null);
     }
@@ -130,52 +127,67 @@ export function EmailTemplatesClient() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-sm text-zinc-500">Cargando plantillas...</p>
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (templates.length === 0) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+        <p className="text-sm text-amber-800">
+          No se encontraron plantillas de email para Time-Off.
+        </p>
+        <p className="mt-2 text-xs text-amber-600">
+          Ejecuta la migración <code className="rounded bg-amber-100 px-1">migration-time-off-emails.sql</code> para crearlas.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-12 gap-6">
+      {/* Template List */}
       <div className="col-span-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-zinc-900 mb-3">Plantillas de Email</h2>
-          <div className="space-y-2">
-            {templates.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => selectTemplate(template)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                  selectedTemplate?.id === template.id
-                    ? 'bg-black text-white'
-                    : 'text-zinc-700 hover:bg-zinc-100'
-                }`}
-              >
-                <div className="font-medium">
-                  {TEMPLATE_NAMES[template.template_key] || template.template_key}
-                </div>
-                {template.description && (
-                  <div className={`text-xs mt-1 ${
-                    selectedTemplate?.id === template.id ? 'text-zinc-300' : 'text-zinc-500'
-                  }`}>
-                    {template.description}
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
+        <div className="space-y-2">
+          {templates.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => selectTemplate(template)}
+              className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-colors ${
+                selectedTemplate?.id === template.id
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+              }`}
+            >
+              <div className="font-medium">
+                {TEMPLATE_NAMES[template.template_key] || template.template_key}
+              </div>
+              <div className={`text-xs mt-1 flex items-center gap-2 ${
+                selectedTemplate?.id === template.id ? 'text-amber-100' : 'text-zinc-500'
+              }`}>
+                <span className={`inline-flex h-2 w-2 rounded-full ${
+                  template.is_active 
+                    ? selectedTemplate?.id === template.id ? 'bg-green-300' : 'bg-green-500'
+                    : selectedTemplate?.id === template.id ? 'bg-zinc-300' : 'bg-zinc-400'
+                }`} />
+                {template.is_active ? 'Activo' : 'Inactivo'}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Editor */}
       <div className="col-span-8">
         {selectedTemplate ? (
           <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-zinc-900">
+                <h3 className="text-lg font-semibold text-zinc-900">
                   {TEMPLATE_NAMES[selectedTemplate.template_key] || selectedTemplate.template_key}
-                </h2>
+                </h3>
                 <p className="text-sm text-zinc-500 mt-1">{selectedTemplate.description}</p>
               </div>
               
@@ -200,13 +212,13 @@ export function EmailTemplatesClient() {
             </div>
 
             {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                <h3 className="text-sm font-semibold text-blue-900 mb-2">Variables disponibles</h3>
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+                <h4 className="text-sm font-semibold text-amber-900 mb-2">Variables disponibles</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedTemplate.variables.map((variable) => (
                     <code
                       key={variable}
-                      className="px-2 py-1 bg-white rounded text-xs font-mono text-blue-700 border border-blue-300"
+                      className="px-2 py-1 bg-white rounded text-xs font-mono text-amber-700 border border-amber-300"
                     >
                       {`{{${variable}}}`}
                     </code>
@@ -224,7 +236,7 @@ export function EmailTemplatesClient() {
                 type="text"
                 value={editedSubject}
                 onChange={(e) => setEditedSubject(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
 
@@ -255,7 +267,7 @@ export function EmailTemplatesClient() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Guardar Cambios'}
               </button>

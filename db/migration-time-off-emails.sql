@@ -24,6 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_time_off_email_logs_sent_at ON public.time_off_em
 -- RLS
 ALTER TABLE public.time_off_email_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can manage time_off_email_logs" ON public.time_off_email_logs;
 CREATE POLICY "Admins can manage time_off_email_logs" ON public.time_off_email_logs
   FOR ALL
   TO authenticated
