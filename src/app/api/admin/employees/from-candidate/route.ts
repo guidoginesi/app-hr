@@ -3,13 +3,21 @@ import { z } from 'zod';
 import { requireAdmin, addUserRole } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
+// Helper to accept any UUID-like string (including non-standard UUIDs from seeds)
+const UUID_LIKE_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const stringToNull = (val: unknown) => {
+  if (val === '' || val === undefined || val === null) return null;
+  return val;
+};
+
 const ConvertCandidateSchema = z.object({
-  application_id: z.string().uuid('ID de aplicación inválido'),
-  legal_entity_id: z.string().uuid().optional().nullable(),
-  department_id: z.string().uuid().optional().nullable(),
-  manager_id: z.string().uuid().optional().nullable(),
-  hire_date: z.string().optional().nullable(),
-  work_email: z.string().email().optional().nullable(),
+  application_id: z.string().regex(UUID_LIKE_REGEX, 'ID de aplicación inválido'),
+  legal_entity_id: z.preprocess(stringToNull, z.string().regex(UUID_LIKE_REGEX).nullable()).optional(),
+  department_id: z.preprocess(stringToNull, z.string().regex(UUID_LIKE_REGEX).nullable()).optional(),
+  manager_id: z.preprocess(stringToNull, z.string().regex(UUID_LIKE_REGEX).nullable()).optional(),
+  hire_date: z.preprocess(stringToNull, z.string().nullable()).optional(),
+  work_email: z.preprocess(stringToNull, z.string().email().nullable()).optional(),
   create_user_account: z.boolean().default(false),
 });
 
@@ -22,11 +30,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    console.log('[from-candidate] Request body:', JSON.stringify(body, null, 2));
+    
     const parsed = ConvertCandidateSchema.safeParse(body);
 
     if (!parsed.success) {
+      console.log('[from-candidate] Validation errors:', JSON.stringify(parsed.error.issues, null, 2));
       return NextResponse.json(
-        { error: parsed.error.issues.map((e) => e.message).join(', ') },
+        { error: parsed.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ') },
         { status: 400 }
       );
     }
