@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.bonus_adjustments (
 );
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_bonus_adjustments_updated_at ON public.bonus_adjustments;
 CREATE TRIGGER update_bonus_adjustments_updated_at
   BEFORE UPDATE ON public.bonus_adjustments
   FOR EACH ROW
@@ -66,6 +67,10 @@ LEFT JOIN public.employees canc ON ba.cancelled_by = canc.id;
 -- 3. RLS Policies
 -- ==========================================
 ALTER TABLE public.bonus_adjustments ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Admins can manage bonus adjustments" ON public.bonus_adjustments;
+DROP POLICY IF EXISTS "Employees can view own bonus adjustments" ON public.bonus_adjustments;
 
 -- Solo admins pueden ver y gestionar ajustes de bonus
 CREATE POLICY "Admins can manage bonus adjustments" ON public.bonus_adjustments
