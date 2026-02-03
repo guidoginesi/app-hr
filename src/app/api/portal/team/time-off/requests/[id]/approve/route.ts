@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { sendTimeOffEmail } from '@/lib/emailService';
 
 // PUT /api/portal/team/time-off/requests/[id]/approve - Approve a team member's leave request
 export async function PUT(
@@ -67,6 +68,80 @@ export async function PUT(
 
     // Note: Balance stays in pending_days until HR approves
     // No balance update needed at this stage
+
+    // Send email notifications
+    const formatDate = (date: string) => {
+      return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    };
+
+    // Get employee and leave type details for email
+    const { data: employeeData } = await supabase
+      .from('employees')
+      .select('first_name, last_name, personal_email, work_email')
+      .eq('id', request.employee_id)
+      .single();
+
+    const { data: leaveType } = await supabase
+      .from('leave_types')
+      .select('name')
+      .eq('id', request.leave_type_id)
+      .single();
+
+    if (employeeData) {
+      const employeeEmail = employeeData.work_email || employeeData.personal_email;
+      const emailVariables = {
+        nombre: employeeData.first_name,
+        fecha_inicio: formatDate(request.start_date),
+        fecha_fin: formatDate(request.end_date),
+        cantidad_dias: String(request.days_requested),
+        tipo_licencia: leaveType?.name || 'Licencia',
+      };
+
+      // Email to employee: approved by leader
+      if (employeeEmail) {
+        sendTimeOffEmail({
+          templateKey: 'time_off_approved_leader',
+          to: employeeEmail,
+          variables: emailVariables,
+          leaveRequestId: id,
+        }).catch((err) => console.error('Error sending leader approved email:', err));
+      }
+
+      // Email to HR: pending HR approval
+      // Get HR admins to notify
+      const { data: admins } = await supabase
+        .from('admins')
+        .select('user_id')
+        .limit(5);
+
+      if (admins && admins.length > 0) {
+        const adminUserIds = admins.map((a) => a.user_id);
+        const { data: hrEmployees } = await supabase
+          .from('employees')
+          .select('personal_email, work_email')
+          .in('user_id', adminUserIds);
+
+        for (const hr of hrEmployees || []) {
+          const hrEmail = hr.work_email || hr.personal_email;
+          if (hrEmail) {
+            sendTimeOffEmail({
+              templateKey: 'time_off_hr_notification',
+              to: hrEmail,
+              variables: {
+                nombre_colaborador: `${employeeData.first_name} ${employeeData.last_name}`,
+                nombre_lider: `${auth.employee.first_name} ${auth.employee.last_name}`,
+                ...emailVariables,
+              },
+              leaveRequestId: id,
+            }).catch((err) => console.error('Error sending HR notification email:', err));
+          }
+        }
+      }
+    }
 
     return NextResponse.json(data);
   } catch (error: any) {

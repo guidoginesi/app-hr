@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { sendTimeOffEmail } from '@/lib/emailService';
 
 const CancelSchema = z.object({
   cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido'),
@@ -115,6 +116,46 @@ export async function PUT(
 
     // Delete remote work weeks if applicable
     await supabase.from('remote_work_weeks').delete().eq('leave_request_id', id);
+
+    // Send email notification to employee
+    const formatDate = (date: string) => {
+      return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    };
+
+    const { data: employeeData } = await supabase
+      .from('employees')
+      .select('first_name, personal_email, work_email')
+      .eq('id', request.employee_id)
+      .single();
+
+    const { data: leaveType } = await supabase
+      .from('leave_types')
+      .select('name')
+      .eq('id', request.leave_type_id)
+      .single();
+
+    if (employeeData) {
+      const employeeEmail = employeeData.work_email || employeeData.personal_email;
+      if (employeeEmail) {
+        sendTimeOffEmail({
+          templateKey: 'time_off_modified',
+          to: employeeEmail,
+          variables: {
+            nombre: employeeData.first_name,
+            fecha_inicio: formatDate(request.start_date),
+            fecha_fin: formatDate(request.end_date),
+            cantidad_dias: String(request.days_requested),
+            tipo_licencia: leaveType?.name || 'Licencia',
+            tipo_cambio: 'cancelada',
+          },
+          leaveRequestId: id,
+        }).catch((err) => console.error('Error sending cancellation email:', err));
+      }
+    }
 
     return NextResponse.json(data);
   } catch (error: any) {

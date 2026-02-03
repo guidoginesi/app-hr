@@ -4,8 +4,29 @@ import { useEffect, useState } from 'react';
 import { TimeOffShell } from '../TimeOffShell';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
 
+interface BonusAdjustment {
+  id: string;
+  employee_id: string;
+  leave_type_id: string;
+  year: number;
+  days: number;
+  reason: string;
+  status: 'active' | 'cancelled';
+  created_by: string | null;
+  cancelled_by: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  created_at: string;
+  employee_name: string;
+  leave_type_code: string;
+  leave_type_name: string;
+  created_by_name: string | null;
+  cancelled_by_name: string | null;
+}
+
 export default function TimeOffRequestsPage() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
+  const [bonusAdjustments, setBonusAdjustments] = useState<BonusAdjustment[]>([]);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -15,6 +36,11 @@ export default function TimeOffRequestsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancellingBonusId, setCancellingBonusId] = useState<string | null>(null);
+  const [cancelBonusReason, setCancelBonusReason] = useState('');
+  const [activeTab, setActiveTab] = useState<'requests' | 'bonus'>('requests');
+
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     fetchData();
@@ -27,9 +53,10 @@ export default function TimeOffRequestsPage() {
       if (statusFilter) params.set('status', statusFilter);
       if (typeFilter) params.set('leave_type_id', typeFilter);
 
-      const [requestsRes, typesRes] = await Promise.all([
+      const [requestsRes, typesRes, bonusRes] = await Promise.all([
         fetch(`/api/admin/time-off/requests?${params}`),
         fetch('/api/admin/time-off/leave-types'),
+        fetch(`/api/admin/time-off/bonus-adjustments?year=${currentYear}`),
       ]);
 
       if (requestsRes.ok) {
@@ -39,6 +66,10 @@ export default function TimeOffRequestsPage() {
       if (typesRes.ok) {
         const data = await typesRes.json();
         setLeaveTypes(data);
+      }
+      if (bonusRes.ok) {
+        const data = await bonusRes.json();
+        setBonusAdjustments(data);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -181,6 +212,38 @@ export default function TimeOffRequestsPage() {
     }
   }
 
+  async function handleCancelBonus(id: string) {
+    if (!cancelBonusReason.trim()) return;
+
+    setActionLoading(id);
+    try {
+      const res = await fetch(`/api/admin/time-off/bonus-adjustments/${id}/cancel`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancellation_reason: cancelBonusReason }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert(result.message);
+        setCancellingBonusId(null);
+        setCancelBonusReason('');
+        fetchData();
+      } else {
+        alert(`Error al cancelar: ${result.error || 'Error desconocido'}`);
+      }
+    } catch (error) {
+      console.error('Error cancelling bonus adjustment:', error);
+      alert('Error de conexión al cancelar el ajuste');
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  const activeBonusAdjustments = bonusAdjustments.filter(b => b.status === 'active');
+  const cancelledBonusAdjustments = bonusAdjustments.filter(b => b.status === 'cancelled');
+
   return (
     <TimeOffShell active="requests">
       <div className="space-y-6">
@@ -191,34 +254,62 @@ export default function TimeOffRequestsPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-          >
-            <option value="">Todos los estados</option>
-            <option value="pending_leader">Pendiente Líder</option>
-            <option value="pending_hr">Pendiente HR</option>
-            <option value="approved">Aprobadas</option>
-            <option value="rejected_leader">Rechazadas por Líder</option>
-            <option value="rejected_hr">Rechazadas por HR</option>
-            <option value="cancelled">Canceladas</option>
-          </select>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-          >
-            <option value="">Todos los tipos</option>
-            {leaveTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
+        {/* Tabs */}
+        <div className="border-b border-zinc-200">
+          <nav className="-mb-px flex gap-4">
+            <button
+              onClick={() => setActiveTab('requests')}
+              className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'requests'
+                  ? 'border-amber-500 text-amber-600'
+                  : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700'
+              }`}
+            >
+              Solicitudes de licencias
+            </button>
+            <button
+              onClick={() => setActiveTab('bonus')}
+              className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'bonus'
+                  ? 'border-amber-500 text-amber-600'
+                  : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700'
+              }`}
+            >
+              Ajustes de días ({activeBonusAdjustments.length} activos)
+            </button>
+          </nav>
         </div>
+
+        {activeTab === 'requests' && (
+          <>
+            {/* Filters */}
+            <div className="flex gap-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              >
+                <option value="">Todos los estados</option>
+                <option value="pending_leader">Pendiente Líder</option>
+                <option value="pending_hr">Pendiente HR</option>
+                <option value="approved">Aprobadas</option>
+                <option value="rejected_leader">Rechazadas por Líder</option>
+                <option value="rejected_hr">Rechazadas por HR</option>
+                <option value="cancelled">Canceladas</option>
+              </select>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              >
+                <option value="">Todos los tipos</option>
+                {leaveTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
         {/* Table */}
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
@@ -383,6 +474,151 @@ export default function TimeOffRequestsPage() {
             </table>
           )}
         </div>
+          </>
+        )}
+
+        {activeTab === 'bonus' && (
+          <>
+            {/* Bonus adjustments info */}
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+              <p>
+                <strong>Ajustes de días:</strong> Aquí puedes ver los días extra agregados a los empleados (días Pow, vacaciones, etc.) y cancelarlos si es necesario.
+                Al cancelar, los días se restan automáticamente del balance del empleado.
+              </p>
+            </div>
+
+            {/* Bonus adjustments table */}
+            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                </div>
+              ) : bonusAdjustments.length === 0 ? (
+                <div className="py-12 text-center text-sm text-zinc-500">
+                  No hay ajustes de días registrados
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      <th className="px-6 py-3">Empleado</th>
+                      <th className="px-6 py-3">Tipo</th>
+                      <th className="px-6 py-3">Días</th>
+                      <th className="px-6 py-3">Motivo</th>
+                      <th className="px-6 py-3">Fecha</th>
+                      <th className="px-6 py-3">Estado</th>
+                      <th className="px-6 py-3">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200">
+                    {bonusAdjustments.map((adjustment) => (
+                      <tr key={adjustment.id} className="hover:bg-zinc-50">
+                        <td className="px-6 py-4">
+                          <p className="font-medium text-zinc-900">{adjustment.employee_name}</p>
+                          {adjustment.created_by_name && (
+                            <p className="text-xs text-zinc-400">Por: {adjustment.created_by_name}</p>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                            adjustment.leave_type_code === 'pow_days' 
+                              ? 'bg-purple-100 text-purple-700' 
+                              : adjustment.leave_type_code === 'vacation'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-zinc-100 text-zinc-700'
+                          }`}>
+                            {adjustment.leave_type_name}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-lg font-bold ${adjustment.days > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {adjustment.days > 0 ? '+' : ''}{adjustment.days}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 max-w-xs">
+                          <p className="text-sm text-zinc-600 truncate" title={adjustment.reason}>
+                            {adjustment.reason}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-zinc-500">
+                          {new Date(adjustment.created_at).toLocaleDateString('es-AR')}
+                        </td>
+                        <td className="px-6 py-4">
+                          {adjustment.status === 'active' ? (
+                            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                              Activo
+                            </span>
+                          ) : (
+                            <div>
+                              <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                                Cancelado
+                              </span>
+                              {adjustment.cancellation_reason && (
+                                <p className="mt-1 text-xs text-zinc-400 italic">
+                                  "{adjustment.cancellation_reason}"
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {adjustment.status === 'active' && (
+                            <>
+                              {cancellingBonusId === adjustment.id ? (
+                                <div className="flex flex-col gap-2">
+                                  <input
+                                    type="text"
+                                    value={cancelBonusReason}
+                                    onChange={(e) => setCancelBonusReason(e.target.value)}
+                                    placeholder="Motivo de cancelación"
+                                    className="w-48 rounded border border-zinc-300 px-2 py-1 text-sm"
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleCancelBonus(adjustment.id)}
+                                      disabled={!cancelBonusReason.trim() || actionLoading === adjustment.id}
+                                      className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                    >
+                                      {actionLoading === adjustment.id ? '...' : 'Confirmar'}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setCancellingBonusId(null);
+                                        setCancelBonusReason('');
+                                      }}
+                                      className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setCancellingBonusId(adjustment.id)}
+                                  className="rounded border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                                >
+                                  Cancelar
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Summary */}
+            {!loading && bonusAdjustments.length > 0 && (
+              <div className="text-sm text-zinc-500">
+                {activeBonusAdjustments.length} ajuste{activeBonusAdjustments.length !== 1 ? 's' : ''} activo{activeBonusAdjustments.length !== 1 ? 's' : ''}
+                {cancelledBonusAdjustments.length > 0 && `, ${cancelledBonusAdjustments.length} cancelado${cancelledBonusAdjustments.length !== 1 ? 's' : ''}`}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </TimeOffShell>
   );

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { sendTimeOffEmail } from '@/lib/emailService';
 
 // PUT /api/admin/time-off/requests/[id]/approve - HR Admin approves a leave request
 export async function PUT(
@@ -89,6 +90,45 @@ export async function PUT(
         .eq('employee_id', request.employee_id)
         .eq('leave_type_id', request.leave_type_id)
         .eq('year', startYear);
+    }
+
+    // Send email notification to employee
+    const formatDate = (date: string) => {
+      return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    };
+
+    const { data: employeeData } = await supabase
+      .from('employees')
+      .select('first_name, personal_email, work_email')
+      .eq('id', request.employee_id)
+      .single();
+
+    const { data: leaveType } = await supabase
+      .from('leave_types')
+      .select('name')
+      .eq('id', request.leave_type_id)
+      .single();
+
+    if (employeeData) {
+      const employeeEmail = employeeData.work_email || employeeData.personal_email;
+      if (employeeEmail) {
+        sendTimeOffEmail({
+          templateKey: 'time_off_approved_hr',
+          to: employeeEmail,
+          variables: {
+            nombre: employeeData.first_name,
+            fecha_inicio: formatDate(request.start_date),
+            fecha_fin: formatDate(request.end_date),
+            cantidad_dias: String(request.days_requested),
+            tipo_licencia: leaveType?.name || 'Licencia',
+          },
+          leaveRequestId: id,
+        }).catch((err) => console.error('Error sending HR approved email:', err));
+      }
     }
 
     return NextResponse.json(data);

@@ -3,9 +3,12 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
+// Regex for UUID format (more permissive than RFC 4122)
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const CreateRequestSchema = z.object({
-  employee_id: z.string().uuid('ID de empleado inválido'),
-  leave_type_id: z.string().uuid('Tipo de licencia inválido'),
+  employee_id: z.string().regex(uuidRegex, 'ID de empleado inválido'),
+  leave_type_id: z.string().regex(uuidRegex, 'Tipo de licencia inválido'),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de inicio inválida'),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de fin inválida'),
   days_requested: z.number().positive('Los días deben ser positivos'),

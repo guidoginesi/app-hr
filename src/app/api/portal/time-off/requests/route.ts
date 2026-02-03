@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { sendTimeOffEmail } from '@/lib/emailService';
+
+// Regex for UUID format (more permissive than RFC 4122)
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Parse date string as local date to avoid timezone issues
 function parseLocalDate(dateStr: string): Date {
@@ -10,7 +14,7 @@ function parseLocalDate(dateStr: string): Date {
 }
 
 const CreateRequestSchema = z.object({
-  leave_type_id: z.string().uuid('Tipo de licencia inválido'),
+  leave_type_id: z.string().regex(uuidRegex, 'Tipo de licencia inválido'),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de inicio inválida'),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de fin inválida'),
   days_requested: z.number().positive('Los días deben ser positivos'),
@@ -269,6 +273,56 @@ export async function POST(req: NextRequest) {
 
       if (weeks.length > 0) {
         await supabase.from('remote_work_weeks').insert(weeks);
+      }
+    }
+
+    // Send email notifications
+    const formatDate = (date: string) => {
+      return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    };
+
+    const emailVariables = {
+      nombre: `${auth.employee.first_name}`,
+      fecha_inicio: formatDate(parsed.data.start_date),
+      fecha_fin: formatDate(parsed.data.end_date),
+      cantidad_dias: String(parsed.data.days_requested),
+      tipo_licencia: leaveType.name,
+    };
+
+    // Email to employee: request submitted
+    if (auth.employee.personal_email) {
+      sendTimeOffEmail({
+        templateKey: 'time_off_request_submitted',
+        to: auth.employee.personal_email,
+        variables: emailVariables,
+        leaveRequestId: data.id,
+      }).catch((err) => console.error('Error sending request submitted email:', err));
+    }
+
+    // Email to leader: new request to approve
+    const { data: manager } = await supabase
+      .from('employees')
+      .select('first_name, personal_email, work_email')
+      .eq('id', employee.manager_id)
+      .single();
+
+    if (manager) {
+      const managerEmail = manager.work_email || manager.personal_email;
+      if (managerEmail) {
+        sendTimeOffEmail({
+          templateKey: 'time_off_leader_notification',
+          to: managerEmail,
+          variables: {
+            nombre_lider: manager.first_name,
+            nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
+            ...emailVariables,
+          },
+          leaveRequestId: data.id,
+        }).catch((err) => console.error('Error sending leader notification email:', err));
       }
     }
 

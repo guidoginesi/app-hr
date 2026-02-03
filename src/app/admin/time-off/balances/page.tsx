@@ -131,6 +131,16 @@ export default function TimeOffBalancesPage() {
   }
 
   function openBonusModal(employeeId: string, employeeName: string, leaveTypeId: string, leaveTypeName: string) {
+    // Debug logging
+    console.log('Opening bonus modal:', { employeeId, employeeName, leaveTypeId, leaveTypeName });
+    
+    // Validación preventiva
+    if (!employeeId || !leaveTypeId) {
+      console.error('Invalid IDs passed to openBonusModal:', { employeeId, leaveTypeId });
+      alert('Error: No se pudieron obtener los IDs necesarios. Por favor recarga la página.');
+      return;
+    }
+    
     setBonusModal({
       isOpen: true,
       employeeId,
@@ -165,18 +175,34 @@ export default function TimeOffBalancesPage() {
       return;
     }
 
+    // Validar que los IDs existan y sean válidos
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!bonusModal.employeeId || !uuidRegex.test(bonusModal.employeeId)) {
+      console.error('Invalid employee ID:', bonusModal.employeeId);
+      alert('Error: ID de empleado inválido. Por favor recarga la página e intenta de nuevo.');
+      return;
+    }
+    if (!bonusModal.leaveTypeId || !uuidRegex.test(bonusModal.leaveTypeId)) {
+      console.error('Invalid leave type ID:', bonusModal.leaveTypeId);
+      alert('Error: ID de tipo de licencia inválido. Por favor recarga la página e intenta de nuevo.');
+      return;
+    }
+
     setAddingBonus(true);
     try {
+      const payload = {
+        employee_id: bonusModal.employeeId,
+        leave_type_id: bonusModal.leaveTypeId,
+        year: currentYear,
+        days: daysValue,
+        reason: bonusReason,
+      };
+      console.log('Adding bonus days:', payload);
+      
       const res = await fetch('/api/admin/time-off/balances/bonus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employee_id: bonusModal.employeeId,
-          leave_type_id: bonusModal.leaveTypeId,
-          year: currentYear,
-          days: daysValue,
-          reason: bonusReason,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await res.json();
@@ -186,6 +212,7 @@ export default function TimeOffBalancesPage() {
         closeBonusModal();
         fetchData();
       } else {
+        console.error('Error response:', result);
         alert(result.error || 'Error al agregar días');
       }
     } catch (error) {

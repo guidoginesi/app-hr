@@ -267,3 +267,134 @@ export async function sendSimpleEmail(params: {
 	}
 }
 
+// ============================================
+// TIME-OFF EMAIL FUNCTIONS
+// ============================================
+
+type TimeOffEmailParams = {
+	templateKey: string;
+	to: string;
+	variables: Record<string, string>;
+	leaveRequestId?: string;
+};
+
+/**
+ * Registra el envío de un email de time-off en la base de datos
+ */
+async function logTimeOffEmail(params: {
+	leaveRequestId?: string;
+	recipientEmail: string;
+	templateKey: string;
+	subject: string;
+	body: string;
+	error?: string;
+	metadata?: Record<string, any>;
+}) {
+	const supabase = getSupabaseServer();
+	await supabase.from('time_off_email_logs').insert({
+		leave_request_id: params.leaveRequestId || null,
+		recipient_email: params.recipientEmail,
+		template_key: params.templateKey,
+		subject: params.subject,
+		body: params.body,
+		error: params.error || null,
+		metadata: params.metadata || {}
+	});
+}
+
+/**
+ * Convierte texto plano con saltos de línea a HTML
+ */
+function textToHtml(text: string): string {
+	// Escapar caracteres HTML
+	let html = text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;');
+	
+	// Convertir saltos de línea a <br>
+	html = html.replace(/\n/g, '<br>');
+	
+	// Wrap en un div con estilos básicos
+	return `
+		<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333;">
+			${html}
+		</div>
+	`;
+}
+
+/**
+ * Envía un email de time-off usando una plantilla
+ */
+export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ success: boolean; error?: string }> {
+	try {
+		// Obtener la plantilla
+		const template = await getEmailTemplate(params.templateKey);
+		if (!template) {
+			const error = `Template ${params.templateKey} not found`;
+			console.error('[TimeOff Email]', error);
+			await logTimeOffEmail({
+				leaveRequestId: params.leaveRequestId,
+				recipientEmail: params.to,
+				templateKey: params.templateKey,
+				subject: 'Error',
+				body: '',
+				error
+			});
+			return { success: false, error };
+		}
+
+		// Verificar si el template está activo
+		if (!template.is_active) {
+			console.log(`[TimeOff Email] Template ${params.templateKey} is disabled, skipping send`);
+			return { success: true, error: 'Email template disabled' };
+		}
+
+		// Reemplazar variables en subject y body
+		const subject = replaceVariables(template.subject, params.variables);
+		const bodyText = replaceVariables(template.body, params.variables);
+		const bodyHtml = textToHtml(bodyText);
+
+		// Enviar email con Resend
+		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+		const resend = getResend();
+		
+		const { data, error } = await resend.emails.send({
+			from: fromEmail,
+			to: params.to,
+			subject,
+			html: bodyHtml,
+		});
+
+		if (error) {
+			console.error('[TimeOff Email] Error sending email with Resend:', error);
+			await logTimeOffEmail({
+				leaveRequestId: params.leaveRequestId,
+				recipientEmail: params.to,
+				templateKey: params.templateKey,
+				subject,
+				body: bodyText,
+				error: error.message
+			});
+			return { success: false, error: error.message };
+		}
+
+		// Registrar envío exitoso
+		await logTimeOffEmail({
+			leaveRequestId: params.leaveRequestId,
+			recipientEmail: params.to,
+			templateKey: params.templateKey,
+			subject,
+			body: bodyText,
+			metadata: { resend_id: data?.id }
+		});
+
+		console.log(`[TimeOff Email] Email sent successfully: ${params.templateKey} to ${params.to}`);
+		return { success: true };
+
+	} catch (error: any) {
+		console.error('[TimeOff Email] Error:', error);
+		return { success: false, error: error.message };
+	}
+}
+

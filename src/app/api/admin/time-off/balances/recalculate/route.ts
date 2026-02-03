@@ -3,9 +3,12 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
+// Regex for UUID format (more permissive than RFC 4122)
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const RecalculateSchema = z.object({
   year: z.number().int().min(2020).max(2100),
-  employee_id: z.string().uuid().optional(), // If not provided, recalculate for all active employees
+  employee_id: z.string().regex(uuidRegex).optional(), // If not provided, recalculate for all active employees
 });
 
 /**
