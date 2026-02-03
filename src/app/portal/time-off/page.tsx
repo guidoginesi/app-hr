@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requirePortalAccess } from '@/lib/checkAuth';
+import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import Link from 'next/link';
@@ -18,6 +18,23 @@ export default async function TimeOffPortalPage() {
   const { employee, isLeader } = auth;
   const supabase = getSupabaseServer();
   const currentYear = new Date().getFullYear();
+
+  // Get pending team requests count for leaders
+  let pendingTeamCount = 0;
+  if (isLeader) {
+    const directReports = await getDirectReports(employee.id);
+    const directReportIds = directReports.map((e) => e.id);
+    
+    if (directReportIds.length > 0) {
+      const { count } = await supabase
+        .from('leave_requests')
+        .select('*', { count: 'exact', head: true })
+        .in('employee_id', directReportIds)
+        .in('status', ['pending_leader', 'pending']);
+      
+      pendingTeamCount = count || 0;
+    }
+  }
 
   // Get balances
   const { data: balances } = await supabase
@@ -57,6 +74,31 @@ export default async function TimeOffPortalPage() {
             Nueva solicitud
           </Link>
         </div>
+
+        {/* Tabs - only show if leader */}
+        {isLeader && (
+          <div className="border-b border-zinc-200">
+            <nav className="-mb-px flex gap-6">
+              <Link
+                href="/portal/time-off"
+                className="border-b-2 border-emerald-500 px-1 pb-3 text-sm font-medium text-emerald-600"
+              >
+                Mis solicitudes
+              </Link>
+              <Link
+                href="/portal/time-off/team"
+                className="border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+              >
+                Mi equipo
+                {pendingTeamCount > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    {pendingTeamCount}
+                  </span>
+                )}
+              </Link>
+            </nav>
+          </div>
+        )}
 
         {/* Balances */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
