@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Employee } from '@/types/employee';
 import type { Objective } from '@/types/objective';
+import type { LeaveBalanceWithDetails, LeaveRequestWithDetails } from '@/types/time-off';
+import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
 import { ObjectiveCard } from '@/components/ObjectiveCard';
 import { 
   getSeniorityLabel, 
@@ -183,6 +185,17 @@ type RecategorizationData = {
   } | null;
 };
 
+type TimeOffData = {
+  year: number;
+  balances: {
+    vacation: LeaveBalanceWithDetails | null;
+    pow_days: LeaveBalanceWithDetails | null;
+    study: LeaveBalanceWithDetails | null;
+    remote_work: LeaveBalanceWithDetails | null;
+  };
+  requests: LeaveRequestWithDetails[];
+};
+
 // Helper function to get available sub-levels for recategorization
 function getAvailableSubLevels(currentLevel: string | null, isLevelChange: boolean): string[] {
   if (!currentLevel) return [];
@@ -226,7 +239,7 @@ export function TeamMemberProfileClient({
   seniorityHistory,
   availableBonusYears,
 }: TeamMemberProfileClientProps) {
-  const [activeTab, setActiveTab] = useState<'objectives' | 'evaluations' | 'recategorization' | 'bonus' | 'history'>('objectives');
+  const [activeTab, setActiveTab] = useState<'objectives' | 'evaluations' | 'recategorization' | 'bonus' | 'history' | 'licencias'>('objectives');
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   const [evaluationDetail, setEvaluationDetail] = useState<EvaluationDetail | null>(null);
@@ -250,6 +263,10 @@ export function TeamMemberProfileClient({
   // Default to most recent year with corporate objectives, or current year if none
   const [bonusYear, setBonusYear] = useState(availableBonusYears[0] || currentYear);
 
+  // Time off / Licencias state
+  const [timeOffData, setTimeOffData] = useState<TimeOffData | null>(null);
+  const [loadingTimeOff, setLoadingTimeOff] = useState(false);
+
   // Load recategorization data when tab is selected
   useEffect(() => {
     if (activeTab === 'recategorization' && !recatData) {
@@ -258,7 +275,25 @@ export function TeamMemberProfileClient({
     if (activeTab === 'bonus') {
       loadBonusData(bonusYear);
     }
+    if (activeTab === 'licencias' && !timeOffData) {
+      loadTimeOffData();
+    }
   }, [activeTab, bonusYear]);
+
+  const loadTimeOffData = async () => {
+    setLoadingTimeOff(true);
+    try {
+      const res = await fetch(`/api/portal/team/${member.id}/time-off`);
+      if (res.ok) {
+        const data = await res.json();
+        setTimeOffData(data);
+      }
+    } catch (error) {
+      console.error('Error loading time off data:', error);
+    } finally {
+      setLoadingTimeOff(false);
+    }
+  };
 
   const loadBonusData = async (year: number) => {
     setLoadingBonus(true);
@@ -531,6 +566,16 @@ export function TeamMemberProfileClient({
             }`}
           >
             Historial de Seniority
+          </button>
+          <button
+            onClick={() => setActiveTab('licencias')}
+            className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
+              activeTab === 'licencias'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-zinc-500 hover:text-zinc-700'
+            }`}
+          >
+            Licencias
           </button>
         </nav>
       </div>
@@ -1547,6 +1592,209 @@ export function TeamMemberProfileClient({
                   );
                 })}
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Licencias Tab */}
+      {activeTab === 'licencias' && (
+        <div className="space-y-6">
+          {loadingTimeOff ? (
+            <div className="rounded-xl border border-zinc-200 bg-white p-12">
+              <div className="flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+              </div>
+            </div>
+          ) : timeOffData ? (
+            <>
+              {/* Balance Cards */}
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-900 mb-4">Saldos de licencias {timeOffData.year}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Vacaciones */}
+                  <div className="rounded-xl border border-zinc-200 bg-white p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                        <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-500">Vacaciones</p>
+                        <p className="text-xs text-zinc-400">días corridos</p>
+                      </div>
+                    </div>
+                    {timeOffData.balances.vacation ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-amber-600">
+                          {timeOffData.balances.vacation.available_days}
+                        </span>
+                        <span className="text-sm text-zinc-500">disponibles</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zinc-400">Sin saldo configurado</p>
+                    )}
+                  </div>
+
+                  {/* Días Pow */}
+                  <div className="rounded-xl border border-zinc-200 bg-white p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                        <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-500">Días Pow</p>
+                        <p className="text-xs text-zinc-400">días hábiles</p>
+                      </div>
+                    </div>
+                    {timeOffData.balances.pow_days ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-purple-600">
+                          {timeOffData.balances.pow_days.available_days}
+                        </span>
+                        <span className="text-sm text-zinc-500">disponibles</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zinc-400">Sin saldo configurado</p>
+                    )}
+                  </div>
+
+                  {/* Semanas Remotas */}
+                  <div className="rounded-xl border border-zinc-200 bg-white p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                        <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-500">Semanas Remotas</p>
+                        <p className="text-xs text-zinc-400">semanas completas</p>
+                      </div>
+                    </div>
+                    {timeOffData.balances.remote_work ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-blue-600">
+                          {timeOffData.balances.remote_work.available_days}
+                        </span>
+                        <span className="text-sm text-zinc-500">disponibles</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zinc-400">Sin saldo configurado</p>
+                    )}
+                  </div>
+
+                  {/* Días de Estudio */}
+                  <div className="rounded-xl border border-zinc-200 bg-white p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-500">Días de Estudio</p>
+                        <p className="text-xs text-zinc-400">días corridos por examen</p>
+                      </div>
+                    </div>
+                    {timeOffData.balances.study ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-emerald-600">
+                          {timeOffData.balances.study.available_days}
+                        </span>
+                        <span className="text-sm text-zinc-500">disponibles</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zinc-400">Sin saldo configurado</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Requests List */}
+              <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+                <div className="border-b border-zinc-200 px-6 py-4">
+                  <h3 className="text-lg font-semibold text-zinc-900">Historial de solicitudes</h3>
+                </div>
+                {timeOffData.requests.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="mt-4 text-zinc-500">No hay solicitudes de licencia registradas</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-zinc-100">
+                    {timeOffData.requests.map((request) => {
+                      const statusColors = LEAVE_STATUS_COLORS[request.status] || { bg: 'bg-zinc-100', text: 'text-zinc-600' };
+                      const statusLabel = LEAVE_STATUS_LABELS[request.status] || request.status;
+                      return (
+                        <div key={request.id} className="p-4 hover:bg-zinc-50">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-medium text-zinc-900">{request.leave_type_name}</span>
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColors.bg} ${statusColors.text}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                              <p className="text-sm text-zinc-600">
+                                {new Date(request.start_date + 'T00:00:00').toLocaleDateString('es-AR', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                                {request.end_date !== request.start_date && (
+                                  <>
+                                    {' - '}
+                                    {new Date(request.end_date + 'T00:00:00').toLocaleDateString('es-AR', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                    })}
+                                  </>
+                                )}
+                                <span className="ml-2 text-zinc-400">
+                                  ({request.days_requested} {request.count_type === 'weeks' ? 'semana(s)' : 'día(s)'})
+                                </span>
+                              </p>
+                              {request.notes && (
+                                <p className="mt-1 text-xs text-zinc-500">{request.notes}</p>
+                              )}
+                              {(request.leader_rejection_reason || request.hr_rejection_reason || request.rejection_reason) && (
+                                <p className="mt-1 text-xs text-red-600">
+                                  Motivo de rechazo: {request.leader_rejection_reason || request.hr_rejection_reason || request.rejection_reason}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right text-xs text-zinc-400">
+                              <p>Solicitada el</p>
+                              <p>{new Date(request.created_at).toLocaleDateString('es-AR', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
+              <p className="text-zinc-500">No se pudo cargar la información de licencias</p>
+              <button
+                onClick={loadTimeOffData}
+                className="mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+              >
+                Reintentar
+              </button>
             </div>
           )}
         </div>
