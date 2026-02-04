@@ -46,6 +46,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     // Calculate pro-rata factor based on hire date
+    // Uses actual days worked for precise calculation
     let proRataFactor = 1; // 100% by default
     let proRataMonths = 12;
     let proRataApplies = false;
@@ -58,10 +59,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
       // Only apply pro-rata if hired during the evaluated year
       if (hireDate > yearStart && hireDate <= yearEnd) {
         proRataApplies = true;
-        // Calculate months worked (from hire date to end of year)
-        const monthsWorked = 12 - hireDate.getMonth(); // Simplified: full months from hire month to December
-        proRataMonths = monthsWorked;
-        proRataFactor = monthsWorked / 12;
+        // Calculate days worked from hire date to end of year
+        const endOfYear = new Date(currentYear, 11, 31);
+        const daysInYear = 365 + (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0) ? 1 : 0);
+        const daysWorked = Math.ceil((endOfYear.getTime() - hireDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        proRataFactor = daysWorked / daysInYear;
+        // Calculate equivalent months for display (rounded to 1 decimal)
+        proRataMonths = Math.round(proRataFactor * 12 * 10) / 10;
       }
     }
 
