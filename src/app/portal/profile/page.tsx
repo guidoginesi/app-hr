@@ -21,13 +21,26 @@ export default async function PortalProfilePage() {
     .select(`
       *,
       legal_entity:legal_entities(id, name),
-      department:departments(id, name),
-      manager:employees!manager_id(id, first_name, last_name)
+      department:departments(id, name)
     `)
     .eq('id', employee.id)
     .single();
 
-  const fullEmployee = employeeData || employee;
+  // Get manager separately (self-reference can be tricky in Supabase)
+  let managerData = null;
+  if (employeeData?.manager_id) {
+    const { data: manager } = await supabase
+      .from('employees')
+      .select('id, first_name, last_name')
+      .eq('id', employeeData.manager_id)
+      .single();
+    managerData = manager;
+  }
+
+  const fullEmployee = {
+    ...(employeeData || employee),
+    manager: managerData
+  };
 
   return (
     <PortalShell employee={employee} isLeader={isLeader} active="profile">
