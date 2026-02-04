@@ -14,16 +14,23 @@ export default async function AdminPeoplePage() {
 
   const supabase = getSupabaseServer();
 
-  // Fetch employees with related data
-  const { data: employees } = await supabase
-    .from('employees')
-    .select(`
-      *,
-      legal_entity:legal_entities(id, name),
-      department:departments(id, name),
-      manager:employees!manager_id(id, first_name, last_name)
-    `)
+  // Fetch employees with related data using view (has correct manager info)
+  const { data: employeesRaw } = await supabase
+    .from('employees_with_details')
+    .select('*')
     .order('last_name', { ascending: true });
+
+  // Transform to expected format with manager object
+  const employees = (employeesRaw || []).map((emp: any) => ({
+    ...emp,
+    legal_entity: emp.legal_entity_id ? { id: emp.legal_entity_id, name: emp.legal_entity_name } : null,
+    department: emp.department_id ? { id: emp.department_id, name: emp.department_name } : null,
+    manager: emp.manager_employee_id ? { 
+      id: emp.manager_employee_id, 
+      first_name: emp.manager_first_name || '', 
+      last_name: emp.manager_last_name || '' 
+    } : null,
+  }));
 
   // Fetch legal entities for filters and forms
   const { data: legalEntities } = await supabase
