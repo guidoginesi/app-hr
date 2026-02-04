@@ -32,7 +32,8 @@ export function ObjetivosClient({
   const [ownObjectives, setOwnObjectives] = useState<Objective[]>(initialOwnObjectives);
   const [teamObjectives, setTeamObjectives] = useState<Objective[]>(initialTeamObjectives);
   const [activeTab, setActiveTab] = useState<'own' | 'team'>(isLeader ? 'team' : 'own');
-  const [selectedYear, setSelectedYear] = useState<number | null>(null); // null = todos
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number | null>(currentYear); // Default to current year
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | null>(null);
@@ -46,6 +47,13 @@ export function ObjetivosClient({
   const [showSubObjectivesEvalModal, setShowSubObjectivesEvalModal] = useState(false);
   const [evaluatingParentObjective, setEvaluatingParentObjective] = useState<Objective | null>(null);
   const [subObjectivesEvalData, setSubObjectivesEvalData] = useState<{ id: string; percentage: string; notes: string }[]>([]);
+
+  // Helper function to calculate status from progress
+  const getStatusFromProgress = (progress: number): ObjectiveStatus => {
+    if (progress === 0) return 'not_started';
+    if (progress >= 100) return 'completed';
+    return 'in_progress';
+  };
 
   // Helper functions to check periods
   const isPeriodOpen = (year: number, type: 'definition' | 'evaluation'): boolean => {
@@ -102,7 +110,6 @@ export function ObjetivosClient({
   // Maximum 2 area objectives per employee per year
   const MAX_OBJECTIVES_PER_EMPLOYEE = 2;
 
-  const currentYear = new Date().getFullYear();
   // Use availableYears from corporate objectives for filtering, fallback to current year
   const years = availableYears.length > 0 ? availableYears : [currentYear];
 
@@ -281,10 +288,13 @@ export function ObjetivosClient({
       }
 
       // For semestral/trimestral, generate a parent title from first sub-objective
+      // Calculate status automatically from progress
+      const calculatedStatus = getStatusFromProgress(parsedProgress);
       const submitData = { 
         ...formData,
         weight_pct: parsedWeightPct,
         progress_percentage: parsedProgress,
+        status: calculatedStatus,
       };
       if (!isAnnual && subObjectives.length > 0) {
         submitData.title = `Objetivo ${PERIODICITY_LABELS[periodicity]}`;
@@ -315,6 +325,10 @@ export function ObjetivosClient({
         for (let i = 0; i < subObjectives.length; i++) {
           const sub = subObjectives[i];
           if (sub.title.trim()) {
+            // Calculate status from progress automatically
+            const subProgress = sub.progress_percentage || 0;
+            const subStatus = getStatusFromProgress(subProgress);
+            
             if (sub.id) {
               // Update existing sub-objective
               const updateRes = await fetch(`/api/portal/objectives/${sub.id}`, {
@@ -323,8 +337,8 @@ export function ObjetivosClient({
                 body: JSON.stringify({
                   title: sub.title,
                   description: sub.description,
-                  progress_percentage: sub.progress_percentage,
-                  status: sub.status,
+                  progress_percentage: subProgress,
+                  status: subStatus,
                 }),
               });
               if (!updateRes.ok) {
@@ -343,8 +357,8 @@ export function ObjetivosClient({
                   period_type: formData.period_type,
                   title: sub.title,
                   description: sub.description,
-                  progress_percentage: sub.progress_percentage || 0,
-                  status: sub.status || 'not_started',
+                  progress_percentage: subProgress,
+                  status: subStatus,
                   periodicity: formData.periodicity,
                   weight_pct: formData.weight_pct,
                   parent_objective_id: data.id,
@@ -914,40 +928,30 @@ export function ObjetivosClient({
                                 className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
                               />
                             </div>
-                            {/* Progress and Status for each sub-objective when editing */}
+                            {/* Progress for each sub-objective when editing (status is calculated automatically) */}
                             {editingObjective && (
-                              <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                  <label className="block text-xs font-medium text-zinc-600 mb-1">Progreso %</label>
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    value={sub.progress_percentage}
-                                    onChange={(e) => {
-                                      const updated = [...subObjectives];
-                                      updated[idx] = { ...updated[idx], progress_percentage: parseInt(e.target.value) || 0 };
-                                      setSubObjectives(updated);
-                                    }}
-                                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-zinc-600 mb-1">Estado</label>
-                                  <select
-                                    value={sub.status}
-                                    onChange={(e) => {
-                                      const updated = [...subObjectives];
-                                      updated[idx] = { ...updated[idx], status: e.target.value as ObjectiveStatus };
-                                      setSubObjectives(updated);
-                                    }}
-                                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
-                                  >
-                                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                      <option key={key} value={key}>{label}</option>
-                                    ))}
-                                  </select>
-                                </div>
+                              <div>
+                                <label className="block text-xs font-medium text-zinc-600 mb-1">Progreso %</label>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  value={sub.progress_percentage}
+                                  onChange={(e) => {
+                                    const progress = parseInt(e.target.value) || 0;
+                                    const updated = [...subObjectives];
+                                    updated[idx] = { 
+                                      ...updated[idx], 
+                                      progress_percentage: progress,
+                                      status: getStatusFromProgress(progress)
+                                    };
+                                    setSubObjectives(updated);
+                                  }}
+                                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                                />
+                                <p className="mt-1 text-xs text-zinc-500">
+                                  Estado: {STATUS_LABELS[getStatusFromProgress(sub.progress_percentage)]}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -956,32 +960,25 @@ export function ObjetivosClient({
                     </div>
                   )}
 
-                  {/* Progress and Status for annual objectives only (no sub-objectives) */}
+                  {/* Progress for annual objectives only (status is calculated automatically) */}
                   {editingObjective && subObjectives.length === 0 && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Progreso %</label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={progressStr}
-                          onChange={(e) => setProgressStr(e.target.value)}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Estado</label>
-                        <select
-                          value={formData.status}
-                          onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ObjectiveStatus }))}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                        >
-                          {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                            <option key={key} value={key}>{label}</option>
-                          ))}
-                        </select>
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1">Progreso %</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={progressStr}
+                        onChange={(e) => {
+                          setProgressStr(e.target.value);
+                          const progress = parseInt(e.target.value) || 0;
+                          setFormData(prev => ({ ...prev, status: getStatusFromProgress(progress) }));
+                        }}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      />
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Estado: {STATUS_LABELS[getStatusFromProgress(parseInt(progressStr) || 0)]}
+                      </p>
                     </div>
                   )}
                 </div>
