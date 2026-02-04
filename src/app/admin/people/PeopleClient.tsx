@@ -364,7 +364,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
                             <span>{employee.work_email}</span>
                           </>
                         )}
-                        {employee.manager && (
+                        {employee.manager?.first_name && employee.manager?.last_name && (
                           <>
                             <span className="text-zinc-300">·</span>
                             <span>

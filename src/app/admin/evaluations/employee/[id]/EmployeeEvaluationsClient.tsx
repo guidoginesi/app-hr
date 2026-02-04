@@ -186,7 +186,9 @@ export function EmployeeEvaluationsClient({
             <div>
               <p className="text-xs text-zinc-500">Manager</p>
               <p className="text-sm font-medium text-zinc-900">
-                {employee.manager ? `${employee.manager.first_name} ${employee.manager.last_name}` : '-'}
+                {employee.manager?.first_name && employee.manager?.last_name 
+                  ? `${employee.manager.first_name} ${employee.manager.last_name}` 
+                  : '-'}
               </p>
             </div>
             <div>

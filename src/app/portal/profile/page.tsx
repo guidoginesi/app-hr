@@ -123,7 +123,7 @@ export default async function PortalProfilePage() {
               <div>
                 <p className="text-xs text-zinc-500">Manager</p>
                 <p className="text-sm font-medium text-zinc-900">
-                  {(fullEmployee as any).manager 
+                  {(fullEmployee as any).manager?.first_name && (fullEmployee as any).manager?.last_name
                     ? `${(fullEmployee as any).manager.first_name} ${(fullEmployee as any).manager.last_name}`
                     : '-'
                   }
