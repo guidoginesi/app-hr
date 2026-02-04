@@ -35,14 +35,28 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
       last_name,
       seniority_level,
       job_title,
-      department:departments(id, name),
-      manager:employees!employees_manager_id_fkey(id, first_name, last_name)
+      manager_id,
+      department:departments(id, name)
     `)
     .eq('id', employeeId)
     .single();
 
   if (employeeError || !employee) {
+    console.error('Employee not found or error:', { employeeId, employeeError, employee });
     redirect('/admin/objectives');
+  }
+
+  // Get manager details separately to avoid self-referential join issues
+  let managerName: string | null = null;
+  if (employee.manager_id) {
+    const { data: manager } = await supabase
+      .from('employees')
+      .select('first_name, last_name')
+      .eq('id', employee.manager_id)
+      .single();
+    if (manager) {
+      managerName = `${manager.first_name} ${manager.last_name}`;
+    }
   }
 
   // Get corporate objectives for the year
@@ -63,6 +77,20 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
     .eq('year', currentYear)
     .order('objective_number', { ascending: true });
 
+  // Get available years for bonus calculation
+  let availableBonusYears: number[] = [];
+  try {
+    const { data: yearsData } = await supabase
+      .from('corporate_objectives')
+      .select('year')
+      .order('year', { ascending: false });
+    if (yearsData) {
+      availableBonusYears = [...new Set(yearsData.map(d => d.year))];
+    }
+  } catch {
+    // Table might not exist
+  }
+
   // Calculate weights based on seniority
   const seniorityLevel = employee.seniority_level as string | null;
   const seniorityCategory = getSeniorityCategory(seniorityLevel) || 1;
@@ -74,9 +102,7 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
         employee={{
           ...employee,
           department_name: (employee.department as any)?.[0]?.name || (employee.department as any)?.name || null,
-          manager_name: (employee.manager as any)
-            ? `${(employee.manager as any).first_name || (employee.manager as any)[0]?.first_name} ${(employee.manager as any).last_name || (employee.manager as any)[0]?.last_name}`
-            : null,
+          manager_name: managerName,
         }}
         corporateObjectives={corporateObjectives || []}
         areaObjectives={areaObjectives || []}
@@ -84,6 +110,7 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
         seniorityLevel={seniorityLevel}
         seniorityCategory={seniorityCategory}
         currentYear={currentYear}
+        availableBonusYears={availableBonusYears}
       />
     </ObjectivesShell>
   );

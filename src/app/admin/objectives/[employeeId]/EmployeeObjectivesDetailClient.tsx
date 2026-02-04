@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { CorporateObjective, ObjectiveWeightDistribution, getSeniorityLabel, getSeniorityCategory, SENIORITY_CATEGORY_COLORS, SENIORITY_CATEGORY_LABELS, SeniorityCategory, Quarter, QUARTER_LABELS } from '@/types/corporate-objectives';
 import { Objective, STATUS_LABELS, STATUS_COLORS, PERIOD_TYPE_LABELS } from '@/types/objective';
 
@@ -14,6 +15,60 @@ type Employee = {
   manager_name: string | null;
 };
 
+type BonusData = {
+  member: {
+    id: string;
+    name: string;
+    seniority_level: string | null;
+    effective_seniority_level: string | null;
+    hire_date: string | null;
+  };
+  year: number;
+  isCurrentYear: boolean;
+  weights: {
+    company: number;
+    area: number;
+    billing: number;
+    nps: number;
+    area1: number;
+    area2: number;
+  };
+  proRata: {
+    applies: boolean;
+    factor: number;
+    months: number;
+    percentage: number;
+  };
+  corporate: {
+    billing: {
+      target: number | null;
+      actual: number | null;
+      gatePercentage: number;
+      gateMet: boolean;
+      rawCompletion: number;
+      completion: number;
+    };
+    nps: {
+      quarters: { quarter: string; score: number | null; met: boolean; actual: number | null; target: number | null }[];
+      averageCompletion: number;
+    };
+    totalCompletion: number;
+  };
+  personal: {
+    objectives: { title: string; achievement: number | null; subObjectives?: { title: string; achievement: number | null }[] }[];
+    averageCompletion: number;
+    evaluatedCount: number;
+    totalCount: number;
+  };
+  bonus: {
+    companyComponent: number;
+    personalComponent: number;
+    totalPercentage: number;
+    gateMet: boolean;
+    finalPercentage: number;
+  };
+};
+
 type EmployeeObjectivesDetailClientProps = {
   employee: Employee;
   corporateObjectives: CorporateObjective[];
@@ -22,6 +77,7 @@ type EmployeeObjectivesDetailClientProps = {
   seniorityLevel: string | null;
   seniorityCategory: SeniorityCategory;
   currentYear: number;
+  availableBonusYears?: number[];
 };
 
 const QUARTERS: Quarter[] = ['q1', 'q2', 'q3', 'q4'];
@@ -34,7 +90,33 @@ export function EmployeeObjectivesDetailClient({
   seniorityLevel,
   seniorityCategory,
   currentYear,
+  availableBonusYears = [],
 }: EmployeeObjectivesDetailClientProps) {
+  const [activeTab, setActiveTab] = useState<'objectives' | 'bonus'>('objectives');
+  const [bonusYear, setBonusYear] = useState(availableBonusYears[0] || currentYear);
+  const [bonusData, setBonusData] = useState<BonusData | null>(null);
+  const [loadingBonus, setLoadingBonus] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'bonus') {
+      loadBonusData(bonusYear);
+    }
+  }, [activeTab, bonusYear]);
+
+  const loadBonusData = async (year: number) => {
+    setLoadingBonus(true);
+    try {
+      const res = await fetch(`/api/admin/objectives/${employee.id}/bonus?year=${year}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBonusData(data);
+      }
+    } catch (error) {
+      console.error('Error loading bonus data:', error);
+    }
+    setLoadingBonus(false);
+  };
+
   const billingObjective = corporateObjectives.find(o => o.objective_type === 'billing');
   const npsObjectives = QUARTERS.map(q => corporateObjectives.find(o => o.objective_type === 'nps' && o.quarter === q));
   const area1 = areaObjectives.find(o => o.objective_number === 1) || areaObjectives[0];
@@ -233,6 +315,33 @@ export function EmployeeObjectivesDetailClient({
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 rounded-lg bg-zinc-100 p-1">
+        <button
+          onClick={() => setActiveTab('objectives')}
+          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'objectives'
+              ? 'bg-white text-zinc-900 shadow-sm'
+              : 'text-zinc-600 hover:text-zinc-900'
+          }`}
+        >
+          Objetivos
+        </button>
+        <button
+          onClick={() => setActiveTab('bonus')}
+          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'bonus'
+              ? 'bg-white text-zinc-900 shadow-sm'
+              : 'text-zinc-600 hover:text-zinc-900'
+          }`}
+        >
+          Cálculo de Bono
+        </button>
+      </div>
+
+      {/* Objectives Tab */}
+      {activeTab === 'objectives' && (
+      <>
       {/* Objectives Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Billing Objective */}
@@ -537,6 +646,323 @@ export function EmployeeObjectivesDetailClient({
           </div>
         </div>
       </div>
+      </>
+      )}
+
+      {/* Bonus Tab */}
+      {activeTab === 'bonus' && (
+        <div className="space-y-6">
+          {/* Year Selector */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-zinc-900">Cálculo de Bono</h3>
+              <p className="text-sm text-zinc-500">Seleccioná el año para ver el bono correspondiente</p>
+            </div>
+            {availableBonusYears.length > 0 ? (
+              <select
+                value={bonusYear}
+                onChange={(e) => setBonusYear(Number(e.target.value))}
+                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              >
+                {availableBonusYears.map(year => (
+                  <option key={year} value={year}>
+                    {year} {year === currentYear ? '(en curso)' : ''}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-zinc-500">Sin objetivos corporativos configurados</span>
+            )}
+          </div>
+
+          {loadingBonus ? (
+            <div className="rounded-xl border border-zinc-200 bg-white p-12">
+              <div className="flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-rose-600 border-t-transparent" />
+              </div>
+            </div>
+          ) : bonusData ? (
+            <>
+              {/* No Corporate Objectives Banner */}
+              {!bonusData.corporate.billing.target && bonusData.corporate.nps.quarters.length === 0 && (
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-blue-800">Sin objetivos corporativos configurados para {bonusData.year}</p>
+                      <p className="text-sm text-blue-700">
+                        Los objetivos corporativos (Facturación y NPS) deben configurarse desde la sección de Objetivos en el panel de administración.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pro-rata Info Banner */}
+              {bonusData.proRata.applies && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-amber-800">Bono proporcional</p>
+                      <p className="text-sm text-amber-700">
+                        El empleado ingresó durante {bonusData.year}, por lo que el bono se calcula proporcionalmente ({bonusData.proRata.months} meses trabajados).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Seniority Level Info */}
+              {bonusData.member.effective_seniority_level && 
+               bonusData.member.effective_seniority_level !== bonusData.member.seniority_level && (
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-blue-800">Nivel de seniority histórico</p>
+                      <p className="text-sm text-blue-700">
+                        El bono de {bonusData.year} se calcula con el nivel <strong>{bonusData.member.effective_seniority_level}</strong> (vigente al cierre del período).
+                        El nivel actual es <strong>{bonusData.member.seniority_level}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Weights Info Bar */}
+              <div className="flex h-8 rounded-lg overflow-hidden">
+                <div 
+                  className="bg-purple-500 flex items-center justify-center"
+                  style={{ width: `${bonusData.weights.company}%` }}
+                >
+                  <span className="text-xs font-semibold text-white">Corporativo {bonusData.weights.company}%</span>
+                </div>
+                <div 
+                  className="bg-blue-500 flex items-center justify-center"
+                  style={{ width: `${bonusData.weights.area}%` }}
+                >
+                  <span className="text-xs font-semibold text-white">Personal {bonusData.weights.area}%</span>
+                </div>
+              </div>
+
+              {/* Corporate Objectives */}
+              <div className="rounded-xl border border-zinc-200 bg-white p-6">
+                <h3 className="text-base font-semibold text-zinc-900 mb-4">
+                  Objetivos corporativos
+                  <span className="ml-2 text-sm font-normal text-zinc-500">
+                    ({bonusData.corporate.totalCompletion.toFixed(1)}% promedio)
+                  </span>
+                </h3>
+                <div className="space-y-4">
+                  {/* Billing */}
+                  <div className={`rounded-lg border p-4 ${bonusData.bonus.gateMet ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-zinc-900">Facturación (Anual)</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                          Peso: {bonusData.weights.billing}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {bonusData.bonus.gateMet ? (
+                          <>
+                            <span className="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Gate alcanzado
+                            </span>
+                            <span className={`font-semibold ${bonusData.corporate.billing.completion >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                              {bonusData.corporate.billing.completion.toFixed(1)}%
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
+                              Gate no alcanzado ({bonusData.corporate.billing.gatePercentage}% req.)
+                            </span>
+                            <span className="text-xs text-zinc-500">
+                              ({bonusData.corporate.billing.rawCompletion.toFixed(1)}% logrado)
+                            </span>
+                            <span className="font-semibold text-red-600">
+                              0%
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {bonusData.corporate.billing.target && (
+                      <p className="text-xs text-zinc-500">
+                        Objetivo: ${bonusData.corporate.billing.target.toLocaleString()} | 
+                        Actual: ${(bonusData.corporate.billing.actual || 0).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* NPS */}
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                    {(() => {
+                      const quartersWithData = bonusData.corporate.nps.quarters.filter(q => q.score !== null);
+                      const quartersMet = quartersWithData.filter(q => q.met).length;
+                      const totalQuarters = quartersWithData.length;
+                      return (
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-zinc-900">NPS (Trimestral)</span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                              Peso: {bonusData.weights.nps}%
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className={`font-semibold ${quartersMet === totalQuarters && totalQuarters > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                              {bonusData.corporate.nps.averageCompletion.toFixed(0)}%
+                            </span>
+                            {totalQuarters > 0 && (
+                              <span className="text-xs text-zinc-500 ml-2">
+                                ({quartersMet}/{totalQuarters} cumplidos)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    <div className="grid grid-cols-4 gap-2">
+                      {['q1', 'q2', 'q3', 'q4'].map(quarter => {
+                        const npsQ = bonusData.corporate.nps.quarters.find(q => q.quarter === quarter);
+                        const hasData = npsQ && npsQ.score !== null;
+                        return (
+                          <div key={quarter} className="text-center p-2 bg-white rounded border border-zinc-200">
+                            <p className="text-xs text-zinc-500 uppercase">{quarter}</p>
+                            {hasData ? (
+                              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                npsQ.met ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {npsQ.met ? 'Cumplido' : 'No cumplido'}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-400 text-sm">-</span>
+                            )}
+                            {npsQ && npsQ.actual !== null && npsQ.target !== null && (
+                              <p className="text-xs text-zinc-400 mt-1">{npsQ.actual} / {npsQ.target}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Objectives */}
+              <div className="rounded-xl border border-zinc-200 bg-white p-6">
+                <h3 className="text-base font-semibold text-zinc-900 mb-4">
+                  Objetivos personales
+                  <span className="ml-2 text-sm font-normal text-zinc-500">
+                    ({bonusData.personal.averageCompletion.toFixed(1)}% promedio - {bonusData.personal.evaluatedCount}/{bonusData.personal.totalCount} evaluados)
+                  </span>
+                </h3>
+                {bonusData.personal.objectives.length > 0 ? (
+                  <div className="space-y-2">
+                    {bonusData.personal.objectives.map((obj, index) => (
+                      <div key={index} className="py-2 border-b border-zinc-100 last:border-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-zinc-700">{obj.title}</span>
+                          <span className={`font-semibold ${
+                            obj.achievement === null ? 'text-zinc-400' :
+                            obj.achievement >= 100 ? 'text-emerald-600' :
+                            obj.achievement >= 75 ? 'text-blue-600' :
+                            'text-amber-600'
+                          }`}>
+                            {obj.achievement !== null ? `${obj.achievement}%` : 'Sin evaluar'}
+                          </span>
+                        </div>
+                        {obj.subObjectives && obj.subObjectives.length > 0 && (
+                          <div className="mt-2 ml-4 space-y-1">
+                            {obj.subObjectives.map((sub, subIdx) => (
+                              <div key={subIdx} className="flex items-center justify-between text-xs">
+                                <span className="text-zinc-500">{sub.title}</span>
+                                <span className={
+                                  sub.achievement === null ? 'text-zinc-400' :
+                                  sub.achievement >= 100 ? 'text-emerald-600' :
+                                  'text-zinc-600'
+                                }>
+                                  {sub.achievement !== null ? `${sub.achievement}%` : '-'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-500">No hay objetivos personales registrados</p>
+                )}
+              </div>
+
+              {/* Calculation Breakdown */}
+              <div className="rounded-xl border border-zinc-200 bg-white p-6">
+                <h3 className="text-base font-semibold text-zinc-900 mb-4">Desglose del cálculo</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between py-2 border-b border-zinc-100">
+                    <span className="text-sm text-zinc-600">
+                      Componente corporativo ({bonusData.corporate.totalCompletion.toFixed(1)}% × {bonusData.weights.company}%)
+                    </span>
+                    <span className="font-semibold text-purple-600">
+                      {bonusData.bonus.companyComponent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 border-b border-zinc-100">
+                    <span className="text-sm text-zinc-600">
+                      Componente personal ({bonusData.personal.averageCompletion.toFixed(1)}% × {bonusData.weights.area}%)
+                    </span>
+                    <span className="font-semibold text-blue-600">
+                      {bonusData.bonus.personalComponent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 border-b border-zinc-100">
+                    <span className="text-sm font-medium text-zinc-900">
+                      Subtotal
+                    </span>
+                    <span className="font-bold text-zinc-900">
+                      {bonusData.bonus.totalPercentage.toFixed(2)}%
+                    </span>
+                  </div>
+                  {bonusData.proRata.applies && (
+                    <div className="flex items-center justify-between py-2 border-b border-zinc-100 bg-amber-50 rounded px-2 -mx-2">
+                      <span className="text-sm text-amber-800">
+                        Proporcionalidad ({bonusData.proRata.months}/12 meses trabajados = {bonusData.proRata.percentage.toFixed(1)}%)
+                      </span>
+                      <span className="font-semibold text-amber-700">
+                        × {bonusData.proRata.factor.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between py-3 rounded-lg px-3 bg-rose-50">
+                    <span className="font-semibold text-rose-900">
+                      Bono a pagar
+                    </span>
+                    <span className="text-xl font-bold text-rose-600">
+                      {bonusData.bonus.finalPercentage.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
+              <p className="text-zinc-500">No se pudo cargar la información del bono</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
