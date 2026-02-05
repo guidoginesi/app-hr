@@ -123,7 +123,7 @@ export async function PUT(
 
     const { data: leaveType } = await supabase
       .from('leave_types')
-      .select('name')
+      .select('name, count_type')
       .eq('id', request.leave_type_id)
       .single();
 
@@ -138,6 +138,7 @@ export async function PUT(
             fecha_inicio: formatDate(request.start_date),
             fecha_fin: formatDate(request.end_date),
             cantidad_dias: String(request.days_requested),
+            unidad_tiempo: leaveType?.count_type === 'weeks' ? 'semanas' : 'días',
             tipo_licencia: leaveType?.name || 'Licencia',
             comentario: parsed.data.rejection_reason,
             rechazado_por: `${auth.employee.first_name} ${auth.employee.last_name}`,

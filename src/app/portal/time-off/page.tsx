@@ -119,9 +119,7 @@ export default async function TimeOffPortalPage() {
                 </div>
                 <p className="mt-0.5 text-2xl font-bold text-zinc-900">
                   {Number(balancesByType['vacation']?.available_days ?? 0)}
-                  <span className="text-sm font-normal text-zinc-500">
-                    {' '}/ {Number(balancesByType['vacation']?.entitled_days ?? 0) + Number(balancesByType['vacation']?.carried_over ?? 0) + Number(balancesByType['vacation']?.bonus_days ?? 0)} días
-                  </span>
+                  <span className="text-sm font-normal text-zinc-500"> días disponibles</span>
                 </p>
               </div>
             </div>
@@ -165,9 +163,7 @@ export default async function TimeOffPortalPage() {
                 </div>
                 <p className="mt-0.5 text-2xl font-bold text-zinc-900">
                   {Number(balancesByType['pow_days']?.available_days ?? 0)}
-                  <span className="text-sm font-normal text-zinc-500">
-                    {' '}/ {Number(balancesByType['pow_days']?.entitled_days ?? 0) + Number(balancesByType['pow_days']?.carried_over ?? 0) + Number(balancesByType['pow_days']?.bonus_days ?? 0)} días
-                  </span>
+                  <span className="text-sm font-normal text-zinc-500"> días disponibles</span>
                 </p>
               </div>
             </div>
@@ -197,9 +193,6 @@ export default async function TimeOffPortalPage() {
                   <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Estudio</p>
                   <p className="mt-0.5 text-2xl font-bold text-zinc-900">
                     {balancesByType['study']?.available_days ?? 0}
-                    <span className="text-sm font-normal text-zinc-500">
-                      {' '}/ {balancesByType['study']?.entitled_days ?? 0} días
-                    </span>
                   </p>
                 </div>
               </div>
@@ -223,9 +216,7 @@ export default async function TimeOffPortalPage() {
                 </div>
                 <p className="mt-0.5 text-2xl font-bold text-zinc-900">
                   {balancesByType['remote_work']?.available_days ?? 0}
-                  <span className="text-sm font-normal text-zinc-500">
-                    {' '}/ {balancesByType['remote_work']?.entitled_days ?? 0} semanas
-                  </span>
+                  <span className="text-sm font-normal text-zinc-500"> semanas disponibles</span>
                 </p>
               </div>
             </div>
