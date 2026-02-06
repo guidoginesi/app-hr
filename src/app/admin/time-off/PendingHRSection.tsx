@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { LeaveRequestWithDetails } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 type PendingHRSectionProps = {
   initialRequests: LeaveRequestWithDetails[];
@@ -138,18 +139,7 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                       : `día${request.days_requested > 1 ? 's' : ''}`}
                   </p>
                   <p className="text-sm text-zinc-500">
-                    {new Date(request.start_date).toLocaleDateString('es-AR', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                    })}{' '}
-                    -{' '}
-                    {new Date(request.end_date).toLocaleDateString('es-AR', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
+                    {formatDateLocal(request.start_date)} - {formatDateLocal(request.end_date)}
                   </p>
                   {request.notes && (
                     <p className="mt-2 text-sm text-zinc-500">"{request.notes}"</p>
@@ -164,7 +154,7 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                       Aprobado por líder: {request.leader_name || request.manager_name || 'Líder'}
                       {request.leader_approved_at && (
                         <span className="text-zinc-400">
-                          {' '}({new Date(request.leader_approved_at).toLocaleDateString('es-AR')})
+                          {' '}({formatDateLocal(request.leader_approved_at)})
                         </span>
                       )}
                     </span>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { TimeOffShell } from '../TimeOffShell';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 interface BonusAdjustment {
   id: string;
@@ -341,8 +342,7 @@ export default function TimeOffRequestsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{request.leave_type_name}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">
-                      {new Date(request.start_date).toLocaleDateString('es-AR')} -{' '}
-                      {new Date(request.end_date).toLocaleDateString('es-AR')}
+                      {formatDateLocal(request.start_date)} - {formatDateLocal(request.end_date)}
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{request.days_requested}</td>
                     <td className="px-6 py-4">
@@ -541,7 +541,7 @@ export default function TimeOffRequestsPage() {
                           </p>
                         </td>
                         <td className="px-6 py-4 text-sm text-zinc-500">
-                          {new Date(adjustment.created_at).toLocaleDateString('es-AR')}
+                          {formatDateLocal(adjustment.created_at)}
                         </td>
                         <td className="px-6 py-4">
                           {adjustment.status === 'active' ? (

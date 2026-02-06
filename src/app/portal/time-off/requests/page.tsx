@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS, CANCELLABLE_STATUSES } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 export default function TimeOffRequestsHistoryPage() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
@@ -133,19 +134,7 @@ export default function TimeOffRequestsHistoryPage() {
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-zinc-600">
-                        {new Date(request.start_date).toLocaleDateString('es-AR', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}{' '}
-                        -{' '}
-                        {new Date(request.end_date).toLocaleDateString('es-AR', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                        {formatDateLocal(request.start_date)} - {formatDateLocal(request.end_date)}
                       </p>
                       <p className="mt-1 text-sm text-zinc-500">
                         {request.days_requested}{' '}
@@ -179,7 +168,7 @@ export default function TimeOffRequestsHistoryPage() {
                           <span className="text-zinc-600">
                             Líder: {request.leader_name || 'Pendiente'}
                             {request.leader_approved_at && (
-                              <span className="text-zinc-400"> ({new Date(request.leader_approved_at).toLocaleDateString('es-AR')})</span>
+                              <span className="text-zinc-400"> ({formatDateLocal(request.leader_approved_at)})</span>
                             )}
                           </span>
                         </div>
@@ -206,7 +195,7 @@ export default function TimeOffRequestsHistoryPage() {
                           <span className="text-zinc-600">
                             HR: {request.hr_approver_name || 'Pendiente'}
                             {request.hr_approved_at && (
-                              <span className="text-zinc-400"> ({new Date(request.hr_approved_at).toLocaleDateString('es-AR')})</span>
+                              <span className="text-zinc-400"> ({formatDateLocal(request.hr_approved_at)})</span>
                             )}
                           </span>
                         </div>

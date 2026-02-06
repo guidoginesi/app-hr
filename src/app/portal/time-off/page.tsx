@@ -5,6 +5,7 @@ import { PortalShell } from '../PortalShell';
 import Link from 'next/link';
 import type { LeaveBalanceWithDetails, LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 export const dynamic = 'force-dynamic';
 
@@ -282,8 +283,7 @@ export default async function TimeOffPortalPage() {
                       <div>
                         <p className="font-medium text-zinc-900">{request.leave_type_name}</p>
                         <p className="text-sm text-zinc-500">
-                          {new Date(request.start_date).toLocaleDateString('es-AR')} -{' '}
-                          {new Date(request.end_date).toLocaleDateString('es-AR')}
+                          {formatDateLocal(request.start_date)} - {formatDateLocal(request.end_date)}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
