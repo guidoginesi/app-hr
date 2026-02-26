@@ -1,13 +1,20 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { CorporateObjective, EmployeeObjectivesStatus, ObjectivesDashboardStats, getSeniorityShortLabel, getSeniorityCategory, SENIORITY_CATEGORY_COLORS, SENIORITY_CATEGORY_LABELS, SeniorityCategory } from '@/types/corporate-objectives';
+import { useRouter } from 'next/navigation';
+import {
+  CorporateObjective,
+  EmployeeObjectivesStatus,
+  ObjectivesDashboardStats,
+  getSeniorityShortLabel,
+  getSeniorityCategory,
+  SENIORITY_CATEGORY_COLORS,
+  SENIORITY_CATEGORY_LABELS,
+  SeniorityCategory,
+} from '@/types/corporate-objectives';
 
-type Department = {
-  id: string;
-  name: string;
-};
+type Department = { id: string; name: string };
 
 type ObjectivesDashboardClientProps = {
   initialEmployees: EmployeeObjectivesStatus[];
@@ -17,6 +24,289 @@ type ObjectivesDashboardClientProps = {
   currentYear: number;
 };
 
+// ─── Modal types ────────────────────────────────────────────────────────────
+
+type SubObjective = {
+  id: string;
+  sub_objective_number: number | null;
+  title: string;
+  progress_percentage: number;
+  achievement_percentage: number | null;
+  is_locked: boolean;
+  status: string;
+};
+
+type AreaObjective = {
+  id: string;
+  objective_number: number | null;
+  title: string;
+  description: string | null;
+  periodicity: string;
+  weight_pct: number;
+  progress_percentage: number;
+  achievement_percentage: number | null;
+  is_locked: boolean;
+  status: string;
+  created_by_employee: { first_name: string; last_name: string } | null;
+  // sub-objectives come from a separate pass
+  sub_objectives?: SubObjective[];
+};
+
+type ModalData = {
+  employee: { id: string; first_name: string; last_name: string; job_title: string | null; department_name: string | null };
+  area_objectives: AreaObjective[];
+  year: number;
+};
+
+// ─── Helper: effective progress for a single row ─────────────────────────────
+function effectiveProgress(obj: { progress_percentage: number; achievement_percentage: number | null; is_locked: boolean }): number {
+  if (obj.is_locked || obj.achievement_percentage != null) return obj.achievement_percentage ?? 0;
+  return obj.progress_percentage;
+}
+
+function objectiveProgress(obj: AreaObjective): number {
+  if (obj.periodicity !== 'annual' && obj.sub_objectives && obj.sub_objectives.length > 0) {
+    const total = obj.sub_objectives.reduce((s, sub) => s + effectiveProgress(sub), 0);
+    return Math.round(total / obj.sub_objectives.length);
+  }
+  return effectiveProgress(obj);
+}
+
+const PERIODICITY_LABEL: Record<string, string> = {
+  annual: 'Anual',
+  semestral: 'Semestral',
+  trimestral: 'Trimestral',
+};
+
+const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
+  not_started: { label: 'Sin iniciar', cls: 'bg-zinc-100 text-zinc-500' },
+  in_progress: { label: 'En progreso', cls: 'bg-blue-100 text-blue-700' },
+  completed: { label: 'Completado', cls: 'bg-emerald-100 text-emerald-700' },
+};
+
+// ─── Modal component ─────────────────────────────────────────────────────────
+
+function ObjectivesModal({
+  employeeId,
+  employeeName,
+  year,
+  onClose,
+}: {
+  employeeId: string;
+  employeeName: string;
+  year: number;
+  onClose: () => void;
+}) {
+  const [data, setData] = useState<ModalData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchObjectives = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/objectives/${employeeId}?year=${year}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || `Error ${res.status} al cargar objetivos`);
+
+      // Attach sub-objectives to each main objective
+      const mainObjs: AreaObjective[] = (json.area_objectives || []).filter(
+        (o: any) => o.parent_objective_id == null
+      );
+      const subObjs: SubObjective[] = (json.area_objectives || []).filter(
+        (o: any) => o.parent_objective_id != null
+      );
+
+      const populated = mainObjs.map((obj) => ({
+        ...obj,
+        sub_objectives: subObjs.filter((s: any) => s.parent_objective_id === obj.id),
+      }));
+
+      setData({ employee: json.employee, area_objectives: populated, year: json.year });
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId, year]);
+
+  useEffect(() => {
+    fetchObjectives();
+  }, [fetchObjectives]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+
+      {/* Panel */}
+      <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-900">{employeeName}</h2>
+            <p className="text-sm text-zinc-500">Objetivos personales · {year}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/admin/objectives/${employeeId}`}
+              className="text-sm font-medium text-rose-600 hover:text-rose-700"
+            >
+              Ver detalle completo →
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-7 w-7 animate-spin rounded-full border-2 border-zinc-300 border-t-rose-500" />
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          )}
+
+          {!loading && !error && data && (
+            <>
+              {data.area_objectives.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-zinc-300 py-10 text-center">
+                  <p className="text-sm text-zinc-500">Sin objetivos cargados para {year}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {data.area_objectives.map((obj, idx) => {
+                    const pct = objectiveProgress(obj);
+                    const isEvaluated = obj.is_locked || obj.achievement_percentage != null;
+                    const badgeInfo = STATUS_BADGE[obj.status] ?? { label: obj.status, cls: 'bg-zinc-100 text-zinc-500' };
+
+                    return (
+                      <div key={obj.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                        {/* Objective header */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-rose-600">
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-zinc-900 leading-snug">{obj.title}</p>
+                              {obj.description && (
+                                <p className="mt-1 text-xs text-zinc-500 line-clamp-2">{obj.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${badgeInfo.cls}`}>
+                            {badgeInfo.label}
+                          </span>
+                        </div>
+
+                        {/* Tags row */}
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                          <span className="rounded bg-white border border-zinc-200 px-2 py-0.5">
+                            {PERIODICITY_LABEL[obj.periodicity] ?? obj.periodicity}
+                          </span>
+                          <span className="rounded bg-white border border-zinc-200 px-2 py-0.5">
+                            Peso {obj.weight_pct}%
+                          </span>
+                          {isEvaluated && (
+                            <span className="rounded bg-violet-100 border border-violet-200 px-2 py-0.5 text-violet-700 font-medium">
+                              Evaluado
+                            </span>
+                          )}
+                          {obj.created_by_employee && (
+                            <span className="text-zinc-400">
+                              Cargado por {obj.created_by_employee.first_name} {obj.created_by_employee.last_name}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-200">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                pct >= 100 ? 'bg-emerald-500' :
+                                pct >= 75 ? 'bg-blue-500' :
+                                pct >= 50 ? 'bg-amber-500' : 'bg-red-400'
+                              }`}
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
+                          </div>
+                          <span className={`w-10 shrink-0 text-right text-xs font-semibold ${
+                            pct >= 100 ? 'text-emerald-600' :
+                            pct >= 75 ? 'text-blue-600' :
+                            pct >= 50 ? 'text-amber-600' : 'text-red-500'
+                          }`}>
+                            {pct}%
+                          </span>
+                        </div>
+
+                        {/* Sub-objectives */}
+                        {obj.sub_objectives && obj.sub_objectives.length > 0 && (
+                          <div className="mt-3 space-y-2 pl-2 border-l-2 border-zinc-200">
+                            {obj.sub_objectives
+                              .sort((a, b) => (a.sub_objective_number ?? 0) - (b.sub_objective_number ?? 0))
+                              .map((sub) => {
+                                const subPct = effectiveProgress(sub);
+                                const subEval = sub.is_locked || sub.achievement_percentage != null;
+                                return (
+                                  <div key={sub.id} className="flex items-center gap-3 rounded-lg bg-white px-3 py-2">
+                                    <span className="shrink-0 text-xs text-zinc-400">#{sub.sub_objective_number}</span>
+                                    <span className="min-w-0 flex-1 truncate text-xs text-zinc-700">{sub.title}</span>
+                                    {subEval && (
+                                      <span className="shrink-0 text-xs text-violet-600 font-medium">eval.</span>
+                                    )}
+                                    <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-zinc-200">
+                                      <div
+                                        className={`h-full rounded-full ${
+                                          subPct >= 100 ? 'bg-emerald-500' :
+                                          subPct >= 75 ? 'bg-blue-500' :
+                                          subPct >= 50 ? 'bg-amber-500' : 'bg-red-400'
+                                        }`}
+                                        style={{ width: `${Math.min(subPct, 100)}%` }}
+                                      />
+                                    </div>
+                                    <span className="w-8 shrink-0 text-right text-xs font-medium text-zinc-600">
+                                      {subPct}%
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main dashboard ───────────────────────────────────────────────────────────
+
 export function ObjectivesDashboardClient({
   initialEmployees,
   initialStats,
@@ -24,45 +314,36 @@ export function ObjectivesDashboardClient({
   corporateObjectives,
   currentYear,
 }: ObjectivesDashboardClientProps) {
-  const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [selectedSeniority, setSelectedSeniority] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'partial' | 'none'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [modalEmployee, setModalEmployee] = useState<{ id: string; name: string } | null>(null);
+  const router = useRouter();
+
+  const handleYearChange = (year: number) => {
+    router.push(`/admin/objectives?year=${year}`);
+  };
+
+  const handleRefresh = () => router.refresh();
 
   // Filter employees
   const filteredEmployees = useMemo(() => {
     return initialEmployees.filter((emp) => {
-      // Department filter
-      if (selectedDepartment && emp.department_name !== selectedDepartment) {
-        return false;
-      }
+      if (selectedDepartment && emp.department_name !== selectedDepartment) return false;
 
-      // Seniority filter (filter by category: 1, 2, 3, 4, 5)
       if (selectedSeniority) {
         const empCategory = getSeniorityCategory(emp.seniority_level);
-        if (empCategory?.toString() !== selectedSeniority) {
-          return false;
-        }
+        if (empCategory?.toString() !== selectedSeniority) return false;
       }
 
-      // Status filter
-      if (statusFilter === 'complete' && !emp.has_all_objectives) {
-        return false;
-      }
-      if (statusFilter === 'partial' && (emp.has_all_objectives || (emp.area_objectives_count === 0 && !emp.has_billing && emp.nps_count === 0))) {
-        return false;
-      }
-      if (statusFilter === 'none' && (emp.area_objectives_count > 0 || emp.has_billing || emp.nps_count > 0)) {
-        return false;
-      }
+      if (statusFilter === 'complete' && !emp.has_all_objectives) return false;
+      if (statusFilter === 'partial' && (emp.has_all_objectives || emp.area_objectives_count === 0)) return false;
+      if (statusFilter === 'none' && emp.area_objectives_count > 0) return false;
 
-      // Search filter
       if (searchQuery) {
         const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
-        if (!fullName.includes(searchQuery.toLowerCase())) {
-          return false;
-        }
+        if (!fullName.includes(searchQuery.toLowerCase())) return false;
       }
 
       return true;
@@ -77,19 +358,26 @@ export function ObjectivesDashboardClient({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900">Dashboard de Objetivos</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Estado de objetivos de todos los empleados
-          </p>
+          <p className="mt-1 text-sm text-zinc-500">Estado de objetivos de todos los empleados</p>
         </div>
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-rose-500"
-        >
-          {years.map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-rose-500"
+          >
+            Actualizar
+          </button>
+          <select
+            value={currentYear}
+            onChange={(e) => handleYearChange(Number(e.target.value))}
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-rose-500"
+          >
+            {years.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Corporate Objectives Status */}
@@ -101,10 +389,10 @@ export function ObjectivesDashboardClient({
             </svg>
             <div>
               <p className="text-sm font-medium text-amber-800">
-                {!initialStats.has_billing && !initialStats.nps_count 
-                  ? 'Objetivos corporativos no configurados' 
-                  : !initialStats.has_billing 
-                  ? 'Facturación no configurada' 
+                {!initialStats.has_billing && !initialStats.nps_count
+                  ? 'Objetivos corporativos no configurados'
+                  : !initialStats.has_billing
+                  ? 'Facturación no configurada'
                   : `NPS: ${initialStats.nps_count}/4 trimestres configurados`}
               </p>
               <p className="text-sm text-amber-700">
@@ -170,7 +458,7 @@ export function ObjectivesDashboardClient({
             </div>
             <div>
               <p className="text-2xl font-bold text-red-600">{initialStats.without_objectives}</p>
-              <p className="text-sm text-zinc-500">Sin objetivos</p>
+              <p className="text-sm text-zinc-500">Sin objetivos personales</p>
             </div>
           </div>
         </div>
@@ -221,7 +509,7 @@ export function ObjectivesDashboardClient({
           <option value="all">Todos los estados</option>
           <option value="complete">Completos (4/4)</option>
           <option value="partial">Parciales</option>
-          <option value="none">Sin objetivos</option>
+          <option value="none">Sin objetivos personales</option>
         </select>
       </div>
 
@@ -274,9 +562,7 @@ export function ObjectivesDashboardClient({
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-center">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      emp.has_billing
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-zinc-100 text-zinc-500'
+                      emp.has_billing ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'
                     }`}>
                       {emp.has_billing ? '1/1' : '0/1'}
                     </span>
@@ -307,7 +593,7 @@ export function ObjectivesDashboardClient({
                     {emp.total_progress !== null ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className="h-2 w-16 overflow-hidden rounded-full bg-zinc-200">
-                          <div 
+                          <div
                             className={`h-full rounded-full ${
                               emp.total_progress >= 100 ? 'bg-emerald-500' :
                               emp.total_progress >= 75 ? 'bg-blue-500' :
@@ -323,15 +609,17 @@ export function ObjectivesDashboardClient({
                     )}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right">
-                    <Link
-                      href={`/admin/objectives/${emp.id}`}
+                    <button
+                      type="button"
+                      onClick={() => setModalEmployee({ id: emp.id, name: `${emp.first_name} ${emp.last_name}` })}
                       className="inline-flex items-center gap-1 text-sm font-medium text-rose-600 hover:text-rose-700"
                     >
                       Ver
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
-                    </Link>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -346,6 +634,16 @@ export function ObjectivesDashboardClient({
           </table>
         </div>
       </div>
+
+      {/* Objectives Modal */}
+      {modalEmployee && (
+        <ObjectivesModal
+          employeeId={modalEmployee.id}
+          employeeName={modalEmployee.name}
+          year={currentYear}
+          onClose={() => setModalEmployee(null)}
+        />
+      )}
     </div>
   );
 }

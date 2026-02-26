@@ -6,27 +6,34 @@ import { ObjectivesDashboardClient } from './ObjectivesDashboardClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ObjectivesDashboardPage() {
+export default async function ObjectivesDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>;
+}) {
   const { isAdmin } = await requireAdmin();
   if (!isAdmin) {
     redirect('/admin/login');
   }
 
   const supabase = getSupabaseServer();
-  const currentYear = new Date().getFullYear();
+  const defaultYear = new Date().getFullYear();
+  const { year: yearParam } = await searchParams;
+  const selectedYear = yearParam ? parseInt(yearParam, 10) : defaultYear;
 
-  // Get corporate objectives for current year
+  // Get corporate objectives for the selected year
   const { data: corporateObjectives } = await supabase
     .from('corporate_objectives')
     .select('*')
-    .eq('year', currentYear);
+    .eq('year', selectedYear);
 
   // Check billing and NPS configuration
   const hasBilling = corporateObjectives?.some(o => o.objective_type === 'billing') || false;
   const npsCount = corporateObjectives?.filter(o => o.objective_type === 'nps').length || 0;
   const hasCorporateObjectives = hasBilling && npsCount >= 1; // At least billing + 1 NPS quarter
 
-  // Get all active employees with their objectives
+  // Get all active employees with their objectives for the selected year
+  // We fetch all objectives (main + sub) so we can calculate real progress for semestral/trimestral
   const { data: employees } = await supabase
     .from('employees')
     .select(`
@@ -38,8 +45,12 @@ export default async function ObjectivesDashboardPage() {
       objectives!objectives_employee_id_fkey(
         id,
         year,
+        periodicity,
         progress_percentage,
-        status
+        achievement_percentage,
+        is_locked,
+        status,
+        parent_objective_id
       )
     `)
     .eq('status', 'active')
@@ -47,14 +58,47 @@ export default async function ObjectivesDashboardPage() {
 
   // Process employees data
   const processedEmployees = (employees || []).map((emp: any) => {
-    const yearObjectives = (emp.objectives || []).filter((obj: any) => obj.year === currentYear);
-    const areaObjectivesCount = yearObjectives.length;
-    
-    // Calculate progress
+    const allYearObjs = (emp.objectives || []).filter((obj: any) => obj.year === selectedYear);
+
+    // Main objectives only (parent_objective_id is null)
+    const mainObjectives = allYearObjs.filter(
+      (obj: any) => obj.parent_objective_id == null
+    );
+    const areaObjectivesCount = mainObjectives.length;
+
+    // Calculate real progress:
+    // - For annual objectives: use progress_percentage directly
+    // - For semestral/trimestral: average sub-objectives' progress_percentage
     let totalProgress: number | null = null;
     if (areaObjectivesCount > 0) {
-      const areaProgress = yearObjectives.reduce((sum: number, obj: any) => sum + (obj.progress_percentage || 0), 0);
-      totalProgress = Math.round(areaProgress / areaObjectivesCount);
+      const subObjectivesByParent = allYearObjs
+        .filter((obj: any) => obj.parent_objective_id != null)
+        .reduce((acc: Record<string, any[]>, sub: any) => {
+          if (!acc[sub.parent_objective_id]) acc[sub.parent_objective_id] = [];
+          acc[sub.parent_objective_id].push(sub);
+          return acc;
+        }, {} as Record<string, any[]>);
+
+      // Helper: pick the best value for a single objective row
+      // If evaluated (achievement_percentage set or is_locked), use achievement; otherwise use progress
+      const effectiveValue = (obj: any): number => {
+        if (obj.is_locked || obj.achievement_percentage != null) {
+          return Math.min(obj.achievement_percentage ?? 0, 100);
+        }
+        return obj.progress_percentage || 0;
+      };
+
+      const progressValues = mainObjectives.map((obj: any) => {
+        const subs: any[] = subObjectivesByParent[obj.id] || [];
+        if (obj.periodicity !== 'annual' && subs.length > 0) {
+          return Math.round(
+            subs.reduce((sum: number, s: any) => sum + effectiveValue(s), 0) / subs.length
+          );
+        }
+        return effectiveValue(obj);
+      });
+
+      totalProgress = Math.round(progressValues.reduce((a: number, b: number) => a + b, 0) / progressValues.length);
     }
 
     return {
@@ -79,7 +123,7 @@ export default async function ObjectivesDashboardPage() {
       !e.has_all_objectives && (e.area_objectives_count > 0 || hasBilling || npsCount > 0)
     ).length,
     without_objectives: processedEmployees.filter((e: any) => 
-      e.area_objectives_count === 0 && !hasBilling && npsCount === 0
+      e.area_objectives_count === 0
     ).length,
     has_billing: hasBilling,
     nps_count: npsCount,
@@ -100,7 +144,7 @@ export default async function ObjectivesDashboardPage() {
         initialStats={stats}
         departments={departments || []}
         corporateObjectives={corporateObjectives || []}
-        currentYear={currentYear}
+        currentYear={selectedYear}
       />
     </ObjectivesShell>
   );

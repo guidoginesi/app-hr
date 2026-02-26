@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdmin } from '@/lib/checkAdmin';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { OBJECTIVE_WEIGHT_DISTRIBUTION, getSeniorityCategory } from '@/types/corporate-objectives';
 
@@ -29,13 +29,24 @@ export async function GET(
         seniority_level,
         job_title,
         department:departments(id, name),
-        manager:employees!employees_manager_id_fkey(id, first_name, last_name)
+        manager_id
       `)
       .eq('id', employeeId)
       .single();
 
     if (employeeError || !employee) {
-      return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+      return NextResponse.json({ error: employeeError?.message || 'Employee not found' }, { status: 404 });
+    }
+
+    // Get manager name separately to avoid FK hint schema cache issues
+    let managerName: string | null = null;
+    if (employee.manager_id) {
+      const { data: manager } = await supabase
+        .from('employees')
+        .select('first_name, last_name')
+        .eq('id', employee.manager_id)
+        .single();
+      if (manager) managerName = `${manager.first_name} ${manager.last_name}`;
     }
 
     // Get corporate objectives for the year
@@ -114,9 +125,7 @@ export async function GET(
       employee: {
         ...employee,
         department_name: (employee.department as any)?.[0]?.name || (employee.department as any)?.name || null,
-        manager_name: (employee.manager as any)
-          ? `${(employee.manager as any).first_name || (employee.manager as any)[0]?.first_name} ${(employee.manager as any).last_name || (employee.manager as any)[0]?.last_name}`
-          : null,
+        manager_name: managerName,
       },
       corporate_objectives: corporateObjectives || [],
       area_objectives: areaObjectives || [],
