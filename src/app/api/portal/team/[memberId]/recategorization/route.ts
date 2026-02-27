@@ -82,24 +82,56 @@ export async function GET(req: NextRequest, context: RouteContext) {
       });
     }
 
-    // Get objectives completion for this employee
-    const { data: objectives } = await supabase
+    // Get objectives for this employee (all, to calculate effective completion)
+    const { data: allObjectives } = await supabase
       .from('objectives')
       .select('*')
       .eq('employee_id', memberId)
       .eq('year', currentPeriod.year);
 
-    // Calculate objectives completion percentage
+    // Only main objectives (parent_objective_id IS NULL) determine if evaluation is complete
+    const mainObjectives = (allObjectives || []).filter(o => o.parent_objective_id === null);
+    const subObjectivesByParent = (allObjectives || [])
+      .filter(o => o.parent_objective_id !== null)
+      .reduce((acc: Record<string, any[]>, sub) => {
+        if (!acc[sub.parent_objective_id]) acc[sub.parent_objective_id] = [];
+        acc[sub.parent_objective_id].push(sub);
+        return acc;
+      }, {});
+
+    // An objective is "evaluated" if:
+    // - annual: has achievement_percentage set directly
+    // - semestral/trimestral: all its sub-objectives have achievement_percentage set
+    const isObjectiveEvaluated = (obj: any): boolean => {
+      const subs = subObjectivesByParent[obj.id] || [];
+      if (obj.periodicity !== 'annual' && subs.length > 0) {
+        return subs.every((s: any) => s.achievement_percentage !== null);
+      }
+      return obj.achievement_percentage !== null;
+    };
+
+    // Effective achievement for a main objective
+    const effectiveAchievement = (obj: any): number => {
+      const subs = subObjectivesByParent[obj.id] || [];
+      if (obj.periodicity !== 'annual' && subs.length > 0) {
+        return Math.round(subs.reduce((s: number, sub: any) => s + (sub.achievement_percentage || 0), 0) / subs.length);
+      }
+      return obj.achievement_percentage || 0;
+    };
+
+    // Calculate objectives completion percentage (based on main objectives only)
     let objectivesCompletion = 0;
-    if (objectives && objectives.length > 0) {
-      const totalAchievement = objectives.reduce((sum, obj) => {
-        return sum + (obj.achievement_percentage || 0);
-      }, 0);
-      objectivesCompletion = Math.round(totalAchievement / objectives.length);
+    if (mainObjectives.length > 0) {
+      const totalAchievement = mainObjectives.reduce((sum, obj) => sum + effectiveAchievement(obj), 0);
+      objectivesCompletion = Math.round(totalAchievement / mainObjectives.length);
     }
 
-    // Check if all objectives have been evaluated
-    const objectivesEvaluated = objectives?.every(obj => obj.achievement_percentage !== null) ?? false;
+    // Check if all main objectives have been evaluated
+    const evaluatedCount = mainObjectives.filter(isObjectiveEvaluated).length;
+    const objectivesEvaluated = mainObjectives.length > 0 && evaluatedCount === mainObjectives.length;
+
+    // Use the legacy `objectives` variable shape for backward compat in the response
+    const objectives = allObjectives;
 
     // Get existing recategorization
     const recategorization = leaderEvaluation.recategorization?.[0] || null;
@@ -123,8 +155,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
         submitted_at: leaderEvaluation.submitted_at,
       },
       objectives: {
-        total: objectives?.length || 0,
-        evaluated: objectives?.filter(o => o.achievement_percentage !== null).length || 0,
+        total: mainObjectives.length,
+        evaluated: evaluatedCount,
         completion: objectivesCompletion,
       },
       eligibility: {

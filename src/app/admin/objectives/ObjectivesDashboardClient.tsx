@@ -155,12 +155,6 @@ function ObjectivesModal({
             <p className="text-sm text-zinc-500">Objetivos personales · {year}</p>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href={`/admin/objectives/${employeeId}`}
-              className="text-sm font-medium text-rose-600 hover:text-rose-700"
-            >
-              Ver detalle completo →
-            </Link>
             <button
               type="button"
               onClick={onClose}
