@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   getSeniorityLabel, 
   getSeniorityCategory, 
@@ -89,6 +89,173 @@ type Props = {
   seniorityHistory: SeniorityHistoryItem[];
 };
 
+type ResponseItem = {
+  id: string;
+  score: number;
+  explanation: string | null;
+  item_id: string;
+  statement: string;
+  dimension_id: string;
+  dimension_name: string;
+};
+
+type OpenQuestion = {
+  id: string;
+  question_key: string;
+  response: string;
+};
+
+type EvaluationResponses = {
+  evaluation: { id: string; type: string; status: string; total_score: number | null };
+  responses: ResponseItem[];
+  openQuestions: OpenQuestion[];
+};
+
+const OPEN_QUESTION_LABELS: Record<string, string> = {
+  highlights: 'Fortalezas destacadas',
+  improvements: 'Áreas de mejora',
+  goals: 'Objetivos propuestos',
+  comments: 'Comentarios adicionales',
+};
+
+function ResponsesModal({
+  evaluation,
+  onClose,
+}: {
+  evaluation: Evaluation;
+  onClose: () => void;
+}) {
+  const [data, setData] = useState<EvaluationResponses | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchResponses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/evaluations/${evaluation.id}/responses`);
+      if (!res.ok) throw new Error('Error al cargar respuestas');
+      setData(await res.json());
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [evaluation.id]);
+
+  useEffect(() => {
+    fetchResponses();
+  }, [fetchResponses]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  // Group responses by dimension
+  const byDimension = data
+    ? data.responses.reduce((acc, r) => {
+        if (!acc[r.dimension_id]) acc[r.dimension_id] = { name: r.dimension_name, items: [] };
+        acc[r.dimension_id].items.push(r);
+        return acc;
+      }, {} as Record<string, { name: string; items: ResponseItem[] }>)
+    : {};
+
+  const typeLabel = evaluation.type === 'self' ? 'Autoevaluación' : 'Evaluación de Líder';
+  const typeBg = evaluation.type === 'self' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${typeBg}`}>
+              {typeLabel}
+            </span>
+            {evaluation.total_score !== null && (
+              <span className="text-lg font-semibold text-zinc-900">
+                {evaluation.total_score.toFixed(1)}/10
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-100 text-zinc-500"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-6">
+          {loading && (
+            <div className="py-12 text-center text-sm text-zinc-500">Cargando respuestas...</div>
+          )}
+          {error && (
+            <div className="py-12 text-center text-sm text-red-600">{error}</div>
+          )}
+          {!loading && !error && data && (
+            <>
+              {/* Scored responses grouped by dimension */}
+              {Object.values(byDimension).map((dim) => (
+                <div key={dim.name}>
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">{dim.name}</h4>
+                  <div className="space-y-2">
+                    {dim.items.map((item) => (
+                      <div key={item.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-sm text-zinc-800">{item.statement}</p>
+                          <span className={`shrink-0 text-lg font-bold ${
+                            item.score >= 7 ? 'text-emerald-600' :
+                            item.score >= 5 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            {item.score}
+                          </span>
+                        </div>
+                        {item.explanation && (
+                          <p className="mt-2 text-xs text-zinc-500 italic">"{item.explanation}"</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Open questions */}
+              {data.openQuestions.length > 0 && (
+                <div>
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Preguntas abiertas</h4>
+                  <div className="space-y-2">
+                    {data.openQuestions.map((q) => (
+                      <div key={q.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                        <p className="text-xs font-medium text-zinc-500 mb-1">
+                          {OPEN_QUESTION_LABELS[q.question_key] || q.question_key}
+                        </p>
+                        <p className="text-sm text-zinc-800 whitespace-pre-wrap">{q.response}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {data.responses.length === 0 && data.openQuestions.length === 0 && (
+                <div className="py-12 text-center text-sm text-zinc-500">
+                  No hay respuestas registradas para esta evaluación
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+      <div className="absolute inset-0" onClick={onClose} />
+    </div>
+  );
+}
+
 export function EmployeeEvaluationsClient({ 
   employee, 
   evaluations, 
@@ -97,6 +264,7 @@ export function EmployeeEvaluationsClient({
   seniorityHistory 
 }: Props) {
   const [activeTab, setActiveTab] = useState<'evaluations' | 'objectives' | 'recategorizations' | 'history'>('evaluations');
+  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
 
   const seniorityCategory = employee.seniority_level 
     ? getSeniorityCategory(employee.seniority_level) 
@@ -301,6 +469,14 @@ export function EmployeeEvaluationsClient({
                         <span className="text-xs text-zinc-400">
                           {new Date(evaluation.created_at).toLocaleDateString('es-AR')}
                         </span>
+                        {evaluation.status === 'submitted' && (
+                          <button
+                            onClick={() => setSelectedEvaluation(evaluation)}
+                            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                          >
+                            Ver respuestas
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -457,6 +633,13 @@ export function EmployeeEvaluationsClient({
             </div>
           )}
         </div>
+      )}
+
+      {selectedEvaluation && (
+        <ResponsesModal
+          evaluation={selectedEvaluation}
+          onClose={() => setSelectedEvaluation(null)}
+        />
       )}
     </div>
   );
