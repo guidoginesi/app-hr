@@ -81,9 +81,10 @@ export default async function EvaluationsDashboardPage() {
     .eq('evaluation.status', 'submitted')
     .not('score', 'is', null);
 
-  // Aggregate item scores
+  // Aggregate item scores — keyed by item_id + period_id so we can filter by period in the client
   const itemScoresMap = new Map<string, {
     item_id: string;
+    period_id: string;
     statement: string;
     dimension_name: string;
     scores: number[];
@@ -91,10 +92,13 @@ export default async function EvaluationsDashboardPage() {
 
   (itemScoresRaw || []).forEach((r: any) => {
     if (!r.item || !r.score) return;
-    const key = r.item_id;
+    const evaluation = Array.isArray(r.evaluation) ? r.evaluation[0] : r.evaluation;
+    const periodId = evaluation?.period_id || 'unknown';
+    const key = `${r.item_id}:${periodId}`;
     if (!itemScoresMap.has(key)) {
       itemScoresMap.set(key, {
         item_id: r.item_id,
+        period_id: periodId,
         statement: r.item.statement,
         dimension_name: r.item.dimension?.name || 'Sin dimensión',
         scores: [],
@@ -105,47 +109,12 @@ export default async function EvaluationsDashboardPage() {
 
   const itemScores = Array.from(itemScoresMap.values()).map(item => ({
     item_id: item.item_id,
+    period_id: item.period_id,
     statement: item.statement,
     dimension_name: item.dimension_name,
     avg_score: item.scores.reduce((a, b) => a + b, 0) / item.scores.length,
     response_count: item.scores.length,
   }));
-
-  // Calculate department scores from leader evaluations
-  const departmentScoresMap = new Map<string, {
-    department_id: string;
-    department_name: string;
-    scores: number[];
-    employees: Set<string>;
-  }>();
-
-  evaluations
-    .filter(e => e.type === 'leader' && e.total_score !== null && e.employee?.department)
-    .forEach(e => {
-      const dept = e.employee.department;
-      if (!dept) return;
-      
-      if (!departmentScoresMap.has(dept.id)) {
-        departmentScoresMap.set(dept.id, {
-          department_id: dept.id,
-          department_name: dept.name,
-          scores: [],
-          employees: new Set(),
-        });
-      }
-      const deptData = departmentScoresMap.get(dept.id)!;
-      deptData.scores.push(e.total_score);
-      deptData.employees.add(e.employee_id);
-    });
-
-  const departmentScores = Array.from(departmentScoresMap.values())
-    .map(dept => ({
-      department_id: dept.department_id,
-      department_name: dept.department_name,
-      avg_score: dept.scores.reduce((a, b) => a + b, 0) / dept.scores.length,
-      employee_count: dept.employees.size,
-    }))
-    .sort((a, b) => b.avg_score - a.avg_score);
 
   return (
     <EvaluationsShell active="dashboard">
@@ -153,7 +122,6 @@ export default async function EvaluationsDashboardPage() {
         periods={periods}
         evaluations={evaluations}
         itemScores={itemScores}
-        departmentScores={departmentScores}
         activePeriodId={activePeriodId}
       />
     </EvaluationsShell>

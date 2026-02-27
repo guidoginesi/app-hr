@@ -3,50 +3,6 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 
-// Demo data for testing - remove in production
-const DEMO_EMPLOYEES = [
-  { name: 'María García', department: 'Tecnología', score: 9.2 },
-  { name: 'Juan Pérez', department: 'Ventas', score: 7.8 },
-  { name: 'Ana Rodríguez', department: 'Marketing', score: 8.5 },
-  { name: 'Carlos López', department: 'Recursos Humanos', score: 6.3 },
-  { name: 'Laura Martínez', department: 'Finanzas', score: 8.9 },
-  { name: 'Pedro Sánchez', department: 'Tecnología', score: 7.1 },
-  { name: 'Sofía Fernández', department: 'Operaciones', score: 8.0 },
-  { name: 'Diego González', department: 'Ventas', score: 5.8 },
-  { name: 'Valentina Torres', department: 'Marketing', score: 9.0 },
-  { name: 'Martín Ruiz', department: 'Tecnología', score: 7.5 },
-  { name: 'Camila Díaz', department: 'Recursos Humanos', score: 8.2 },
-  { name: 'Nicolás Herrera', department: 'Finanzas', score: 6.9 },
-  { name: 'Isabella Vargas', department: 'Operaciones', score: 7.7 },
-  { name: 'Sebastián Castro', department: 'Ventas', score: 8.4 },
-  { name: 'Luciana Morales', department: 'Marketing', score: 5.5 },
-  { name: 'Tomás Ortiz', department: 'Tecnología', score: 9.1 },
-  { name: 'Florencia Romero', department: 'Recursos Humanos', score: 7.3 },
-  { name: 'Mateo Acosta', department: 'Finanzas', score: 8.7 },
-  { name: 'Emilia Medina', department: 'Operaciones', score: 6.6 },
-  { name: 'Benjamín Flores', department: 'Ventas', score: 7.9 },
-  { name: 'Victoria Ríos', department: 'Marketing', score: 8.1 },
-  { name: 'Lucas Jiménez', department: 'Tecnología', score: 6.2 },
-  { name: 'Antonella Vega', department: 'Recursos Humanos', score: 9.3 },
-  { name: 'Santiago Mendoza', department: 'Finanzas', score: 7.0 },
-  { name: 'Catalina Suárez', department: 'Operaciones', score: 8.6 },
-  { name: 'Gabriel Ramos', department: 'Ventas', score: 5.9 },
-  { name: 'Julieta Silva', department: 'Marketing', score: 7.4 },
-  { name: 'Daniel Molina', department: 'Tecnología', score: 8.8 },
-  { name: 'Renata Aguirre', department: 'Recursos Humanos', score: 6.7 },
-  { name: 'Maximiliano Peña', department: 'Finanzas', score: 7.6 },
-  { name: 'Paulina Guerrero', department: 'Operaciones', score: 9.4 },
-  { name: 'Joaquín Navarro', department: 'Ventas', score: 6.4 },
-  { name: 'Agustina Campos', department: 'Marketing', score: 8.3 },
-  { name: 'Felipe Delgado', department: 'Tecnología', score: 7.2 },
-  { name: 'Milagros Vera', department: 'Recursos Humanos', score: 5.7 },
-  { name: 'Ignacio Sosa', department: 'Finanzas', score: 8.0 },
-  { name: 'Bianca Figueroa', department: 'Operaciones', score: 6.8 },
-  { name: 'Franco Cabrera', department: 'Ventas', score: 9.0 },
-  { name: 'Alma Rojas', department: 'Marketing', score: 7.8 },
-  { name: 'Lautaro Paz', department: 'Tecnología', score: 6.1 },
-].map((emp, idx) => ({ ...emp, id: `demo-${idx}` }));
-
 type Period = {
   id: string;
   name: string;
@@ -73,24 +29,17 @@ type Evaluation = {
 
 type ItemScore = {
   item_id: string;
+  period_id: string;
   statement: string;
   dimension_name: string;
   avg_score: number;
   response_count: number;
 };
 
-type DepartmentScore = {
-  department_id: string;
-  department_name: string;
-  avg_score: number;
-  employee_count: number;
-};
-
 type Props = {
   periods: Period[];
   evaluations: Evaluation[];
   itemScores: ItemScore[];
-  departmentScores: DepartmentScore[];
   activePeriodId: string | null;
 };
 
@@ -103,13 +52,11 @@ export function EvaluationsDashboardClient({
   periods,
   evaluations,
   itemScores,
-  departmentScores,
   activePeriodId,
 }: Props) {
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(activePeriodId || 'all');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [employeeDeptFilter, setEmployeeDeptFilter] = useState<string>('all');
-  const [showDemoData, setShowDemoData] = useState(true); // Toggle for demo data
 
   // Filter evaluations by selected period
   const filteredEvaluations = useMemo(() => {
@@ -117,18 +64,35 @@ export function EvaluationsDashboardClient({
     return evaluations.filter(e => e.period_id === selectedPeriodId);
   }, [evaluations, selectedPeriodId]);
 
-  // Filter item scores by selected period (already filtered from server if needed)
+  // Filter item scores by period_id
   const filteredItemScores = useMemo(() => {
-    // Item scores are already aggregated, filter based on period
     if (selectedPeriodId === 'all') return itemScores;
-    return itemScores; // In real scenario, this would be filtered server-side
+    return itemScores.filter(s => s.period_id === selectedPeriodId);
   }, [itemScores, selectedPeriodId]);
 
-  // Filter department scores
+  // Compute department scores dynamically from the already-filtered evaluations
   const filteredDepartmentScores = useMemo(() => {
-    if (selectedPeriodId === 'all') return departmentScores;
-    return departmentScores;
-  }, [departmentScores, selectedPeriodId]);
+    const map = new Map<string, { department_id: string; department_name: string; scores: number[]; employees: Set<string> }>();
+    filteredEvaluations
+      .filter(e => e.type === 'leader' && e.total_score !== null && e.employee?.department)
+      .forEach(e => {
+        const dept = e.employee.department!;
+        if (!map.has(dept.id)) {
+          map.set(dept.id, { department_id: dept.id, department_name: dept.name, scores: [], employees: new Set() });
+        }
+        const d = map.get(dept.id)!;
+        d.scores.push(e.total_score as number);
+        d.employees.add(e.employee_id);
+      });
+    return Array.from(map.values())
+      .map(d => ({
+        department_id: d.department_id,
+        department_name: d.department_name,
+        avg_score: d.scores.reduce((a, b) => a + b, 0) / d.scores.length,
+        employee_count: d.employees.size,
+      }))
+      .sort((a, b) => b.avg_score - a.avg_score);
+  }, [filteredEvaluations]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -164,8 +128,8 @@ export function EvaluationsDashboardClient({
       .slice(0, 3);
   }, [filteredItemScores]);
 
-  // Employee scores (from leader evaluations)
-  const realEmployeeScores = useMemo(() => {
+  // Employee scores (from leader evaluations only, filtered by period)
+  const employeeScores = useMemo(() => {
     return filteredEvaluations
       .filter(e => e.type === 'leader' && e.total_score !== null && e.employee)
       .map(e => ({
@@ -173,16 +137,9 @@ export function EvaluationsDashboardClient({
         name: `${e.employee.first_name} ${e.employee.last_name}`,
         department: e.employee.department?.name || 'Sin área',
         score: e.total_score as number,
-      }));
+      }))
+      .sort((a, b) => b.score - a.score);
   }, [filteredEvaluations]);
-
-  // Combine real data with demo data if enabled
-  const employeeScores = useMemo(() => {
-    const combined = showDemoData 
-      ? [...realEmployeeScores, ...DEMO_EMPLOYEES]
-      : realEmployeeScores;
-    return combined.sort((a, b) => b.score - a.score);
-  }, [realEmployeeScores, showDemoData]);
 
   // Get unique departments for filter
   const availableDepartments = useMemo(() => {
@@ -485,16 +442,6 @@ export function EvaluationsDashboardClient({
                     <span className="text-sm text-zinc-600">Media: <span className="font-semibold">{globalAvgScore.toFixed(1)}</span></span>
                   </div>
                 )}
-                {/* Demo data toggle - remove in production */}
-                <label className="flex items-center gap-2 text-xs text-zinc-500">
-                  <input
-                    type="checkbox"
-                    checked={showDemoData}
-                    onChange={(e) => setShowDemoData(e.target.checked)}
-                    className="rounded border-zinc-300"
-                  />
-                  Demo data
-                </label>
               </div>
             </div>
             
