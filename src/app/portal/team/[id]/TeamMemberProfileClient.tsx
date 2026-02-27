@@ -361,6 +361,9 @@ export function TeamMemberProfileClient({
       if (res.ok) {
         const data = await res.json();
         setEvaluationDetail(data);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error('Error fetching evaluation details:', res.status, err);
       }
     } catch (error) {
       console.error('Error fetching evaluation details:', error);

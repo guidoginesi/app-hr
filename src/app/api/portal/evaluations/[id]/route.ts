@@ -30,8 +30,21 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Evaluación no encontrada' }, { status: 404 });
     }
 
-    // Check permissions: user must be the evaluator or the employee being evaluated
-    if (evaluation.evaluator_id !== auth.employee.id && evaluation.employee_id !== auth.employee.id) {
+    // Check permissions: user must be the evaluator, the employee being evaluated, or the direct manager of the employee
+    const isEvaluator = evaluation.evaluator_id === auth.employee.id;
+    const isEmployee = evaluation.employee_id === auth.employee.id;
+
+    let isManager = false;
+    if (!isEvaluator && !isEmployee) {
+      const { data: emp } = await supabase
+        .from('employees')
+        .select('manager_id')
+        .eq('id', evaluation.employee_id)
+        .single();
+      isManager = emp?.manager_id === auth.employee.id;
+    }
+
+    if (!isEvaluator && !isEmployee && !isManager) {
       return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 });
     }
 
