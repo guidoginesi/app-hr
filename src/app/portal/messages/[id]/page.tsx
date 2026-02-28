@@ -59,7 +59,7 @@ export default async function MessageDetailPage({ params }: Props) {
   }
 
   return (
-    <PortalShell employee={auth.employee} isLeader={auth.isLeader} active="dashboard">
+    <PortalShell employee={auth.employee} isLeader={auth.isLeader} active="messages">
       <MessageDetailClient
         recipientId={recipient.id}
         messageId={message.id}
