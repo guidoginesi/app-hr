@@ -40,7 +40,7 @@ type CreateForm = {
   priority: 'info' | 'warning' | 'critical';
   require_confirmation: boolean;
   expires_at: string;
-  audience: 'all' | 'leaders' | 'employees';
+  audience: 'all' | 'leaders' | 'employees' | 'test';
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -55,6 +55,7 @@ const DEFAULT_FORM: CreateForm = {
 function audienceLabel(audience: Record<string, unknown> | null): string {
   if (!audience) return 'Todos';
   if (audience.all) return 'Todos';
+  if (audience.test) return '🧪 Test';
   if (Array.isArray(audience.roles)) return `Roles: ${audience.roles.join(', ')}`;
   return 'Personalizado';
 }
@@ -73,6 +74,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
     if (a === 'all') return { all: true };
     if (a === 'leaders') return { roles: ['leader'] };
     if (a === 'employees') return { roles: ['employee'] };
+    if (a === 'test') return { test: true };
     return { all: true };
   };
 
@@ -317,6 +319,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                         <option value="all">Todos los empleados</option>
                         <option value="leaders">Solo líderes</option>
                         <option value="employees">Solo empleados</option>
+                        <option value="test">🧪 Test (Agustina, Guido, Antonella)</option>
                       </select>
                     </div>
                   </div>

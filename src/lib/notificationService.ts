@@ -15,7 +15,8 @@ export type SystemNotificationParams = {
 
 export type BroadcastAudience =
   | { all: true }
-  | { roles: string[] };
+  | { roles: string[] }
+  | { test: true };
 
 export type BroadcastMessageParams = {
   createdBy: string; // auth.users id
@@ -112,9 +113,16 @@ export async function createSystemNotification(
   }
 }
 
+// Names of test audience members (first_name + last_name, case-insensitive)
+const TEST_AUDIENCE_NAMES = [
+  { first_name: 'Agustina', last_name: 'Marques' },
+  { first_name: 'Guido',    last_name: 'Ginesi' },
+  { first_name: 'Antonella', last_name: 'Medone' },
+];
+
 /**
  * Resolve user IDs from audience filter.
- * Supports { all: true } or { roles: string[] }.
+ * Supports { all: true }, { roles: string[] }, or { test: true }.
  */
 export async function resolveAudienceUserIds(
   audience: BroadcastAudience
@@ -138,6 +146,23 @@ export async function resolveAudienceUserIds(
       .in('role', audience.roles);
 
     return (data ?? []).map((r: any) => r.user_id as string).filter(Boolean);
+  }
+
+  if ('test' in audience && audience.test) {
+    const userIds: string[] = [];
+    for (const { first_name, last_name } of TEST_AUDIENCE_NAMES) {
+      const { data } = await supabase
+        .from('employees')
+        .select('user_id')
+        .ilike('first_name', first_name)
+        .ilike('last_name', last_name)
+        .not('user_id', 'is', null)
+        .limit(1);
+
+      const uid = data?.[0]?.user_id;
+      if (uid) userIds.push(uid);
+    }
+    return userIds;
   }
 
   return [];

@@ -13,6 +13,7 @@ const CreateMessageSchema = z.object({
     .union([
       z.object({ all: z.literal(true) }),
       z.object({ roles: z.array(z.string()).min(1) }),
+      z.object({ test: z.literal(true) }),
     ])
     .default({ all: true }),
 });
