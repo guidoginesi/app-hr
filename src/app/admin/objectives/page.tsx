@@ -17,8 +17,16 @@ export default async function ObjectivesDashboardPage({
   }
 
   const supabase = getSupabaseServer();
-  const defaultYear = new Date().getFullYear();
   const { year: yearParam } = await searchParams;
+
+  // Default to previous year (same logic as bonos page)
+  const { data: yearRows } = await supabase
+    .from('corporate_objectives')
+    .select('year')
+    .order('year', { ascending: false });
+  const availableYears = yearRows ? [...new Set(yearRows.map((r: any) => r.year as number))] : [];
+  const prevYear = new Date().getFullYear() - 1;
+  const defaultYear = availableYears.includes(prevYear) ? prevYear : (availableYears[0] ?? prevYear);
   const selectedYear = yearParam ? parseInt(yearParam, 10) : defaultYear;
 
   // Get corporate objectives for the selected year

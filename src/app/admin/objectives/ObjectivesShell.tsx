@@ -6,7 +6,7 @@ import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 
 type ObjectivesShellProps = {
   children: ReactNode;
-  active: 'dashboard' | 'config' | 'periods' | 'employee';
+  active: 'dashboard' | 'config' | 'periods' | 'employee' | 'bonos';
 };
 
 export function ObjectivesShell({ children, active }: ObjectivesShellProps) {
@@ -65,6 +65,19 @@ export function ObjectivesShell({ children, active }: ObjectivesShellProps) {
           >
             <span>Períodos</span>
             {active === 'periods' && (
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            )}
+          </Link>
+          <Link
+            href="/admin/objectives/bonos"
+            className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+              active === 'bonos'
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+            }`}
+          >
+            <span>Bonos</span>
+            {active === 'bonos' && (
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
           </Link>
