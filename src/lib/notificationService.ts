@@ -113,12 +113,8 @@ export async function createSystemNotification(
   }
 }
 
-// Names of test audience members (first_name + last_name, case-insensitive)
-const TEST_AUDIENCE_NAMES = [
-  { first_name: 'Agustina', last_name: 'Marques' },
-  { first_name: 'Guido',    last_name: 'Ginesi' },
-  { first_name: 'Antonella', last_name: 'Medone' },
-];
+// First names of test audience members (case-insensitive match)
+const TEST_AUDIENCE_FIRST_NAMES = ['Agustina', 'Guido', 'Antonella'];
 
 /**
  * Resolve user IDs from audience filter.
@@ -149,20 +145,14 @@ export async function resolveAudienceUserIds(
   }
 
   if ('test' in audience && audience.test) {
-    const userIds: string[] = [];
-    for (const { first_name, last_name } of TEST_AUDIENCE_NAMES) {
-      const { data } = await supabase
-        .from('employees')
-        .select('user_id')
-        .ilike('first_name', first_name)
-        .ilike('last_name', last_name)
-        .not('user_id', 'is', null)
-        .limit(1);
+    const orFilter = TEST_AUDIENCE_FIRST_NAMES.map((n) => `first_name.ilike.${n}`).join(',');
+    const { data } = await supabase
+      .from('employees')
+      .select('user_id')
+      .or(orFilter)
+      .not('user_id', 'is', null);
 
-      const uid = data?.[0]?.user_id;
-      if (uid) userIds.push(uid);
-    }
-    return userIds;
+    return (data ?? []).map((e: any) => e.user_id as string).filter(Boolean);
   }
 
   return [];
