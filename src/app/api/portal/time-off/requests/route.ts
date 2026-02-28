@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -307,7 +308,7 @@ export async function POST(req: NextRequest) {
     // Email to leader: new request to approve
     const { data: manager } = await supabase
       .from('employees')
-      .select('first_name, personal_email, work_email')
+      .select('first_name, personal_email, work_email, user_id')
       .eq('id', employee.manager_id)
       .single();
 
@@ -324,6 +325,19 @@ export async function POST(req: NextRequest) {
           },
           leaveRequestId: data.id,
         }).catch((err) => console.error('Error sending leader notification email:', err));
+      }
+
+      // In-app notification to leader
+      if (manager.user_id) {
+        createSystemNotification({
+          userIds: [manager.user_id],
+          title: 'Nueva solicitud de licencia pendiente',
+          body: `${auth.employee.first_name} ${auth.employee.last_name} solicitó ${parsed.data.days_requested} día(s) de ${leaveType.name}.`,
+          priority: 'info',
+          deepLink: '/portal/team',
+          metadata: { entity_type: 'leave_request', entity_id: data.id },
+          dedupeKey: `leave_request:${data.id}:pending_leader`,
+        }).catch((err) => console.error('Error creating leader in-app notification:', err));
       }
     }
 

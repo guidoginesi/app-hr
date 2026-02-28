@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 const RejectSchema = z.object({
   rejection_reason: z.string().min(1, 'El motivo de rechazo es requerido'),
@@ -117,7 +118,7 @@ export async function PUT(
 
     const { data: employeeData } = await supabase
       .from('employees')
-      .select('first_name, personal_email, work_email')
+      .select('first_name, personal_email, work_email, user_id')
       .eq('id', request.employee_id)
       .single();
 
@@ -145,6 +146,19 @@ export async function PUT(
           leaveRequestId: id,
         }).catch((err) => console.error('Error sending rejection email:', err));
       }
+    }
+
+    // In-app notification to employee: rejected by leader
+    if (employeeData?.user_id) {
+      createSystemNotification({
+        userIds: [employeeData.user_id],
+        title: 'Solicitud de licencia rechazada',
+        body: `Tu solicitud de ${leaveType?.name ?? 'licencia'} fue rechazada por tu líder. Motivo: ${parsed.data.rejection_reason}`,
+        priority: 'warning',
+        deepLink: '/portal/time-off',
+        metadata: { entity_type: 'leave_request', entity_id: id },
+        dedupeKey: `leave_request:${id}:rejected_leader`,
+      }).catch((err) => console.error('Error creating rejection in-app notification:', err));
     }
 
     return NextResponse.json(data);

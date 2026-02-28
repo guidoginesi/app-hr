@@ -5,12 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useTransition, useState, useRef, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'messages' | 'offboarding';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -49,6 +50,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
     { key: 'time-off' as const, label: 'Time Off', href: '/portal/time-off' },
     { key: 'evaluaciones' as const, label: 'Evaluaciones', href: '/portal/evaluaciones' },
     { key: 'objetivos' as const, label: 'Objetivos', href: '/portal/objetivos' },
+    { key: 'messages' as const, label: 'Mensajes', href: '/portal/messages' },
     ...(isLeader ? [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] : []),
   ];
 
@@ -93,8 +95,12 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
             </p>
           </div>
           
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="flex items-center gap-2">
+            {/* Notification Bell */}
+            <NotificationBell detailBasePath="/portal/messages" />
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -203,6 +209,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
                 </div>
               </div>
             )}
+          </div>
           </div>
         </header>
 

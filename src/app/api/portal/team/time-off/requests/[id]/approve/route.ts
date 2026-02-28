@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
+import { createSystemNotification, getAdminUserIds } from '@/lib/notificationService';
 
 // PUT /api/portal/team/time-off/requests/[id]/approve - Approve a team member's leave request
 export async function PUT(
@@ -81,7 +82,7 @@ export async function PUT(
     // Get employee and leave type details for email
     const { data: employeeData } = await supabase
       .from('employees')
-      .select('first_name, last_name, personal_email, work_email')
+      .select('first_name, last_name, personal_email, work_email, user_id')
       .eq('id', request.employee_id)
       .single();
 
@@ -140,7 +141,31 @@ export async function PUT(
             }).catch((err) => console.error('Error sending HR notification email:', err));
           }
         }
+
+        // In-app notification to HR admins
+        createSystemNotification({
+          userIds: adminUserIds,
+          title: 'Solicitud de licencia pendiente de aprobación',
+          body: `${employeeData.first_name} ${employeeData.last_name} tiene una solicitud aprobada por su líder que requiere tu aprobación final.`,
+          priority: 'info',
+          deepLink: '/admin/time-off/requests',
+          metadata: { entity_type: 'leave_request', entity_id: id },
+          dedupeKey: `leave_request:${id}:pending_hr`,
+        }).catch((err) => console.error('Error creating HR in-app notification:', err));
       }
+    }
+
+    // In-app notification to employee: approved by leader
+    if (employeeData?.user_id) {
+      createSystemNotification({
+        userIds: [employeeData.user_id],
+        title: 'Solicitud aprobada por tu líder',
+        body: `Tu solicitud de ${leaveType?.name ?? 'licencia'} fue aprobada por tu líder. Pendiente de aprobación final de HR.`,
+        priority: 'info',
+        deepLink: '/portal/time-off',
+        metadata: { entity_type: 'leave_request', entity_id: id },
+        dedupeKey: `leave_request:${id}:approved_leader`,
+      }).catch((err) => console.error('Error creating employee in-app notification:', err));
     }
 
     return NextResponse.json(data);
