@@ -33,17 +33,36 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: periodError.message }, { status: 500 });
     }
 
-    const { data: settlements, error: settError } = await supabase
+    const { data: rawSettlements, error: settError } = await supabase
       .from('payroll_settlements_with_details')
       .select('*')
-      .eq('period_id', id);
+      .eq('period_id', id)
+      .order('first_name', { ascending: true });
 
     if (settError) {
       console.error('Error fetching settlements:', settError);
       return NextResponse.json({ error: settError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ period, settlements: settlements || [] });
+    // Map DB view columns → client-expected field names
+    const settlements = (rawSettlements || []).map((s: any) => ({
+      id: s.id,
+      period_id: s.period_id,
+      employee_id: s.employee_id,
+      employee_name: `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim() || 'Sin nombre',
+      contract_type: s.contract_type_snapshot,
+      status: s.status,
+      base_salary: s.sueldo ?? 0,
+      monotributo: s.monotributo ?? 0,
+      internet_reimbursement: s.reintegro_internet ?? 0,
+      extra_reimbursement: s.reintegro_extraordinario ?? 0,
+      vacation_bonus: s.plus_vacacional ?? 0,
+      total: s.total_a_facturar ?? 0,
+      payslip_url: s.pdf_storage_path ?? null,
+      email_to: s.email_to ?? null,
+    }));
+
+    return NextResponse.json({ period, settlements });
   } catch (error: any) {
     console.error('Error in GET /api/admin/payroll/periods/[id]:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
