@@ -326,7 +326,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Email to leader: new request to approve (with retry for transient DB failures)
-    const managerResult = await withRetry(() =>
+    const managerResult = await withRetry(async () =>
       supabase
         .from('employees')
         .select('first_name, personal_email, work_email, user_id')
