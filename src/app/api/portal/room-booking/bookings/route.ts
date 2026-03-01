@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendSimpleEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 // GET /api/portal/room-booking/bookings - List bookings
 export async function GET(req: NextRequest) {
@@ -393,7 +394,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert invitees for all bookings
-    let inviteeEmployees: Array<{ id: string; first_name: string; last_name: string; work_email: string | null }> = [];
+    let inviteeEmployees: Array<{ id: string; first_name: string; last_name: string; work_email: string | null; user_id: string | null }> = [];
 
     if (inviteeIds.length > 0) {
       const inviteeRows = allBookingIds.flatMap((bookingId) =>
@@ -408,10 +409,10 @@ export async function POST(req: NextRequest) {
         console.error('Error inserting invitees:', inviteeError);
       }
 
-      // Fetch invitee details for emails
+      // Fetch invitee details for emails and in-app notifications
       const { data: invData } = await supabase
         .from('employees')
-        .select('id, first_name, last_name, work_email')
+        .select('id, first_name, last_name, work_email, user_id')
         .in('id', inviteeIds);
 
       inviteeEmployees = invData || [];
@@ -448,25 +449,52 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error('Error sending confirmation email:', err));
     }
 
-    // Send invitation emails to invitees
+    // Send invitation emails + in-app notifications to invitees
+    const inviteeUserIds: string[] = [];
+
     for (const invitee of inviteeEmployees) {
+      // Email
       const email = invitee.work_email;
-      if (!email) continue;
-      sendSimpleEmail({
-        to: email,
-        subject: `📅 Invitación: ${title}`,
-        html: buildInvitationEmail({
-          inviteeName: `${invitee.first_name} ${invitee.last_name}`,
-          organizer: organizerName,
-          title,
-          roomName: room.name,
-          roomLocation: room.location,
-          start: occurrences[0].start,
-          end: occurrences[0].end,
-          recurrenceType: recurrence_type,
-          occurrenceCount: occurrences.length,
-        }),
-      }).catch((err) => console.error('Error sending invitation email:', err));
+      if (email) {
+        sendSimpleEmail({
+          to: email,
+          subject: `📅 Invitación: ${title}`,
+          html: buildInvitationEmail({
+            inviteeName: `${invitee.first_name} ${invitee.last_name}`,
+            organizer: organizerName,
+            title,
+            roomName: room.name,
+            roomLocation: room.location,
+            start: occurrences[0].start,
+            end: occurrences[0].end,
+            recurrenceType: recurrence_type,
+            occurrenceCount: occurrences.length,
+          }),
+        }).catch((err) => console.error('Error sending invitation email:', err));
+      }
+
+      // Collect user_ids for in-app notification
+      if (invitee.user_id) inviteeUserIds.push(invitee.user_id);
+    }
+
+    // In-app notification for all invitees at once
+    if (inviteeUserIds.length > 0) {
+      const dateStr = occurrences[0].start.toLocaleDateString('es-AR', {
+        weekday: 'long', day: 'numeric', month: 'long',
+      });
+      const timeStr = `${occurrences[0].start.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} – ${occurrences[0].end.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
+      const recurrenceNote = recurrence_type && occurrences.length > 1
+        ? ` (${recurrenceLabel(recurrence_type)}, ${occurrences.length} ocurrencias)`
+        : '';
+
+      createSystemNotification({
+        userIds: inviteeUserIds,
+        title: `📅 Invitación: ${title}`,
+        body: `${organizerName} te invitó a una reunión en ${room.name}${room.location ? ` (${room.location})` : ''} el ${dateStr}, ${timeStr}${recurrenceNote}.`,
+        priority: 'info',
+        deepLink: '/portal/room-booking',
+        metadata: { booking_id: firstBooking.id, room_id: room_id },
+      }).catch((err) => console.error('Error sending in-app notification:', err));
     }
 
     return NextResponse.json(
