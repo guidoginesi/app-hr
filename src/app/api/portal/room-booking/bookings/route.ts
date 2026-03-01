@@ -37,8 +37,11 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid date format. Use YYYY-MM-DD' }, { status: 400 });
       }
 
+      const toDate = searchParams.get('to');
       const dayStart = `${date}T00:00:00.000Z`;
-      const dayEnd = `${date}T23:59:59.999Z`;
+      const dayEnd = toDate && /^\d{4}-\d{2}-\d{2}$/.test(toDate)
+        ? `${toDate}T23:59:59.999Z`
+        : `${date}T23:59:59.999Z`;
 
       let query = supabase
         .from('room_bookings_with_details')
