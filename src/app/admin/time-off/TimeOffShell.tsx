@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type TimeOffShellProps = {
   children: ReactNode;
@@ -104,7 +105,10 @@ export function TimeOffShell({ children, active }: TimeOffShellProps) {
               Gestión de vacaciones y licencias
             </p>
           </div>
-          <AdminProfileDropdown />
+          <div className="flex items-center gap-2">
+            <NotificationBell detailBasePath="/portal/messages" />
+            <AdminProfileDropdown />
+          </div>
         </header>
 
         <main className="min-w-0 flex-1 bg-zinc-50 px-8 py-8">{children}</main>
