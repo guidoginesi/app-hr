@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ employees: [] });
     }
 
+    const sanitized = q.replace(/[,()]/g, '');
+
     const supabase = getSupabaseServer();
 
     const { data, error } = await supabase
@@ -25,7 +27,7 @@ export async function GET(req: NextRequest) {
       .eq('status', 'active')
       .neq('id', auth.employee.id)
       .or(
-        `first_name.ilike.%${q}%,last_name.ilike.%${q}%,work_email.ilike.%${q}%`
+        `first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%,work_email.ilike.%${sanitized}%`
       )
       .order('first_name')
       .limit(10);

@@ -13,7 +13,7 @@ interface Booking {
   notes: string | null;
   created_at: string;
   room_name: string;
-  room_floor: string | null;
+  room_location: string | null;
   room_capacity: number;
   employee_first_name: string;
   employee_last_name: string;
@@ -200,8 +200,8 @@ export function BookingsClient() {
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-medium text-zinc-900">{booking.room_name}</p>
-                    {booking.room_floor && (
-                      <p className="text-xs text-zinc-500">Piso {booking.room_floor}</p>
+                    {booking.room_location && (
+                      <p className="text-xs text-zinc-500">{booking.room_location}</p>
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-zinc-600">

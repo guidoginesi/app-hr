@@ -7,9 +7,10 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 
 const UpdateRoomSchema = z.object({
   name: z.string().min(1).optional(),
-  floor: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
   capacity: z.number().int().positive().optional(),
-  amenities: z.array(z.string()).optional(),
+  equipment: z.string().optional().nullable(),
   is_active: z.boolean().optional(),
 });
 

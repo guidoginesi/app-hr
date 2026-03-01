@@ -14,7 +14,7 @@ type Booking = {
   status: string;
   notes: string | null;
   room_name: string;
-  room_floor: string | null;
+  room_location: string | null;
   room_capacity: number;
   employee_first_name: string;
   employee_last_name: string;

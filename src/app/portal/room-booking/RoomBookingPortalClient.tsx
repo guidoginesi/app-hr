@@ -259,8 +259,8 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
     setSubmitting(true);
     setError(null);
     try {
-      const start_at = `${selectedSlot.date}T${formStartTime}:00`;
-      const end_at = `${selectedSlot.date}T${formEndTime}:00`;
+      const start_at = `${selectedSlot.date}T${formStartTime}:00-03:00`;
+      const end_at = `${selectedSlot.date}T${formEndTime}:00-03:00`;
 
       const body: Record<string, any> = {
         room_id: selectedRoomId,
@@ -272,7 +272,7 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
 
       if (formRecurrence) {
         body.recurrence_type = formRecurrence;
-        body.recurrence_end_date = `${formRecurrenceEndDate}T23:59:59`;
+        body.recurrence_end_date = `${formRecurrenceEndDate}T23:59:59-03:00`;
       }
 
       if (formInvitees.length > 0) {
