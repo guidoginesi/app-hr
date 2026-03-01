@@ -44,7 +44,7 @@ export function PayrollPeriodsClient() {
       const res = await fetch('/api/admin/payroll/periods');
       if (res.ok) {
         const data = await res.json();
-        setPeriods(data);
+        setPeriods(data.periods || data);
       }
     } catch {
       setMessage({ type: 'error', text: 'Error al cargar los periodos' });
@@ -70,8 +70,8 @@ export function PayrollPeriodsClient() {
       });
 
       if (res.ok) {
-        const newPeriod = await res.json();
-        setPeriods((prev) => [newPeriod, ...prev]);
+        await res.json();
+        await fetchPeriods();
         setShowModal(false);
         setMessage({ type: 'success', text: 'Periodo creado exitosamente' });
       } else {
