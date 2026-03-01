@@ -346,7 +346,15 @@ export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ su
 
 		// Verificar si el template está activo
 		if (!template.is_active) {
-			console.log(`[TimeOff Email] Template ${params.templateKey} is disabled, skipping send`);
+			console.warn(`[TimeOff Email] Template ${params.templateKey} is disabled, skipping send`);
+			await logTimeOffEmail({
+				leaveRequestId: params.leaveRequestId,
+				recipientEmail: params.to,
+				templateKey: params.templateKey,
+				subject: 'SKIPPED: template disabled',
+				body: '',
+				error: 'Email template disabled',
+			});
 			return { success: true, error: 'Email template disabled' };
 		}
 

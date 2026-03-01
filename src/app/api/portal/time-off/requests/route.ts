@@ -312,8 +312,26 @@ export async function POST(req: NextRequest) {
       .eq('id', employee.manager_id)
       .single();
 
+    if (!manager) {
+      console.error(
+        `[TimeOff] manager_id=${employee.manager_id} not found in employees for leave_request=${data.id}`
+      );
+    }
+
     if (manager) {
-      const managerEmail = manager.work_email || manager.personal_email;
+      let managerEmail: string | null = manager.work_email || manager.personal_email;
+
+      // Fallback: if the employee record has no email, try the auth account email
+      if (!managerEmail && manager.user_id) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(manager.user_id);
+        if (authUser?.user?.email) {
+          managerEmail = authUser.user.email;
+          console.warn(
+            `[TimeOff] Manager ${employee.manager_id} has no work/personal email — falling back to auth email for leave_request=${data.id}`
+          );
+        }
+      }
+
       if (managerEmail) {
         sendTimeOffEmail({
           templateKey: 'time_off_leader_notification',
@@ -325,6 +343,10 @@ export async function POST(req: NextRequest) {
           },
           leaveRequestId: data.id,
         }).catch((err) => console.error('Error sending leader notification email:', err));
+      } else {
+        console.error(
+          `[TimeOff] Cannot notify leader ${employee.manager_id}: no email found anywhere for leave_request=${data.id}`
+        );
       }
 
       // In-app notification to leader
