@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const employeeId = auth.employee.id;
     const supabase = getSupabaseServer();
     const { searchParams } = new URL(req.url);
 
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
       const { data, error } = await supabase
         .from('room_bookings_with_details')
         .select('*')
-        .eq('employee_id', auth.employee.id)
+        .eq('employee_id', employeeId)
         .order('start_at', { ascending: false });
 
       if (error) {
@@ -239,6 +240,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const employeeId = employeeId;
+
     const body = await req.json();
     const {
       room_id,
@@ -343,7 +346,7 @@ export async function POST(req: NextRequest) {
       .from('room_bookings')
       .insert({
         room_id,
-        employee_id: auth.employee.id,
+        employee_id: employeeId,
         title,
         start_at: occurrences[0].start.toISOString(),
         end_at: occurrences[0].end.toISOString(),
@@ -366,7 +369,7 @@ export async function POST(req: NextRequest) {
     if (occurrences.length > 1) {
       const recurrenceRows = occurrences.slice(1).map((occ) => ({
         room_id,
-        employee_id: auth.employee.id,
+        employee_id: employeeId,
         title,
         start_at: occ.start.toISOString(),
         end_at: occ.end.toISOString(),
@@ -418,7 +421,7 @@ export async function POST(req: NextRequest) {
     const { data: organizer } = await supabase
       .from('employees')
       .select('first_name, last_name, work_email')
-      .eq('id', auth.employee.id)
+      .eq('id', employeeId)
       .single();
 
     const organizerName = organizer ? `${organizer.first_name} ${organizer.last_name}` : 'el organizador';
