@@ -2,10 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { sendTimeOffEmail } from '@/lib/emailService';
+import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Retry a DB fetch up to `retries` times with exponential backoff. */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 2,
+  delayMs = 500
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
 
 // Parse date string as local date to avoid timezone issues
 function parseLocalDate(dateStr: string): Date {
@@ -293,7 +314,7 @@ export async function POST(req: NextRequest) {
       tipo_licencia: leaveType.name,
     };
 
-    // Email to employee: request submitted (prefer work_email)
+    // Email + in-app to employee: request submitted
     const employeeEmail = auth.employee.work_email || auth.employee.personal_email;
     if (employeeEmail) {
       sendTimeOffEmail({
@@ -303,16 +324,58 @@ export async function POST(req: NextRequest) {
         leaveRequestId: data.id,
       }).catch((err) => console.error('Error sending request submitted email:', err));
     }
+    // In-app notification to the employee who submitted
+    if (auth.user?.id) {
+      createSystemNotification({
+        userIds: [auth.user.id],
+        title: 'Solicitud de licencia enviada',
+        body: `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`,
+        priority: 'info',
+        deepLink: '/portal/time-off',
+        metadata: { entity_type: 'leave_request', entity_id: data.id },
+        dedupeKey: `leave_request:${data.id}:submitted`,
+      }).catch((err) => console.error('Error creating employee submission in-app notification:', err));
+    }
 
-    // Email to leader: new request to approve
-    const { data: manager } = await supabase
-      .from('employees')
-      .select('first_name, personal_email, work_email')
-      .eq('id', employee.manager_id)
-      .single();
+    // Email to leader: new request to approve (with retry for transient DB failures)
+    const managerResult = await withRetry(async () =>
+      supabase
+        .from('employees')
+        .select('first_name, personal_email, work_email, user_id')
+        .eq('id', employee.manager_id)
+        .single()
+    ).catch(() => ({ data: null as null }));
+    const manager = managerResult?.data ?? null;
+
+    if (!manager) {
+      console.error(
+        `[TimeOff] manager_id=${employee.manager_id} not found in employees for leave_request=${data.id}`
+      );
+      // Log to DB so it's visible in diagnostic queries
+      logTimeOffEmail({
+        leaveRequestId: data.id,
+        recipientEmail: 'unknown',
+        templateKey: 'time_off_leader_notification',
+        subject: 'ERROR: manager not found',
+        body: '',
+        error: `manager_id=${employee.manager_id} not found in employees table`,
+      }).catch(() => {});
+    }
 
     if (manager) {
-      const managerEmail = manager.work_email || manager.personal_email;
+      let managerEmail: string | null = manager.work_email || manager.personal_email;
+
+      // Fallback: if the employee record has no email, try the auth account email
+      if (!managerEmail && manager.user_id) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(manager.user_id);
+        if (authUser?.user?.email) {
+          managerEmail = authUser.user.email;
+          console.warn(
+            `[TimeOff] Manager ${employee.manager_id} has no work/personal email — falling back to auth email for leave_request=${data.id}`
+          );
+        }
+      }
+
       if (managerEmail) {
         sendTimeOffEmail({
           templateKey: 'time_off_leader_notification',
@@ -324,6 +387,31 @@ export async function POST(req: NextRequest) {
           },
           leaveRequestId: data.id,
         }).catch((err) => console.error('Error sending leader notification email:', err));
+      } else {
+        console.error(
+          `[TimeOff] Cannot notify leader ${employee.manager_id}: no email found anywhere for leave_request=${data.id}`
+        );
+        logTimeOffEmail({
+          leaveRequestId: data.id,
+          recipientEmail: 'unknown',
+          templateKey: 'time_off_leader_notification',
+          subject: 'ERROR: no email available for leader',
+          body: '',
+          error: `manager_id=${employee.manager_id} has no work_email, personal_email, or auth email`,
+        }).catch(() => {});
+      }
+
+      // In-app notification to leader
+      if (manager.user_id) {
+        createSystemNotification({
+          userIds: [manager.user_id],
+          title: 'Nueva solicitud de licencia pendiente',
+          body: `${auth.employee.first_name} ${auth.employee.last_name} solicitó ${parsed.data.days_requested} día(s) de ${leaveType.name}.`,
+          priority: 'info',
+          deepLink: '/portal/team',
+          metadata: { entity_type: 'leave_request', entity_id: data.id },
+          dedupeKey: `leave_request:${data.id}:pending_leader`,
+        }).catch((err) => console.error('Error creating leader in-app notification:', err));
       }
     }
 

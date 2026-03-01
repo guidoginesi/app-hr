@@ -5,12 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useTransition, useState, useRef, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'messages' | 'offboarding' | 'room-booking';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -49,6 +50,8 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
     { key: 'time-off' as const, label: 'Time Off', href: '/portal/time-off' },
     { key: 'evaluaciones' as const, label: 'Evaluaciones', href: '/portal/evaluaciones' },
     { key: 'objetivos' as const, label: 'Objetivos', href: '/portal/objetivos' },
+    { key: 'room-booking' as const, label: 'Reserva de Salas', href: '/portal/room-booking' },
+    { key: 'messages' as const, label: 'Mensajes', href: '/portal/messages' },
     ...(isLeader ? [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] : []),
   ];
 
@@ -93,8 +96,12 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
             </p>
           </div>
           
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="flex items-center gap-2">
+            {/* Notification Bell */}
+            <NotificationBell detailBasePath="/portal/messages" />
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -170,6 +177,17 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
                     Objetivos
                   </Link>
 
+                  <Link
+                    href="/portal/room-booking"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                  >
+                    <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Reserva de Salas
+                  </Link>
+
                   {isLeader && (
                     <Link
                       href="/portal/team"
@@ -203,6 +221,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
                 </div>
               </div>
             )}
+          </div>
           </div>
         </header>
 

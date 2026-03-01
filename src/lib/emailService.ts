@@ -281,7 +281,7 @@ type TimeOffEmailParams = {
 /**
  * Registra el envío de un email de time-off en la base de datos
  */
-async function logTimeOffEmail(params: {
+export async function logTimeOffEmail(params: {
 	leaveRequestId?: string;
 	recipientEmail: string;
 	templateKey: string;
@@ -346,7 +346,15 @@ export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ su
 
 		// Verificar si el template está activo
 		if (!template.is_active) {
-			console.log(`[TimeOff Email] Template ${params.templateKey} is disabled, skipping send`);
+			console.warn(`[TimeOff Email] Template ${params.templateKey} is disabled, skipping send`);
+			await logTimeOffEmail({
+				leaveRequestId: params.leaveRequestId,
+				recipientEmail: params.to,
+				templateKey: params.templateKey,
+				subject: 'SKIPPED: template disabled',
+				body: '',
+				error: 'Email template disabled',
+			});
 			return { success: true, error: 'Email template disabled' };
 		}
 
@@ -393,7 +401,20 @@ export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ su
 		return { success: true };
 
 	} catch (error: any) {
-		console.error('[TimeOff Email] Error:', error);
+		console.error('[TimeOff Email] Unexpected error:', error);
+		// Log unexpected errors to DB so they're traceable (e.g. transient DB failures)
+		try {
+			await logTimeOffEmail({
+				leaveRequestId: params.leaveRequestId,
+				recipientEmail: params.to,
+				templateKey: params.templateKey,
+				subject: 'ERROR: unexpected failure',
+				body: '',
+				error: error.message ?? String(error),
+			});
+		} catch {
+			// If logging itself fails, at least we logged to console above
+		}
 		return { success: false, error: error.message };
 	}
 }
