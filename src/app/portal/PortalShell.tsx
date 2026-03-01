@@ -10,7 +10,7 @@ type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'liquidaciones' | 'recibos';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -49,6 +49,8 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
     { key: 'time-off' as const, label: 'Time Off', href: '/portal/time-off' },
     { key: 'evaluaciones' as const, label: 'Evaluaciones', href: '/portal/evaluaciones' },
     { key: 'objetivos' as const, label: 'Objetivos', href: '/portal/objetivos' },
+    { key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' },
+    { key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' },
     ...(isLeader ? [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] : []),
   ];
 
