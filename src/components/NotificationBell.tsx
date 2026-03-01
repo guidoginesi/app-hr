@@ -99,9 +99,35 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const markAllRead = useCallback(async () => {
+    // Optimistic: zero out unread badge immediately
+    setInbox((prev) => {
+      if (!prev) return prev;
+      const now = new Date().toISOString();
+      return {
+        ...prev,
+        items: prev.items.map((i) => (i.read_at ? i : { ...i, read_at: now })),
+        unread_count: 0,
+        badge_count: prev.pending_confirm_count,
+      };
+    });
+
+    try {
+      await fetch('/api/messages/read-all', { method: 'POST' });
+    } catch {
+      // silently fail; next poll will correct the state
+    }
+  }, []);
+
   const handleOpen = () => {
-    setIsOpen((prev) => !prev);
-    if (!isOpen) fetchInbox();
+    const opening = !isOpen;
+    setIsOpen(opening);
+    if (opening) {
+      fetchInbox().then(() => {
+        // After getting fresh data, mark all unread as read
+        markAllRead();
+      });
+    }
   };
 
   const markRead = async (messageId: string, recipientId: string) => {
