@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { sendTimeOffEmail } from '@/lib/emailService';
+import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 
 // Regex for UUID format (more permissive than RFC 4122)
@@ -316,6 +316,15 @@ export async function POST(req: NextRequest) {
       console.error(
         `[TimeOff] manager_id=${employee.manager_id} not found in employees for leave_request=${data.id}`
       );
+      // Log to DB so it's visible in diagnostic queries
+      logTimeOffEmail({
+        leaveRequestId: data.id,
+        recipientEmail: 'unknown',
+        templateKey: 'time_off_leader_notification',
+        subject: 'ERROR: manager not found',
+        body: '',
+        error: `manager_id=${employee.manager_id} not found in employees table`,
+      }).catch(() => {});
     }
 
     if (manager) {
@@ -347,6 +356,14 @@ export async function POST(req: NextRequest) {
         console.error(
           `[TimeOff] Cannot notify leader ${employee.manager_id}: no email found anywhere for leave_request=${data.id}`
         );
+        logTimeOffEmail({
+          leaveRequestId: data.id,
+          recipientEmail: 'unknown',
+          templateKey: 'time_off_leader_notification',
+          subject: 'ERROR: no email available for leader',
+          body: '',
+          error: `manager_id=${employee.manager_id} has no work_email, personal_email, or auth email`,
+        }).catch(() => {});
       }
 
       // In-app notification to leader
