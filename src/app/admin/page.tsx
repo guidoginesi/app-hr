@@ -15,15 +15,17 @@ export default async function AdminHome() {
   const supabase = getSupabaseServer();
 
   // Get quick stats for modules
-  const [jobsResult, employeesResult, evaluationPeriodsResult] = await Promise.all([
+  const [jobsResult, employeesResult, evaluationPeriodsResult, roomsResult] = await Promise.all([
     supabase.from('jobs').select('id', { count: 'exact' }).eq('is_published', true),
     supabase.from('employees').select('id', { count: 'exact' }).eq('status', 'active'),
     supabase.from('evaluation_periods').select('id', { count: 'exact' }).eq('status', 'open'),
+    supabase.from('rooms').select('id', { count: 'exact' }).eq('is_active', true),
   ]);
 
   const activeJobs = jobsResult.count || 0;
   const activeEmployees = employeesResult.count || 0;
   const activeEvaluationPeriods = evaluationPeriodsResult.count || 0;
+  const activeRooms = roomsResult.count || 0;
 
   const modules = [
     {
@@ -104,6 +106,22 @@ export default async function AdminHome() {
       color: 'bg-rose-600',
       bgLight: 'bg-rose-50',
       textColor: 'text-rose-600',
+      available: true,
+    },
+    {
+      id: 'room-booking',
+      name: 'Reserva de Salas',
+      description: 'Gestión de salas de reuniones y reservas del equipo',
+      href: '/admin/room-booking',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      stats: `${activeRooms} sala${activeRooms !== 1 ? 's' : ''} activa${activeRooms !== 1 ? 's' : ''}`,
+      color: 'bg-cyan-600',
+      bgLight: 'bg-cyan-50',
+      textColor: 'text-cyan-600',
       available: true,
     },
     {
