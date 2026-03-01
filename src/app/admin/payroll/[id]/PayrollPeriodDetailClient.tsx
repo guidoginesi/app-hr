@@ -3,6 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 
+async function openPayslipPdf(settlementId: string): Promise<string | null> {
+  const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.url ?? null;
+}
+
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -424,6 +431,22 @@ function SettlementRow({
   onSave,
   onUploadPdf,
 }: SettlementRowProps) {
+  const [loadingPdf, setLoadingPdf] = useState(false);
+
+  const handleViewPdf = async () => {
+    setLoadingPdf(true);
+    try {
+      const url = await openPayslipPdf(settlement.id);
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('No se pudo obtener el enlace al PDF');
+      }
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
   const statusConfig = settlementStatusConfig[settlement.status];
   const isMonotributo = settlement.contract_type === 'MONOTRIBUTO';
   const isRelDep = settlement.contract_type === 'RELACION_DEPENDENCIA';
@@ -489,14 +512,13 @@ function SettlementRow({
               </td>
               <td className="px-4 py-3">
                 {settlement.payslip_url ? (
-                  <a
-                    href={settlement.payslip_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-emerald-600 hover:text-emerald-700"
+                  <button
+                    onClick={handleViewPdf}
+                    disabled={loadingPdf}
+                    className="text-sm font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
                   >
-                    ✓ Cargado
-                  </a>
+                    {loadingPdf ? 'Abriendo...' : '✓ Ver PDF'}
+                  </button>
                 ) : (
                   <span className="text-sm text-zinc-400">No cargado</span>
                 )}
@@ -510,14 +532,13 @@ function SettlementRow({
       {activeFilter === 'RELACION_DEPENDENCIA' && (
         <td className="px-4 py-3">
           {settlement.payslip_url ? (
-            <a
-              href={settlement.payslip_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-emerald-600 hover:text-emerald-700"
+            <button
+              onClick={handleViewPdf}
+              disabled={loadingPdf}
+              className="text-sm font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
             >
-              ✓ Cargado
-            </a>
+              {loadingPdf ? 'Abriendo...' : '✓ Ver PDF'}
+            </button>
           ) : (
             <span className="text-sm text-zinc-400">No cargado</span>
           )}
