@@ -44,12 +44,12 @@ LIMIT 50;
 
 -- 3. Email log entries that have errors (failed sends)
 SELECT
-  tel.created_at,
+  tel.sent_at,
   tel.recipient_email,
   tel.template_key,
   tel.error,
   tel.leave_request_id
 FROM public.time_off_email_logs tel
 WHERE tel.error IS NOT NULL
-ORDER BY tel.created_at DESC
+ORDER BY tel.sent_at DESC
 LIMIT 50;
