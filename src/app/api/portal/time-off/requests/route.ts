@@ -8,6 +8,26 @@ import { createSystemNotification } from '@/lib/notificationService';
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Retry a DB fetch up to `retries` times with exponential backoff. */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 2,
+  delayMs = 500
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
+
 // Parse date string as local date to avoid timezone issues
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -305,12 +325,14 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error('Error sending request submitted email:', err));
     }
 
-    // Email to leader: new request to approve
-    const { data: manager } = await supabase
-      .from('employees')
-      .select('first_name, personal_email, work_email, user_id')
-      .eq('id', employee.manager_id)
-      .single();
+    // Email to leader: new request to approve (with retry for transient DB failures)
+    const { data: manager } = await withRetry(() =>
+      supabase
+        .from('employees')
+        .select('first_name, personal_email, work_email, user_id')
+        .eq('id', employee.manager_id)
+        .single()
+    ).catch(() => ({ data: null }));
 
     if (!manager) {
       console.error(
