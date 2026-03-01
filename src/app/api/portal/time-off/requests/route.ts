@@ -326,13 +326,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Email to leader: new request to approve (with retry for transient DB failures)
-    const { data: manager } = await withRetry(() =>
+    const managerResult = await withRetry(() =>
       supabase
         .from('employees')
         .select('first_name, personal_email, work_email, user_id')
         .eq('id', employee.manager_id)
         .single()
-    ).catch(() => ({ data: null }));
+    ).catch(() => ({ data: null as null }));
+    const manager = managerResult?.data ?? null;
 
     if (!manager) {
       console.error(
