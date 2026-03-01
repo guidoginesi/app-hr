@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
       tipo_licencia: leaveType.name,
     };
 
-    // Email to employee: request submitted (prefer work_email)
+    // Email + in-app to employee: request submitted
     const employeeEmail = auth.employee.work_email || auth.employee.personal_email;
     if (employeeEmail) {
       sendTimeOffEmail({
@@ -323,6 +323,18 @@ export async function POST(req: NextRequest) {
         variables: emailVariables,
         leaveRequestId: data.id,
       }).catch((err) => console.error('Error sending request submitted email:', err));
+    }
+    // In-app notification to the employee who submitted
+    if (auth.user?.id) {
+      createSystemNotification({
+        userIds: [auth.user.id],
+        title: 'Solicitud de licencia enviada',
+        body: `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`,
+        priority: 'info',
+        deepLink: '/portal/time-off',
+        metadata: { entity_type: 'leave_request', entity_id: data.id },
+        dedupeKey: `leave_request:${data.id}:submitted`,
+      }).catch((err) => console.error('Error creating employee submission in-app notification:', err));
     }
 
     // Email to leader: new request to approve (with retry for transient DB failures)

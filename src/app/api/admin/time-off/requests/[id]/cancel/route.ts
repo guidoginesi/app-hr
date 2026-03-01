@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 const CancelSchema = z.object({
   cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido'),
@@ -128,7 +129,7 @@ export async function PUT(
 
     const { data: employeeData } = await supabase
       .from('employees')
-      .select('first_name, personal_email, work_email')
+      .select('first_name, personal_email, work_email, user_id')
       .eq('id', request.employee_id)
       .single();
 
@@ -154,6 +155,19 @@ export async function PUT(
           },
           leaveRequestId: id,
         }).catch((err) => console.error('Error sending cancellation email:', err));
+      }
+
+      // In-app notification to employee
+      if (employeeData.user_id) {
+        createSystemNotification({
+          userIds: [employeeData.user_id],
+          title: 'Solicitud de licencia cancelada',
+          body: `Tu solicitud de ${leaveType?.name ?? 'licencia'} del ${formatDate(request.start_date)} al ${formatDate(request.end_date)} fue cancelada por HR. Los días fueron devueltos a tu saldo.`,
+          priority: 'warning',
+          deepLink: '/portal/time-off',
+          metadata: { entity_type: 'leave_request', entity_id: id },
+          dedupeKey: `leave_request:${id}:cancelled_hr`,
+        }).catch((err) => console.error('Error creating cancellation in-app notification:', err));
       }
     }
 
