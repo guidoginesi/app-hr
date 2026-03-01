@@ -76,8 +76,8 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 
     const supabase = getSupabaseServer();
 
-    // If changing times, validate no overlap
-    if (parsed.data.start_at || parsed.data.end_at) {
+    // If changing times or confirming a booking, validate no overlap
+    if (parsed.data.start_at || parsed.data.end_at || parsed.data.status === 'confirmed') {
       // Fetch the current booking to merge times
       const { data: current, error: fetchError } = await supabase
         .from('room_bookings')
