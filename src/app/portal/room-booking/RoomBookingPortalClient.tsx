@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 
 type Room = {
@@ -27,6 +27,12 @@ type Booking = {
   employee_last_name?: string;
 };
 
+type Invitee = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 type Props = {
   rooms: Room[];
   employeeId: string;
@@ -36,6 +42,14 @@ type Props = {
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 const DAY_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
+const RECURRENCE_OPTIONS = [
+  { value: '', label: 'Sin recurrencia' },
+  { value: 'daily', label: 'Diaria' },
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'biweekly', label: 'Quincenal' },
+  { value: 'monthly', label: 'Mensual' },
+];
+
 function getWeekStart(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -43,6 +57,27 @@ function getWeekStart(date: Date): Date {
   d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+function getInitialWeek(): Date {
+  const now = new Date();
+  const weekStart = getWeekStart(now);
+
+  // Check if the current week still has at least one future slot
+  for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
+    const day = addDays(weekStart, dayOffset);
+    for (const time of TIME_SLOTS) {
+      const hour = parseInt(time.split(':')[0]);
+      const slotDate = new Date(day);
+      slotDate.setHours(hour, 0, 0, 0);
+      if (slotDate > now) {
+        return weekStart;
+      }
+    }
+  }
+
+  // Current week is fully past — show next week
+  return addDays(weekStart, 7);
 }
 
 function addDays(date: Date, days: number): Date {
@@ -62,20 +97,39 @@ function formatWeekRange(weekStart: Date): string {
   return `${startStr} – ${endStr}`;
 }
 
+function toInputDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Props) {
-  const [currentWeek, setCurrentWeek] = useState(() => getWeekStart(new Date()));
+  const [currentWeek, setCurrentWeek] = useState(() => getInitialWeek());
   const [selectedRoomId, setSelectedRoomId] = useState(rooms[0]?.id || '');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; hour: number } | null>(null);
   const [formTitle, setFormTitle] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formStartTime, setFormStartTime] = useState('');
   const [formEndTime, setFormEndTime] = useState('');
+  const [formRecurrence, setFormRecurrence] = useState('');
+  const [formRecurrenceEndDate, setFormRecurrenceEndDate] = useState('');
+  const [formInvitees, setFormInvitees] = useState<Invitee[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Invitee search state
+  const [inviteeSearch, setInviteeSearch] = useState('');
+  const [inviteeResults, setInviteeResults] = useState<Invitee[]>([]);
+  const [showInviteeDropdown, setShowInviteeDropdown] = useState(false);
+  const [searchingInvitees, setSearchingInvitees] = useState(false);
+  const inviteeInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const weekDays = useMemo(() => {
     return Array.from({ length: 5 }, (_, i) => addDays(currentWeek, i));
@@ -100,6 +154,48 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
     fetchBookings();
   }, [selectedRoomId, currentWeek]);
 
+  // Debounced invitee search
+  useEffect(() => {
+    if (inviteeSearch.length < 2) {
+      setInviteeResults([]);
+      setShowInviteeDropdown(false);
+      return;
+    }
+    setSearchingInvitees(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/portal/room-booking/employees?q=${encodeURIComponent(inviteeSearch)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const filtered = (data.employees || []).filter(
+            (e: Invitee) => !formInvitees.find((i) => i.id === e.id)
+          );
+          setInviteeResults(filtered);
+          setShowInviteeDropdown(filtered.length > 0);
+        }
+      } catch { /* ignore */ } finally {
+        setSearchingInvitees(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [inviteeSearch, formInvitees]);
+
+  // Close invitee dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        inviteeInputRef.current &&
+        !inviteeInputRef.current.contains(e.target as Node)
+      ) {
+        setShowInviteeDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   const getBookingForSlot = (date: Date, hour: number): Booking | undefined => {
     return bookings.find((b) => {
       if (b.status === 'cancelled') return false;
@@ -120,33 +216,81 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
     const existing = getBookingForSlot(date, hour);
     if (existing) return;
 
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toInputDate(date);
     setSelectedSlot({ date: dateStr, hour });
     setFormTitle('');
     setFormNotes('');
     setFormStartTime(`${hour.toString().padStart(2, '0')}:00`);
     setFormEndTime(`${(hour + 1).toString().padStart(2, '0')}:00`);
+    setFormRecurrence('');
+    setFormRecurrenceEndDate('');
+    setFormInvitees([]);
+    setInviteeSearch('');
+    setInviteeResults([]);
     setError(null);
     setShowModal(true);
   };
 
+  const handleAddInvitee = useCallback((invitee: Invitee) => {
+    setFormInvitees((prev) => [...prev, invitee]);
+    setInviteeSearch('');
+    setInviteeResults([]);
+    setShowInviteeDropdown(false);
+    inviteeInputRef.current?.focus();
+  }, []);
+
+  const handleRemoveInvitee = useCallback((id: string) => {
+    setFormInvitees((prev) => prev.filter((i) => i.id !== id));
+  }, []);
+
   const handleSubmit = async () => {
-    if (!formTitle.trim() || !selectedSlot) return;
+    if (!selectedSlot) return;
+
+    // Inline validation with clear error messages
+    if (!formTitle.trim()) {
+      setError('Por favor completá el propósito de la reunión.');
+      return;
+    }
+    if (formRecurrence && !formRecurrenceEndDate) {
+      setError('Por favor indicá la fecha de finalización de la recurrencia.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
       const start_at = `${selectedSlot.date}T${formStartTime}:00`;
       const end_at = `${selectedSlot.date}T${formEndTime}:00`;
+
+      const body: Record<string, any> = {
+        room_id: selectedRoomId,
+        title: formTitle.trim(),
+        start_at,
+        end_at,
+        notes: formNotes || undefined,
+      };
+
+      if (formRecurrence) {
+        body.recurrence_type = formRecurrence;
+        body.recurrence_end_date = `${formRecurrenceEndDate}T23:59:59`;
+      }
+
+      if (formInvitees.length > 0) {
+        body.invitees = formInvitees.map((i) => i.id);
+      }
+
       const res = await fetch('/api/portal/room-booking/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_id: selectedRoomId, title: formTitle.trim(), start_at, end_at, notes: formNotes || undefined }),
+        body: JSON.stringify(body),
       });
+
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Error al reservar');
         return;
       }
+
       setShowModal(false);
       const from = currentWeek.toISOString().split('T')[0];
       const to = addDays(currentWeek, 5).toISOString().split('T')[0];
@@ -319,43 +463,197 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
       {/* Reservation modal */}
       {showModal && selectedSlot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
               <div>
                 <h2 className="text-base font-semibold text-zinc-900">Reservar {selectedRoom?.name}</h2>
                 <p className="mt-0.5 text-xs text-zinc-500">
-                  {new Date(selectedSlot.date).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  {new Date(selectedSlot.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
               </div>
               <button type="button" onClick={() => setShowModal(false)} className="text-zinc-400 hover:text-zinc-600">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="space-y-4 px-6 py-5">
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Motivo de la reunión *</label>
-                <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="Ej: Standup diario, Planning sprint..." className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+
+            {error && (
+              <div className="mx-6 mt-4 rounded-lg bg-red-50 px-4 py-3 text-xs font-medium text-red-700">
+                {error}
               </div>
+            )}
+
+            <div className="space-y-4 px-6 py-5">
+              {/* Times */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Inicio</label>
-                  <input type="time" value={formStartTime} onChange={(e) => setFormStartTime(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Hora inicio *</label>
+                  <input
+                    type="time"
+                    value={formStartTime}
+                    onChange={(e) => setFormStartTime(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Fin</label>
-                  <input type="time" value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Hora fin *</label>
+                  <input
+                    type="time"
+                    value={formEndTime}
+                    onChange={(e) => setFormEndTime(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
                 </div>
               </div>
+
+              {/* Title / Propósito */}
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Notas (opcional)</label>
-                <textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value)} rows={2} placeholder="Notas adicionales..." className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Propósito de la reunión *</label>
+                <textarea
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  rows={2}
+                  placeholder="Describe brevemente el propósito de la reserva..."
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                />
               </div>
-              {error && <p className="text-xs text-red-600">{error}</p>}
+
+              {/* Recurrence */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Recurrencia</label>
+                <select
+                  value={formRecurrence}
+                  onChange={(e) => {
+                    setFormRecurrence(e.target.value);
+                    if (!e.target.value) setFormRecurrenceEndDate('');
+                  }}
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                >
+                  {RECURRENCE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Recurrence end date */}
+              {formRecurrence && (
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Finalizar recurrencia *</label>
+                  <input
+                    type="date"
+                    value={formRecurrenceEndDate}
+                    onChange={(e) => setFormRecurrenceEndDate(e.target.value)}
+                    min={selectedSlot?.date}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
+                  {formRecurrenceEndDate && selectedSlot?.date && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Se crearán reservas hasta el {new Date(formRecurrenceEndDate + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Invitees */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-600">Invitar usuarios</label>
+
+                {/* Selected invitees chips */}
+                {formInvitees.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-2">
+                    {formInvitees.map((inv) => (
+                      <span
+                        key={inv.id}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-800"
+                      >
+                        {inv.name}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveInvitee(inv.id)}
+                          className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-cyan-200 text-cyan-700 hover:bg-cyan-300"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Search input */}
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    ref={inviteeInputRef}
+                    type="text"
+                    value={inviteeSearch}
+                    onChange={(e) => setInviteeSearch(e.target.value)}
+                    onFocus={() => inviteeResults.length > 0 && setShowInviteeDropdown(true)}
+                    placeholder="Buscar usuarios por nombre o email..."
+                    className="w-full rounded-lg border border-zinc-300 py-2 pl-9 pr-3 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
+                  {searchingInvitees && (
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <svg className="h-4 w-4 animate-spin text-zinc-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Results dropdown */}
+                  {showInviteeDropdown && inviteeResults.length > 0 && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg"
+                    >
+                      {inviteeResults.map((emp) => (
+                        <button
+                          key={emp.id}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); handleAddInvitee(emp); }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-zinc-50 first:rounded-t-lg last:rounded-b-lg"
+                        >
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-100 text-xs font-semibold text-cyan-700">
+                            {emp.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-zinc-900">{emp.name}</p>
+                            <p className="text-xs text-zinc-400">{emp.email}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1.5 text-xs text-zinc-400">
+                  💡 Usa ↑↓ para navegar, Enter para seleccionar, o haz clic directamente
+                </p>
+              </div>
+
             </div>
+
+            {/* Footer */}
             <div className="flex items-center justify-end gap-3 border-t border-zinc-100 px-6 py-4">
-              <button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">Cancelar</button>
-              <button type="button" onClick={handleSubmit} disabled={submitting || !formTitle.trim()} className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-700 disabled:opacity-60">
-                {submitting ? 'Reservando...' : 'Confirmar reserva'}
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="rounded-lg bg-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-700 disabled:opacity-60"
+              >
+                {submitting ? 'Reservando...' : 'Confirmar Reserva'}
               </button>
             </div>
           </div>
