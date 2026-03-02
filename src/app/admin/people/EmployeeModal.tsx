@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { formatDateLocal } from '@/lib/dateUtils';
 import type { EmployeeStatus } from '@/types/employee';
 
@@ -48,6 +49,31 @@ const statusColors: Record<EmployeeStatus, string> = {
 };
 
 export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps) {
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleResendAccess = async () => {
+    setResending(true);
+    setResendMsg(null);
+    try {
+      const res = await fetch(`/api/admin/employees/${employee.id}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force: true }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendMsg({ type: 'success', text: data.message || 'Email reenviado exitosamente' });
+      } else {
+        setResendMsg({ type: 'error', text: data.error || 'Error al reenviar' });
+      }
+    } catch {
+      setResendMsg({ type: 'error', text: 'Error de red al reenviar' });
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
@@ -156,9 +182,24 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
                 </div>
                 <div>
                   <p className="text-xs text-zinc-500">Cuenta de usuario</p>
-                  <p className="text-sm font-medium text-zinc-900">
-                    {employee.user_id ? 'Sí' : 'No'}
-                  </p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <p className="text-sm font-medium text-zinc-900">
+                      {employee.user_id ? 'Sí' : 'No'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResendAccess}
+                      disabled={resending}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resending ? 'Enviando…' : 'Reenviar acceso'}
+                    </button>
+                  </div>
+                  {resendMsg && (
+                    <p className={`text-xs mt-1 ${resendMsg.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                      {resendMsg.text}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

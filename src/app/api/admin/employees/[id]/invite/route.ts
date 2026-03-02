@@ -29,8 +29,15 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Empleado no encontrado' }, { status: 404 });
     }
 
-    // Check if already has user
-    if (employee.user_id) {
+    // Parse body for optional force resend
+    let forceResend = false;
+    try {
+      const body = await req.json();
+      forceResend = body?.force === true;
+    } catch { /* no body */ }
+
+    // If already has user and not forcing resend, return error
+    if (employee.user_id && !forceResend) {
       return NextResponse.json({ error: 'El empleado ya tiene acceso al portal' }, { status: 400 });
     }
 
@@ -95,8 +102,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       // Non-fatal, continue
     }
 
-    // If new user, generate password reset token and send welcome email via Resend
-    if (isNewUser) {
+    // Send welcome email for new users OR when force-resending
+    if (isNewUser || forceResend) {
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days for invitations
 
@@ -170,9 +177,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ 
       success: true, 
-      message: existingUser 
-        ? 'Empleado vinculado al portal exitosamente' 
-        : 'Invitación enviada exitosamente'
+      message: forceResend
+        ? 'Email de acceso reenviado exitosamente'
+        : existingUser 
+          ? 'Empleado vinculado al portal exitosamente' 
+          : 'Invitación enviada exitosamente'
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/employees/[id]/invite:', error);
