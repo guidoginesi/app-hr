@@ -234,8 +234,18 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       });
 
       if (res.ok) {
-        const updated = await res.json();
-        setSettlements((prev) => prev.map((s) => (s.id === settlementId ? updated : s)));
+        const payslip = await res.json();
+        setSettlements((prev) =>
+          prev.map((s) =>
+            s.id === settlementId
+              ? {
+                  ...s,
+                  payslip_url: payslip.pdf_storage_path || s.payslip_url,
+                  status: payslip.pdf_storage_path ? 'READY_TO_SEND' : s.status,
+                }
+              : s
+          )
+        );
         setMessage({ type: 'success', text: 'Recibo cargado exitosamente' });
       } else {
         const data = await res.json();
