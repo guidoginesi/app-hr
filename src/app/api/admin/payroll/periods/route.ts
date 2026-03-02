@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
       .map((s) => s.id);
 
     // Bulk insert breakdowns and payslips in parallel (2 round-trips total)
-    const inserts: Promise<unknown>[] = [];
+    const inserts: PromiseLike<unknown>[] = [];
 
     if (monotributoIds.length > 0) {
       inserts.push(
