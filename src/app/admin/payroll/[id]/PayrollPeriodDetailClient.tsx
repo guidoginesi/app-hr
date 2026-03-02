@@ -36,6 +36,24 @@ type Settlement = {
   payslip_url: string | null;
 };
 
+function mapSettlement(raw: any): Settlement {
+  return {
+    id: raw.id,
+    period_id: raw.period_id,
+    employee_id: raw.employee_id,
+    employee_name: [raw.first_name, raw.last_name].filter(Boolean).join(' ') || raw.employee_name || '—',
+    contract_type: raw.contract_type_snapshot || raw.contract_type,
+    status: raw.status,
+    base_salary: Number(raw.sueldo ?? raw.base_salary ?? 0),
+    monotributo: Number(raw.monotributo ?? 0),
+    internet_reimbursement: Number(raw.reintegro_internet ?? raw.internet_reimbursement ?? 0),
+    extra_reimbursement: Number(raw.reintegro_extraordinario ?? raw.extra_reimbursement ?? 0),
+    vacation_bonus: Number(raw.plus_vacacional ?? raw.vacation_bonus ?? 0),
+    total: Number(raw.total_a_facturar ?? raw.total ?? 0),
+    payslip_url: raw.pdf_storage_path || raw.payslip_url || null,
+  };
+}
+
 const currencyFormatter = new Intl.NumberFormat('es-AR', {
   style: 'currency',
   currency: 'ARS',
@@ -77,7 +95,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       if (res.ok) {
         const data = await res.json();
         setPeriod(data.period);
-        setSettlements(data.settlements || []);
+        setSettlements((data.settlements || []).map(mapSettlement));
       } else {
         setMessage({ type: 'error', text: 'Error al cargar el periodo' });
       }
@@ -132,17 +150,25 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     const edited = editedRows[settlementId];
     if (!edited) return;
 
+    const apiPayload: Record<string, unknown> = {};
+    if ('base_salary' in edited) apiPayload.sueldo = edited.base_salary;
+    if ('monotributo' in edited) apiPayload.monotributo = edited.monotributo;
+    if ('internet_reimbursement' in edited) apiPayload.reintegro_internet = edited.internet_reimbursement;
+    if ('extra_reimbursement' in edited) apiPayload.reintegro_extraordinario = edited.extra_reimbursement;
+    if ('vacation_bonus' in edited) apiPayload.plus_vacacional = edited.vacation_bonus;
+    if ('status' in edited) apiPayload.status = edited.status;
+
     setSavingRows((prev) => ({ ...prev, [settlementId]: true }));
     try {
       const res = await fetch(`/api/admin/payroll/settlements/${settlementId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(edited),
+        body: JSON.stringify(apiPayload),
       });
 
       if (res.ok) {
         const updated = await res.json();
-        setSettlements((prev) => prev.map((s) => (s.id === settlementId ? updated : s)));
+        setSettlements((prev) => prev.map((s) => (s.id === settlementId ? mapSettlement(updated) : s)));
         setEditedRows((prev) => {
           const next = { ...prev };
           delete next[settlementId];
@@ -173,7 +199,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
       if (res.ok) {
         const updated = await res.json();
-        setSettlements((prev) => prev.map((s) => (s.id === settlementId ? updated : s)));
+        setSettlements((prev) => prev.map((s) => (s.id === settlementId ? mapSettlement(updated) : s)));
         setMessage({ type: 'success', text: 'Recibo cargado exitosamente' });
       } else {
         const data = await res.json();
@@ -197,7 +223,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       if (res.ok) {
         const data = await res.json();
         setPeriod(data.period);
-        if (data.settlements) setSettlements(data.settlements);
+        if (data.settlements) setSettlements(data.settlements.map(mapSettlement));
         setMessage({ type: 'success', text: data.message || 'Acción realizada exitosamente' });
       } else {
         const data = await res.json();
