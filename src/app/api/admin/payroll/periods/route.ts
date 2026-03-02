@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
             plus_vacacional: 0,
             total_a_facturar: 0,
           }))
-        )
+        ).then()
       );
     }
 
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
             pdf_uploaded_at: null,
             pdf_uploaded_by: null,
           }))
-        )
+        ).then()
       );
     }
 
