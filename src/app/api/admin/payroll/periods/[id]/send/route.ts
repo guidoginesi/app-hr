@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendSimpleEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -89,33 +90,27 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
       if (s.contract_type_snapshot === 'MONOTRIBUTO') {
         emailSubject = `Liquidación ${periodLabel}`;
+
+        const buildRow = (label: string, amount: number, isNegative = false) =>
+          amount !== 0 ? `
+              <tr style="border-bottom:1px solid #e4e4e7">
+                <td style="padding:10px 0;color:#52525b">${label}</td>
+                <td style="padding:10px 0;text-align:right;font-weight:600">${isNegative ? '−' : ''}${formatARS(Math.abs(amount))}</td>
+              </tr>` : '';
+
         emailHtml = `
           <div style="font-family:sans-serif;max-width:580px;margin:0 auto;color:#18181b">
             <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Liquidación ${periodLabel}</h2>
             <p style="color:#71717a;margin-top:0">Hola ${employeeName}, ya podés ver el detalle de tu liquidación.</p>
             <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              <tr style="border-bottom:1px solid #e4e4e7">
-                <td style="padding:10px 0;color:#52525b">Sueldo</td>
-                <td style="padding:10px 0;text-align:right;font-weight:600">${formatARS(s.sueldo ?? 0)}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #e4e4e7">
-                <td style="padding:10px 0;color:#52525b">Monotributo</td>
-                <td style="padding:10px 0;text-align:right;font-weight:600">${formatARS(s.monotributo ?? 0)}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #e4e4e7">
-                <td style="padding:10px 0;color:#52525b">Reintegro Internet</td>
-                <td style="padding:10px 0;text-align:right;font-weight:600">${formatARS(s.reintegro_internet ?? 0)}</td>
-              </tr>
-              ${(s.reintegro_extraordinario ?? 0) > 0 ? `
-              <tr style="border-bottom:1px solid #e4e4e7">
-                <td style="padding:10px 0;color:#52525b">Reintegro Extraordinario</td>
-                <td style="padding:10px 0;text-align:right;font-weight:600">${formatARS(s.reintegro_extraordinario ?? 0)}</td>
-              </tr>` : ''}
-              ${(s.plus_vacacional ?? 0) > 0 ? `
-              <tr style="border-bottom:1px solid #e4e4e7">
-                <td style="padding:10px 0;color:#52525b">Plus Vacacional</td>
-                <td style="padding:10px 0;text-align:right;font-weight:600">${formatARS(s.plus_vacacional ?? 0)}</td>
-              </tr>` : ''}
+              ${buildRow('Sueldo', s.sueldo ?? 0)}
+              ${buildRow('Monotributo', s.monotributo ?? 0)}
+              ${buildRow('Reintegro Internet', s.reintegro_internet ?? 0)}
+              ${buildRow('Reintegro Extraordinario', s.reintegro_extraordinario ?? 0)}
+              ${buildRow('Plus Vacacional', s.plus_vacacional ?? 0)}
+              ${buildRow('Bonificación Anual', s.bonificacion_anual ?? 0)}
+              ${buildRow('Aguinaldo', s.aguinaldo ?? 0)}
+              ${buildRow('Adelanto de Sueldo', s.adelanto_sueldo ?? 0, true)}
               <tr style="background:#f4f4f5">
                 <td style="padding:12px;font-weight:700;font-size:16px">Total a Facturar</td>
                 <td style="padding:12px;text-align:right;font-weight:700;font-size:16px;color:#4f46e5">${formatARS(s.total_a_facturar ?? 0)}</td>
@@ -166,6 +161,28 @@ export async function POST(req: NextRequest, context: RouteContext) {
           }
         }).catch((err) => {
           console.error(`[Payroll Send] Email exception for settlement ${s.id}:`, err);
+        });
+      }
+
+      // Send in-app notification if employee has a user_id
+      if (s.user_id) {
+        const notifTitle = s.contract_type_snapshot === 'MONOTRIBUTO'
+          ? `Liquidación ${periodLabel} disponible`
+          : `Recibo de sueldo ${periodLabel} disponible`;
+        const notifBody = s.contract_type_snapshot === 'MONOTRIBUTO'
+          ? `Ya podés ver el detalle de tu liquidación de ${periodLabel} en el portal.`
+          : `Tu recibo de sueldo de ${periodLabel} ya está disponible para descargar.`;
+        const deepLink = s.contract_type_snapshot === 'MONOTRIBUTO'
+          ? '/portal/liquidaciones'
+          : '/portal/recibos';
+        createSystemNotification({
+          userIds: [s.user_id],
+          title: notifTitle,
+          body: notifBody,
+          deepLink,
+          dedupeKey: `payroll-sent-${s.id}`,
+        }).catch((err) => {
+          console.error(`[Payroll Send] In-app notification failed for settlement ${s.id}:`, err);
         });
       }
 

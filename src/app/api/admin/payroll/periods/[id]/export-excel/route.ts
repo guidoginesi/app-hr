@@ -31,10 +31,12 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Período no encontrado' }, { status: 404 });
     }
 
+    // Solo exportar Monotributo
     const { data: settlements, error: settError } = await supabase
       .from('payroll_settlements_with_details')
       .select('*')
       .eq('period_id', id)
+      .eq('contract_type_snapshot', 'MONOTRIBUTO')
       .order('first_name', { ascending: true });
 
     if (settError) {
@@ -44,23 +46,26 @@ export async function GET(_req: NextRequest, context: RouteContext) {
     const rows = (settlements || []).map((s: any) => ({
       'ID (no editar)': s.id,
       'Empleado': `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim(),
-      'Tipo': s.contract_type_snapshot === 'MONOTRIBUTO' ? 'Monotributo' : 'Rel. Dependencia',
+      'Email': s.email_to ?? '',
       'Sueldo': s.sueldo ?? 0,
       'Monotributo': s.monotributo ?? 0,
       'Reintegro Internet': s.reintegro_internet ?? 0,
       'Reintegro Extra': s.reintegro_extraordinario ?? 0,
       'Plus Vacacional': s.plus_vacacional ?? 0,
+      'Bonificacion Anual': s.bonificacion_anual ?? 0,
+      'Aguinaldo': s.aguinaldo ?? 0,
+      'Adelanto Sueldo': s.adelanto_sueldo ?? 0,
       'Total a Facturar': s.total_a_facturar ?? 0,
       'Estado': s.status,
-      'Email': s.email_to ?? '',
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = [
-      { wch: 38 }, { wch: 28 }, { wch: 20 },
+      { wch: 38 }, { wch: 28 }, { wch: 30 },
       { wch: 14 }, { wch: 14 }, { wch: 18 },
       { wch: 16 }, { wch: 16 }, { wch: 18 },
-      { wch: 14 }, { wch: 30 },
+      { wch: 14 }, { wch: 16 }, { wch: 18 },
+      { wch: 14 },
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Liquidaciones');

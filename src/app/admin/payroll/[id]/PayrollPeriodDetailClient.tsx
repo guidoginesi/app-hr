@@ -51,6 +51,9 @@ type Settlement = {
   internet_reimbursement: number;
   extra_reimbursement: number;
   vacation_bonus: number;
+  annual_bonus: number;
+  aguinaldo: number;
+  salary_advance: number;
   total: number;
   payslip_url: string | null;
   invoice_storage_path: string | null;
@@ -89,6 +92,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [claimingInvoices, setClaimingInvoices] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
@@ -140,7 +144,10 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       getFieldValue(settlement, 'monotributo') +
       getFieldValue(settlement, 'internet_reimbursement') +
       getFieldValue(settlement, 'extra_reimbursement') +
-      getFieldValue(settlement, 'vacation_bonus')
+      getFieldValue(settlement, 'vacation_bonus') +
+      getFieldValue(settlement, 'annual_bonus') +
+      getFieldValue(settlement, 'aguinaldo') -
+      getFieldValue(settlement, 'salary_advance')
     );
   };
 
@@ -154,11 +161,14 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
     // Translate client field names → DB column names expected by the API
     const apiPayload: Record<string, number> = {};
-    if (edited.base_salary !== undefined)          apiPayload.sueldo = edited.base_salary as number;
-    if (edited.monotributo !== undefined)           apiPayload.monotributo = edited.monotributo as number;
+    if (edited.base_salary !== undefined)            apiPayload.sueldo = edited.base_salary as number;
+    if (edited.monotributo !== undefined)            apiPayload.monotributo = edited.monotributo as number;
     if (edited.internet_reimbursement !== undefined) apiPayload.reintegro_internet = edited.internet_reimbursement as number;
-    if (edited.extra_reimbursement !== undefined)   apiPayload.reintegro_extraordinario = edited.extra_reimbursement as number;
-    if (edited.vacation_bonus !== undefined)        apiPayload.plus_vacacional = edited.vacation_bonus as number;
+    if (edited.extra_reimbursement !== undefined)    apiPayload.reintegro_extraordinario = edited.extra_reimbursement as number;
+    if (edited.vacation_bonus !== undefined)         apiPayload.plus_vacacional = edited.vacation_bonus as number;
+    if (edited.annual_bonus !== undefined)           apiPayload.bonificacion_anual = edited.annual_bonus as number;
+    if (edited.aguinaldo !== undefined)              apiPayload.aguinaldo = edited.aguinaldo as number;
+    if (edited.salary_advance !== undefined)         apiPayload.adelanto_sueldo = edited.salary_advance as number;
 
     setSavingRows((prev) => ({ ...prev, [settlementId]: true }));
     try {
@@ -181,7 +191,10 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
               (merged.monotributo ?? 0) +
               (merged.internet_reimbursement ?? 0) +
               (merged.extra_reimbursement ?? 0) +
-              (merged.vacation_bonus ?? 0);
+              (merged.vacation_bonus ?? 0) +
+              (merged.annual_bonus ?? 0) +
+              (merged.aguinaldo ?? 0) -
+              (merged.salary_advance ?? 0);
             return merged;
           })
         );
@@ -301,6 +314,26 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     }
   };
 
+  const handleClaimInvoices = async () => {
+    setClaimingInvoices(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/payroll/periods/${periodId}/claim-invoices`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message || 'Recordatorios enviados' });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Error al enviar recordatorios' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Error al enviar recordatorios' });
+    } finally {
+      setClaimingInvoices(false);
+    }
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -372,12 +405,12 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Excel export */}
+          {/* Excel export (solo Monotributo) */}
           <button
             onClick={handleExport}
             className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
           >
-            ↓ Exportar Excel
+            ↓ Excel Monotributo
           </button>
 
           {/* Excel import */}
@@ -392,6 +425,15 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
               disabled={importing}
             />
           </label>
+
+          {/* Reclamar facturas pendientes */}
+          <button
+            onClick={handleClaimInvoices}
+            disabled={claimingInvoices}
+            className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+          >
+            {claimingInvoices ? 'Enviando...' : '⚠ Reclamar facturas'}
+          </button>
 
           {!isClosed && (
             <button
@@ -499,6 +541,9 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                       <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Reint. Internet</th>
                       <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Reint. Extra</th>
                       <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Plus Vac.</th>
+                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Bonif. Anual</th>
+                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Aguinaldo</th>
+                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Adelanto</th>
                       <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Total</th>
                     </>
                   )}
@@ -627,6 +672,9 @@ function SettlementRow({
     { key: 'internet_reimbursement', label: 'Reint. Internet' },
     { key: 'extra_reimbursement', label: 'Reint. Extra' },
     { key: 'vacation_bonus', label: 'Plus Vac.' },
+    { key: 'annual_bonus', label: 'Bonif. Anual' },
+    { key: 'aguinaldo', label: 'Aguinaldo' },
+    { key: 'salary_advance', label: 'Adelanto' },
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -684,8 +732,8 @@ function SettlementRow({
             </>
           ) : (
             <>
-              {/* Rel. Dep. rows in mixed view: span all 6 numeric columns (Sueldo→Total) */}
-              <td colSpan={6} className="px-4 py-3 text-center text-xs text-zinc-400">—</td>
+              {/* Rel. Dep. rows in mixed view: span all 9 numeric columns (Sueldo→Total) */}
+              <td colSpan={9} className="px-4 py-3 text-center text-xs text-zinc-400">—</td>
             </>
           )}
         </>

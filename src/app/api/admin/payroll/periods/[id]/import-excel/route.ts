@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
 
     const updates = rows
-      .filter((row) => row['Tipo'] === 'Monotributo' && row['ID (no editar)'])
+      .filter((row) => row['ID (no editar)'])
       .map((row) => ({
         id: String(row['ID (no editar)']),
         base_salary: Number(row['Sueldo']) || 0,
@@ -36,6 +36,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
         internet_reimbursement: Number(row['Reintegro Internet']) || 0,
         extra_reimbursement: Number(row['Reintegro Extra']) || 0,
         vacation_bonus: Number(row['Plus Vacacional']) || 0,
+        bonificacion_anual: Number(row['Bonificacion Anual']) || 0,
+        aguinaldo: Number(row['Aguinaldo']) || 0,
+        adelanto_sueldo: Number(row['Adelanto Sueldo']) || 0,
       }));
 
     if (updates.length === 0) {
@@ -68,7 +71,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
         (u.monotributo || 0) +
         (u.internet_reimbursement || 0) +
         (u.extra_reimbursement || 0) +
-        (u.vacation_bonus || 0);
+        (u.vacation_bonus || 0) +
+        (u.bonificacion_anual || 0) +
+        (u.aguinaldo || 0) -
+        (u.adelanto_sueldo || 0);
 
       const { error } = await supabase
         .from('payroll_monotributo_breakdown')
@@ -78,6 +84,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
           reintegro_internet: u.internet_reimbursement,
           reintegro_extraordinario: u.extra_reimbursement,
           plus_vacacional: u.vacation_bonus,
+          bonificacion_anual: u.bonificacion_anual,
+          aguinaldo: u.aguinaldo,
+          adelanto_sueldo: u.adelanto_sueldo,
           total_a_facturar: total,
           updated_at: new Date().toISOString(),
         })

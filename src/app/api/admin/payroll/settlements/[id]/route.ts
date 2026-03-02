@@ -9,6 +9,9 @@ const UpdateMonotributoSchema = z.object({
   reintegro_internet: z.number().min(0).optional(),
   reintegro_extraordinario: z.number().min(0).optional(),
   plus_vacacional: z.number().min(0).optional(),
+  bonificacion_anual: z.number().min(0).optional(),
+  aguinaldo: z.number().min(0).optional(),
+  adelanto_sueldo: z.number().min(0).optional(),
 });
 
 const UpdateSettlementSchema = z.object({
@@ -19,6 +22,9 @@ const UpdateSettlementSchema = z.object({
   reintegro_internet: z.number().min(0).optional(),
   reintegro_extraordinario: z.number().min(0).optional(),
   plus_vacacional: z.number().min(0).optional(),
+  bonificacion_anual: z.number().min(0).optional(),
+  aguinaldo: z.number().min(0).optional(),
+  adelanto_sueldo: z.number().min(0).optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -136,6 +142,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
         reintegro_internet: monotributoParsed.data.reintegro_internet ?? currentBreakdown?.reintegro_internet ?? 0,
         reintegro_extraordinario: monotributoParsed.data.reintegro_extraordinario ?? currentBreakdown?.reintegro_extraordinario ?? 0,
         plus_vacacional: monotributoParsed.data.plus_vacacional ?? currentBreakdown?.plus_vacacional ?? 0,
+        bonificacion_anual: monotributoParsed.data.bonificacion_anual ?? currentBreakdown?.bonificacion_anual ?? 0,
+        aguinaldo: monotributoParsed.data.aguinaldo ?? currentBreakdown?.aguinaldo ?? 0,
+        adelanto_sueldo: monotributoParsed.data.adelanto_sueldo ?? currentBreakdown?.adelanto_sueldo ?? 0,
       };
 
       const total_a_facturar =
@@ -143,7 +152,10 @@ export async function PUT(req: NextRequest, context: RouteContext) {
         merged.monotributo +
         merged.reintegro_internet +
         merged.reintegro_extraordinario +
-        merged.plus_vacacional;
+        merged.plus_vacacional +
+        merged.bonificacion_anual +
+        merged.aguinaldo -
+        merged.adelanto_sueldo;
 
       const { error: breakdownError } = await supabase
         .from('payroll_monotributo_breakdown')
