@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
 
 async function openPayslipPdf(settlementId: string): Promise<void> {
   const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip`);
@@ -87,6 +88,8 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
   const [uploadingRows, setUploadingRows] = useState<Record<string, boolean>>({});
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -279,6 +282,85 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     }
   };
 
+  const handleExport = () => {
+    if (!period) return;
+    const periodLabel = `${MONTH_NAMES[period.month - 1]}_${period.year}`;
+
+    const rows = settlements.map((s) => ({
+      'ID (no editar)': s.id,
+      'Empleado': s.employee_name,
+      'Tipo': s.contract_type === 'MONOTRIBUTO' ? 'Monotributo' : 'Rel. Dependencia',
+      'Sueldo': s.base_salary,
+      'Monotributo': s.monotributo,
+      'Reintegro Internet': s.internet_reimbursement,
+      'Reintegro Extra': s.extra_reimbursement,
+      'Plus Vacacional': s.vacation_bonus,
+      'Total a Facturar': s.total,
+      'Estado': s.status,
+      'Email': s.email_to ?? '',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 38 }, { wch: 28 }, { wch: 20 },
+      { wch: 14 }, { wch: 14 }, { wch: 18 },
+      { wch: 16 }, { wch: 16 }, { wch: 18 },
+      { wch: 14 }, { wch: 30 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Liquidaciones');
+    XLSX.writeFile(wb, `liquidaciones_${periodLabel}.xlsx`);
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setMessage(null);
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
+
+      const updates = rows
+        .filter((row) => row['Tipo'] === 'Monotributo' && row['ID (no editar)'])
+        .map((row) => ({
+          id: String(row['ID (no editar)']),
+          base_salary: Number(row['Sueldo']) || 0,
+          monotributo: Number(row['Monotributo']) || 0,
+          internet_reimbursement: Number(row['Reintegro Internet']) || 0,
+          extra_reimbursement: Number(row['Reintegro Extra']) || 0,
+          vacation_bonus: Number(row['Plus Vacacional']) || 0,
+        }));
+
+      if (updates.length === 0) {
+        setMessage({ type: 'error', text: 'No se encontraron filas Monotributo para actualizar' });
+        return;
+      }
+
+      const res = await fetch(`/api/admin/payroll/periods/${periodId}/import-excel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message || `${updates.length} liquidaciones actualizadas` });
+        await fetchData();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Error al importar' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Error al leer el archivo Excel' });
+    } finally {
+      setImporting(false);
+      if (importInputRef.current) importInputRef.current.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -320,6 +402,27 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Excel export */}
+          <button
+            onClick={handleExport}
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          >
+            ↓ Exportar Excel
+          </button>
+
+          {/* Excel import */}
+          <label className={`cursor-pointer rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
+            {importing ? 'Importando...' : '↑ Importar Excel'}
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleImportFile}
+              disabled={importing}
+            />
+          </label>
+
           {!isClosed && (
             <button
               onClick={() => handlePeriodAction('send-all')}
