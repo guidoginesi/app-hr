@@ -43,7 +43,9 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: settError.message }, { status: 500 });
     }
 
-    const rows = (settlements || []).map((s: any) => ({
+    const rows = (settlements || [])
+      .filter((s: any) => s.contract_type_snapshot === 'MONOTRIBUTO')
+      .map((s: any) => ({
       'ID (no editar)': s.id,
       'Empleado': `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim(),
       'Email': s.email_to ?? '',
