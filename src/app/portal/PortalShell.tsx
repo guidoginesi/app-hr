@@ -101,7 +101,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
           </div>
 
           <div className="flex items-center gap-3">
-            <NotificationBell employeeId={employee.id} />
+            <NotificationBell />
 
             {/* Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
