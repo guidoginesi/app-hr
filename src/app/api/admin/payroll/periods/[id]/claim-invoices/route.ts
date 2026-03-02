@@ -39,7 +39,7 @@ export async function POST(_req: NextRequest, context: RouteContext) {
     // Buscar Monotributistas SENT sin factura
     const { data: settlements, error: fetchError } = await supabase
       .from('payroll_settlements_with_details')
-      .select('id, first_name, last_name, email_to, user_id, invoice_storage_path')
+      .select('id, first_name, last_name, email_to, employee_user_id, invoice_storage_path')
       .eq('period_id', id)
       .eq('contract_type_snapshot', 'MONOTRIBUTO')
       .eq('status', 'SENT')
@@ -84,7 +84,7 @@ export async function POST(_req: NextRequest, context: RouteContext) {
       }
 
       // In-app notification
-      const employeeUserId = s.employee_user_id ?? s.user_id;
+      const employeeUserId = s.employee_user_id;
       if (employeeUserId) {
         createSystemNotification({
           userIds: [employeeUserId],

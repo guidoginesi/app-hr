@@ -165,7 +165,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       }
 
       // Send in-app notification if employee has a user account
-      const employeeUserId = s.employee_user_id ?? s.user_id;
+      const employeeUserId = s.employee_user_id;
       if (employeeUserId) {
         const notifTitle = s.contract_type_snapshot === 'MONOTRIBUTO'
           ? `Liquidación ${periodLabel} disponible`
