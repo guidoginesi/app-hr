@@ -6,8 +6,8 @@ import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
 
 const TerminateEmployeeSchema = z.object({
   termination_date: z.string().min(1, 'La fecha de baja es requerida'),
-  termination_reason: z.enum(['resignation', 'dismissal'], {
-    errorMap: () => ({ message: 'El motivo debe ser "resignation" o "dismissal"' }),
+  termination_reason: z.enum(['resignation', 'dismissal'] as const, {
+    message: 'El motivo debe ser "resignation" o "dismissal"',
   }),
   termination_notes: z.string().optional().nullable(),
   enable_offboarding: z.boolean().default(false),
