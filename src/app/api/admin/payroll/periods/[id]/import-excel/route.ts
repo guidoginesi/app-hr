@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import * as XLSX from 'xlsx';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-type SettlementUpdate = {
-  id: string;
-  base_salary: number;
-  monotributo: number;
-  internet_reimbursement: number;
-  extra_reimbursement: number;
-  vacation_bonus: number;
-};
-
-// POST /api/admin/payroll/periods/[id]/import-excel - Bulk update settlements from Excel
+// POST /api/admin/payroll/periods/[id]/import-excel - Parse xlsx and bulk update settlements
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
     const { isAdmin } = await requireAdmin();
@@ -22,11 +14,32 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     const { id: periodId } = await context.params;
-    const body = await req.json();
-    const updates: SettlementUpdate[] = body.updates ?? [];
 
-    if (!Array.isArray(updates) || updates.length === 0) {
-      return NextResponse.json({ error: 'No hay datos para importar' }, { status: 400 });
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: 'No se recibió ningún archivo' }, { status: 400 });
+    }
+
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
+
+    const updates = rows
+      .filter((row) => row['Tipo'] === 'Monotributo' && row['ID (no editar)'])
+      .map((row) => ({
+        id: String(row['ID (no editar)']),
+        base_salary: Number(row['Sueldo']) || 0,
+        monotributo: Number(row['Monotributo']) || 0,
+        internet_reimbursement: Number(row['Reintegro Internet']) || 0,
+        extra_reimbursement: Number(row['Reintegro Extra']) || 0,
+        vacation_bonus: Number(row['Plus Vacacional']) || 0,
+      }));
+
+    if (updates.length === 0) {
+      return NextResponse.json({ error: 'No se encontraron filas Monotributo para actualizar' }, { status: 400 });
     }
 
     const supabase = getSupabaseServer();
