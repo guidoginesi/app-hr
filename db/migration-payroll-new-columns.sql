@@ -34,9 +34,9 @@ SELECT
   ps.pdf_storage_path,
   ps.pdf_filename,
   ps.pdf_uploaded_at,
-  inv.storage_path AS invoice_storage_path,
-  inv.filename     AS invoice_filename,
-  inv.uploaded_at  AS invoice_uploaded_at
+  inv.pdf_storage_path AS invoice_storage_path,
+  inv.pdf_filename     AS invoice_filename,
+  inv.uploaded_at      AS invoice_uploaded_at
 FROM public.payroll_employee_settlements s
 JOIN public.payroll_periods p ON p.id = s.period_id
 JOIN public.employees e ON e.id = s.employee_id
