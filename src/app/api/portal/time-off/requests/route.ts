@@ -203,16 +203,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for overlapping requests (exclude final rejected/cancelled statuses)
+    // pow_days and remote_work are allowed to overlap with each other
     const { data: overlapping } = await supabase
       .from('leave_requests')
-      .select('id')
+      .select('id, leave_type_id, leave_types(code)')
       .eq('employee_id', auth.employee.id)
       .not('status', 'in', '("cancelled","rejected","rejected_leader","rejected_hr")')
       .lte('start_date', parsed.data.end_date)
-      .gte('end_date', parsed.data.start_date)
-      .limit(1);
+      .gte('end_date', parsed.data.start_date);
 
-    if (overlapping && overlapping.length > 0) {
+    const blockingOverlap = (overlapping ?? []).filter((r) => {
+      const existingCode = (r.leave_types as { code: string } | null)?.code;
+      if (
+        (leaveType.code === 'pow_days' && existingCode === 'remote_work') ||
+        (leaveType.code === 'remote_work' && existingCode === 'pow_days')
+      ) return false;
+      return true;
+    });
+
+    if (blockingOverlap.length > 0) {
       return NextResponse.json(
         { error: 'Ya existe una solicitud que se superpone con estas fechas' },
         { status: 400 }

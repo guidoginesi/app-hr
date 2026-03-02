@@ -108,16 +108,33 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for overlapping requests
-    const { data: overlapping } = await supabase
-      .from('leave_requests')
-      .select('id')
-      .eq('employee_id', parsed.data.employee_id)
-      .neq('status', 'cancelled')
-      .neq('status', 'rejected')
-      .or(`start_date.lte.${parsed.data.end_date},end_date.gte.${parsed.data.start_date}`)
-      .limit(1);
+    // pow_days and remote_work are allowed to overlap with each other
+    const [{ data: newLeaveType }, { data: overlapping }] = await Promise.all([
+      supabase
+        .from('leave_types')
+        .select('code')
+        .eq('id', parsed.data.leave_type_id)
+        .single(),
+      supabase
+        .from('leave_requests')
+        .select('id, leave_type_id, leave_types(code)')
+        .eq('employee_id', parsed.data.employee_id)
+        .neq('status', 'cancelled')
+        .neq('status', 'rejected')
+        .or(`start_date.lte.${parsed.data.end_date},end_date.gte.${parsed.data.start_date}`),
+    ]);
 
-    if (overlapping && overlapping.length > 0) {
+    const newCode = newLeaveType?.code ?? '';
+    const blockingOverlap = (overlapping ?? []).filter((r) => {
+      const existingCode = (r.leave_types as { code: string } | null)?.code;
+      if (
+        (newCode === 'pow_days' && existingCode === 'remote_work') ||
+        (newCode === 'remote_work' && existingCode === 'pow_days')
+      ) return false;
+      return true;
+    });
+
+    if (blockingOverlap.length > 0) {
       return NextResponse.json(
         { error: 'Ya existe una solicitud que se superpone con estas fechas' },
         { status: 400 }
