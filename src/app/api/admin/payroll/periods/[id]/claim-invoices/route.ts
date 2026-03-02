@@ -84,9 +84,10 @@ export async function POST(_req: NextRequest, context: RouteContext) {
       }
 
       // In-app notification
-      if (s.user_id) {
+      const employeeUserId = s.employee_user_id ?? s.user_id;
+      if (employeeUserId) {
         createSystemNotification({
-          userIds: [s.user_id],
+          userIds: [employeeUserId],
           title: `Factura pendiente — ${periodLabel}`,
           body: `Todavía no recibimos tu factura de ${periodLabel}. Por favor cargala en el portal.`,
           deepLink: '/portal/liquidaciones',

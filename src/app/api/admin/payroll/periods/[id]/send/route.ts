@@ -164,8 +164,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
         });
       }
 
-      // Send in-app notification if employee has a user_id
-      if (s.user_id) {
+      // Send in-app notification if employee has a user account
+      const employeeUserId = s.employee_user_id ?? s.user_id;
+      if (employeeUserId) {
         const notifTitle = s.contract_type_snapshot === 'MONOTRIBUTO'
           ? `Liquidación ${periodLabel} disponible`
           : `Recibo de sueldo ${periodLabel} disponible`;
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
           ? '/portal/liquidaciones'
           : '/portal/recibos';
         createSystemNotification({
-          userIds: [s.user_id],
+          userIds: [employeeUserId],
           title: notifTitle,
           body: notifBody,
           deepLink,

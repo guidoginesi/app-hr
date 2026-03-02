@@ -17,6 +17,7 @@ SELECT
   p.month AS period_month,
   p.period_key,
   p.status AS period_status,
+  e.user_id AS employee_user_id,
   e.first_name,
   e.last_name,
   COALESCE(e.work_email, e.personal_email) AS employee_email,
