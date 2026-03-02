@@ -15,18 +15,15 @@ type PayrollPeriod = {
   year: number;
   month: number;
   status: PeriodStatus;
-  employee_count: number;
-  ready_count: number;
-  sent_count: number;
+  settlement_counts: {
+    total: number;
+    draft: number;
+    ready_to_send: number;
+    sent: number;
+  };
   created_at: string;
 };
 
-const statusConfig: Record<PeriodStatus, { label: string; classes: string }> = {
-  DRAFT: { label: 'Borrador', classes: 'bg-zinc-100 text-zinc-700' },
-  IN_REVIEW: { label: 'En revisión', classes: 'bg-amber-100 text-amber-700' },
-  SENT: { label: 'Enviado', classes: 'bg-emerald-100 text-emerald-700' },
-  CLOSED: { label: 'Cerrado', classes: 'bg-zinc-100 text-zinc-600' },
-};
 
 export function PayrollPeriodsClient() {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
@@ -191,7 +188,6 @@ export function PayrollPeriodsClient() {
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 text-left">
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Periodo</th>
-                  <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Estado</th>
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Empleados</th>
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Listos</th>
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Enviados</th>
@@ -199,21 +195,23 @@ export function PayrollPeriodsClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
-                {periods.map((period) => {
-                  const config = statusConfig[period.status];
-                  return (
+                {periods.map((period) => (
                     <tr key={period.id} className="transition-colors hover:bg-zinc-50">
-                      <td className="px-6 py-4 text-sm font-medium text-zinc-900">
-                        {MONTH_NAMES[period.month - 1]} {period.year}
-                      </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.classes}`}>
-                          {config.label}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-zinc-900">
+                            {MONTH_NAMES[period.month - 1]} {period.year}
+                          </span>
+                          {period.status === 'CLOSED' && (
+                            <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                              Cerrado
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-zinc-600">{period.employee_count}</td>
-                      <td className="px-6 py-4 text-sm text-zinc-600">{period.ready_count}</td>
-                      <td className="px-6 py-4 text-sm text-zinc-600">{period.sent_count}</td>
+                      <td className="px-6 py-4 text-sm text-zinc-600">{period.settlement_counts?.total ?? 0}</td>
+                      <td className="px-6 py-4 text-sm text-zinc-600">{period.settlement_counts?.ready_to_send ?? 0}</td>
+                      <td className="px-6 py-4 text-sm text-zinc-600">{period.settlement_counts?.sent ?? 0}</td>
                       <td className="px-6 py-4">
                         <Link
                           href={`/admin/payroll/${period.id}`}
@@ -223,8 +221,7 @@ export function PayrollPeriodsClient() {
                         </Link>
                       </td>
                     </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>

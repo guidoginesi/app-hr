@@ -54,6 +54,11 @@ export async function GET(req: NextRequest, context: RouteContext) {
   }
 }
 
+// PATCH /api/admin/payroll/settlements/[id] - Update settlement (alias of PUT)
+export async function PATCH(req: NextRequest, context: RouteContext) {
+  return PUT(req, context);
+}
+
 // PUT /api/admin/payroll/settlements/[id] - Update settlement
 export async function PUT(req: NextRequest, context: RouteContext) {
   try {

@@ -82,6 +82,69 @@ export async function POST(req: NextRequest, context: RouteContext) {
   }
 }
 
+// DELETE /api/admin/payroll/settlements/[id]/payslip - Remove uploaded PDF
+export async function DELETE(_req: NextRequest, context: RouteContext) {
+  try {
+    const { isAdmin } = await requireAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+    const supabase = getSupabaseServer();
+
+    // Get current payslip path
+    const { data: payslip, error: fetchError } = await supabase
+      .from('payroll_payslips')
+      .select('pdf_storage_path')
+      .eq('settlement_id', id)
+      .single();
+
+    if (fetchError || !payslip) {
+      return NextResponse.json({ error: 'Recibo no encontrado' }, { status: 404 });
+    }
+
+    // Remove from storage if it exists
+    if (payslip.pdf_storage_path) {
+      const { error: storageError } = await supabase.storage
+        .from('payslips')
+        .remove([payslip.pdf_storage_path]);
+
+      if (storageError) {
+        console.error('Error deleting payslip from storage:', storageError);
+        // Continue anyway to clear the DB record
+      }
+    }
+
+    // Clear DB record
+    const { error: updateError } = await supabase
+      .from('payroll_payslips')
+      .update({
+        pdf_storage_path: null,
+        pdf_filename: null,
+        pdf_uploaded_at: null,
+        pdf_uploaded_by: null,
+      })
+      .eq('settlement_id', id);
+
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    // Also reset settlement status to DRAFT if it was READY_TO_SEND
+    await supabase
+      .from('payroll_employee_settlements')
+      .update({ status: 'DRAFT' })
+      .eq('id', id)
+      .eq('status', 'READY_TO_SEND');
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error in DELETE /api/admin/payroll/settlements/[id]/payslip:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 // GET /api/admin/payroll/settlements/[id]/payslip - Get signed URL for PDF download
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
@@ -107,16 +170,30 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'No hay PDF cargado para esta liquidación' }, { status: 404 });
     }
 
-    const { data: signedUrlData, error: urlError } = await supabase.storage
+    // Download server-side and proxy to avoid S3 ACL issues
+    const { data: fileData, error: downloadError } = await supabase.storage
       .from('payslips')
-      .createSignedUrl(payslip.pdf_storage_path, 3600);
+      .download(payslip.pdf_storage_path);
 
-    if (urlError) {
-      console.error('Error creating signed URL:', urlError);
-      return NextResponse.json({ error: urlError.message }, { status: 500 });
+    if (downloadError || !fileData) {
+      console.error('Error downloading payslip for admin:', downloadError);
+      // Fallback: signed URL
+      const { data: signedUrlData, error: urlError } = await supabase.storage
+        .from('payslips')
+        .createSignedUrl(payslip.pdf_storage_path, 3600);
+      if (urlError || !signedUrlData?.signedUrl) {
+        return NextResponse.json({ error: urlError?.message || 'Error al obtener el PDF' }, { status: 500 });
+      }
+      return NextResponse.json({ url: signedUrlData.signedUrl });
     }
 
-    return NextResponse.json({ url: signedUrlData.signedUrl });
+    return new NextResponse(fileData, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="recibo.pdf"`,
+        'Cache-Control': 'private, no-cache',
+      },
+    });
   } catch (error: any) {
     console.error('Error in GET /api/admin/payroll/settlements/[id]/payslip:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

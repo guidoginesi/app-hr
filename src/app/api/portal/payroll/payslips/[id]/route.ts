@@ -46,20 +46,30 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Recibo no encontrado' }, { status: 404 });
     }
 
-    // Generate signed URL (valid for 1 hour)
-    const { data: signedUrlData, error: signedUrlError } = await supabase
-      .storage
+    // Download the file server-side and proxy it (avoids S3 ACL issues with signed URLs)
+    const { data: fileData, error: downloadError } = await supabase.storage
       .from('payslips')
-      .createSignedUrl(payslip.pdf_storage_path, 3600);
+      .download(payslip.pdf_storage_path);
 
-    if (signedUrlError || !signedUrlData?.signedUrl) {
-      console.error('Error creating signed URL:', signedUrlError);
-      return NextResponse.json({ error: 'Error al generar el enlace de descarga' }, { status: 500 });
+    if (downloadError || !fileData) {
+      console.error('Error downloading payslip:', downloadError);
+      // Fallback: try signed URL
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('payslips')
+        .createSignedUrl(payslip.pdf_storage_path, 3600);
+      if (signedUrlError || !signedUrlData?.signedUrl) {
+        return NextResponse.json({ error: 'Error al obtener el recibo' }, { status: 500 });
+      }
+      return NextResponse.json({ url: signedUrlData.signedUrl, filename: payslip.pdf_filename });
     }
 
-    return NextResponse.json({
-      url: signedUrlData.signedUrl,
-      filename: payslip.pdf_filename,
+    const filename = payslip.pdf_filename || 'recibo.pdf';
+    return new NextResponse(fileData, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'private, no-cache',
+      },
     });
   } catch (error: any) {
     console.error('Error in GET /api/portal/payroll/payslips/[id]:', error);

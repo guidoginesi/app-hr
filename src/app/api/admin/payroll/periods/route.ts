@@ -120,71 +120,75 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: empError.message }, { status: 500 });
     }
 
-    let settlementCount = 0;
+    if (!employees || employees.length === 0) {
+      return NextResponse.json({ period, settlement_count: 0 }, { status: 201 });
+    }
 
-    for (const emp of employees || []) {
-      const contractType =
-        emp.employment_type === 'dependency'
-          ? 'RELACION_DEPENDENCIA'
-          : 'MONOTRIBUTO';
+    // Bulk insert all settlements in one round-trip
+    const settlementsToInsert = employees.map((emp) => ({
+      period_id: period.id,
+      employee_id: emp.id,
+      contract_type_snapshot: emp.employment_type === 'dependency' ? 'RELACION_DEPENDENCIA' : 'MONOTRIBUTO',
+      currency: 'ARS',
+      status: 'DRAFT',
+      email_to: emp.work_email || emp.personal_email || null,
+    }));
 
-      const emailTo = emp.work_email || emp.personal_email;
+    const { data: createdSettlements, error: settError } = await supabase
+      .from('payroll_employee_settlements')
+      .insert(settlementsToInsert)
+      .select('id, contract_type_snapshot');
 
-      const { data: settlement, error: settError } = await supabase
-        .from('payroll_employee_settlements')
-        .insert({
-          period_id: period.id,
-          employee_id: emp.id,
-          contract_type_snapshot: contractType,
-          currency: 'ARS',
-          status: 'DRAFT',
-          email_to: emailTo,
-        })
-        .select()
-        .single();
+    if (settError || !createdSettlements) {
+      console.error('Error bulk-creating settlements:', settError);
+      return NextResponse.json({ error: settError?.message || 'Error al crear liquidaciones' }, { status: 500 });
+    }
 
-      if (settError) {
-        console.error(`Error creating settlement for employee ${emp.id}:`, settError);
-        continue;
-      }
+    const monotributoIds = createdSettlements
+      .filter((s) => s.contract_type_snapshot === 'MONOTRIBUTO')
+      .map((s) => s.id);
 
-      if (contractType === 'MONOTRIBUTO') {
-        const { error: breakdownError } = await supabase
-          .from('payroll_monotributo_breakdown')
-          .insert({
-            settlement_id: settlement.id,
+    const relDepIds = createdSettlements
+      .filter((s) => s.contract_type_snapshot === 'RELACION_DEPENDENCIA')
+      .map((s) => s.id);
+
+    // Bulk insert breakdowns and payslips in parallel (2 round-trips total)
+    const inserts: Promise<unknown>[] = [];
+
+    if (monotributoIds.length > 0) {
+      inserts.push(
+        supabase.from('payroll_monotributo_breakdown').insert(
+          monotributoIds.map((id) => ({
+            settlement_id: id,
             sueldo: 0,
             monotributo: 0,
             reintegro_internet: 0,
             reintegro_extraordinario: 0,
             plus_vacacional: 0,
             total_a_facturar: 0,
-          });
+          }))
+        )
+      );
+    }
 
-        if (breakdownError) {
-          console.error(`Error creating breakdown for settlement ${settlement.id}:`, breakdownError);
-        }
-      } else {
-        const { error: payslipError } = await supabase
-          .from('payroll_payslips')
-          .insert({
-            settlement_id: settlement.id,
+    if (relDepIds.length > 0) {
+      inserts.push(
+        supabase.from('payroll_payslips').insert(
+          relDepIds.map((id) => ({
+            settlement_id: id,
             pdf_storage_path: null,
             pdf_filename: null,
             pdf_uploaded_at: null,
             pdf_uploaded_by: null,
-          });
-
-        if (payslipError) {
-          console.error(`Error creating payslip record for settlement ${settlement.id}:`, payslipError);
-        }
-      }
-
-      settlementCount++;
+          }))
+        )
+      );
     }
 
+    await Promise.all(inserts);
+
     return NextResponse.json(
-      { period, settlement_count: settlementCount },
+      { period, settlement_count: createdSettlements.length },
       { status: 201 }
     );
   } catch (error: any) {

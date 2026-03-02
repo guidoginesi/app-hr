@@ -24,20 +24,38 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleDownload = async (settlementId: string) => {
+  const handleDownload = async (settlementId: string, filename: string) => {
     setDownloadingId(settlementId);
     setError(null);
 
     try {
       const res = await fetch(`/api/portal/payroll/payslips/${settlementId}`);
-      const data = await res.json();
 
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setError(data.error || 'Error al descargar el recibo');
         return;
       }
 
-      window.open(data.url, '_blank');
+      const contentType = res.headers.get('Content-Type') || '';
+
+      if (contentType.includes('application/pdf')) {
+        // Direct file proxy — download as blob
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'recibo.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // Fallback: signed URL redirect
+        const data = await res.json();
+        if (data.url) window.open(data.url, '_blank');
+        else setError('No se pudo obtener el enlace al recibo');
+      }
     } catch {
       setError('Error al descargar el recibo');
     } finally {
@@ -94,7 +112,7 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDownload(settlement.id)}
+                  onClick={() => handleDownload(settlement.id, settlement.pdf_filename || `recibo-${settlement.period_month}-${settlement.period_year}.pdf`)}
                   disabled={downloadingId === settlement.id}
                   className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
                 >

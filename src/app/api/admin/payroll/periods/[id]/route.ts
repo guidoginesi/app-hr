@@ -59,6 +59,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
       vacation_bonus: s.plus_vacacional ?? 0,
       total: s.total_a_facturar ?? 0,
       payslip_url: s.pdf_storage_path ?? null,
+      invoice_storage_path: s.invoice_storage_path ?? null,
+      invoice_filename: s.invoice_filename ?? null,
+      invoice_uploaded_at: s.invoice_uploaded_at ?? null,
       email_to: s.email_to ?? null,
     }));
 

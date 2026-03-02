@@ -15,6 +15,15 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const supabase = getSupabaseServer();
 
+    // Optional body with specific settlement IDs to validate
+    let settlementIds: string[] | null = null;
+    try {
+      const body = await req.json();
+      if (Array.isArray(body?.settlement_ids) && body.settlement_ids.length > 0) {
+        settlementIds = body.settlement_ids;
+      }
+    } catch { /* no body = validate all */ }
+
     // Verify period exists
     const { data: period, error: periodError } = await supabase
       .from('payroll_periods')
@@ -26,12 +35,18 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Período no encontrado' }, { status: 404 });
     }
 
-    // Get all DRAFT settlements for validation
-    const { data: settlements, error: fetchError } = await supabase
+    // Get DRAFT settlements (optionally filtered by IDs)
+    let query = supabase
       .from('payroll_employee_settlements')
       .select('id, contract_type_snapshot, employee_id')
       .eq('period_id', id)
       .eq('status', 'DRAFT');
+
+    if (settlementIds) {
+      query = query.in('id', settlementIds);
+    }
+
+    const { data: settlements, error: fetchError } = await query;
 
     if (fetchError) {
       console.error('Error fetching settlements for validation:', fetchError);

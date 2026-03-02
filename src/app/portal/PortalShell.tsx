@@ -44,13 +44,15 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
   // Get initials for avatar
   const initials = `${employee.first_name?.charAt(0) || ''}${employee.last_name?.charAt(0) || ''}`.toUpperCase();
 
+  const isRelDep = employee.employment_type === 'dependency';
+
   const navItems = [
     { key: 'dashboard' as const, label: 'Dashboard', href: '/portal' },
     { key: 'time-off' as const, label: 'Time Off', href: '/portal/time-off' },
     { key: 'evaluaciones' as const, label: 'Evaluaciones', href: '/portal/evaluaciones' },
     { key: 'objetivos' as const, label: 'Objetivos', href: '/portal/objetivos' },
-    { key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' },
-    { key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' },
+    ...(!isRelDep ? [{ key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' }] : []),
+    ...(isRelDep ? [{ key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' }] : []),
     ...(isLeader ? [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] : []),
   ];
 
