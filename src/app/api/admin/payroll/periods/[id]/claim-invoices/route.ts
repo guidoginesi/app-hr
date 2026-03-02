@@ -71,9 +71,7 @@ export async function POST(_req: NextRequest, context: RouteContext) {
               <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Factura pendiente — ${periodLabel}</h2>
               <p style="color:#71717a;margin-top:0">Hola ${employeeName},</p>
               <p>Todavía no recibimos tu factura correspondiente a la liquidación de <strong>${periodLabel}</strong>.</p>
-              <p>Por favor, emití la factura por el importe de tu liquidación y cargala en el portal o enviala a
-                <a href="mailto:manuela@pow.la" style="color:#4f46e5">manuela@pow.la</a> a la brevedad.
-              </p>
+              <p>Por favor, emití la factura por el importe de tu liquidación y cargala en el portal a la brevedad.</p>
               <a href="${portalUrl}/portal/liquidaciones" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;margin-top:16px">
                 Cargar factura en el portal
               </a>

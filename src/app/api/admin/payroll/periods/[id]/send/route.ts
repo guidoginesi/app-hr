@@ -118,8 +118,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
             </table>
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:24px">
               <p style="margin:0;font-size:14px;color:#92400e">
-                <strong>Recordá:</strong> emití la factura por el Total a Facturar y enviala a
-                <a href="mailto:manuela@pow.la" style="color:#92400e">manuela@pow.la</a> dentro de 1 día hábil.
+                <strong>Recordá:</strong> emití la factura por el Total a Facturar y cargala en el portal dentro de 1 día hábil.
               </p>
             </div>
             <a href="${portalUrl}/portal/liquidaciones" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Ver en el portal</a>
