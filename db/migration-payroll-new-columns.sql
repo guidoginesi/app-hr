@@ -10,7 +10,8 @@ ALTER TABLE public.payroll_monotributo_breakdown
   ADD COLUMN IF NOT EXISTS adelanto_sueldo       numeric(12,2) NOT NULL DEFAULT 0;
 
 -- Recrear la vista payroll_settlements_with_details para incluir las nuevas columnas
-CREATE OR REPLACE VIEW public.payroll_settlements_with_details AS
+DROP VIEW IF EXISTS public.payroll_settlements_with_details;
+CREATE VIEW public.payroll_settlements_with_details AS
 SELECT
   s.*,
   p.year AS period_year,
