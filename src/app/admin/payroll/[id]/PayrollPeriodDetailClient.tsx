@@ -57,6 +57,7 @@ type Settlement = {
   invoice_storage_path: string | null;
   invoice_filename: string | null;
   invoice_uploaded_at: string | null;
+  email_to: string | null;
 };
 
 const currencyFormatter = new Intl.NumberFormat('es-AR', {
