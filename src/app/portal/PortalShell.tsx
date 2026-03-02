@@ -5,12 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useTransition, useState, useRef, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'liquidaciones' | 'recibos';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'liquidaciones' | 'recibos' | 'messages' | 'offboarding' | 'room-booking';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -51,6 +52,8 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
     { key: 'time-off' as const, label: 'Time Off', href: '/portal/time-off' },
     { key: 'evaluaciones' as const, label: 'Evaluaciones', href: '/portal/evaluaciones' },
     { key: 'objetivos' as const, label: 'Objetivos', href: '/portal/objetivos' },
+    { key: 'room-booking' as const, label: 'Reserva de Salas', href: '/portal/room-booking' },
+    { key: 'messages' as const, label: 'Mensajes', href: '/portal/messages' },
     ...(!isRelDep ? [{ key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' }] : []),
     ...(isRelDep ? [{ key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' }] : []),
     ...(isLeader ? [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] : []),
@@ -96,117 +99,132 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
               Bienvenido, {employee.first_name}
             </p>
           </div>
-          
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-zinc-100"
-            >
-              {employee.photo_url ? (
-                <img
-                  src={employee.photo_url}
-                  alt={`${employee.first_name} ${employee.last_name}`}
-                  className="h-9 w-9 rounded-full object-cover ring-2 ring-zinc-200"
-                />
-              ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white ring-2 ring-emerald-200">
-                  {initials}
-                </div>
-              )}
-              <div className="hidden text-left md:block">
-                <p className="font-medium text-zinc-900">{employee.first_name} {employee.last_name}</p>
-                <p className="text-xs text-zinc-500">{employee.job_title || 'Empleado'}</p>
-              </div>
-              <svg
-                className={`h-4 w-4 text-zinc-500 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+
+          <div className="flex items-center gap-3">
+            <NotificationBell employeeId={employee.id} />
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-zinc-100"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Dropdown menu */}
-            {isProfileOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-zinc-200 bg-white py-2 shadow-lg">
-                {/* User info header */}
-                <div className="border-b border-zinc-100 px-4 py-3">
-                  <p className="font-semibold text-zinc-900">{employee.first_name} {employee.last_name}</p>
-                  <p className="text-sm text-zinc-500">{employee.work_email || employee.personal_email}</p>
+                {employee.photo_url ? (
+                  <img
+                    src={employee.photo_url}
+                    alt={`${employee.first_name} ${employee.last_name}`}
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-zinc-200"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white ring-2 ring-emerald-200">
+                    {initials}
+                  </div>
+                )}
+                <div className="hidden text-left md:block">
+                  <p className="font-medium text-zinc-900">{employee.first_name} {employee.last_name}</p>
+                  <p className="text-xs text-zinc-500">{employee.job_title || 'Empleado'}</p>
                 </div>
+                <svg
+                  className={`h-4 w-4 text-zinc-500 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-                {/* Menu items */}
-                <div className="py-1">
-                  <Link
-                    href="/portal/profile"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
-                  >
-                    <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Mi Perfil
-                  </Link>
+              {/* Dropdown menu */}
+              {isProfileOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-zinc-200 bg-white py-2 shadow-lg">
+                  {/* User info header */}
+                  <div className="border-b border-zinc-100 px-4 py-3">
+                    <p className="font-semibold text-zinc-900">{employee.first_name} {employee.last_name}</p>
+                    <p className="text-sm text-zinc-500">{employee.work_email || employee.personal_email}</p>
+                  </div>
 
-                  <Link
-                    href="/portal/evaluaciones"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
-                  >
-                    <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Evaluaciones
-                  </Link>
-
-                  <Link
-                    href="/portal/objetivos"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
-                  >
-                    <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    Objetivos
-                  </Link>
-
-                  {isLeader && (
+                  {/* Menu items */}
+                  <div className="py-1">
                     <Link
-                      href="/portal/team"
+                      href="/portal/profile"
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
                     >
                       <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Mi Equipo
+                      Mi Perfil
                     </Link>
-                  )}
-                </div>
 
-                {/* Logout */}
-                <div className="border-t border-zinc-100 py-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      handleLogout();
-                    }}
-                    disabled={isPending}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
-                  >
-                    <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    {isPending ? 'Cerrando sesión...' : 'Cerrar sesión'}
-                  </button>
+                    <Link
+                      href="/portal/evaluaciones"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                    >
+                      <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Evaluaciones
+                    </Link>
+
+                    <Link
+                      href="/portal/objetivos"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                    >
+                      <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      Objetivos
+                    </Link>
+
+                    <Link
+                      href="/portal/room-booking"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                    >
+                      <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Reserva de Salas
+                    </Link>
+
+                    {isLeader && (
+                      <Link
+                        href="/portal/team"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                      >
+                        <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Mi Equipo
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t border-zinc-100 py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        handleLogout();
+                      }}
+                      disabled={isPending}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
+                    >
+                      <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      {isPending ? 'Cerrando sesión...' : 'Cerrar sesión'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </header>
 

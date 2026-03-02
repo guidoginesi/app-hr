@@ -39,6 +39,8 @@ export default function TimeOffRequestsPage() {
   const [cancellingBonusId, setCancellingBonusId] = useState<string | null>(null);
   const [cancelBonusReason, setCancelBonusReason] = useState('');
   const [activeTab, setActiveTab] = useState<'requests' | 'bonus'>('requests');
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [resendFeedback, setResendFeedback] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
 
   const currentYear = new Date().getFullYear();
 
@@ -209,6 +211,28 @@ export default function TimeOffRequestsPage() {
       alert('Error de conexión al cancelar la solicitud');
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  async function handleResendNotification(id: string) {
+    setResendingId(id);
+    setResendFeedback(null);
+    try {
+      const res = await fetch(`/api/admin/time-off/requests/${id}/resend-notification`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      setResendFeedback({
+        id,
+        ok: res.ok,
+        msg: res.ok ? (data.message ?? 'Email reenviado') : (data.error ?? 'Error al reenviar'),
+      });
+      // Auto-hide feedback after 5s
+      setTimeout(() => setResendFeedback(null), 5000);
+    } catch {
+      setResendFeedback({ id, ok: false, msg: 'Error de conexión' });
+    } finally {
+      setResendingId(null);
     }
   }
 
@@ -401,7 +425,31 @@ export default function TimeOffRequestsPage() {
                                 </button>
                               </div>
                               {request.status === 'pending_leader' && (
-                                <span className="text-xs text-amber-600">Saltar aprobación líder</span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-xs text-amber-600">Saltar aprobación líder</span>
+                                  <button
+                                    onClick={() => handleResendNotification(request.id)}
+                                    disabled={resendingId === request.id}
+                                    title="Reenviar email de notificación al líder"
+                                    className="flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+                                  >
+                                    {resendingId === request.id ? (
+                                      '...'
+                                    ) : (
+                                      <>
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        Reenviar notif.
+                                      </>
+                                    )}
+                                  </button>
+                                  {resendFeedback?.id === request.id && (
+                                    <span className={`text-xs ${resendFeedback.ok ? 'text-green-600' : 'text-red-600'}`}>
+                                      {resendFeedback.ok ? '✓' : '✗'} {resendFeedback.msg}
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </>
                           )}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
+import { createSystemNotification } from '@/lib/notificationService';
 
 // PUT /api/admin/time-off/requests/[id]/approve - HR Admin approves a leave request
 export async function PUT(
@@ -103,7 +104,7 @@ export async function PUT(
 
     const { data: employeeData } = await supabase
       .from('employees')
-      .select('first_name, personal_email, work_email')
+      .select('first_name, personal_email, work_email, user_id')
       .eq('id', request.employee_id)
       .single();
 
@@ -129,6 +130,19 @@ export async function PUT(
           leaveRequestId: id,
         }).catch((err) => console.error('Error sending HR approved email:', err));
       }
+    }
+
+    // In-app notification to employee: final approval
+    if (employeeData?.user_id) {
+      createSystemNotification({
+        userIds: [employeeData.user_id],
+        title: '¡Solicitud de licencia aprobada!',
+        body: `Tu solicitud de ${leaveType?.name ?? 'licencia'} fue aprobada definitivamente. ¡Que lo disfrutes!`,
+        priority: 'info',
+        deepLink: '/portal/time-off',
+        metadata: { entity_type: 'leave_request', entity_id: id },
+        dedupeKey: `leave_request:${id}:approved_final`,
+      }).catch((err) => console.error('Error creating final approval in-app notification:', err));
     }
 
     return NextResponse.json(data);

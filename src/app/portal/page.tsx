@@ -75,8 +75,8 @@ export default async function PortalDashboardPage() {
             </a>
           </div>
 
-          {/* Performance Card - Coming Soon */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
+          {/* Evaluaciones Card */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
                 <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,9 +88,39 @@ export default async function PortalDashboardPage() {
                 <p className="text-sm text-zinc-500">Ver tu desempeño</p>
               </div>
             </div>
-            <span className="mt-4 inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-              Próximamente
-            </span>
+            <a
+              href="/portal/evaluaciones"
+              className="mt-4 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700"
+            >
+              Ver evaluaciones
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+
+          {/* Reserva de Salas Card */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-100">
+                <svg className="h-6 w-6 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-900">Reserva de Salas</h3>
+                <p className="text-sm text-zinc-500">Salas de reuniones</p>
+              </div>
+            </div>
+            <a
+              href="/portal/room-booking"
+              className="mt-4 inline-flex items-center text-sm font-medium text-cyan-600 hover:text-cyan-700"
+            >
+              Ver disponibilidad
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
           </div>
 
           {/* Team Card - Only for leaders */}
