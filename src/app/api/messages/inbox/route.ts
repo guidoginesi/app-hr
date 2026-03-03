@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
       .eq('messages.status', 'published')
       .order('read_at', { ascending: true, nullsFirst: true })
       .order('delivered_at', { ascending: false })
+      .order('published_at', { ascending: false, referencedTable: 'messages' })
       .range(offset, offset + limit - 1);
 
     if (error) {
