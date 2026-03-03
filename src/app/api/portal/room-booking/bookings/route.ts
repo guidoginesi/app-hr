@@ -273,7 +273,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'end_at must be after start_at' }, { status: 400 });
     }
 
-    if (startDate <= new Date()) {
+    if (endDate <= new Date()) {
       return NextResponse.json({ error: 'Booking must be in the future' }, { status: 400 });
     }
 
