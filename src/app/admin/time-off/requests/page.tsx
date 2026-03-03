@@ -32,6 +32,7 @@ export default function TimeOffRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
+  const [nameFilter, setNameFilter] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -269,6 +270,12 @@ export default function TimeOffRequestsPage() {
   const activeBonusAdjustments = bonusAdjustments.filter(b => b.status === 'active');
   const cancelledBonusAdjustments = bonusAdjustments.filter(b => b.status === 'cancelled');
 
+  const filteredRequests = nameFilter.trim()
+    ? requests.filter((r) =>
+        r.employee_name?.toLowerCase().includes(nameFilter.trim().toLowerCase())
+      )
+    : requests;
+
   return (
     <TimeOffShell active="requests">
       <div className="space-y-6">
@@ -308,7 +315,30 @@ export default function TimeOffRequestsPage() {
         {activeTab === 'requests' && (
           <>
             {/* Filters */}
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-3">
+              {/* Search by name */}
+              <div className="relative">
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre..."
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  className="rounded-lg border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+                {nameFilter && (
+                  <button
+                    onClick={() => setNameFilter('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -342,9 +372,9 @@ export default function TimeOffRequestsPage() {
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
             </div>
-          ) : requests.length === 0 ? (
+          ) : filteredRequests.length === 0 ? (
             <div className="py-12 text-center text-sm text-zinc-500">
-              No hay solicitudes
+              {nameFilter ? `Sin resultados para "${nameFilter}"` : 'No hay solicitudes'}
             </div>
           ) : (
             <table className="w-full">
@@ -359,7 +389,7 @@ export default function TimeOffRequestsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
-                {requests.map((request) => (
+                {filteredRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-zinc-50">
                     <td className="px-6 py-4">
                       <p className="font-medium text-zinc-900">{request.employee_name}</p>
