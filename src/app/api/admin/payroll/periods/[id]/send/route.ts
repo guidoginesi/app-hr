@@ -77,7 +77,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const errors: { settlement_id: string; error: string }[] = [];
 
     for (const s of settlements) {
-      const emailTo = s.email_to as string | null;
+      // Prefer the snapshot email; fall back to the live employee email from the view
+      const emailTo = (s.email_to as string | null)?.trim() || (s.employee_email as string | null)?.trim() || null;
       if (!emailTo) {
         console.warn(`[Payroll Send] Settlement ${s.id} has no email_to, skipping email`);
       }

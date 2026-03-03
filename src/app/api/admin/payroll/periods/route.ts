@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
       contract_type_snapshot: emp.employment_type === 'dependency' ? 'RELACION_DEPENDENCIA' : 'MONOTRIBUTO',
       currency: 'ARS',
       status: 'DRAFT',
-      email_to: emp.work_email || emp.personal_email || null,
+      email_to: emp.work_email?.trim() || emp.personal_email?.trim() || null,
     }));
 
     const { data: createdSettlements, error: settError } = await supabase
