@@ -126,7 +126,8 @@ export async function POST(req: NextRequest) {
 
     const newCode = newLeaveType?.code ?? '';
     const blockingOverlap = (overlapping ?? []).filter((r) => {
-      const existingCode = (r.leave_types as { code: string } | null)?.code;
+      const lt = r.leave_types;
+      const existingCode = (Array.isArray(lt) ? lt[0] : lt as unknown as { code: string } | null)?.code;
       if (
         (newCode === 'pow_days' && existingCode === 'remote_work') ||
         (newCode === 'remote_work' && existingCode === 'pow_days')

@@ -213,7 +213,8 @@ export async function POST(req: NextRequest) {
       .gte('end_date', parsed.data.start_date);
 
     const blockingOverlap = (overlapping ?? []).filter((r) => {
-      const existingCode = (r.leave_types as { code: string } | null)?.code;
+      const lt = r.leave_types;
+      const existingCode = (Array.isArray(lt) ? lt[0] : lt as unknown as { code: string } | null)?.code;
       if (
         (leaveType.code === 'pow_days' && existingCode === 'remote_work') ||
         (leaveType.code === 'remote_work' && existingCode === 'pow_days')
