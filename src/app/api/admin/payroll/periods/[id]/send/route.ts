@@ -152,11 +152,22 @@ export async function POST(req: NextRequest, context: RouteContext) {
         continue;
       }
 
-      // Send email (fire-and-forget - don't fail the whole batch if one email fails)
+      // Send email and persist Resend ID + any error for traceability
       if (emailTo) {
         sendSimpleEmail({ to: emailTo, subject: emailSubject, html: emailHtml }).then((result) => {
           if (!result.success) {
             console.error(`[Payroll Send] Email failed for settlement ${s.id}:`, result.error);
+            supabase
+              .from('payroll_employee_settlements')
+              .update({ email_provider_id: `ERROR: ${result.error}`, updated_at: new Date().toISOString() })
+              .eq('id', s.id)
+              .then(() => {});
+          } else if (result.id) {
+            supabase
+              .from('payroll_employee_settlements')
+              .update({ email_provider_id: result.id, updated_at: new Date().toISOString() })
+              .eq('id', s.id)
+              .then(() => {});
           }
         }).catch((err) => {
           console.error(`[Payroll Send] Email exception for settlement ${s.id}:`, err);

@@ -236,7 +236,7 @@ export async function sendSimpleEmail(params: {
 	to: string;
 	subject: string;
 	html: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; id?: string; error?: string }> {
 	try {
 		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 		const resend = getResend();
@@ -260,7 +260,7 @@ export async function sendSimpleEmail(params: {
 		}
 
 		console.log('[sendSimpleEmail] Email sent successfully, Resend ID:', data?.id);
-		return { success: true };
+		return { success: true, id: data?.id };
 	} catch (error: any) {
 		console.error('[sendSimpleEmail] Exception:', error);
 		return { success: false, error: error.message };
