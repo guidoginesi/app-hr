@@ -5,6 +5,7 @@ import { TimeOffShell } from './TimeOffShell';
 import Link from 'next/link';
 import { PendingHRSection } from './PendingHRSection';
 import type { LeaveRequestWithDetails } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,7 +156,7 @@ export default async function TimeOffDashboardPage() {
                       </p>
                     </div>
                     <span className="text-sm text-zinc-500">
-                      hasta {new Date(request.end_date).toLocaleDateString('es-AR')}
+                      hasta {formatDateLocal(request.end_date)}
                     </span>
                   </div>
                 </li>

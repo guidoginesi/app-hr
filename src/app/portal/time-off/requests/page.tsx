@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS, CANCELLABLE_STATUSES } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 export default function TimeOffRequestsHistoryPage() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
@@ -133,14 +134,14 @@ export default function TimeOffRequestsHistoryPage() {
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-zinc-600">
-                        {new Date(request.start_date).toLocaleDateString('es-AR', {
+                        {formatDateLocal(request.start_date, 'es-AR', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                         })}{' '}
                         -{' '}
-                        {new Date(request.end_date).toLocaleDateString('es-AR', {
+                        {formatDateLocal(request.end_date, 'es-AR', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',

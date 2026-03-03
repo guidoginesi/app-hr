@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
+import { formatDateLocal } from '@/lib/dateUtils';
 
 export function TeamTimeOffClient() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
@@ -233,13 +234,13 @@ export function TeamTimeOffClient() {
                           : `día${request.days_requested > 1 ? 's' : ''}`}
                       </p>
                       <p className="text-sm text-zinc-500">
-                        {new Date(request.start_date).toLocaleDateString('es-AR', {
+                        {formatDateLocal(request.start_date, 'es-AR', {
                           weekday: 'short',
                           day: 'numeric',
                           month: 'short',
                         })}{' '}
                         -{' '}
-                        {new Date(request.end_date).toLocaleDateString('es-AR', {
+                        {formatDateLocal(request.end_date, 'es-AR', {
                           weekday: 'short',
                           day: 'numeric',
                           month: 'short',
