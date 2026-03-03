@@ -127,13 +127,21 @@ export default function NewTimeOffRequestPage() {
     return date.getDay() === 1;
   }
 
+  // Format a local Date object as YYYY-MM-DD without UTC conversion
+  function formatLocalDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
   // Calculate end date for vacations based on weeks
   function calculateVacationEndDate(start: string, weeks: number): string {
     if (!start) return '';
     const startDate = parseLocalDate(start);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + (weeks * 7) - 1); // -1 because we include start day
-    return endDate.toISOString().split('T')[0];
+    return formatLocalDate(endDate);
   }
 
   // Get next Monday from a given date
@@ -142,7 +150,7 @@ export default function NewTimeOffRequestPage() {
     const day = date.getDay();
     const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
     date.setDate(date.getDate() + daysUntilMonday);
-    return date.toISOString().split('T')[0];
+    return formatLocalDate(date);
   }
 
   // Handle start date change for week-based types (vacations, remote work)
