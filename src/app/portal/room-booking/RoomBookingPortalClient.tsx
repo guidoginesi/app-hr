@@ -210,9 +210,9 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
   };
 
   const handleSlotClick = (date: Date, hour: number) => {
-    const slotDate = new Date(date);
-    slotDate.setHours(hour, 0, 0, 0);
-    if (slotDate < new Date()) return;
+    const slotEnd = new Date(date);
+    slotEnd.setHours(hour + 1, 0, 0, 0);
+    if (slotEnd <= new Date()) return;
     const existing = getBookingForSlot(date, hour);
     if (existing) return;
 
