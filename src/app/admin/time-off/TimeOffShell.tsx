@@ -7,7 +7,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 
 type TimeOffShellProps = {
   children: ReactNode;
-  active: 'dashboard' | 'requests' | 'balances' | 'settings';
+  active: 'dashboard' | 'requests' | 'balances' | 'novedades' | 'settings';
 };
 
 export function TimeOffShell({ children, active }: TimeOffShellProps) {
@@ -65,6 +65,19 @@ export function TimeOffShell({ children, active }: TimeOffShellProps) {
           >
             <span>Balances</span>
             {active === 'balances' && (
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            )}
+          </Link>
+          <Link
+            href="/admin/time-off/novedades"
+            className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+              active === 'novedades'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+            }`}
+          >
+            <span>Novedades</span>
+            {active === 'novedades' && (
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
           </Link>
