@@ -480,6 +480,7 @@ export default function TimeOffRequestsPage() {
                   <th className="px-6 py-3">Fechas</th>
                   <th className="px-6 py-3">Días</th>
                   <th className="px-6 py-3">Estado</th>
+                  <th className="px-6 py-3">Comentario</th>
                   <th className="px-6 py-3">Acciones</th>
                 </tr>
               </thead>
@@ -503,6 +504,15 @@ export default function TimeOffRequestsPage() {
                       >
                         {getStatusText(request.status)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 max-w-[200px]">
+                      {request.notes ? (
+                        <p className="text-xs text-zinc-500 italic line-clamp-2" title={request.notes}>
+                          "{request.notes}"
+                        </p>
+                      ) : (
+                        <span className="text-xs text-zinc-300">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {canHRApprove(request.status) && (
