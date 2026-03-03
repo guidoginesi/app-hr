@@ -1,9 +1,54 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import * as XLSX from 'xlsx';
 import { TimeOffShell } from '../TimeOffShell';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+const NOV_STATUS_LABELS: Record<string, string> = {
+  approved: 'Aprobada',
+  pending_leader: 'Pend. Líder',
+  pending_hr: 'Pend. HR',
+  rejected_leader: 'Rechazada Líder',
+  rejected_hr: 'Rechazada HR',
+  rejected: 'Rechazada',
+  cancelled: 'Cancelada',
+  pending: 'Pendiente',
+};
+
+const NOV_STATUS_COLORS: Record<string, string> = {
+  approved: 'bg-emerald-100 text-emerald-800',
+  pending_leader: 'bg-amber-100 text-amber-800',
+  pending_hr: 'bg-blue-100 text-blue-800',
+  rejected_leader: 'bg-red-100 text-red-800',
+  rejected_hr: 'bg-red-100 text-red-800',
+  rejected: 'bg-red-100 text-red-800',
+  cancelled: 'bg-zinc-100 text-zinc-500',
+  pending: 'bg-amber-100 text-amber-800',
+};
+
+interface Novedad {
+  id: string;
+  employee_name: string;
+  leave_type_name: string;
+  start_date: string;
+  end_date: string;
+  days_requested: number;
+  count_type: string;
+  status: string;
+  notes: string | null;
+  rejection_reason: string | null;
+  hr_rejection_reason: string | null;
+  leader_rejection_reason: string | null;
+}
+
+interface NovEmployee { id: string; first_name: string; last_name: string; }
 
 interface BonusAdjustment {
   id: string;
@@ -40,15 +85,45 @@ export default function TimeOffRequestsPage() {
   const [cancelReason, setCancelReason] = useState('');
   const [cancellingBonusId, setCancellingBonusId] = useState<string | null>(null);
   const [cancelBonusReason, setCancelBonusReason] = useState('');
-  const [activeTab, setActiveTab] = useState<'requests' | 'bonus'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'bonus' | 'novedades'>('requests');
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendFeedback, setResendFeedback] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
 
+  // Novedades state
+  const now = new Date();
+  const [novYear, setNovYear] = useState(now.getFullYear());
+  const [novMonth, setNovMonth] = useState(now.getMonth() + 1);
+  const [novEmployeeId, setNovEmployeeId] = useState('');
+  const [novStatusFilter, setNovStatusFilter] = useState('');
+  const [novedades, setNovedades] = useState<Novedad[]>([]);
+  const [novEmployees, setNovEmployees] = useState<NovEmployee[]>([]);
+  const [novLoading, setNovLoading] = useState(false);
+  const [novExpandedRow, setNovExpandedRow] = useState<string | null>(null);
+
   const currentYear = new Date().getFullYear();
 
+  useEffect(() => { fetchData(); }, [statusFilter, typeFilter]);
+
+  const fetchNovedades = useCallback(async () => {
+    setNovLoading(true);
+    try {
+      const params = new URLSearchParams({ year: String(novYear), month: String(novMonth) });
+      if (novEmployeeId) params.set('employee_id', novEmployeeId);
+      if (novStatusFilter) params.set('status', novStatusFilter);
+      const res = await fetch(`/api/admin/time-off/novedades?${params}`);
+      const data = await res.json();
+      if (res.ok) {
+        setNovedades(data.novedades ?? []);
+        setNovEmployees(data.employees ?? []);
+      }
+    } finally {
+      setNovLoading(false);
+    }
+  }, [novYear, novMonth, novEmployeeId, novStatusFilter]);
+
   useEffect(() => {
-    fetchData();
-  }, [statusFilter, typeFilter]);
+    if (activeTab === 'novedades') fetchNovedades();
+  }, [activeTab, fetchNovedades]);
 
   async function fetchData() {
     setLoading(true);
@@ -265,6 +340,26 @@ export default function TimeOffRequestsPage() {
     } finally {
       setActionLoading(null);
     }
+  }
+
+  function exportNovedadesXLSX() {
+    const periodLabel = `${MONTH_NAMES[novMonth - 1]} ${novYear}`;
+    const rows = novedades.map((n) => ({
+      Empleado: n.employee_name,
+      'Tipo de licencia': n.leave_type_name,
+      'Fecha inicio': formatDateLocal(n.start_date),
+      'Fecha fin': formatDateLocal(n.end_date),
+      Duración: n.count_type === 'weeks'
+        ? `${n.days_requested} semana${n.days_requested !== 1 ? 's' : ''}`
+        : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`,
+      Estado: NOV_STATUS_LABELS[n.status] ?? n.status,
+      Observaciones: [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
+        .filter(Boolean).join(' | '),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, periodLabel);
+    XLSX.writeFile(wb, `novedades-${novYear}-${String(novMonth).padStart(2, '0')}.xlsx`);
   }
 
   const activeBonusAdjustments = bonusAdjustments.filter(b => b.status === 'active');
@@ -696,6 +791,132 @@ export default function TimeOffRequestsPage() {
                 {cancelledBonusAdjustments.length > 0 && `, ${cancelledBonusAdjustments.length} cancelado${cancelledBonusAdjustments.length !== 1 ? 's' : ''}`}
               </div>
             )}
+          </>
+        )}
+
+        {/* ── NOVEDADES TAB ── */}
+        {activeTab === 'novedades' && (
+          <>
+            {/* Filters */}
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">Mes</label>
+                <select value={novMonth} onChange={(e) => setNovMonth(Number(e.target.value))}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  {MONTH_NAMES.map((name, i) => <option key={i + 1} value={i + 1}>{name}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">Año</label>
+                <select value={novYear} onChange={(e) => setNovYear(Number(e.target.value))}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1 min-w-[180px]">
+                <label className="text-xs font-medium text-zinc-500">Persona</label>
+                <select value={novEmployeeId} onChange={(e) => setNovEmployeeId(e.target.value)}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  <option value="">Todos</option>
+                  {novEmployees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">Estado</label>
+                <select value={novStatusFilter} onChange={(e) => setNovStatusFilter(e.target.value)}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                  <option value="">Todos</option>
+                  <option value="approved">Aprobadas</option>
+                  <option value="pending_leader">Pend. Líder</option>
+                  <option value="pending_hr">Pend. HR</option>
+                  <option value="rejected_leader">Rechazadas Líder</option>
+                  <option value="rejected_hr">Rechazadas HR</option>
+                </select>
+              </div>
+              <div className="ml-auto flex items-end">
+                <button onClick={exportNovedadesXLSX} disabled={novedades.length === 0}
+                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Exportar XLSX
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
+                <p className="text-sm text-zinc-500">
+                  {novLoading ? 'Cargando...' : `${novedades.length} novedad${novedades.length !== 1 ? 'es' : ''} — ${MONTH_NAMES[novMonth - 1]} ${novYear}`}
+                </p>
+              </div>
+              {novLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                </div>
+              ) : novedades.length === 0 ? (
+                <div className="py-12 text-center text-sm text-zinc-500">Sin novedades para este período</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                        <th className="px-6 py-3">Empleado</th>
+                        <th className="px-6 py-3">Tipo de licencia</th>
+                        <th className="px-6 py-3">Fecha inicio</th>
+                        <th className="px-6 py-3">Fecha fin</th>
+                        <th className="px-6 py-3 text-center">Duración</th>
+                        <th className="px-6 py-3">Estado</th>
+                        <th className="px-6 py-3">Observaciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      {novedades.map((n) => {
+                        const obs = [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason].filter(Boolean).join(' | ');
+                        const isExpanded = novExpandedRow === n.id;
+                        const duracion = n.count_type === 'weeks'
+                          ? `${n.days_requested} sem.`
+                          : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`;
+                        return (
+                          <tr key={n.id} className="hover:bg-zinc-50 transition-colors">
+                            <td className="px-6 py-3 font-medium text-zinc-900">{n.employee_name}</td>
+                            <td className="px-6 py-3 text-zinc-600">{n.leave_type_name}</td>
+                            <td className="px-6 py-3 text-zinc-600">{formatDateLocal(n.start_date)}</td>
+                            <td className="px-6 py-3 text-zinc-600">{formatDateLocal(n.end_date)}</td>
+                            <td className="px-6 py-3 text-center">
+                              <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">{duracion}</span>
+                            </td>
+                            <td className="px-6 py-3">
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${NOV_STATUS_COLORS[n.status] ?? 'bg-zinc-100 text-zinc-600'}`}>
+                                {NOV_STATUS_LABELS[n.status] ?? n.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-3 max-w-xs">
+                              {obs ? (
+                                <button onClick={() => setNovExpandedRow(isExpanded ? null : n.id)}
+                                  className="flex items-start gap-1 text-left text-zinc-600 hover:text-zinc-900 transition-colors">
+                                  <span className={`text-xs leading-relaxed ${isExpanded ? '' : 'line-clamp-1'}`}>{obs}</span>
+                                  {obs.length > 60 && (
+                                    <svg className={`mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-zinc-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  )}
+                                </button>
+                              ) : <span className="text-xs text-zinc-300">—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
