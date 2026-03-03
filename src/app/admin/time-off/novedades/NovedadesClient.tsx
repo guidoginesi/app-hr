@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import * as XLSX from 'xlsx';
 import { TimeOffShell } from '../TimeOffShell';
 import { formatDateLocal } from '@/lib/dateUtils';
 
@@ -57,41 +58,23 @@ const STATUS_COLORS: Record<string, string> = {
 function exportToExcel(novedades: Novedad[], year: number, month: number) {
   const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 
-  const headers = ['Empleado', 'Tipo de licencia', 'Fecha inicio', 'Fecha fin', 'Duración', 'Estado', 'Observaciones'];
-
-  const rows = novedades.map((n) => {
-    const duracion = n.count_type === 'weeks'
+  const rows = novedades.map((n) => ({
+    Empleado: n.employee_name,
+    'Tipo de licencia': n.leave_type_name,
+    'Fecha inicio': formatDateLocal(n.start_date),
+    'Fecha fin': formatDateLocal(n.end_date),
+    Duración: n.count_type === 'weeks'
       ? `${n.days_requested} semana${n.days_requested !== 1 ? 's' : ''}`
-      : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`;
+      : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`,
+    Estado: STATUS_LABELS[n.status] ?? n.status,
+    Observaciones: [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
+      .filter(Boolean).join(' | '),
+  }));
 
-    const obs = [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
-      .filter(Boolean)
-      .join(' | ');
-
-    return [
-      n.employee_name,
-      n.leave_type_name,
-      formatDateLocal(n.start_date),
-      formatDateLocal(n.end_date),
-      duracion,
-      STATUS_LABELS[n.status] ?? n.status,
-      obs,
-    ];
-  });
-
-  // Build CSV with BOM for Excel UTF-8 compatibility
-  const BOM = '\uFEFF';
-  const csv = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\r\n');
-
-  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `novedades-${year}-${String(month).padStart(2, '0')}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, periodLabel);
+  XLSX.writeFile(wb, `novedades-${year}-${String(month).padStart(2, '0')}.xlsx`);
 }
 
 export function NovedadesClient() {
