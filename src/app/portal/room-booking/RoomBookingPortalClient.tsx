@@ -42,6 +42,27 @@ type Props = {
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 const DAY_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
+// Always work in Argentina timezone so the grid is consistent regardless of the browser's locale
+const AR_TZ = 'America/Argentina/Buenos_Aires';
+
+// Returns "YYYY-MM-DD" in Buenos Aires timezone
+function toArgDateStr(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: AR_TZ }).format(date);
+}
+
+// Returns the hour (0-23) in Buenos Aires timezone
+function toArgHour(date: Date): number {
+  return parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: AR_TZ, hour: 'numeric', hour12: false }).format(date),
+    10,
+  );
+}
+
+// Returns a Date representing the start/end of a slot in Buenos Aires time
+function argSlotBoundary(dateStr: string, hour: number): Date {
+  return new Date(`${dateStr}T${String(hour).padStart(2, '0')}:00:00-03:00`);
+}
+
 const RECURRENCE_OPTIONS = [
   { value: '', label: 'Sin recurrencia' },
   { value: 'daily', label: 'Diaria' },
@@ -197,26 +218,25 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
   }, []);
 
   const getBookingForSlot = (date: Date, hour: number): Booking | undefined => {
+    const slotDateStr = toArgDateStr(date);
+    const slotStart = argSlotBoundary(slotDateStr, hour);
+    const slotEnd = argSlotBoundary(slotDateStr, hour + 1);
     return bookings.find((b) => {
       if (b.status === 'cancelled') return false;
       const start = new Date(b.start_at);
       const end = new Date(b.end_at);
-      const slotStart = new Date(date);
-      slotStart.setHours(hour, 0, 0, 0);
-      const slotEnd = new Date(slotStart);
-      slotEnd.setHours(hour + 1, 0, 0, 0);
       return start < slotEnd && end > slotStart;
     });
   };
 
   const handleSlotClick = (date: Date, hour: number) => {
-    const slotEnd = new Date(date);
-    slotEnd.setHours(hour + 1, 0, 0, 0);
+    const argDateStr = toArgDateStr(date);
+    const slotEnd = argSlotBoundary(argDateStr, hour + 1);
     if (slotEnd <= new Date()) return;
     const existing = getBookingForSlot(date, hour);
     if (existing) return;
 
-    const dateStr = toInputDate(date);
+    const dateStr = argDateStr;
     setSelectedSlot({ date: dateStr, hour });
     setFormTitle('');
     setFormNotes('');
@@ -259,8 +279,8 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
     setSubmitting(true);
     setError(null);
     try {
-      const start_at = `${selectedSlot.date}T${formStartTime}:00`;
-      const end_at = `${selectedSlot.date}T${formEndTime}:00`;
+      const start_at = `${selectedSlot.date}T${formStartTime}:00-03:00`;
+      const end_at = `${selectedSlot.date}T${formEndTime}:00-03:00`;
 
       const body: Record<string, any> = {
         room_id: selectedRoomId,
@@ -401,10 +421,8 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
                   <div key={`t-${time}`} className="bg-zinc-50 p-3 text-center text-xs font-semibold text-zinc-500">{time}</div>,
                   ...weekDays.map((day, di) => {
                     const booking = getBookingForSlot(day, hour);
-                    const slotDate = new Date(day);
-                    slotDate.setHours(hour, 0, 0, 0);
-                    const slotEnd = new Date(day);
-                    slotEnd.setHours(hour + 1, 0, 0, 0);
+                    const argDateStr = toArgDateStr(day);
+                    const slotEnd = argSlotBoundary(argDateStr, hour + 1);
                     const isPast = slotEnd <= new Date();
                     const isMine = booking?.employee_id === employeeId;
                     const isClickable = !booking && !isPast;
