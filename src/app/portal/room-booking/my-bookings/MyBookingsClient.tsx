@@ -79,6 +79,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: 'America/Argentina/Buenos_Aires',
     });
   }
 
@@ -87,6 +88,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
+      timeZone: 'America/Argentina/Buenos_Aires',
     });
   }
 
