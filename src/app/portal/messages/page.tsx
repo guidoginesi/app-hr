@@ -35,7 +35,6 @@ export default async function MessagesInboxPage() {
     `
     )
     .eq('user_id', user.id)
-    .order('read_at', { ascending: true, nullsFirst: true })
     .order('delivered_at', { ascending: false })
     .limit(100);
 
