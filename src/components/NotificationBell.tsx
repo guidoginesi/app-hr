@@ -164,7 +164,12 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
   };
 
   const badgeCount = inbox?.badge_count ?? 0;
-  const items = inbox?.items.filter((i) => i.messages !== null) ?? [];
+  const items = (inbox?.items.filter((i) => i.messages !== null) ?? []).sort((a, b) => {
+    const aUnread = a.read_at ? 0 : 1;
+    const bUnread = b.read_at ? 0 : 1;
+    if (aUnread !== bUnread) return bUnread - aUnread;
+    return new Date(b.delivered_at).getTime() - new Date(a.delivered_at).getTime();
+  });
 
   return (
     <div className="relative" ref={drawerRef}>
