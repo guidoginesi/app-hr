@@ -136,13 +136,14 @@ export async function POST(req: NextRequest, context: RouteContext) {
           </div>`;
       }
 
-      // Mark settlement as SENT in DB
+      // Mark settlement as SENT in DB; also persist resolved email so future re-sends work
       const { error: updateError } = await supabase
         .from('payroll_employee_settlements')
         .update({
           status: 'SENT',
           sent_at: new Date().toISOString(),
           sent_by: user.id,
+          email_to: emailTo ?? undefined,   // persist resolved email if snapshot was missing
           updated_at: new Date().toISOString(),
         })
         .eq('id', s.id);
