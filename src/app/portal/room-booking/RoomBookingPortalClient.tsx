@@ -403,7 +403,9 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
                     const booking = getBookingForSlot(day, hour);
                     const slotDate = new Date(day);
                     slotDate.setHours(hour, 0, 0, 0);
-                    const isPast = slotDate < new Date();
+                    const slotEnd = new Date(day);
+                    slotEnd.setHours(hour + 1, 0, 0, 0);
+                    const isPast = slotEnd <= new Date();
                     const isMine = booking?.employee_id === employeeId;
                     const isClickable = !booking && !isPast;
 
