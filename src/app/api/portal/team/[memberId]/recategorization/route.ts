@@ -64,10 +64,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
     // Get the leader evaluation for this employee and period
     const { data: leaderEvaluation } = await supabase
       .from('evaluations')
-      .select(`
-        *,
-        recategorization:evaluation_recategorization(*)
-      `)
+      .select('*')
       .eq('period_id', currentPeriod.id)
       .eq('employee_id', memberId)
       .eq('type', 'leader')
@@ -143,8 +140,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
     const evaluatedCount = mainObjectives.filter(isObjectiveEvaluated).length;
     const objectivesEvaluated = mainObjectives.length > 0 && evaluatedCount === mainObjectives.length;
 
-    // Get existing recategorization (evaluation-linked takes priority over note-only)
-    const recategorization = leaderEvaluation.recategorization?.[0] || null;
+    // Get existing recategorization directly (avoids relying on FK join)
+    const { data: recategorizationRecord } = await supabase
+      .from('evaluation_recategorization')
+      .select('*')
+      .eq('evaluation_id', leaderEvaluation.id)
+      .maybeSingle();
+
+    const recategorization = recategorizationRecord || null;
 
     // Calculate eligibility based on rules
     const leaderScore = leaderEvaluation.total_score || 0;
