@@ -219,8 +219,21 @@ export async function POST(req: NextRequest, context: RouteContext) {
       level_recategorization === 'not_approved' && position_recategorization === 'not_approved';
 
     const hrStatus = isNotApplicable ? 'rejected' : 'pending';
-    const hrNotes = isNotApplicable ? null : undefined;
     const now = new Date().toISOString();
+
+    // Build base payload — include hr_notes only when clearing it (not-applicable case)
+    // to avoid sending unknown columns to a potentially stale PostgREST schema cache.
+    const basePayload: Record<string, unknown> = {
+      level_recategorization,
+      position_recategorization,
+      recommended_level,
+      notes,
+      hr_status: hrStatus,
+      updated_at: now,
+    };
+    if (isNotApplicable) {
+      basePayload.hr_notes = null;
+    }
 
     let updated;
 
@@ -242,16 +255,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
       const { data, error } = await supabase
         .from('evaluation_recategorization')
         .upsert({
+          ...basePayload,
           evaluation_id,
           employee_id: memberId,
           period_id: evaluation.period_id,
-          level_recategorization,
-          position_recategorization,
-          recommended_level,
-          notes,
-          hr_status: hrStatus,
-          hr_notes: hrNotes,
-          updated_at: now,
         }, { onConflict: 'evaluation_id' })
         .select()
         .single();
@@ -287,15 +294,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       if (existing) {
         const { data, error } = await supabase
           .from('evaluation_recategorization')
-          .update({
-            level_recategorization,
-            position_recategorization,
-            recommended_level,
-            notes,
-            hr_status: hrStatus,
-            hr_notes: hrNotes,
-            updated_at: now,
-          })
+          .update(basePayload)
           .eq('id', existing.id)
           .select()
           .single();
@@ -309,14 +308,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
         const { data, error } = await supabase
           .from('evaluation_recategorization')
           .insert({
+            ...basePayload,
             evaluation_id: null,
             employee_id: memberId,
             period_id,
-            level_recategorization,
-            position_recategorization,
-            recommended_level,
-            notes,
-            hr_status: hrStatus,
           })
           .select()
           .single();
