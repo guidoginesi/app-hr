@@ -83,14 +83,17 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
   const getPeriod = (r: Recategorization): PeriodInfo | null =>
     r.evaluation?.period ?? r.period_info ?? null;
 
+  // Effective HR status: isNotApplicable records are always treated as 'rejected'
+  const effectiveHrStatus = (r: Recategorization) =>
+    isNotApplicable(r) ? 'rejected' : (r.hr_status || 'pending');
+
   // Filter recategorizations
   const filteredRecategorizations = recategorizations.filter(r => {
     if (!hasMadeDecision(r)) return false;
 
     // Filter by HR status
     if (filter !== 'all') {
-      const hrStatus = r.hr_status || 'pending';
-      if (hrStatus !== filter) return false;
+      if (effectiveHrStatus(r) !== filter) return false;
     }
 
     // Filter by period (check both the evaluation period and the direct period_info)
