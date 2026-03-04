@@ -268,6 +268,68 @@ export async function sendSimpleEmail(params: {
 }
 
 // ============================================
+// BATCH EMAIL FUNCTIONS
+// ============================================
+
+type BatchEmailItem = {
+	to: string;
+	subject: string;
+	html: string;
+};
+
+/**
+ * Envía múltiples emails en una sola llamada usando la API batch de Resend.
+ * Los emails se procesan en chunks de 100 (límite de la API).
+ * El array de IDs devuelto mantiene el mismo orden que el array de entrada;
+ * un valor null indica que ese email particular no pudo procesarse.
+ */
+export async function sendBatchEmails(
+	emails: BatchEmailItem[],
+): Promise<{ success: boolean; ids?: (string | null)[]; error?: string }> {
+	if (emails.length === 0) {
+		return { success: true, ids: [] };
+	}
+
+	try {
+		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+		const resend = getResend();
+		const BATCH_SIZE = 100;
+		const allIds: (string | null)[] = [];
+
+		for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+			const chunk = emails.slice(i, i + BATCH_SIZE);
+
+			console.log(`[sendBatchEmails] Sending chunk ${Math.floor(i / BATCH_SIZE) + 1}: ${chunk.length} emails`);
+
+			const { data, error } = await resend.batch.send(
+				chunk.map((e) => ({
+					from: fromEmail,
+					to: e.to,
+					subject: e.subject,
+					html: e.html,
+				})),
+			);
+
+			if (error) {
+				console.error('[sendBatchEmails] Error sending batch chunk:', error);
+				for (let j = 0; j < chunk.length; j++) allIds.push(null);
+			} else {
+				const chunkIds = (data?.data ?? []).map((d) => d.id ?? null);
+				allIds.push(...chunkIds);
+				// Rellenar con null si Resend devuelve menos IDs de los esperados
+				while (allIds.length < i + chunk.length) allIds.push(null);
+			}
+		}
+
+		console.log(`[sendBatchEmails] Finished. Total emails: ${emails.length}, IDs obtained: ${allIds.filter(Boolean).length}`);
+		return { success: true, ids: allIds };
+	} catch (error: any) {
+		console.error('[sendBatchEmails] Exception:', error);
+		return { success: false, error: error.message };
+	}
+}
+
+// ============================================
 // TIME-OFF EMAIL FUNCTIONS
 // ============================================
 
