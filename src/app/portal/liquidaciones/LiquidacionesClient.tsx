@@ -243,9 +243,7 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
 
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                 <p className="text-sm text-amber-800">
-                  <span className="font-medium">Recordá:</span> emití la factura por el Total a Facturar y adjuntala aquí
-                  dentro de 1 día hábil. También enviala a{' '}
-                  <a href="mailto:manuela@pow.la" className="font-medium underline">manuela@pow.la</a>.
+                  <span className="font-medium">Recordá:</span> emití la factura por el Total a Facturar y adjuntala aquí dentro de 1 día hábil.
                 </p>
               </div>
 

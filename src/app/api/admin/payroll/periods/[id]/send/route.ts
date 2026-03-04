@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { sendSimpleEmail } from '@/lib/emailService';
+import { sendBatchEmails } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -75,6 +75,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     let sentCount = 0;
     const errors: { settlement_id: string; error: string }[] = [];
+
+    // Emails queued for batch sending: { settlementId, to, subject, html }
+    const pendingEmails: Array<{ settlementId: string; to: string; subject: string; html: string }> = [];
 
     for (const s of settlements) {
       // Prefer the snapshot email; fall back to the live employee email from the view
@@ -154,26 +157,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
         continue;
       }
 
-      // Send email and persist Resend ID + any error for traceability
+      // Queue email for batch dispatch
       if (emailTo) {
-        sendSimpleEmail({ to: emailTo, subject: emailSubject, html: emailHtml }).then((result) => {
-          if (!result.success) {
-            console.error(`[Payroll Send] Email failed for settlement ${s.id}:`, result.error);
-            supabase
-              .from('payroll_employee_settlements')
-              .update({ email_provider_id: `ERROR: ${result.error}`, updated_at: new Date().toISOString() })
-              .eq('id', s.id)
-              .then(() => {});
-          } else if (result.id) {
-            supabase
-              .from('payroll_employee_settlements')
-              .update({ email_provider_id: result.id, updated_at: new Date().toISOString() })
-              .eq('id', s.id)
-              .then(() => {});
-          }
-        }).catch((err) => {
-          console.error(`[Payroll Send] Email exception for settlement ${s.id}:`, err);
-        });
+        pendingEmails.push({ settlementId: s.id, to: emailTo, subject: emailSubject, html: emailHtml });
       }
 
       // Send in-app notification if employee has a user account
@@ -200,6 +186,39 @@ export async function POST(req: NextRequest, context: RouteContext) {
       }
 
       sentCount++;
+    }
+
+    // Dispatch all emails in a single batch call (fire-and-forget), then persist Resend IDs
+    if (pendingEmails.length > 0) {
+      sendBatchEmails(pendingEmails.map((e) => ({ to: e.to, subject: e.subject, html: e.html })))
+        .then((result) => {
+          if (!result.success) {
+            console.error('[Payroll Send] Batch email failed:', result.error);
+            for (const e of pendingEmails) {
+              supabase
+                .from('payroll_employee_settlements')
+                .update({ email_provider_id: `ERROR: ${result.error}`, updated_at: new Date().toISOString() })
+                .eq('id', e.settlementId)
+                .then(() => {});
+            }
+            return;
+          }
+          const ids = result.ids ?? [];
+          pendingEmails.forEach((e, i) => {
+            const providerId = ids[i] ?? null;
+            supabase
+              .from('payroll_employee_settlements')
+              .update({
+                email_provider_id: providerId ?? `ERROR: no ID returned`,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', e.settlementId)
+              .then(() => {});
+          });
+        })
+        .catch((err) => {
+          console.error('[Payroll Send] Batch email exception:', err);
+        });
     }
 
     const message = sentCount > 0

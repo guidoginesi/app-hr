@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { sendSimpleEmail } from '@/lib/emailService';
+import { sendSimpleEmail, sendBatchEmails } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 
 // GET /api/portal/room-booking/bookings - List bookings
@@ -451,13 +451,12 @@ export async function POST(req: NextRequest) {
 
     // Send invitation emails + in-app notifications to invitees
     const inviteeUserIds: string[] = [];
+    const invitationEmails: Array<{ to: string; subject: string; html: string }> = [];
 
     for (const invitee of inviteeEmployees) {
-      // Email
-      const email = invitee.work_email;
-      if (email) {
-        sendSimpleEmail({
-          to: email,
+      if (invitee.work_email) {
+        invitationEmails.push({
+          to: invitee.work_email,
           subject: `📅 Invitación: ${title}`,
           html: buildInvitationEmail({
             inviteeName: `${invitee.first_name} ${invitee.last_name}`,
@@ -470,11 +469,23 @@ export async function POST(req: NextRequest) {
             recurrenceType: recurrence_type,
             occurrenceCount: occurrences.length,
           }),
-        }).catch((err) => console.error('Error sending invitation email:', err));
+        });
       }
 
       // Collect user_ids for in-app notification
       if (invitee.user_id) inviteeUserIds.push(invitee.user_id);
+    }
+
+    if (invitationEmails.length > 0) {
+      sendBatchEmails(invitationEmails)
+        .then((result) => {
+          if (!result.success) {
+            console.error('[RoomBooking] Batch invitation emails failed:', result.error);
+          } else {
+            console.log(`[RoomBooking] Batch sent: ${result.ids?.filter(Boolean).length ?? 0}/${invitationEmails.length} invitation emails dispatched`);
+          }
+        })
+        .catch((err) => console.error('[RoomBooking] Batch invitation emails exception:', err));
     }
 
     // In-app notification for all invitees at once

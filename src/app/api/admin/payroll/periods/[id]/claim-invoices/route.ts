@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { sendSimpleEmail } from '@/lib/emailService';
+import { sendBatchEmails } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -58,12 +58,15 @@ export async function POST(_req: NextRequest, context: RouteContext) {
 
     let notifiedCount = 0;
 
+    // Emails queued for batch dispatch
+    const pendingEmails: Array<{ to: string; subject: string; html: string }> = [];
+
     for (const s of settlements) {
       const employeeName = `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim();
 
-      // Email
+      // Queue email for batch dispatch
       if (s.email_to) {
-        sendSimpleEmail({
+        pendingEmails.push({
           to: s.email_to,
           subject: `Recordatorio: factura pendiente ${periodLabel}`,
           html: `
@@ -76,8 +79,6 @@ export async function POST(_req: NextRequest, context: RouteContext) {
                 Cargar factura en el portal
               </a>
             </div>`,
-        }).catch((err) => {
-          console.error(`[ClaimInvoices] Email failed for settlement ${s.id}:`, err);
         });
       }
 
@@ -96,6 +97,21 @@ export async function POST(_req: NextRequest, context: RouteContext) {
       }
 
       notifiedCount++;
+    }
+
+    // Dispatch all reminder emails in a single batch call (fire-and-forget)
+    if (pendingEmails.length > 0) {
+      sendBatchEmails(pendingEmails)
+        .then((result) => {
+          if (!result.success) {
+            console.error('[ClaimInvoices] Batch email failed:', result.error);
+          } else {
+            console.log(`[ClaimInvoices] Batch sent: ${result.ids?.filter(Boolean).length ?? 0}/${pendingEmails.length} emails dispatched`);
+          }
+        })
+        .catch((err) => {
+          console.error('[ClaimInvoices] Batch email exception:', err);
+        });
     }
 
     return NextResponse.json({
