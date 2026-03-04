@@ -349,8 +349,17 @@ export function TeamMemberProfileClient({
       });
 
       if (res.ok) {
+        const saved = await res.json();
         setIsEditingRecat(false);
-        await loadRecategorizationData();
+        // Update recategorization in state immediately from the POST response
+        setRecatData(prev => prev ? { ...prev, recategorization: saved } : prev);
+        // Also sync form fields with saved values
+        setRecatForm({
+          level_recategorization: saved.level_recategorization || '',
+          position_recategorization: saved.position_recategorization || '',
+          recommended_level: saved.recommended_level || '',
+          notes: saved.notes || '',
+        });
       } else {
         const err = await res.json().catch(() => ({}));
         setRecatSaveError(err.error || `Error ${res.status} al guardar. Intentá de nuevo.`);
@@ -388,8 +397,9 @@ export function TeamMemberProfileClient({
       });
 
       if (res.ok) {
+        const saved = await res.json();
         setNotAvailableNote('');
-        await loadRecategorizationData();
+        setRecatData(prev => prev ? { ...prev, recategorization: saved } : prev);
       }
     } catch (error) {
       console.error('Error saving HR note:', error);
