@@ -6,11 +6,14 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 type RouteContext = { params: Promise<{ memberId: string }> };
 
 const RecategorizationSchema = z.object({
-  evaluation_id: z.string().uuid(),
+  evaluation_id: z.string().uuid().optional().nullable(),
+  period_id: z.string().uuid().optional().nullable(),
   level_recategorization: z.enum(['approved', 'not_approved']),
   position_recategorization: z.enum(['approved', 'not_approved']),
   recommended_level: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+}).refine(data => data.evaluation_id || data.period_id, {
+  message: 'Se requiere evaluation_id o period_id',
 });
 
 // GET /api/portal/team/[memberId]/recategorization - Get recategorization data for a team member
@@ -51,6 +54,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         canRecategorize: false,
         reason: 'No hay período de evaluación activo',
         member,
+        period: null,
         evaluation: null,
         objectives: null,
         recategorization: null,
@@ -71,6 +75,15 @@ export async function GET(req: NextRequest, context: RouteContext) {
       .single();
 
     if (!leaderEvaluation) {
+      // No evaluation yet — check for an existing note-only record (evaluation_id IS NULL)
+      const { data: existingNote } = await supabase
+        .from('evaluation_recategorization')
+        .select('*')
+        .is('evaluation_id', null)
+        .eq('employee_id', memberId)
+        .eq('period_id', currentPeriod.id)
+        .maybeSingle();
+
       return NextResponse.json({ 
         canRecategorize: false,
         reason: 'La evaluación del líder no está completa',
@@ -78,7 +91,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         period: currentPeriod,
         evaluation: null,
         objectives: null,
-        recategorization: null,
+        recategorization: existingNote || null,
       });
     }
 
@@ -130,10 +143,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
     const evaluatedCount = mainObjectives.filter(isObjectiveEvaluated).length;
     const objectivesEvaluated = mainObjectives.length > 0 && evaluatedCount === mainObjectives.length;
 
-    // Use the legacy `objectives` variable shape for backward compat in the response
-    const objectives = allObjectives;
-
-    // Get existing recategorization
+    // Get existing recategorization (evaluation-linked takes priority over note-only)
     const recategorization = leaderEvaluation.recategorization?.[0] || null;
 
     // Calculate eligibility based on rules
@@ -191,7 +201,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Datos inválidos', details: parsed.error.issues }, { status: 400 });
     }
 
-    const { evaluation_id, level_recategorization, position_recategorization, recommended_level, notes } = parsed.data;
+    const { evaluation_id, period_id, level_recategorization, position_recategorization, recommended_level, notes } = parsed.data;
 
     // Verify this is a direct report
     const { data: member } = await supabase
@@ -205,44 +215,118 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Empleado no encontrado o no es tu reporte directo' }, { status: 404 });
     }
 
-    // Verify the evaluation belongs to this employee
-    const { data: evaluation } = await supabase
-      .from('evaluations')
-      .select('id, employee_id, type, status, total_score')
-      .eq('id', evaluation_id)
-      .eq('employee_id', memberId)
-      .eq('type', 'leader')
-      .eq('status', 'submitted')
-      .single();
-
-    if (!evaluation) {
-      return NextResponse.json({ error: 'Evaluación no encontrada o no completada' }, { status: 404 });
-    }
-
-    // When neither type applies (both not_approved), auto-close without requiring HR action.
-    // Otherwise, reset to pending so HR sees any updated proposal.
     const isNotApplicable =
       level_recategorization === 'not_approved' && position_recategorization === 'not_approved';
 
-    // Upsert recategorization
-    const { data: updated, error } = await supabase
-      .from('evaluation_recategorization')
-      .upsert({
-        evaluation_id,
-        level_recategorization,
-        position_recategorization,
-        recommended_level,
-        notes,
-        hr_status: isNotApplicable ? 'rejected' : 'pending',
-        hr_notes: isNotApplicable ? null : undefined,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'evaluation_id' })
-      .select()
-      .single();
+    const hrStatus = isNotApplicable ? 'rejected' : 'pending';
+    const hrNotes = isNotApplicable ? null : undefined;
+    const now = new Date().toISOString();
 
-    if (error) {
-      console.error('Error saving recategorization:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    let updated;
+
+    if (evaluation_id) {
+      // ── Path A: linked to a submitted leader evaluation ──────────────────────
+      const { data: evaluation } = await supabase
+        .from('evaluations')
+        .select('id, employee_id, type, status, period_id')
+        .eq('id', evaluation_id)
+        .eq('employee_id', memberId)
+        .eq('type', 'leader')
+        .eq('status', 'submitted')
+        .single();
+
+      if (!evaluation) {
+        return NextResponse.json({ error: 'Evaluación no encontrada o no completada' }, { status: 404 });
+      }
+
+      const { data, error } = await supabase
+        .from('evaluation_recategorization')
+        .upsert({
+          evaluation_id,
+          employee_id: memberId,
+          period_id: evaluation.period_id,
+          level_recategorization,
+          position_recategorization,
+          recommended_level,
+          notes,
+          hr_status: hrStatus,
+          hr_notes: hrNotes,
+          updated_at: now,
+        }, { onConflict: 'evaluation_id' })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving recategorization (with evaluation):', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      updated = data;
+
+    } else {
+      // ── Path B: note only — no evaluation yet ────────────────────────────────
+      const { data: period } = await supabase
+        .from('evaluation_periods')
+        .select('id')
+        .eq('id', period_id)
+        .eq('status', 'open')
+        .single();
+
+      if (!period) {
+        return NextResponse.json({ error: 'Período de evaluación no encontrado o no activo' }, { status: 404 });
+      }
+
+      // Check whether a note-only record already exists for this employee + period
+      const { data: existing } = await supabase
+        .from('evaluation_recategorization')
+        .select('id')
+        .is('evaluation_id', null)
+        .eq('employee_id', memberId)
+        .eq('period_id', period_id)
+        .maybeSingle();
+
+      if (existing) {
+        const { data, error } = await supabase
+          .from('evaluation_recategorization')
+          .update({
+            level_recategorization,
+            position_recategorization,
+            recommended_level,
+            notes,
+            hr_status: hrStatus,
+            hr_notes: hrNotes,
+            updated_at: now,
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error updating note-only recategorization:', error);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        updated = data;
+      } else {
+        const { data, error } = await supabase
+          .from('evaluation_recategorization')
+          .insert({
+            evaluation_id: null,
+            employee_id: memberId,
+            period_id,
+            level_recategorization,
+            position_recategorization,
+            recommended_level,
+            notes,
+            hr_status: hrStatus,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error inserting note-only recategorization:', error);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        updated = data;
+      }
     }
 
     return NextResponse.json(updated);

@@ -3,9 +3,26 @@
 import { useState } from 'react';
 import { SENIORITY_LEVELS, getSeniorityLabel } from '@/types/corporate-objectives';
 
+type EmployeeInfo = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  job_title: string | null;
+  seniority_level: string | null;
+  department: { id: string; name: string } | null;
+};
+
+type PeriodInfo = {
+  id: string;
+  name: string;
+  year: number;
+};
+
 type Recategorization = {
   id: string;
-  evaluation_id: string;
+  evaluation_id: string | null;
+  employee_id: string | null;
+  period_id: string | null;
   level_recategorization: 'approved' | 'not_approved' | null;
   position_recategorization: 'approved' | 'not_approved' | null;
   recommended_level: string | null;
@@ -14,6 +31,10 @@ type Recategorization = {
   hr_notes: string | null;
   created_at: string;
   updated_at: string;
+  // Direct joins (populated even without an evaluation)
+  employee: EmployeeInfo | null;
+  period_info: PeriodInfo | null;
+  // Evaluation join — null for note-only records
   evaluation: {
     id: string;
     period_id: string;
@@ -22,25 +43,10 @@ type Recategorization = {
     type: string;
     status: string;
     total_score: number | null;
-    employee: {
-      id: string;
-      first_name: string;
-      last_name: string;
-      job_title: string | null;
-      seniority_level: string | null;
-      department: { id: string; name: string } | null;
-    };
-    evaluator: {
-      id: string;
-      first_name: string;
-      last_name: string;
-    };
-    period: {
-      id: string;
-      name: string;
-      year: number;
-    };
-  };
+    employee: EmployeeInfo;
+    evaluator: { id: string; first_name: string; last_name: string };
+    period: PeriodInfo;
+  } | null;
 };
 
 type Period = {
@@ -70,6 +76,13 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
   const isNotApplicable = (r: Recategorization) =>
     r.level_recategorization === 'not_approved' && r.position_recategorization === 'not_approved';
 
+  // Resolve employee and period from either the linked evaluation or the direct joins
+  const getEmployee = (r: Recategorization): EmployeeInfo | null =>
+    r.evaluation?.employee ?? r.employee ?? null;
+
+  const getPeriod = (r: Recategorization): PeriodInfo | null =>
+    r.evaluation?.period ?? r.period_info ?? null;
+
   // Filter recategorizations
   const filteredRecategorizations = recategorizations.filter(r => {
     if (!hasMadeDecision(r)) return false;
@@ -80,9 +93,10 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
       if (hrStatus !== filter) return false;
     }
 
-    // Filter by period
-    if (periodFilter !== 'all' && r.evaluation?.period?.id !== periodFilter) {
-      return false;
+    // Filter by period (check both the evaluation period and the direct period_info)
+    if (periodFilter !== 'all') {
+      const periodId = getPeriod(r)?.id;
+      if (periodId !== periodFilter) return false;
     }
 
     return true;
@@ -269,33 +283,38 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-zinc-200">
-              {filteredRecategorizations.map((recat) => (
+              {filteredRecategorizations.map((recat) => {
+                const emp = getEmployee(recat);
+                const period = getPeriod(recat);
+                return (
                 <tr key={recat.id} className="hover:bg-zinc-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <p className="text-sm font-medium text-zinc-900">
-                        {recat.evaluation?.employee?.first_name} {recat.evaluation?.employee?.last_name}
+                        {emp?.first_name} {emp?.last_name}
                       </p>
                       <p className="text-xs text-zinc-500">
-                        {recat.evaluation?.employee?.job_title || 'Sin puesto'}
+                        {emp?.job_title || 'Sin puesto'}
                       </p>
                       <p className="text-xs text-zinc-400">
-                        {recat.evaluation?.employee?.department?.name || 'Sin departamento'}
+                        {emp?.department?.name || 'Sin departamento'}
                       </p>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="text-sm text-zinc-700">
-                      {recat.evaluation?.evaluator?.first_name} {recat.evaluation?.evaluator?.last_name}
+                      {recat.evaluation?.evaluator
+                        ? `${recat.evaluation.evaluator.first_name} ${recat.evaluation.evaluator.last_name}`
+                        : <span className="text-zinc-400 italic">Sin evaluación</span>}
                     </p>
                     <p className="text-xs text-zinc-400">
-                      {recat.evaluation?.period?.name}
+                      {period?.name}
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-zinc-700">
-                      {recat.evaluation?.employee?.seniority_level 
-                        ? getSeniorityLabel(recat.evaluation.employee.seniority_level)
+                      {emp?.seniority_level 
+                        ? getSeniorityLabel(emp.seniority_level)
                         : 'Sin nivel'}
                     </span>
                   </td>
@@ -339,7 +358,8 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -373,11 +393,14 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                 <div className="rounded-lg bg-zinc-50 p-4">
                   <h3 className="text-sm font-medium text-zinc-700 mb-2">Empleado</h3>
                   <p className="text-base font-semibold text-zinc-900">
-                    {selectedRecat.evaluation?.employee?.first_name} {selectedRecat.evaluation?.employee?.last_name}
+                    {getEmployee(selectedRecat)?.first_name} {getEmployee(selectedRecat)?.last_name}
                   </p>
                   <p className="text-sm text-zinc-500">
-                    {selectedRecat.evaluation?.employee?.job_title || 'Sin puesto'} • {selectedRecat.evaluation?.employee?.department?.name || 'Sin departamento'}
+                    {getEmployee(selectedRecat)?.job_title || 'Sin puesto'} • {getEmployee(selectedRecat)?.department?.name || 'Sin departamento'}
                   </p>
+                  {!selectedRecat.evaluation_id && (
+                    <p className="mt-1 text-xs text-amber-600 font-medium">Nota sin evaluación vinculada</p>
+                  )}
                 </div>
 
                 {/* Current Level */}
@@ -385,8 +408,8 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                   <div>
                     <p className="text-xs text-zinc-500 mb-1">Nivel actual</p>
                     <p className="text-sm font-medium text-zinc-900">
-                      {selectedRecat.evaluation?.employee?.seniority_level 
-                        ? getSeniorityLabel(selectedRecat.evaluation.employee.seniority_level)
+                      {getEmployee(selectedRecat)?.seniority_level 
+                        ? getSeniorityLabel(getEmployee(selectedRecat)!.seniority_level!)
                         : 'Sin nivel'}
                     </p>
                   </div>

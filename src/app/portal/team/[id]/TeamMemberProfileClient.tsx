@@ -356,20 +356,26 @@ export function TeamMemberProfileClient({
   };
 
   const handleSaveNotAvailableNote = async () => {
-    if (!recatData?.evaluation?.id) return;
+    if (!recatData?.period?.id && !recatData?.evaluation?.id) return;
 
     setSavingNotAvailableNote(true);
     try {
+      const payload: Record<string, unknown> = {
+        level_recategorization: 'not_approved',
+        position_recategorization: 'not_approved',
+        recommended_level: null,
+        notes: notAvailableNote.trim() || null,
+      };
+      if (recatData.evaluation?.id) {
+        payload.evaluation_id = recatData.evaluation.id;
+      } else {
+        payload.period_id = recatData.period!.id;
+      }
+
       const res = await fetch(`/api/portal/team/${member.id}/recategorization`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          evaluation_id: recatData.evaluation.id,
-          level_recategorization: 'not_approved',
-          position_recategorization: 'not_approved',
-          recommended_level: null,
-          notes: notAvailableNote.trim() || null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -789,8 +795,8 @@ export function TeamMemberProfileClient({
                 </div>
               </div>
 
-              {/* HR note — always available when we have an evaluation to link to */}
-              {recatData?.evaluation?.id && (
+              {/* HR note — available whenever there is an active period (with or without evaluation) */}
+              {recatData?.period?.id && (
                 <div className="mt-6 border-t border-zinc-200 pt-6">
                   {recatData.recategorization ? (
                     <div className="flex items-start gap-3">

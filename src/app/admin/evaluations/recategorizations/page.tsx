@@ -14,11 +14,26 @@ export default async function RecategorizationsPage() {
 
   const supabase = getSupabaseServer();
 
-  // Get all recategorizations with employee and evaluation data
+  // Get all recategorizations with employee and evaluation data.
+  // Records may or may not have a linked evaluation (evaluation_id can be null).
+  // The direct employee / period_info joins cover the note-only case.
   const { data: recategorizations, error } = await supabase
     .from('evaluation_recategorization')
     .select(`
       *,
+      employee:employees!employee_id(
+        id,
+        first_name,
+        last_name,
+        job_title,
+        seniority_level,
+        department:departments(id, name)
+      ),
+      period_info:evaluation_periods!period_id(
+        id,
+        name,
+        year
+      ),
       evaluation:evaluations!evaluation_id(
         id,
         period_id,
