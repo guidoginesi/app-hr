@@ -237,6 +237,9 @@ export function TeamMemberProfileClient({
   const [loadingRecat, setLoadingRecat] = useState(false);
   const [savingRecat, setSavingRecat] = useState(false);
   const [isEditingRecat, setIsEditingRecat] = useState(false);
+  // Note for the "not available" case (evaluation exists but canRecategorize = false)
+  const [notAvailableNote, setNotAvailableNote] = useState('');
+  const [savingNotAvailableNote, setSavingNotAvailableNote] = useState(false);
   const [recatForm, setRecatForm] = useState({
     level_recategorization: '' as 'approved' | 'not_approved' | '',
     position_recategorization: '' as 'approved' | 'not_approved' | '',
@@ -349,6 +352,34 @@ export function TeamMemberProfileClient({
       console.error('Error saving recategorization:', error);
     } finally {
       setSavingRecat(false);
+    }
+  };
+
+  const handleSaveNotAvailableNote = async () => {
+    if (!recatData?.evaluation?.id) return;
+
+    setSavingNotAvailableNote(true);
+    try {
+      const res = await fetch(`/api/portal/team/${member.id}/recategorization`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          evaluation_id: recatData.evaluation.id,
+          level_recategorization: 'not_approved',
+          position_recategorization: 'not_approved',
+          recommended_level: null,
+          notes: notAvailableNote.trim() || null,
+        }),
+      });
+
+      if (res.ok) {
+        setNotAvailableNote('');
+        await loadRecategorizationData();
+      }
+    } catch (error) {
+      console.error('Error saving HR note:', error);
+    } finally {
+      setSavingNotAvailableNote(false);
     }
   };
 
@@ -757,6 +788,71 @@ export function TeamMemberProfileClient({
                   </p>
                 </div>
               </div>
+
+              {/* HR note — always available when we have an evaluation to link to */}
+              {recatData?.evaluation?.id && (
+                <div className="mt-6 border-t border-zinc-200 pt-6">
+                  {recatData.recategorization ? (
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-zinc-700">Comentario enviado a HR</p>
+                        {recatData.recategorization.notes ? (
+                          <p className="mt-1 text-sm text-zinc-600 rounded-lg bg-zinc-50 border border-zinc-200 px-3 py-2">
+                            {recatData.recategorization.notes}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-sm text-zinc-400 italic">Sin comentario adicional</p>
+                        )}
+                        <button
+                          onClick={() => {
+                            setNotAvailableNote(recatData.recategorization?.notes || '');
+                            // Clear the saved recategorization from local state to re-show the form
+                            setRecatData({ ...recatData, recategorization: null });
+                          }}
+                          className="mt-2 text-xs font-medium text-zinc-500 hover:text-zinc-700 underline"
+                        >
+                          Modificar comentario
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm font-medium text-zinc-700 mb-1">Comentario para HR</p>
+                      <p className="text-xs text-zinc-500 mb-3">
+                        Podés registrar contexto adicional sobre este colaborador. El comentario quedará visible para RRHH aunque no haya recategorización.
+                      </p>
+                      <textarea
+                        value={notAvailableNote}
+                        onChange={(e) => setNotAvailableNote(e.target.value)}
+                        rows={3}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        placeholder="Ej: El colaborador tiene un desempeño sólido, se recomienda seguimiento para el próximo período..."
+                      />
+                      <div className="flex justify-end mt-3">
+                        <button
+                          onClick={handleSaveNotAvailableNote}
+                          disabled={savingNotAvailableNote}
+                          className="inline-flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {savingNotAvailableNote ? (
+                            <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              Enviando...
+                            </>
+                          ) : (
+                            'Enviar a HR'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <>

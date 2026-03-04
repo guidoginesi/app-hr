@@ -406,7 +406,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                   <div className="flex gap-2">
                     {isNotApplicable(selectedRecat) ? (
                       <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                        No aplica — puntaje insuficiente
+                        No aplica
                       </span>
                     ) : (
                       <>
