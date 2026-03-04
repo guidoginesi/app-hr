@@ -252,22 +252,39 @@ export async function POST(req: NextRequest, context: RouteContext) {
         return NextResponse.json({ error: 'Evaluación no encontrada o no completada' }, { status: 404 });
       }
 
-      const { data, error } = await supabase
+      // Check for existing record (avoids relying on onConflict / unique constraint)
+      const { data: existingA } = await supabase
         .from('evaluation_recategorization')
-        .upsert({
-          ...basePayload,
-          evaluation_id,
-          employee_id: memberId,
-          period_id: evaluation.period_id,
-        }, { onConflict: 'evaluation_id' })
-        .select()
-        .single();
+        .select('id')
+        .eq('evaluation_id', evaluation_id)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error saving recategorization (with evaluation):', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+      if (existingA) {
+        const { data, error } = await supabase
+          .from('evaluation_recategorization')
+          .update({ ...basePayload, employee_id: memberId, period_id: evaluation.period_id })
+          .eq('id', existingA.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error updating recategorization (with evaluation):', error);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        updated = data;
+      } else {
+        const { data, error } = await supabase
+          .from('evaluation_recategorization')
+          .insert({ ...basePayload, evaluation_id, employee_id: memberId, period_id: evaluation.period_id })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error inserting recategorization (with evaluation):', error);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        updated = data;
       }
-      updated = data;
 
     } else {
       // ── Path B: note only — no evaluation yet ────────────────────────────────
