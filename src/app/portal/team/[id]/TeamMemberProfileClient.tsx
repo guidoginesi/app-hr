@@ -236,6 +236,7 @@ export function TeamMemberProfileClient({
   const [recatData, setRecatData] = useState<RecategorizationData | null>(null);
   const [loadingRecat, setLoadingRecat] = useState(false);
   const [savingRecat, setSavingRecat] = useState(false);
+  const [recatSaveError, setRecatSaveError] = useState<string | null>(null);
   const [isEditingRecat, setIsEditingRecat] = useState(false);
   // Note for the "not available" case (evaluation exists but canRecategorize = false)
   const [notAvailableNote, setNotAvailableNote] = useState('');
@@ -304,7 +305,10 @@ export function TeamMemberProfileClient({
   };
 
   const handleSaveRecategorization = async () => {
+    setRecatSaveError(null);
+
     if (!recatData?.evaluation?.id) {
+      setRecatSaveError('No se encontró la evaluación vinculada. Recargá la página e intentá de nuevo.');
       return;
     }
 
@@ -347,8 +351,13 @@ export function TeamMemberProfileClient({
       if (res.ok) {
         setIsEditingRecat(false);
         await loadRecategorizationData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setRecatSaveError(err.error || `Error ${res.status} al guardar. Intentá de nuevo.`);
+        console.error('Error saving recategorization:', res.status, err);
       }
     } catch (error) {
+      setRecatSaveError('Error de red al guardar. Intentá de nuevo.');
       console.error('Error saving recategorization:', error);
     } finally {
       setSavingRecat(false);
@@ -1248,6 +1257,13 @@ export function TeamMemberProfileClient({
                         placeholder="Agregar comentarios o justificación..."
                       />
                     </div>
+
+                    {/* Save error */}
+                    {recatSaveError && (
+                      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                        <p className="text-sm text-red-700">{recatSaveError}</p>
+                      </div>
+                    )}
 
                     {/* Submit Button */}
                     <div className="flex items-center justify-end gap-3">
