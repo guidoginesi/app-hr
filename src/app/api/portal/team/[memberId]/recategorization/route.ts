@@ -219,6 +219,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Evaluación no encontrada o no completada' }, { status: 404 });
     }
 
+    // When neither type applies (both not_approved), auto-close without requiring HR action.
+    // Otherwise, reset to pending so HR sees any updated proposal.
+    const isNotApplicable =
+      level_recategorization === 'not_approved' && position_recategorization === 'not_approved';
+
     // Upsert recategorization
     const { data: updated, error } = await supabase
       .from('evaluation_recategorization')
@@ -228,6 +233,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
         position_recategorization,
         recommended_level,
         notes,
+        hr_status: isNotApplicable ? 'rejected' : 'pending',
+        hr_notes: isNotApplicable ? null : undefined,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'evaluation_id' })
       .select()

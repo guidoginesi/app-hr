@@ -62,11 +62,17 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
   const [hrNotes, setHrNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // A record is visible once the leader has saved any decision (both fields are set)
+  const hasMadeDecision = (r: Recategorization) =>
+    r.level_recategorization !== null && r.position_recategorization !== null;
+
+  // "No aplica": leader explicitly closed it because the employee didn't qualify
+  const isNotApplicable = (r: Recategorization) =>
+    r.level_recategorization === 'not_approved' && r.position_recategorization === 'not_approved';
+
   // Filter recategorizations
   const filteredRecategorizations = recategorizations.filter(r => {
-    // Only show recategorizations where leader approved something
-    const hasApproval = r.level_recategorization === 'approved' || r.position_recategorization === 'approved';
-    if (!hasApproval) return false;
+    if (!hasMadeDecision(r)) return false;
 
     // Filter by HR status
     if (filter !== 'all') {
@@ -132,8 +138,11 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
     }
   };
 
-  const getStatusBadge = (status: string | null) => {
-    switch (status) {
+  const getStatusBadge = (recat: Recategorization) => {
+    if (isNotApplicable(recat)) {
+      return <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">No aplica</span>;
+    }
+    switch (recat.hr_status) {
       case 'approved':
         return <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Aprobado por HR</span>;
       case 'rejected':
@@ -144,6 +153,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
   };
 
   const getLeaderDecision = (recat: Recategorization) => {
+    if (isNotApplicable(recat)) return 'No aplica';
     const decisions = [];
     if (recat.level_recategorization === 'approved') {
       decisions.push('Dentro del nivel');
@@ -154,8 +164,9 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
     return decisions.join(' + ') || 'Sin cambios';
   };
 
-  const pendingCount = recategorizations.filter(r => 
-    (r.level_recategorization === 'approved' || r.position_recategorization === 'approved') && 
+  const pendingCount = recategorizations.filter(r =>
+    hasMadeDecision(r) &&
+    !isNotApplicable(r) &&
     (!r.hr_status || r.hr_status === 'pending')
   ).length;
 
@@ -301,10 +312,10 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(recat.hr_status)}
+                    {getStatusBadge(recat)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    {(!recat.hr_status || recat.hr_status === 'pending') && (
+                    {!isNotApplicable(recat) && (!recat.hr_status || recat.hr_status === 'pending') && (
                       <button
                         onClick={() => {
                           setSelectedRecat(recat);
@@ -315,7 +326,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                         Revisar
                       </button>
                     )}
-                    {recat.hr_status && recat.hr_status !== 'pending' && (
+                    {(isNotApplicable(recat) || (recat.hr_status && recat.hr_status !== 'pending')) && (
                       <button
                         onClick={() => {
                           setSelectedRecat(recat);
@@ -343,7 +354,9 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
             <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
               <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
                 <h2 className="text-lg font-semibold text-zinc-900">
-                  Revisar Recategorización
+                  {selectedRecat && isNotApplicable(selectedRecat)
+                    ? 'No aplica recategorización'
+                    : 'Revisar Recategorización'}
                 </h2>
                 <button
                   onClick={() => setSelectedRecat(null)}
@@ -389,17 +402,25 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
 
                 {/* Leader Decision */}
                 <div>
-                  <p className="text-xs text-zinc-500 mb-1">Propuesta del líder</p>
+                  <p className="text-xs text-zinc-500 mb-1">Decisión del líder</p>
                   <div className="flex gap-2">
-                    {selectedRecat.level_recategorization === 'approved' && (
-                      <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
-                        Dentro del nivel
+                    {isNotApplicable(selectedRecat) ? (
+                      <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                        No aplica — puntaje insuficiente
                       </span>
-                    )}
-                    {selectedRecat.position_recategorization === 'approved' && (
-                      <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
-                        Ascenso de nivel
-                      </span>
+                    ) : (
+                      <>
+                        {selectedRecat.level_recategorization === 'approved' && (
+                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                            Dentro del nivel
+                          </span>
+                        )}
+                        {selectedRecat.position_recategorization === 'approved' && (
+                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                            Ascenso de nivel
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -414,25 +435,27 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                   </div>
                 )}
 
-                {/* HR Notes */}
-                <div>
-                  <label className="block text-xs text-zinc-500 mb-1">
-                    Notas de HR {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') && '(opcional)'}
-                  </label>
-                  {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') ? (
-                    <textarea
-                      value={hrNotes}
-                      onChange={(e) => setHrNotes(e.target.value)}
-                      placeholder="Agregar comentarios..."
-                      rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    />
-                  ) : (
-                    <p className="text-sm text-zinc-700 bg-zinc-50 rounded-lg p-3">
-                      {selectedRecat.hr_notes || 'Sin notas'}
-                    </p>
-                  )}
-                </div>
+                {/* HR Notes — only shown when HR action is needed */}
+                {!isNotApplicable(selectedRecat) && (
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">
+                      Notas de HR {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') && '(opcional)'}
+                    </label>
+                    {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') ? (
+                      <textarea
+                        value={hrNotes}
+                        onChange={(e) => setHrNotes(e.target.value)}
+                        placeholder="Agregar comentarios..."
+                        rows={3}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      />
+                    ) : (
+                      <p className="text-sm text-zinc-700 bg-zinc-50 rounded-lg p-3">
+                        {selectedRecat.hr_notes || 'Sin notas'}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
@@ -441,9 +464,11 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                   onClick={() => setSelectedRecat(null)}
                   className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
                 >
-                  {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') ? 'Cancelar' : 'Cerrar'}
+                  {(!isNotApplicable(selectedRecat) && (!selectedRecat.hr_status || selectedRecat.hr_status === 'pending'))
+                    ? 'Cancelar'
+                    : 'Cerrar'}
                 </button>
-                {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') && (
+                {!isNotApplicable(selectedRecat) && (!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') && (
                   <>
                     <button
                       onClick={() => handleReject(selectedRecat)}
