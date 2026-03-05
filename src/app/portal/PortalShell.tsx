@@ -11,7 +11,7 @@ type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'liquidaciones' | 'recibos' | 'messages' | 'offboarding' | 'room-booking';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'liquidaciones' | 'recibos' | 'messages' | 'offboarding' | 'room-booking' | 'certificates';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -53,6 +53,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
     { key: 'evaluaciones' as const, label: 'Evaluaciones', href: '/portal/evaluaciones' },
     { key: 'objetivos' as const, label: 'Objetivos', href: '/portal/objetivos' },
     { key: 'room-booking' as const, label: 'Reserva de Salas', href: '/portal/room-booking' },
+    { key: 'certificates' as const, label: 'Certificados', href: '/portal/certificates' },
     { key: 'messages' as const, label: 'Mensajes', href: '/portal/messages' },
     ...(!isRelDep ? [{ key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' }] : []),
     ...(isRelDep ? [{ key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' }] : []),

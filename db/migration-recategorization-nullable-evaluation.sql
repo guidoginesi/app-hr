@@ -29,6 +29,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS evaluation_recategorization_employee_period_no
 
 -- 6. Enforce that every row has either evaluation_id OR (employee_id + period_id)
 ALTER TABLE public.evaluation_recategorization
+  DROP CONSTRAINT IF EXISTS evaluation_recategorization_has_reference;
+ALTER TABLE public.evaluation_recategorization
   ADD CONSTRAINT evaluation_recategorization_has_reference
   CHECK (
     evaluation_id IS NOT NULL

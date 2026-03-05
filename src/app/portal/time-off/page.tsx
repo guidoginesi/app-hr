@@ -68,12 +68,20 @@ export default async function TimeOffPortalPage() {
               Gestiona tus vacaciones y licencias
             </p>
           </div>
-          <Link
-            href="/portal/time-off/new"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-          >
-            Nueva solicitud
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/portal/certificates"
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            >
+              Cargar certificado
+            </Link>
+            <Link
+              href="/portal/time-off/new"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Nueva solicitud
+            </Link>
+          </div>
         </div>
 
         {/* Tabs - only show if leader */}
