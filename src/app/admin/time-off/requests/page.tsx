@@ -265,7 +265,8 @@ export default function TimeOffRequestsPage() {
     const details = encodeURIComponent(
       `Tipo: ${request.leave_type_name}\nEmpleado: ${request.employee_name}\nDuración: ${request.days_requested} ${request.count_type === 'weeks' ? 'semana(s)' : 'día(s)'}`
     );
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}`;
+    const calId = encodeURIComponent('holapow.com_k5bov6etce7tj5nv40kutgni5s@group.calendar.google.com');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}&src=${calId}`;
   }
 
   // Check if HR can cancel an approved request (before it starts)
