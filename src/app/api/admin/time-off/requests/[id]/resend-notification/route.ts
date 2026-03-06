@@ -27,7 +27,7 @@ export async function POST(
           id, first_name, last_name, work_email, personal_email
         ),
         leave_type:leave_type_id (
-          id, name
+          id, name, count_type
         )
       `)
       .eq('id', id)
@@ -103,6 +103,7 @@ export async function POST(
         fecha_inicio: formatDate(request.start_date),
         fecha_fin: formatDate(request.end_date),
         cantidad_dias: String(request.days_requested),
+        unidad_tiempo: leaveType?.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
         tipo_licencia: leaveType?.name ?? 'Licencia',
       },
       leaveRequestId: id,

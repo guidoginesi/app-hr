@@ -321,6 +321,7 @@ export async function POST(req: NextRequest) {
       fecha_inicio: formatDate(parsed.data.start_date),
       fecha_fin: formatDate(parsed.data.end_date),
       cantidad_dias: String(parsed.data.days_requested),
+      unidad_tiempo: leaveType.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
       tipo_licencia: leaveType.name,
     };
 

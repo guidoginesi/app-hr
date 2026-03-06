@@ -135,7 +135,7 @@ export async function PUT(
 
     const { data: leaveType } = await supabase
       .from('leave_types')
-      .select('name')
+      .select('name, count_type')
       .eq('id', request.leave_type_id)
       .single();
 
@@ -150,6 +150,7 @@ export async function PUT(
             fecha_inicio: formatDate(request.start_date),
             fecha_fin: formatDate(request.end_date),
             cantidad_dias: String(request.days_requested),
+            unidad_tiempo: leaveType?.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
             tipo_licencia: leaveType?.name || 'Licencia',
             tipo_cambio: 'cancelada',
           },
