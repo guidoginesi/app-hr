@@ -93,7 +93,16 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [claimingInvoices, setClaimingInvoices] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Settlement; direction: 'asc' | 'desc' } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSort = (key: keyof Settlement) => {
+    setSortConfig((prev) => {
+      if (!prev || prev.key !== key) return { key, direction: 'asc' };
+      if (prev.direction === 'asc') return { key, direction: 'desc' };
+      return null;
+    });
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -117,9 +126,17 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
   }, [fetchData]);
 
   const filteredSettlements = useMemo(() => {
-    if (activeFilter === 'all') return settlements;
-    return settlements.filter((s) => s.contract_type === activeFilter);
-  }, [settlements, activeFilter]);
+    const base = activeFilter === 'all' ? settlements : settlements.filter((s) => s.contract_type === activeFilter);
+    if (!sortConfig) return base;
+    return [...base].sort((a, b) => {
+      const aVal = a[sortConfig.key] ?? '';
+      const bVal = b[sortConfig.key] ?? '';
+      const cmp = typeof aVal === 'number' && typeof bVal === 'number'
+        ? aVal - bVal
+        : String(aVal).localeCompare(String(bVal), 'es');
+      return sortConfig.direction === 'asc' ? cmp : -cmp;
+    });
+  }, [settlements, activeFilter, sortConfig]);
 
   const isEditable = period?.status !== 'CLOSED';
 
@@ -374,6 +391,29 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     }
   };
 
+  const SortableHeader = ({ label, sortKey, className = '' }: { label: string; sortKey: keyof Settlement; className?: string }) => {
+    const isActive = sortConfig?.key === sortKey;
+    const dir = isActive ? sortConfig!.direction : null;
+    return (
+      <th
+        className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 cursor-pointer select-none hover:text-zinc-800 ${className}`}
+        onClick={() => handleSort(sortKey)}
+      >
+        <span className="inline-flex items-center gap-1">
+          {label}
+          <span className="inline-flex flex-col leading-none">
+            <svg className={`h-2.5 w-2.5 ${isActive && dir === 'asc' ? 'text-indigo-600' : 'text-zinc-300'}`} viewBox="0 0 10 6" fill="currentColor">
+              <path d="M5 0L10 6H0L5 0Z"/>
+            </svg>
+            <svg className={`h-2.5 w-2.5 ${isActive && dir === 'desc' ? 'text-indigo-600' : 'text-zinc-300'}`} viewBox="0 0 10 6" fill="currentColor">
+              <path d="M5 6L0 0H10L5 6Z"/>
+            </svg>
+          </span>
+        </span>
+      </th>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -542,19 +582,19 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                       className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
                     />
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Empleado</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Tipo</th>
+                  <SortableHeader label="Empleado" sortKey="employee_name" />
+                  <SortableHeader label="Tipo" sortKey="contract_type" />
                   {(activeFilter === 'all' || activeFilter === 'MONOTRIBUTO') && (
                     <>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Sueldo</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Monotributo</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Reint. Internet</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Reint. Extra</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Plus Vac.</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Bonif. Anual</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Aguinaldo</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Adelanto</th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Total</th>
+                      <SortableHeader label="Sueldo" sortKey="base_salary" />
+                      <SortableHeader label="Monotributo" sortKey="monotributo" />
+                      <SortableHeader label="Reint. Internet" sortKey="internet_reimbursement" />
+                      <SortableHeader label="Reint. Extra" sortKey="extra_reimbursement" />
+                      <SortableHeader label="Plus Vac." sortKey="vacation_bonus" />
+                      <SortableHeader label="Bonif. Anual" sortKey="annual_bonus" />
+                      <SortableHeader label="Aguinaldo" sortKey="aguinaldo" />
+                      <SortableHeader label="Adelanto" sortKey="salary_advance" />
+                      <SortableHeader label="Total" sortKey="total" />
                     </>
                   )}
                   {activeFilter === 'RELACION_DEPENDENCIA' && (
@@ -563,7 +603,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                   {(activeFilter === 'MONOTRIBUTO' || activeFilter === 'all') && (
                     <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Factura</th>
                   )}
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Estado</th>
+                  <SortableHeader label="Estado" sortKey="status" />
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Acciones</th>
                 </tr>
               </thead>
