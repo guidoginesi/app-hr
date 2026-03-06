@@ -255,6 +255,19 @@ export default function TimeOffRequestsPage() {
     return ['pending', 'pending_leader', 'pending_hr'].includes(status);
   }
 
+  function buildGCalUrl(request: LeaveRequestWithDetails): string {
+    const startDate = request.start_date.replace(/-/g, '');
+    // GCal all-day end date is exclusive — add 1 day
+    const endObj = new Date(request.end_date + 'T00:00:00');
+    endObj.setDate(endObj.getDate() + 1);
+    const endDate = endObj.toISOString().slice(0, 10).replace(/-/g, '');
+    const title = encodeURIComponent(`${request.leave_type_name} — ${request.employee_name}`);
+    const details = encodeURIComponent(
+      `Tipo: ${request.leave_type_name}\nEmpleado: ${request.employee_name}\nDuración: ${request.days_requested} ${request.count_type === 'weeks' ? 'semana(s)' : 'día(s)'}`
+    );
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}`;
+  }
+
   // Check if HR can cancel an approved request (before it starts)
   function canCancel(request: LeaveRequestWithDetails): boolean {
     if (request.status !== 'approved') return false;
@@ -597,6 +610,17 @@ export default function TimeOffRequestsPage() {
                             {request.hr_approver_name && <p>HR: {request.hr_approver_name}</p>}
                             {request.leader_name && <p>Líder: {request.leader_name}</p>}
                           </div>
+                          <a
+                            href={buildGCalUrl(request)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 w-fit"
+                          >
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+                            </svg>
+                            Google Calendar
+                          </a>
                           {canCancel(request) && (
                             <>
                               {cancellingId === request.id ? (
