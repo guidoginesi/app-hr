@@ -601,7 +601,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                     <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">PDF</th>
                   )}
                   {(activeFilter === 'MONOTRIBUTO' || activeFilter === 'all') && (
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Factura</th>
+                    <SortableHeader label="Factura" sortKey="invoice_uploaded_at" />
                   )}
                   <SortableHeader label="Estado" sortKey="status" />
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Acciones</th>
