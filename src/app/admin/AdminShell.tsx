@@ -6,7 +6,7 @@ import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 
 type AdminShellProps = {
   children: ReactNode;
-  active: 'dashboard' | 'people' | 'busquedas' | 'candidatos' | 'configuracion';
+  active: 'dashboard' | 'people' | 'busquedas' | 'candidatos' | 'referidos' | 'configuracion';
 };
 
 export function AdminShell({ children, active }: AdminShellProps) {
@@ -70,6 +70,19 @@ export function AdminShell({ children, active }: AdminShellProps) {
           >
             <span>Candidatos</span>
             {active === 'candidatos' && (
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            )}
+          </Link>
+          <Link
+            href="/admin/referidos"
+            className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+              active === 'referidos'
+                ? 'bg-black text-white shadow-sm'
+                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+            }`}
+          >
+            <span>Referidos</span>
+            {active === 'referidos' && (
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
           </Link>
