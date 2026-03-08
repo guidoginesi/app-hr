@@ -25,30 +25,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 const TEMPLATE_NAMES: Record<string, string> = {
   birthday_greeting: 'Saludo de Cumpleaños',
   work_anniversary: 'Aniversario de Trabajo',
-  time_off_request_submitted: 'Solicitud de Licencia Enviada',
-  time_off_leader_notification: 'Notificación al Líder (nueva solicitud)',
-  time_off_hr_notification: 'Notificación a HR (aprobación final)',
-  time_off_approved_leader: 'Licencia Aprobada por Líder',
-  time_off_approved_hr: 'Licencia Aprobada por HR',
-  time_off_rejected: 'Licencia Rechazada',
-  time_off_modified: 'Licencia Cancelada/Modificada',
-};
-
-const VARIABLE_DESCRIPTIONS: Record<string, string> = {
-  firstName: 'Nombre del empleado',
-  employeeName: 'Nombre completo',
-  years: 'Años de antigüedad',
-  yearsSuffix: '"s" o vacío (pluralización)',
-  hireDate: 'Fecha de ingreso',
-  employee_name: 'Nombre completo del empleado',
-  leave_type: 'Tipo de licencia',
-  start_date: 'Fecha de inicio',
-  end_date: 'Fecha de fin',
-  days_count: 'Cantidad de días',
-  unidad_tiempo: 'días o semanas',
-  leader_name: 'Nombre del líder',
-  employee_email: 'Email del empleado',
-  rejection_reason: 'Motivo de rechazo',
+  time_off_request_submitted: 'Solicitud enviada (al empleado)',
+  time_off_leader_notification: 'Nueva solicitud (al líder)',
+  time_off_hr_notification: 'Requiere aprobación final (a HR)',
+  time_off_approved_leader: 'Aprobada por líder',
+  time_off_approved_hr: 'Aprobada por HR',
+  time_off_rejected: 'Rechazada',
+  time_off_modified: 'Cancelada / Modificada',
 };
 
 function convertToHtml(text: string): string {
@@ -74,7 +57,6 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
   const [editSubject, setEditSubject] = useState(initialTemplates[0]?.subject ?? '');
   const [editBody, setEditBody] = useState(initialTemplates[0] ? convertToHtml(initialTemplates[0].body) : '');
   const [editActive, setEditActive] = useState(initialTemplates[0]?.is_active ?? true);
-  const [editSendEmail, setEditSendEmail] = useState(true);
   const [editSendMessage, setEditSendMessage] = useState(initialTemplates[0]?.send_internal_message ?? false);
   const [editMessageText, setEditMessageText] = useState(initialTemplates[0]?.internal_message_text ?? '');
   const [saving, setSaving] = useState(false);
@@ -85,7 +67,6 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
     setEditSubject(t.subject);
     setEditBody(convertToHtml(t.body));
     setEditActive(t.is_active);
-    setEditSendEmail(true);
     setEditSendMessage(t.send_internal_message);
     setEditMessageText(t.internal_message_text ?? '');
     setFeedback(null);
@@ -112,7 +93,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
         const updated = await res.json();
         setTemplates(prev => prev.map(t => t.template_key === updated.template_key ? { ...t, ...updated } : t));
         setSelected(prev => prev ? { ...prev, ...updated } : prev);
-        setFeedback({ type: 'success', text: 'Cambios guardados correctamente' });
+        setFeedback({ type: 'success', text: 'Plantilla guardada correctamente' });
       } else {
         const err = await res.json();
         setFeedback({ type: 'error', text: err.error || 'Error al guardar' });
@@ -125,171 +106,182 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
   }
 
   function handleReset() {
-    if (!selected) return;
-    selectTemplate(selected);
-    setFeedback(null);
+    if (selected) selectTemplate(selected);
   }
 
-  // Group by category
-  const grouped = templates.reduce<Record<string, Template[]>>((acc, t) => {
-    acc[t.category] = acc[t.category] || [];
-    acc[t.category].push(t);
+  // Group by category maintaining order: automation first
+  const categoryOrder = ['automation', 'time_off', 'payroll'];
+  const grouped = categoryOrder.reduce<Record<string, Template[]>>((acc, cat) => {
+    const items = templates.filter(t => t.category === cat);
+    if (items.length) acc[cat] = items;
     return acc;
   }, {});
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Configuración de Mensajes</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Administrá las automatizaciones y plantillas de email enviadas a empleados
-        </p>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-zinc-900">Configuración de Mensajes</h2>
+        <p className="mt-1 text-sm text-zinc-500">Administrá las automatizaciones y plantillas de email enviadas a empleados</p>
       </div>
 
-      <div className="flex gap-6 items-start">
+      <div className="grid grid-cols-12 gap-6">
         {/* Left: template list */}
-        <div className="w-72 shrink-0 rounded-xl border border-zinc-200 bg-white overflow-hidden">
-          {Object.entries(grouped).map(([cat, tpls]) => (
-            <div key={cat}>
-              <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                  {CATEGORY_LABELS[cat] ?? cat}
-                </p>
-              </div>
-              {tpls.map(t => (
-                <button
-                  key={t.template_key}
-                  onClick={() => selectTemplate(t)}
-                  className={`w-full text-left px-4 py-3.5 border-b border-zinc-100 last:border-0 transition-colors ${
-                    selected?.template_key === t.template_key
-                      ? 'bg-black text-white'
-                      : 'hover:bg-zinc-50 text-zinc-900'
-                  }`}
-                >
-                  <p className={`text-sm font-medium leading-tight ${selected?.template_key === t.template_key ? 'text-white' : 'text-zinc-900'}`}>
-                    {TEMPLATE_NAMES[t.template_key] ?? t.template_key}
+        <div className="col-span-4">
+          <div className="rounded-xl border border-zinc-200 bg-white p-4">
+            <h3 className="text-sm font-semibold text-zinc-900 mb-3">Plantillas</h3>
+            <div className="space-y-4">
+              {Object.entries(grouped).map(([cat, tpls]) => (
+                <div key={cat}>
+                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-1 mb-1.5">
+                    {CATEGORY_LABELS[cat] ?? cat}
                   </p>
-                  <p className={`text-xs mt-0.5 leading-snug line-clamp-2 ${selected?.template_key === t.template_key ? 'text-zinc-300' : 'text-zinc-500'}`}>
-                    {t.description}
-                  </p>
-                </button>
+                  <div className="space-y-1">
+                    {tpls.map(t => (
+                      <button
+                        key={t.template_key}
+                        onClick={() => selectTemplate(t)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          selected?.template_key === t.template_key
+                            ? 'bg-black text-white'
+                            : 'text-zinc-700 hover:bg-zinc-100'
+                        }`}
+                      >
+                        <div className="font-medium">
+                          {TEMPLATE_NAMES[t.template_key] ?? t.template_key}
+                        </div>
+                        {t.description && (
+                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                            {t.description}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-          ))}
+          </div>
         </div>
 
         {/* Right: editor */}
-        {selected ? (
-          <div className="flex-1 rounded-xl border border-zinc-200 bg-white p-6 space-y-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  {TEMPLATE_NAMES[selected.template_key] ?? selected.template_key}
-                </h2>
-                <p className="text-sm text-zinc-500 mt-0.5">{selected.description}</p>
-              </div>
-              {/* Active toggle */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <span className="text-sm font-medium text-zinc-700">{editActive ? 'Activo' : 'Inactivo'}</span>
-                <button
-                  onClick={() => setEditActive(v => !v)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-emerald-500' : 'bg-zinc-300'}`}
-                >
-                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${editActive ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </label>
-            </div>
-
-            {/* Variables */}
-            {selected.variables && selected.variables.length > 0 && (
-              <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                <p className="text-xs font-semibold text-blue-700 mb-1.5">Variables disponibles</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.variables.map((v: string) => (
-                    <span key={v} title={VARIABLE_DESCRIPTIONS[v]} className="cursor-help rounded bg-blue-100 px-2 py-0.5 font-mono text-xs text-blue-800">
-                      {`{{${v}}}`}
-                    </span>
-                  ))}
+        <div className="col-span-8">
+          {selected ? (
+            <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-zinc-900">
+                    {TEMPLATE_NAMES[selected.template_key] ?? selected.template_key}
+                  </h2>
+                  <p className="text-sm text-zinc-500 mt-1">{selected.description}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-medium ${editActive ? 'text-emerald-700' : 'text-zinc-500'}`}>
+                    {editActive ? 'Activo' : 'Desactivado'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditActive(v => !v)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-emerald-500' : 'bg-zinc-300'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${editActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
                 </div>
               </div>
-            )}
 
-            {/* Channels */}
-            <div>
-              <p className="text-sm font-medium text-zinc-700 mb-2">Canales de envío</p>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={editSendEmail} onChange={e => setEditSendEmail(e.target.checked)} className="accent-black w-4 h-4" />
-                  <span className="text-sm text-zinc-700">📧 Email</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={editSendMessage} onChange={e => setEditSendMessage(e.target.checked)} className="accent-black w-4 h-4" />
-                  <span className="text-sm text-zinc-700">💬 Mensaje interno en el portal</span>
-                </label>
-              </div>
-            </div>
+              {/* Variables */}
+              {selected.variables && selected.variables.length > 0 && (
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">Variables disponibles</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.variables.map((v: string) => (
+                      <code key={v} className="px-2 py-1 bg-white rounded text-xs font-mono text-blue-700 border border-blue-300">
+                        {`{{${v}}}`}
+                      </code>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {/* Subject */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Asunto</label>
-              <input
-                type="text"
-                value={editSubject}
-                onChange={e => setEditSubject(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-              />
-            </div>
+              {/* Canales (solo para automation) */}
+              {selected.category === 'automation' && (
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900 mb-2">Canales de envío</label>
+                  <div className="flex gap-5">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                      <input type="checkbox" checked readOnly className="accent-black w-4 h-4" />
+                      📧 Email
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                      <input type="checkbox" checked={editSendMessage} onChange={e => setEditSendMessage(e.target.checked)} className="accent-black w-4 h-4" />
+                      💬 Mensaje interno en el portal
+                    </label>
+                  </div>
+                </div>
+              )}
 
-            {/* Body */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Cuerpo del Email</label>
-              <RichTextEditor content={editBody} onChange={setEditBody} />
-            </div>
-
-            {/* Internal message text */}
-            {editSendMessage && (
+              {/* Subject */}
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
-                  Texto del mensaje interno <span className="font-normal text-zinc-400">(portal)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={editMessageText}
-                  onChange={e => setEditMessageText(e.target.value)}
-                  placeholder="Texto corto que aparecerá como mensaje en el portal del empleado..."
+                <label className="block text-sm font-medium text-zinc-900 mb-2">Asunto</label>
+                <input
+                  type="text"
+                  value={editSubject}
+                  onChange={e => setEditSubject(e.target.value)}
                   className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                 />
               </div>
-            )}
 
-            {feedback && (
-              <div className={`rounded-lg px-4 py-3 text-sm ${feedback.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'}`}>
-                {feedback.text}
+              {/* Body */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-900 mb-2">Cuerpo del Email</label>
+                <RichTextEditor content={editBody} onChange={setEditBody} />
               </div>
-            )}
 
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
-              >
-                {saving ? 'Guardando...' : 'Guardar Cambios'}
-              </button>
-              <button
-                onClick={handleReset}
-                disabled={saving}
-                className="rounded-lg border border-zinc-300 bg-white px-5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
-              >
-                Restablecer
-              </button>
+              {/* Internal message text */}
+              {selected.category === 'automation' && editSendMessage && (
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900 mb-2">
+                    Texto del mensaje interno <span className="font-normal text-zinc-400">(portal del empleado)</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editMessageText}
+                    onChange={e => setEditMessageText(e.target.value)}
+                    placeholder="Texto corto que aparecerá como notificación en el portal..."
+                    className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+              )}
+
+              {feedback && (
+                <div className={`rounded-lg px-4 py-3 text-sm ${feedback.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                  {feedback.text}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+                <button
+                  onClick={handleReset}
+                  disabled={saving}
+                  className="rounded-lg border border-zinc-300 bg-white px-5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                >
+                  Restablecer
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex-1 rounded-xl border border-zinc-200 bg-white p-12 text-center text-sm text-zinc-400">
-            Seleccioná un template para editarlo
-          </div>
-        )}
+          ) : (
+            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center text-sm text-zinc-400">
+              Seleccioná un template para editarlo
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
