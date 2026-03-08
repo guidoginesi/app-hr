@@ -19,7 +19,7 @@ export async function GET() {
         .order('created_at', { ascending: false }),
       supabase
         .from('referrals')
-        .select(`*, job:jobs!job_id(id, title, department)`)
+        .select(`*, job:jobs!job_id(id, title, department), application:applications!application_id(id, current_stage, current_stage_status, final_outcome, offer_status)`)
         .eq('referrer_employee_id', auth.employee.id)
         .order('created_at', { ascending: false }),
     ]);

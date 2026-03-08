@@ -6,10 +6,19 @@ const PROVINCIAS = ['CABA', 'GBA', 'Otra'];
 
 type Job = { id: string; title: string; department?: string | null; location?: string | null; work_mode?: string | null };
 
+type ApplicationSnapshot = {
+  id: string;
+  current_stage: string | null;
+  current_stage_status: string | null;
+  final_outcome: string | null;
+  offer_status: string | null;
+};
+
 type Referral = {
   id: string;
   job_id: string;
   job: { id: string; title: string; department?: string | null } | null;
+  application: ApplicationSnapshot | null;
   candidate_name: string;
   candidate_email: string;
   candidate_phone?: string | null;
@@ -24,21 +33,70 @@ type Referral = {
   created_at: string;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pendiente de revisión',
-  in_process: 'En proceso',
-  hired: '¡Contratado/a!',
-  rejected: 'No avanzó',
-  closed: 'Búsqueda cerrada',
-};
+// Derive a friendly label + color from the linked application stage
+function getApplicationStatusBadge(ref: Referral): { label: string; color: string } {
+  const app = ref.application;
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-700',
-  in_process: 'bg-blue-100 text-blue-700',
-  hired: 'bg-emerald-100 text-emerald-700',
-  rejected: 'bg-red-100 text-red-700',
-  closed: 'bg-zinc-100 text-zinc-600',
-};
+  if (!app) {
+    return { label: 'Pendiente de revisión', color: 'bg-amber-100 text-amber-700' };
+  }
+
+  // Final outcome takes priority
+  if (app.final_outcome === 'HIRED') {
+    return { label: '¡Contratado/a! 🎉', color: 'bg-emerald-100 text-emerald-700' };
+  }
+  if (app.final_outcome === 'REJECTED_BY_POW' || app.final_outcome === 'REJECTED_BY_CANDIDATE') {
+    return { label: 'No avanzó', color: 'bg-red-100 text-red-700' };
+  }
+  if (app.final_outcome === 'ROLE_CANCELLED') {
+    return { label: 'Búsqueda cerrada', color: 'bg-zinc-100 text-zinc-600' };
+  }
+  if (app.final_outcome === 'TALENT_POOL') {
+    return { label: 'Banco de talento', color: 'bg-purple-100 text-purple-700' };
+  }
+
+  // Discarded in stage
+  if (app.current_stage_status === 'DISCARDED_IN_STAGE') {
+    return { label: 'No avanzó', color: 'bg-red-100 text-red-700' };
+  }
+
+  // Offer stage
+  if (app.current_stage === 'OFFER') {
+    if (app.offer_status === 'ACCEPTED') return { label: 'Oferta aceptada 🎉', color: 'bg-emerald-100 text-emerald-700' };
+    if (app.offer_status === 'REJECTED_BY_CANDIDATE') return { label: 'Oferta rechazada', color: 'bg-red-100 text-red-700' };
+    return { label: 'En etapa de oferta', color: 'bg-emerald-100 text-emerald-700' };
+  }
+
+  const stageLabels: Record<string, string> = {
+    CV_RECEIVED: 'CV recibido',
+    HR_REVIEW: 'En revisión HR',
+    FILTER_QUESTIONS: 'Preguntas filtro',
+    HR_INTERVIEW: 'Entrevista HR',
+    LEAD_INTERVIEW: 'Entrevista con líder',
+    EO_INTERVIEW: 'Entrevista EO/CEO',
+    REFERENCES_CHECK: 'Chequeo de referencias',
+    SELECTED_FOR_OFFER: 'Seleccionado/a para oferta',
+    CLOSED: 'Búsqueda cerrada',
+  };
+
+  const stageColors: Record<string, string> = {
+    CV_RECEIVED: 'bg-amber-100 text-amber-700',
+    HR_REVIEW: 'bg-blue-100 text-blue-700',
+    FILTER_QUESTIONS: 'bg-blue-100 text-blue-700',
+    HR_INTERVIEW: 'bg-indigo-100 text-indigo-700',
+    LEAD_INTERVIEW: 'bg-indigo-100 text-indigo-700',
+    EO_INTERVIEW: 'bg-violet-100 text-violet-700',
+    REFERENCES_CHECK: 'bg-violet-100 text-violet-700',
+    SELECTED_FOR_OFFER: 'bg-emerald-100 text-emerald-700',
+    CLOSED: 'bg-zinc-100 text-zinc-600',
+  };
+
+  const stage = app.current_stage || 'CV_RECEIVED';
+  return {
+    label: stageLabels[stage] ?? 'En proceso',
+    color: stageColors[stage] ?? 'bg-blue-100 text-blue-700',
+  };
+}
 
 const WORK_MODE_LABELS: Record<string, string> = {
   remote: 'Remoto',
@@ -203,11 +261,6 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-zinc-900">{ref.candidate_name}</p>
-                        {ref.bonus_paid && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
-                            🎉 Bonificación pagada
-                          </span>
-                        )}
                       </div>
                       <p className="text-xs text-zinc-500 mt-0.5">
                         {ref.candidate_email}
@@ -226,9 +279,19 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[ref.status] || 'bg-zinc-100 text-zinc-600'}`}>
-                        {STATUS_LABELS[ref.status] || ref.status}
-                      </span>
+                      {(() => {
+                        const { label, color } = getApplicationStatusBadge(ref);
+                        return (
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${color}`}>
+                            {label}
+                          </span>
+                        );
+                      })()}
+                      {ref.bonus_paid && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
+                          🎉 Bonificación pagada
+                        </span>
+                      )}
                       <span className="text-xs text-zinc-400">
                         {new Date(ref.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
