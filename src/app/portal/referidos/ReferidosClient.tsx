@@ -26,6 +26,7 @@ type Referral = {
   candidate_linkedin?: string | null;
   candidate_salary_expectation?: string | null;
   recommendation_reason: string;
+  relationship_type?: string | null;
   status: string;
   bonus_paid: boolean;
   hr_notes?: string | null;
@@ -122,6 +123,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
     candidate_province: '',
     candidate_linkedin: '',
     recommendation_reason: '',
+    relationship_type: '',
   });
   const reasonRef = useRef<HTMLTextAreaElement>(null);
   const cvInputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +136,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
 
   const openModal = (job: Job) => {
     setSelectedJob(job);
-    setForm({ candidate_name: '', candidate_email: '', candidate_phone: '', candidate_province: '', candidate_linkedin: '', recommendation_reason: '' });
+    setForm({ candidate_name: '', candidate_email: '', candidate_phone: '', candidate_province: '', candidate_linkedin: '', recommendation_reason: '', relationship_type: '' });
     setSalaryDisplay('');
     setCvFile(null);
     setSubmitError(null);
@@ -154,6 +156,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
     if (!form.candidate_phone.trim()) { setSubmitError('El teléfono es requerido'); return; }
     if (!form.candidate_province) { setSubmitError('La provincia es requerida'); return; }
     if (!cvFile) { setSubmitError('El CV es requerido'); return; }
+    if (!form.relationship_type) { setSubmitError('Indicá cómo conocés a esta persona'); return; }
     if (!form.recommendation_reason.trim()) { setSubmitError('El motivo de recomendación es requerido'); reasonRef.current?.focus(); return; }
 
     setSubmitting(true);
@@ -166,6 +169,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
       data.append('candidate_province', form.candidate_province);
       if (form.candidate_linkedin.trim()) data.append('candidate_linkedin', form.candidate_linkedin);
       if (salaryDisplay) data.append('candidate_salary_expectation', salaryDisplay.replace(/\D/g, ''));
+      if (form.relationship_type) data.append('relationship_type', form.relationship_type);
       data.append('recommendation_reason', form.recommendation_reason);
       if (cvFile) data.append('cv', cvFile);
 
@@ -474,6 +478,32 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                         </svg>
                       </button>
                     )}
+                  </div>
+                </div>
+
+                {/* Tipo de relación */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">
+                    ¿Trabajaste con esta persona o la conocés por otra vía? <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'worked_together', label: 'Sí, trabajamos juntos' },
+                      { value: 'know_well', label: 'No trabajamos juntos, pero la conozco bien' },
+                      { value: 'recommended', label: 'Me la recomendaron y confío en la referencia' },
+                    ].map(opt => (
+                      <label key={opt.value} className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${form.relationship_type === opt.value ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-zinc-300 bg-white'}`}>
+                        <input
+                          type="radio"
+                          name="relationship_type"
+                          value={opt.value}
+                          checked={form.relationship_type === opt.value}
+                          onChange={() => setForm(f => ({ ...f, relationship_type: opt.value }))}
+                          className="accent-emerald-600"
+                        />
+                        <span className="text-sm text-zinc-700">{opt.label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 

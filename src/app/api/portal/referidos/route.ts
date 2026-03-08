@@ -71,15 +71,19 @@ export async function POST(req: NextRequest) {
     const candidate_linkedin = formData.get('candidate_linkedin') as string | null;
     const candidate_salary_expectation = formData.get('candidate_salary_expectation') as string | null;
     const recommendation_reason = formData.get('recommendation_reason') as string | null;
+    const relationship_type = formData.get('relationship_type') as string | null;
     const cvFile = formData.get('cv') as File | null;
+
+    const validRelationships = ['worked_together', 'know_well', 'recommended'];
 
     if (!job_id) return NextResponse.json({ error: 'Debe seleccionar una búsqueda' }, { status: 400 });
     if (!candidate_name?.trim()) return NextResponse.json({ error: 'El nombre es requerido' }, { status: 400 });
     if (!candidate_email?.trim()) return NextResponse.json({ error: 'El email es requerido' }, { status: 400 });
     if (!candidate_phone?.trim()) return NextResponse.json({ error: 'El teléfono es requerido' }, { status: 400 });
     if (!candidate_province?.trim()) return NextResponse.json({ error: 'La provincia es requerida' }, { status: 400 });
-    if (!recommendation_reason?.trim()) return NextResponse.json({ error: 'El motivo de recomendación es requerido' }, { status: 400 });
     if (!cvFile || cvFile.size === 0) return NextResponse.json({ error: 'El CV es requerido' }, { status: 400 });
+    if (!relationship_type || !validRelationships.includes(relationship_type)) return NextResponse.json({ error: 'Indicá cómo conocés a esta persona' }, { status: 400 });
+    if (!recommendation_reason?.trim()) return NextResponse.json({ error: 'El motivo de recomendación es requerido' }, { status: 400 });
 
     const supabase = getSupabaseServer();
 
@@ -204,6 +208,7 @@ export async function POST(req: NextRequest) {
         candidate_linkedin: candidate_linkedin?.trim() || null,
         candidate_salary_expectation: candidate_salary_expectation?.trim() || null,
         recommendation_reason: recommendation_reason.trim(),
+        relationship_type,
         cv_storage_path,
         cv_filename,
         application_id: application.id,

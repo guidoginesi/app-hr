@@ -30,6 +30,7 @@ type Referral = {
   candidate_linkedin?: string | null;
   candidate_salary_expectation?: string | null;
   recommendation_reason: string;
+  relationship_type?: string | null;
   status: string;
   bonus_paid: boolean;
   hr_notes?: string | null;
@@ -270,6 +271,18 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
                     {' · '}Búsqueda: <span className="font-medium text-zinc-600">{selectedReferral.job?.title || '—'}</span>
                   </p>
                 </div>
+
+                {/* Relación con el candidato */}
+                {selectedReferral.relationship_type && (
+                  <div>
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">¿Cómo lo/la conoce?</p>
+                    <p className="text-sm text-zinc-700">
+                      {selectedReferral.relationship_type === 'worked_together' && 'Trabajaron juntos'}
+                      {selectedReferral.relationship_type === 'know_well' && 'No trabajaron juntos, pero lo/la conoce bien'}
+                      {selectedReferral.relationship_type === 'recommended' && 'Se lo/la recomendaron y confía en la referencia'}
+                    </p>
+                  </div>
+                )}
 
                 {/* Recommendation reason */}
                 <div>
