@@ -189,11 +189,44 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Referidos</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Recomendá personas para las búsquedas abiertas de Pow y obtené tu bonificación si se suman al equipo.
-        </p>
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Referidos</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Recomendá personas para las búsquedas abiertas de Pow y obtené tu bonificación si se suman al equipo.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4">
+          <p className="text-sm text-zinc-700">
+            ¿Conocés a alguien que podría sumarse a nuestro equipo y compartir nuestros valores? Esta es tu oportunidad de recomendarlo/a y, si ingresa, recibir un bono como reconocimiento.
+          </p>
+
+          <div>
+            <p className="text-sm font-semibold text-zinc-900 mb-2">¿Cómo funciona?</p>
+            <ol className="space-y-2 text-sm text-zinc-600">
+              <li className="flex gap-2">
+                <span className="shrink-0 font-medium text-zinc-400">1.</span>
+                <span>
+                  Antes de comenzar leé la política{' '}
+                  <span className="font-medium text-zinc-900">Programa de Referidos Pow 🚀</span>
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 font-medium text-zinc-400">2.</span>
+                <span>Si conocés a alguien que encaje con alguna de nuestras búsquedas abiertas, podés completarlo en el formulario de referidos.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 font-medium text-zinc-400">3.</span>
+                <span>Si tu referido/a es contratado/a y cumple el período de prueba, vas a recibir un bono según la posición y el esquema vigente.</span>
+              </li>
+            </ol>
+          </div>
+
+          <p className="text-sm font-medium text-emerald-700">
+            ¡Tu recomendación puede ser clave para seguir construyendo el equipo que queremos!
+          </p>
+        </div>
       </div>
 
       {/* Open jobs */}
