@@ -19,14 +19,37 @@ export async function GET() {
         .order('created_at', { ascending: false }),
       supabase
         .from('referrals')
-        .select(`*, job:jobs!job_id(id, title, department), application:applications!application_id(id, current_stage, current_stage_status, final_outcome, offer_status)`)
+        .select(`*, job:jobs!job_id(id, title, department)`)
         .eq('referrer_employee_id', auth.employee.id)
         .order('created_at', { ascending: false }),
     ]);
 
+    const referrals = referralsRes.data || [];
+
+    // Fetch application snapshots for referrals that have an application_id
+    const appIds = referrals
+      .map((r: any) => r.application_id)
+      .filter(Boolean) as string[];
+
+    let applicationsMap: Record<string, any> = {};
+    if (appIds.length > 0) {
+      const { data: apps } = await supabase
+        .from('applications')
+        .select('id, current_stage, current_stage_status, final_outcome, offer_status')
+        .in('id', appIds);
+      if (apps) {
+        for (const app of apps) applicationsMap[app.id] = app;
+      }
+    }
+
+    const referralsWithApp = referrals.map((r: any) => ({
+      ...r,
+      application: r.application_id ? (applicationsMap[r.application_id] ?? null) : null,
+    }));
+
     return NextResponse.json({
       jobs: jobsRes.data || [],
-      referrals: referralsRes.data || [],
+      referrals: referralsWithApp,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
