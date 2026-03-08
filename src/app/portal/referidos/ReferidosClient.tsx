@@ -209,7 +209,12 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                 <span className="shrink-0 font-medium text-zinc-400">1.</span>
                 <span>
                   Antes de comenzar leé la política{' '}
-                  <span className="font-medium text-zinc-900">Programa de Referidos Pow 🚀</span>
+                  <a
+                    href="https://docs.google.com/document/d/1HWXHbKaQ161lsgNufTKcrCS7UIfiIBS98-L6ud80c-U/edit?tab=t.0#heading=h.f5v4k0nmuvib"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-emerald-700 underline hover:text-emerald-800"
+                  >Programa de Referidos Pow 🚀</a>
                 </span>
               </li>
               <li className="flex gap-2">
