@@ -198,10 +198,6 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4">
-          <p className="text-sm text-zinc-700">
-            ¿Conocés a alguien que podría sumarse a nuestro equipo y compartir nuestros valores? Esta es tu oportunidad de recomendarlo/a y, si ingresa, recibir un bono como reconocimiento.
-          </p>
-
           <div>
             <p className="text-sm font-semibold text-zinc-900 mb-2">¿Cómo funciona?</p>
             <ol className="space-y-2 text-sm text-zinc-600">
