@@ -606,7 +606,11 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 															</svg>
 															<div className="flex-1">
 																<p className="text-xs font-semibold text-amber-900 mb-1">Notas:</p>
-																<p className="text-sm text-amber-800 leading-relaxed">{entry.notes}</p>
+																<div className="text-sm text-amber-800 leading-relaxed space-y-0.5">
+																	{entry.notes.split(/\.\s+/).filter(Boolean).map((line, i, arr) => (
+																		<p key={i}>{line}{i < arr.length - 1 ? '.' : ''}</p>
+																	))}
+																</div>
 															</div>
 														</div>
 													</div>
