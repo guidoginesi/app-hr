@@ -26,9 +26,30 @@ export default async function ReferidosPage() {
       .order('created_at', { ascending: false }),
   ]);
 
+  // Fetch application snapshots separately to avoid FK ambiguity
+  const appIds = (referrals || [])
+    .map((r: any) => r.application_id)
+    .filter(Boolean) as string[];
+
+  let applicationsMap: Record<string, any> = {};
+  if (appIds.length > 0) {
+    const { data: apps } = await supabase
+      .from('applications')
+      .select('id, current_stage, current_stage_status, final_outcome, offer_status')
+      .in('id', appIds);
+    if (apps) {
+      for (const app of apps) applicationsMap[app.id] = app;
+    }
+  }
+
+  const referralsWithApp = (referrals || []).map((r: any) => ({
+    ...r,
+    application: r.application_id ? (applicationsMap[r.application_id] ?? null) : null,
+  }));
+
   return (
     <PortalShell employee={employee} isLeader={isLeader} active="referidos">
-      <ReferidosClient initialJobs={jobs || []} initialReferrals={referrals || []} />
+      <ReferidosClient initialJobs={jobs || []} initialReferrals={referralsWithApp} />
     </PortalShell>
   );
 }
