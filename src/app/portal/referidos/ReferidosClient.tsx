@@ -2,6 +2,8 @@
 
 import { useState, useRef } from 'react';
 
+const PROVINCIAS = ['CABA', 'GBA', 'Otra'];
+
 type Job = { id: string; title: string; department?: string | null; location?: string | null; work_mode?: string | null };
 
 type Referral = {
@@ -11,11 +13,14 @@ type Referral = {
   candidate_name: string;
   candidate_email: string;
   candidate_phone?: string | null;
+  candidate_province?: string | null;
   candidate_linkedin?: string | null;
+  candidate_salary_expectation?: string | null;
   recommendation_reason: string;
   status: string;
   bonus_paid: boolean;
   hr_notes?: string | null;
+  cv_filename?: string | null;
   created_at: string;
 };
 
@@ -50,37 +55,63 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [salaryDisplay, setSalaryDisplay] = useState('');
   const [form, setForm] = useState({
     candidate_name: '',
     candidate_email: '',
     candidate_phone: '',
+    candidate_province: '',
     candidate_linkedin: '',
     recommendation_reason: '',
   });
   const reasonRef = useRef<HTMLTextAreaElement>(null);
+  const cvInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSalaryInput = (value: string) => {
+    const onlyNumbers = value.replace(/\D/g, '');
+    if (!onlyNumbers) { setSalaryDisplay(''); return; }
+    setSalaryDisplay(new Intl.NumberFormat('es-AR').format(parseInt(onlyNumbers)));
+  };
 
   const openModal = (job: Job) => {
     setSelectedJob(job);
-    setForm({ candidate_name: '', candidate_email: '', candidate_phone: '', candidate_linkedin: '', recommendation_reason: '' });
+    setForm({ candidate_name: '', candidate_email: '', candidate_phone: '', candidate_province: '', candidate_linkedin: '', recommendation_reason: '' });
+    setSalaryDisplay('');
+    setCvFile(null);
     setSubmitError(null);
     setShowModal(true);
   };
 
-  const closeModal = () => { setShowModal(false); setSelectedJob(null); };
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedJob(null);
+    if (cvInputRef.current) cvInputRef.current.value = '';
+  };
 
   const handleSubmit = async () => {
     setSubmitError(null);
     if (!form.candidate_name.trim()) { setSubmitError('El nombre es requerido'); return; }
     if (!form.candidate_email.trim()) { setSubmitError('El email es requerido'); return; }
+    if (!form.candidate_phone.trim()) { setSubmitError('El teléfono es requerido'); return; }
+    if (!form.candidate_province) { setSubmitError('La provincia es requerida'); return; }
+    if (!cvFile) { setSubmitError('El CV es requerido'); return; }
     if (!form.recommendation_reason.trim()) { setSubmitError('El motivo de recomendación es requerido'); reasonRef.current?.focus(); return; }
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/portal/referidos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: selectedJob!.id, ...form }),
-      });
+      const data = new FormData();
+      data.append('job_id', selectedJob!.id);
+      data.append('candidate_name', form.candidate_name);
+      data.append('candidate_email', form.candidate_email);
+      data.append('candidate_phone', form.candidate_phone);
+      data.append('candidate_province', form.candidate_province);
+      if (form.candidate_linkedin.trim()) data.append('candidate_linkedin', form.candidate_linkedin);
+      if (salaryDisplay) data.append('candidate_salary_expectation', salaryDisplay.replace(/\D/g, ''));
+      data.append('recommendation_reason', form.recommendation_reason);
+      if (cvFile) data.append('cv', cvFile);
+
+      const res = await fetch('/api/portal/referidos', { method: 'POST', body: data });
       if (res.ok) {
         const saved: Referral = await res.json();
         setReferrals(prev => [saved, ...prev]);
@@ -179,7 +210,9 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                         )}
                       </div>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        {ref.candidate_email}{ref.candidate_phone ? ` · ${ref.candidate_phone}` : ''}
+                        {ref.candidate_email}
+                        {ref.candidate_phone ? ` · ${ref.candidate_phone}` : ''}
+                        {ref.candidate_province ? ` · ${ref.candidate_province}` : ''}
                       </p>
                       <p className="text-xs text-zinc-500 mt-0.5">
                         Búsqueda: <span className="font-medium text-zinc-700">{ref.job?.title || '—'}</span>
@@ -226,70 +259,143 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      Nombre completo <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={form.candidate_name}
-                      onChange={e => setForm(f => ({ ...f, candidate_name: e.target.value }))}
-                      placeholder="Ej: María González"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={form.candidate_email}
-                      onChange={e => setForm(f => ({ ...f, candidate_email: e.target.value }))}
-                      placeholder="maria@email.com"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      Teléfono <span className="text-zinc-400 font-normal">(opcional)</span>
-                    </label>
+              <div className="max-h-[70vh] overflow-y-auto p-6 space-y-4">
+                {/* Nombre */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    Nombre completo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.candidate_name}
+                    onChange={e => setForm(f => ({ ...f, candidate_name: e.target.value }))}
+                    placeholder="Ej: María González"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    Dirección de email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={form.candidate_email}
+                    onChange={e => setForm(f => ({ ...f, candidate_email: e.target.value }))}
+                    placeholder="maria@email.com"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Teléfono */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    Número de teléfono <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 whitespace-nowrap">
+                      🇦🇷 Argentina
+                    </div>
                     <input
                       type="tel"
                       value={form.candidate_phone}
                       onChange={e => setForm(f => ({ ...f, candidate_phone: e.target.value }))}
-                      placeholder="+54 11 1234-5678"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      LinkedIn <span className="text-zinc-400 font-normal">(opcional)</span>
-                    </label>
-                    <input
-                      type="url"
-                      value={form.candidate_linkedin}
-                      onChange={e => setForm(f => ({ ...f, candidate_linkedin: e.target.value }))}
-                      placeholder="https://linkedin.com/in/..."
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      ¿Por qué recomendás a esta persona? <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      ref={reasonRef}
-                      value={form.recommendation_reason}
-                      onChange={e => setForm(f => ({ ...f, recommendation_reason: e.target.value }))}
-                      rows={4}
-                      placeholder="Contanos qué conocés de esta persona, su experiencia, habilidades o por qué creés que encajaría bien en Pow..."
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      placeholder="+54"
+                      className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
                 </div>
+
+                {/* Provincia */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    Provincia <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={form.candidate_province}
+                    onChange={e => setForm(f => ({ ...f, candidate_province: e.target.value }))}
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">Seleccionar provincia</option>
+                    {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+
+                {/* LinkedIn */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    Perfil de LinkedIn (URL) <span className="text-zinc-400 font-normal">(opcional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={form.candidate_linkedin}
+                    onChange={e => setForm(f => ({ ...f, candidate_linkedin: e.target.value }))}
+                    placeholder="https://linkedin.com/in/tuperfil"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Expectativa salarial */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    ¿Cuál es su expectativa salarial mensual neta? <span className="text-zinc-400 font-normal">(opcional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={salaryDisplay}
+                    onChange={e => handleSalaryInput(e.target.value)}
+                    placeholder="Ej: 1.500.000"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* CV */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    CV / Currículum <span className="text-red-500">*</span> <span className="text-zinc-400 font-normal">(PDF/DOC hasta 10 MB)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="cursor-pointer rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+                      Elegir archivo
+                      <input
+                        ref={cvInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        className="hidden"
+                        onChange={e => setCvFile(e.target.files?.[0] || null)}
+                      />
+                    </label>
+                    <span className="text-sm text-zinc-500 truncate max-w-[200px]">
+                      {cvFile ? cvFile.name : 'Ningún archivo seleccionado'}
+                    </span>
+                    {cvFile && (
+                      <button onClick={() => { setCvFile(null); if (cvInputRef.current) cvInputRef.current.value = ''; }} className="text-zinc-400 hover:text-red-500">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Motivo */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    ¿Por qué recomendás a esta persona? <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    ref={reasonRef}
+                    value={form.recommendation_reason}
+                    onChange={e => setForm(f => ({ ...f, recommendation_reason: e.target.value }))}
+                    rows={4}
+                    placeholder="Contanos qué conocés de esta persona, su experiencia, habilidades o por qué creés que encajaría bien en Pow..."
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <p className="text-xs text-zinc-400">Los campos marcados con * son obligatorios.</p>
 
                 {submitError && (
                   <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">

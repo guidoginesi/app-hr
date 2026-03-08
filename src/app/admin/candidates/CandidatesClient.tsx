@@ -43,6 +43,7 @@ type Application = {
 	current_stage_status?: StageStatus;
 	stage_history?: StageHistory[];
 	recruiter_rating?: number | null;
+	referral_id?: string | null;
 };
 
 type Candidate = {
@@ -359,15 +360,25 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 													</span>
 												)}
 												
-												{/* AI Score */}
-												{application.ai_score !== null && (
-													<>
-														<span className="text-xs text-zinc-400">·</span>
-														<span className="text-xs font-medium text-zinc-600">
-															Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
-														</span>
-													</>
-												)}
+											{/* Referido badge */}
+											{application.referral_id && (
+												<>
+													<span className="text-xs text-zinc-400">·</span>
+													<span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">
+														⭐ Referido
+													</span>
+												</>
+											)}
+
+											{/* AI Score */}
+											{application.ai_score !== null && (
+												<>
+													<span className="text-xs text-zinc-400">·</span>
+													<span className="text-xs font-medium text-zinc-600">
+														Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
+													</span>
+												</>
+											)}
 											</div>
 											<div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
 												<span>{candidate.email}</span>

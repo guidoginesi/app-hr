@@ -26,11 +26,15 @@ type Referral = {
   candidate_name: string;
   candidate_email: string;
   candidate_phone?: string | null;
+  candidate_province?: string | null;
   candidate_linkedin?: string | null;
+  candidate_salary_expectation?: string | null;
   recommendation_reason: string;
   status: string;
   bonus_paid: boolean;
   hr_notes?: string | null;
+  cv_storage_path?: string | null;
+  cv_filename?: string | null;
   created_at: string;
 };
 
@@ -245,8 +249,19 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
                   <p className="text-sm font-semibold text-zinc-900">{selectedReferral.candidate_name}</p>
                   <p className="text-sm text-zinc-600">{selectedReferral.candidate_email}</p>
                   {selectedReferral.candidate_phone && <p className="text-sm text-zinc-600">{selectedReferral.candidate_phone}</p>}
+                  {selectedReferral.candidate_province && <p className="text-sm text-zinc-600">{selectedReferral.candidate_province}</p>}
+                  {selectedReferral.candidate_salary_expectation && (
+                    <p className="text-sm text-zinc-600">
+                      Expectativa salarial: {new Intl.NumberFormat('es-AR').format(parseInt(selectedReferral.candidate_salary_expectation))}
+                    </p>
+                  )}
                   {selectedReferral.candidate_linkedin && (
                     <a href={selectedReferral.candidate_linkedin} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline block">LinkedIn →</a>
+                  )}
+                  {selectedReferral.cv_filename && selectedReferral.cv_storage_path && (
+                    <p className="text-sm text-zinc-600">
+                      CV: <span className="font-medium">{selectedReferral.cv_filename}</span>
+                    </p>
                   )}
                   <p className="text-xs text-zinc-400 pt-1">
                     Referido por: <span className="font-medium text-zinc-600">
