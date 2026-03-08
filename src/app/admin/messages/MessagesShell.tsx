@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 
-type Props = { children: ReactNode };
+type Props = { children: ReactNode; active?: string };
 
 export function MessagesShell({ children }: Props) {
   return (
