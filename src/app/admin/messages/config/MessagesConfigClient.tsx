@@ -142,7 +142,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                         onClick={() => selectTemplate(t)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                           selected?.template_key === t.template_key
-                            ? 'bg-black text-white'
+                            ? 'bg-violet-600 text-white'
                             : 'text-zinc-700 hover:bg-zinc-100'
                         }`}
                       >
@@ -150,7 +150,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                           {TEMPLATE_NAMES[t.template_key] ?? t.template_key}
                         </div>
                         {t.description && (
-                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-violet-200' : 'text-zinc-500'}`}>
                             {t.description}
                           </div>
                         )}
@@ -176,13 +176,13 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                   <p className="text-sm text-zinc-500 mt-1">{selected.description}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm font-medium ${editActive ? 'text-emerald-700' : 'text-zinc-500'}`}>
+                  <span className={`text-sm font-medium ${editActive ? 'text-violet-700' : 'text-zinc-500'}`}>
                     {editActive ? 'Activo' : 'Desactivado'}
                   </span>
                   <button
                     type="button"
                     onClick={() => setEditActive(v => !v)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-emerald-500' : 'bg-zinc-300'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-violet-600' : 'bg-zinc-300'}`}
                   >
                     <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${editActive ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -227,7 +227,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                   type="text"
                   value={editSubject}
                   onChange={e => setEditSubject(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
                 />
               </div>
 
@@ -248,7 +248,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                     value={editMessageText}
                     onChange={e => setEditMessageText(e.target.value)}
                     placeholder="Texto corto que aparecerá como notificación en el portal..."
-                    className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                    className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
                   />
                 </div>
               )}
@@ -263,7 +263,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
+                  className="rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
