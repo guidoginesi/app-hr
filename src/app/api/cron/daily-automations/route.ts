@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
   // Fetch active automation templates
   const { data: templates } = await supabase
     .from('email_templates')
-    .select('template_key, subject, body, is_active, send_internal_message, internal_message_text')
+    .select('template_key, subject, body, is_active, send_internal_message, internal_message_text, send_to_google_chat')
     .in('template_key', ['birthday_greeting', 'work_anniversary'])
     .eq('is_active', true);
 
@@ -129,6 +130,11 @@ export async function GET(req: NextRequest) {
                   replaceVariables(tpl.subject, vars),
                   replaceVariables(tpl.internal_message_text, vars)
                 );
+              }
+              // Send to Google Chat
+              if (tpl.send_to_google_chat) {
+                const chatText = `🎂 *¡Hoy es el cumpleaños de ${fullName}!* Sumate a felicitarlo/a 🎉`;
+                await sendGoogleChatMessage(chatText);
               }
               // Log
               await supabase.from('automation_log').insert({
@@ -189,6 +195,11 @@ export async function GET(req: NextRequest) {
                   replaceVariables(tpl.subject, vars),
                   replaceVariables(tpl.internal_message_text, vars)
                 );
+              }
+              // Send to Google Chat
+              if (tpl.send_to_google_chat) {
+                const chatText = `🎉 *¡${fullName} cumple ${years} año${years === 1 ? '' : 's'} en Pow hoy!* Gracias por ser parte del equipo 💜`;
+                await sendGoogleChatMessage(chatText);
               }
               await supabase.from('automation_log').insert({
                 employee_id: emp.id,

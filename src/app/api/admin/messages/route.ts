@@ -9,6 +9,7 @@ const CreateMessageSchema = z.object({
   priority: z.enum(['info', 'warning', 'critical']).default('info'),
   require_confirmation: z.boolean().default(false),
   expires_at: z.string().datetime().optional().nullable(),
+  send_to_google_chat: z.boolean().default(false),
   audience: z
     .union([
       z.object({ all: z.literal(true) }),
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
         priority: parsed.data.priority,
         require_confirmation: parsed.data.require_confirmation,
         expires_at: parsed.data.expires_at ?? null,
+        send_to_google_chat: parsed.data.send_to_google_chat,
         audience: parsed.data.audience,
         status: 'draft',
         created_by: user.id,

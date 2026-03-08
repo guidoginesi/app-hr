@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { sendGoogleChatMessage } from '@/lib/googleChat';
 
 function replaceVariables(text: string, vars: Record<string, string>): string {
   let result = text;
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   const { data: tpl } = await supabase
     .from('email_templates')
-    .select('template_key, subject, body, is_active, send_internal_message, internal_message_text')
+    .select('template_key, subject, body, is_active, send_internal_message, internal_message_text, send_to_google_chat')
     .eq('template_key', template_key)
     .single();
 
@@ -86,5 +87,16 @@ export async function POST(req: NextRequest) {
 
   if (sendError) return NextResponse.json({ error: sendError.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true, sent_to: emailTo, subject: `[TEST] ${subject}` });
+  // Send to Google Chat if enabled
+  let googleChatSent = false;
+  if (tpl.send_to_google_chat) {
+    try {
+      await sendGoogleChatMessage(`[TEST] ${subject}`);
+      googleChatSent = true;
+    } catch (e: any) {
+      console.warn('[test-automation] Google Chat error:', e.message);
+    }
+  }
+
+  return NextResponse.json({ ok: true, sent_to: emailTo, subject: `[TEST] ${subject}`, google_chat_sent: googleChatSent });
 }

@@ -14,6 +14,7 @@ type Template = {
   category: string;
   send_internal_message: boolean;
   internal_message_text: string | null;
+  send_to_google_chat: boolean;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -59,6 +60,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
   const [editActive, setEditActive] = useState(initialTemplates[0]?.is_active ?? true);
   const [editSendMessage, setEditSendMessage] = useState(initialTemplates[0]?.send_internal_message ?? false);
   const [editMessageText, setEditMessageText] = useState(initialTemplates[0]?.internal_message_text ?? '');
+  const [editSendGoogleChat, setEditSendGoogleChat] = useState(initialTemplates[0]?.send_to_google_chat ?? false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -69,6 +71,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
     setEditActive(t.is_active);
     setEditSendMessage(t.send_internal_message);
     setEditMessageText(t.internal_message_text ?? '');
+    setEditSendGoogleChat(t.send_to_google_chat ?? false);
     setFeedback(null);
   }
 
@@ -87,6 +90,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
           is_active: editActive,
           send_internal_message: editSendMessage,
           internal_message_text: editSendMessage ? editMessageText : null,
+          send_to_google_chat: editSendGoogleChat,
         }),
       });
       if (res.ok) {
@@ -207,14 +211,19 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
               {selected.category === 'automation' && (
                 <div>
                   <label className="block text-sm font-medium text-zinc-900 mb-2">Canales de envío</label>
-                  <div className="flex gap-5">
+                  <div className="flex flex-wrap gap-5">
                     <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
-                      <input type="checkbox" checked readOnly className="accent-black w-4 h-4" />
+                      <input type="checkbox" checked readOnly className="accent-violet-600 w-4 h-4" />
                       📧 Email
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
-                      <input type="checkbox" checked={editSendMessage} onChange={e => setEditSendMessage(e.target.checked)} className="accent-black w-4 h-4" />
+                      <input type="checkbox" checked={editSendMessage} onChange={e => setEditSendMessage(e.target.checked)} className="accent-violet-600 w-4 h-4" />
                       💬 Mensaje interno en el portal
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                      <input type="checkbox" checked={editSendGoogleChat} onChange={e => setEditSendGoogleChat(e.target.checked)} className="accent-violet-600 w-4 h-4" />
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                      Chat grupal de Pow (Google Chat)
                     </label>
                   </div>
                 </div>

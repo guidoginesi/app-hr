@@ -41,6 +41,7 @@ type CreateForm = {
   require_confirmation: boolean;
   expires_at: string;
   audience: 'all' | 'leaders' | 'employees' | 'test';
+  send_to_google_chat: boolean;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -50,6 +51,7 @@ const DEFAULT_FORM: CreateForm = {
   require_confirmation: false,
   expires_at: '',
   audience: 'all',
+  send_to_google_chat: false,
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -93,6 +95,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
         body: form.body.trim(),
         priority: form.priority,
         require_confirmation: form.require_confirmation,
+        send_to_google_chat: form.send_to_google_chat,
         audience: audiencePayload(form.audience),
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
@@ -353,6 +356,23 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                     />
                     <label htmlFor="require_confirmation" className="text-sm font-medium text-zinc-700">
                       Requiere confirmación de lectura
+                    </label>
+                  </div>
+
+                  {/* Google Chat */}
+                  <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      id="send_to_google_chat"
+                      checked={form.send_to_google_chat}
+                      onChange={(e) => setForm({ ...form, send_to_google_chat: e.target.checked })}
+                      className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <label htmlFor="send_to_google_chat" className="flex items-center gap-2 text-sm font-medium text-zinc-700 cursor-pointer">
+                      <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                      </svg>
+                      Enviar también al chat grupal de Pow (Google Chat)
                     </label>
                   </div>
                 </div>

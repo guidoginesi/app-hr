@@ -10,7 +10,7 @@ export async function GET() {
   const supabase = getSupabaseServer();
   const { data, error } = await supabase
     .from('email_templates')
-    .select('id, template_key, subject, body, description, variables, is_active, category, send_internal_message, internal_message_text')
+    .select('id, template_key, subject, body, description, variables, is_active, category, send_internal_message, internal_message_text, send_to_google_chat')
     .in('category', ['automation', 'time_off', 'payroll'])
     .order('category')
     .order('template_key');
@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest) {
   if (!isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { template_key, subject, body: templateBody, is_active, send_internal_message, internal_message_text } = body;
+  const { template_key, subject, body: templateBody, is_active, send_internal_message, internal_message_text, send_to_google_chat } = body;
 
   if (!template_key) return NextResponse.json({ error: 'template_key requerido' }, { status: 400 });
 
@@ -38,6 +38,7 @@ export async function PUT(req: NextRequest) {
       is_active,
       send_internal_message,
       internal_message_text,
+      send_to_google_chat: send_to_google_chat ?? false,
       updated_at: new Date().toISOString(),
     })
     .eq('template_key', template_key)

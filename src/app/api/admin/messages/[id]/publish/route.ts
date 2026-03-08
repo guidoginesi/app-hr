@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { resolveAudienceUserIds } from '@/lib/notificationService';
+import { sendGoogleChatMessage } from '@/lib/googleChat';
 
 const BATCH_SIZE = 500;
 
@@ -85,6 +86,17 @@ export async function POST(
         console.error('[publish] Error inserting recipients batch:', recipientsError);
       } else {
         insertedCount += batch.length;
+      }
+    }
+
+    // Send to Google Chat if enabled
+    if (message.send_to_google_chat) {
+      try {
+        const priorityEmoji = message.priority === 'critical' ? '🚨' : message.priority === 'warning' ? '⚠️' : 'ℹ️';
+        const chatText = `${priorityEmoji} *${message.title}*\n\n${message.body}`;
+        await sendGoogleChatMessage(chatText);
+      } catch (chatError: any) {
+        console.error('[publish] Google Chat error:', chatError.message);
       }
     }
 
