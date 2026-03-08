@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { MessagesShell } from '../MessagesShell';
 import { MessagesConfigClient } from './MessagesConfigClient';
 
+
 export const dynamic = 'force-dynamic';
 
 export default async function MessagesConfigPage() {

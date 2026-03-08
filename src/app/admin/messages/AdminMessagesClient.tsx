@@ -196,6 +196,13 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
             <span>Todos los mensajes</span>
             <span className="h-1.5 w-1.5 rounded-full bg-white" />
           </span>
+          <div className="my-3 border-t border-zinc-200" />
+          <Link
+            href="/admin/messages/config"
+            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 hover:text-black transition-all duration-150"
+          >
+            <span>Configuración</span>
+          </Link>
         </nav>
         <div className="border-t border-zinc-200 px-3 py-3">
           <Link

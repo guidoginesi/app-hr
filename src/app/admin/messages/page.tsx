@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { AdminMessagesClient } from './AdminMessagesClient';
-import { MessagesShell } from './MessagesShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +44,5 @@ export default async function AdminMessagesPage() {
     ...(metricsMap[m.id] ?? { recipients_total: 0, read_count: 0, confirmed_count: 0 }),
   }));
 
-  return (
-    <MessagesShell active="mensajes">
-      <AdminMessagesClient messages={enriched} />
-    </MessagesShell>
-  );
+  return <AdminMessagesClient messages={enriched} />;
 }
