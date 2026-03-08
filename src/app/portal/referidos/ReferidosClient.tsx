@@ -510,7 +510,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                 {/* Motivo */}
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    ¿Por qué recomendás a esta persona? <span className="text-red-500">*</span>
+                    ¿Por qué pensaste en esta persona para que sea parte de Pow? <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     ref={reasonRef}
