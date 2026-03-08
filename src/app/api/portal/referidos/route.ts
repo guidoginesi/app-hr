@@ -173,6 +173,19 @@ export async function POST(req: NextRequest) {
 
     const referrerName = `${auth.employee.first_name} ${auth.employee.last_name}`;
 
+    const relationshipLabels: Record<string, string> = {
+      worked_together: 'Trabajaron juntos',
+      know_well: 'No trabajaron juntos, pero lo/la conoce bien',
+      recommended: 'Se lo/la recomendaron y confía en la referencia',
+    };
+    const relationshipLabel = relationship_type ? relationshipLabels[relationship_type] : null;
+
+    const cvNote = [
+      `CV recibido por referido de ${referrerName}.`,
+      relationshipLabel ? `Relación: ${relationshipLabel}.` : null,
+      recommendation_reason?.trim() ? `Motivo: ${recommendation_reason.trim()}` : null,
+    ].filter(Boolean).join(' ');
+
     // Stage history: CV_RECEIVED (completed) → HR_REVIEW (pending)
     await supabase.from('stage_history').insert([
       {
@@ -181,7 +194,7 @@ export async function POST(req: NextRequest) {
         to_stage: Stage.CV_RECEIVED,
         status: StageStatus.COMPLETED,
         changed_by_user_id: null,
-        notes: `CV recibido por referido de ${referrerName}`,
+        notes: cvNote,
         changed_at: cvReceivedDate.toISOString(),
       },
       {
