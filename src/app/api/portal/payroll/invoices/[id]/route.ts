@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Verify the settlement belongs to the logged-in employee and is MONOTRIBUTO
     const { data: settlement, error: fetchError } = await supabase
       .from('payroll_settlements_with_details')
-      .select('id, employee_id, contract_type_snapshot, period_key, status')
+      .select('id, employee_id, contract_type_snapshot, period_key, status, period_year, period_month, first_name, last_name')
       .eq('id', id)
       .eq('employee_id', auth.employee.id)
       .single();
@@ -37,6 +37,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'No se proporcionó un archivo' }, { status: 400 });
     }
 
+    // Build structured filename: POW SA - FACTURA [NOMBRE] - PERIODO [MES AÑO].pdf
+    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const monthName = MONTH_NAMES[(settlement.period_month ?? 1) - 1] ?? settlement.period_month;
+    const collaboratorName = `${settlement.first_name} ${settlement.last_name}`.trim();
+    const structuredFilename = `POW SA - FACTURA ${collaboratorName} - PERIODO ${monthName} ${settlement.period_year}.pdf`;
+
     const storagePath = `${auth.employee.id}/${settlement.period_key}.pdf`;
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
@@ -49,13 +55,13 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    // Upsert invoice record
+    // Upsert invoice record with structured filename
     const { error: upsertError } = await supabase
       .from('payroll_invoices')
       .upsert({
         settlement_id: id,
         pdf_storage_path: storagePath,
-        pdf_filename: file.name,
+        pdf_filename: structuredFilename,
         uploaded_at: new Date().toISOString(),
         uploaded_by: auth.user.id,
       }, { onConflict: 'settlement_id' });
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       invoice_storage_path: storagePath,
-      invoice_filename: file.name,
+      invoice_filename: structuredFilename,
       invoice_uploaded_at: new Date().toISOString(),
     });
   } catch (error: any) {

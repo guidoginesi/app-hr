@@ -1,0 +1,35 @@
+{
+  "timeZone": "America/Argentina/Buenos_Aires",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/calendar.addons.execute",
+    "https://www.googleapis.com/auth/calendar.addons.current.event.read",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/script.external_request"
+  ],
+  "addOns": {
+    "common": {
+      "name": "Reserva de Salas POW",
+      "logoUrl": "https://www.gstatic.com/images/branding/product/1x/calendar_2020q4_48dp.png",
+      "homepageTrigger": {
+        "runFunction": "onCalendarHomepage",
+        "enabled": true
+      }
+    },
+    "calendar": {
+      "homepageTrigger": {
+        "runFunction": "onCalendarHomepage",
+        "enabled": true
+      },
+      "eventOpenTrigger": {
+        "runFunction": "onCalendarEventOpen"
+      },
+      "eventUpdateTrigger": {
+        "runFunction": "onCalendarEventOpen"
+      },
+      "currentEventAccess": "READ"
+    }
+  }
+}
