@@ -119,8 +119,11 @@ function generateOccurrences(
   return occurrences;
 }
 
+const TZ = 'America/Argentina/Buenos_Aires';
+
 function formatDateTimeAR(date: Date): string {
   return date.toLocaleString('es-AR', {
+    timeZone: TZ,
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -128,6 +131,14 @@ function formatDateTimeAR(date: Date): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function formatTimeAR(date: Date): string {
+  return date.toLocaleTimeString('es-AR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDateAR(date: Date): string {
+  return date.toLocaleDateString('es-AR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 function recurrenceLabel(type: string): string {
@@ -152,7 +163,7 @@ function buildConfirmationEmail(params: {
   occurrenceCount: number;
   invitees: string[];
 }): string {
-  const timeRange = `${params.firstStart.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} – ${params.firstEnd.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
+  const timeRange = `${formatTimeAR(params.firstStart)} – ${formatTimeAR(params.firstEnd)}`;
   const dateStr = formatDateTimeAR(params.firstStart);
 
   const recurrenceSection = params.recurrenceType
@@ -202,7 +213,7 @@ function buildInvitationEmail(params: {
   recurrenceType?: string;
   occurrenceCount: number;
 }): string {
-  const timeRange = `${params.start.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} – ${params.end.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
+  const timeRange = `${formatTimeAR(params.start)} – ${formatTimeAR(params.end)}`;
   const dateStr = formatDateTimeAR(params.start);
 
   const recurrenceSection = params.recurrenceType
@@ -334,7 +345,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (overlapping && overlapping.length > 0) {
-        const conflictDate = occ.start.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+        const conflictDate = formatDateAR(occ.start);
         return NextResponse.json(
           { error: `Conflicto de horario el ${conflictDate}. Ya existe una reserva en ese horario.` },
           { status: 409 }
@@ -490,10 +501,8 @@ export async function POST(req: NextRequest) {
 
     // In-app notification for all invitees at once
     if (inviteeUserIds.length > 0) {
-      const dateStr = occurrences[0].start.toLocaleDateString('es-AR', {
-        weekday: 'long', day: 'numeric', month: 'long',
-      });
-      const timeStr = `${occurrences[0].start.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} – ${occurrences[0].end.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
+      const dateStr = formatDateAR(occurrences[0].start);
+      const timeStr = `${formatTimeAR(occurrences[0].start)} – ${formatTimeAR(occurrences[0].end)}`;
       const recurrenceNote = recurrence_type && occurrences.length > 1
         ? ` (${recurrenceLabel(recurrence_type)}, ${occurrences.length} ocurrencias)`
         : '';
