@@ -37,7 +37,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
     return new NextResponse(fileData, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="${invoice.pdf_filename || 'factura.pdf'}"`,
+        'Content-Disposition': `attachment; filename="${invoice.pdf_filename || 'factura.pdf'}"`,
         'Cache-Control': 'private, no-cache',
       },
     });

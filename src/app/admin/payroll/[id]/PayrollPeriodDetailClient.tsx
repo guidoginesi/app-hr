@@ -631,7 +631,12 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                       if (!res.ok) { alert('No se pudo obtener la factura'); return; }
                       const blob = await res.blob();
                       const url = URL.createObjectURL(blob);
-                      window.open(url, '_blank', 'noopener,noreferrer');
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = settlement.invoice_filename || 'factura.pdf';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
                       setTimeout(() => URL.revokeObjectURL(url), 10000);
                     }}
                   />
