@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
 
     if (balance) {
       const available =
-        balance.entitled_days + balance.carried_over - balance.used_days - balance.pending_days;
+        balance.entitled_days + (balance.bonus_days ?? 0) + balance.carried_over - balance.used_days - balance.pending_days;
       if (parsed.data.days_requested > available) {
         return NextResponse.json(
           { error: `No tienes suficientes días disponibles. Disponible: ${available}` },
