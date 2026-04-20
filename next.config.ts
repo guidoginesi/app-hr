@@ -11,23 +11,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      // Redirect pow-apps.com and www.pow-apps.com → hr.pow-apps.com (preserving path)
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'pow-apps.com' }],
-        destination: 'https://hr.pow-apps.com/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.pow-apps.com' }],
-        destination: 'https://hr.pow-apps.com/:path*',
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
