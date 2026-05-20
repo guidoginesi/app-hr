@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 // PUT /api/admin/time-off/requests/[id]/approve - HR Admin approves a leave request
 export async function PUT(
@@ -71,26 +72,34 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update balance: move from pending to used
-    const startYear = new Date(request.start_date).getFullYear();
-    const { data: balance } = await supabase
-      .from('leave_balances')
-      .select('pending_days, used_days')
-      .eq('employee_id', request.employee_id)
-      .eq('leave_type_id', request.leave_type_id)
-      .eq('year', startYear)
+    // Update balance: move from pending to used (skip for unlimited types)
+    const { data: leaveTypeForBalance } = await supabase
+      .from('leave_types')
+      .select('code')
+      .eq('id', request.leave_type_id)
       .single();
 
-    if (balance) {
-      await supabase
+    if (!leaveTypeForBalance || !isUnlimitedLeaveType(leaveTypeForBalance.code)) {
+      const startYear = new Date(request.start_date).getFullYear();
+      const { data: balance } = await supabase
         .from('leave_balances')
-        .update({
-          pending_days: Math.max(0, balance.pending_days - request.days_requested),
-          used_days: balance.used_days + request.days_requested,
-        })
+        .select('pending_days, used_days')
         .eq('employee_id', request.employee_id)
         .eq('leave_type_id', request.leave_type_id)
-        .eq('year', startYear);
+        .eq('year', startYear)
+        .single();
+
+      if (balance) {
+        await supabase
+          .from('leave_balances')
+          .update({
+            pending_days: Math.max(0, balance.pending_days - request.days_requested),
+            used_days: balance.used_days + request.days_requested,
+          })
+          .eq('employee_id', request.employee_id)
+          .eq('leave_type_id', request.leave_type_id)
+          .eq('year', startYear);
+      }
     }
 
     // Send email notification to employee

@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 const CancelSchema = z.object({
   cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido'),
@@ -88,30 +89,37 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update balance: restore used days back to available
-    const startYear = new Date(request.start_date).getFullYear();
-    const { data: balance } = await supabase
-      .from('leave_balances')
-      .select('used_days')
-      .eq('employee_id', request.employee_id)
-      .eq('leave_type_id', request.leave_type_id)
-      .eq('year', startYear)
+    const { data: leaveTypeForBalance } = await supabase
+      .from('leave_types')
+      .select('code')
+      .eq('id', request.leave_type_id)
       .single();
 
-    if (balance) {
-      const { error: balanceError } = await supabase
+    if (!leaveTypeForBalance || !isUnlimitedLeaveType(leaveTypeForBalance.code)) {
+      const startYear = new Date(request.start_date).getFullYear();
+      const { data: balance } = await supabase
         .from('leave_balances')
-        .update({
-          used_days: Math.max(0, balance.used_days - request.days_requested),
-        })
+        .select('used_days')
         .eq('employee_id', request.employee_id)
         .eq('leave_type_id', request.leave_type_id)
-        .eq('year', startYear);
+        .eq('year', startYear)
+        .single();
 
-      if (balanceError) {
-        console.error('Error restoring balance:', balanceError);
-      } else {
-        console.log(`Balance restored: ${request.days_requested} days returned to employee ${request.employee_id}`);
+      if (balance) {
+        const { error: balanceError } = await supabase
+          .from('leave_balances')
+          .update({
+            used_days: Math.max(0, balance.used_days - request.days_requested),
+          })
+          .eq('employee_id', request.employee_id)
+          .eq('leave_type_id', request.leave_type_id)
+          .eq('year', startYear);
+
+        if (balanceError) {
+          console.error('Error restoring balance:', balanceError);
+        } else {
+          console.log(`Balance restored: ${request.days_requested} days returned to employee ${request.employee_id}`);
+        }
       }
     }
 

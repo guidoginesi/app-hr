@@ -4,6 +4,7 @@ import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 const RejectSchema = z.object({
   rejection_reason: z.string().min(1, 'El motivo de rechazo es requerido'),
@@ -83,25 +84,32 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update balance: remove from pending
-    const startYear = new Date(request.start_date).getFullYear();
-    const { data: balance } = await supabase
-      .from('leave_balances')
-      .select('pending_days')
-      .eq('employee_id', request.employee_id)
-      .eq('leave_type_id', request.leave_type_id)
-      .eq('year', startYear)
+    const { data: leaveTypeForBalance } = await supabase
+      .from('leave_types')
+      .select('code')
+      .eq('id', request.leave_type_id)
       .single();
 
-    if (balance) {
-      await supabase
+    if (!leaveTypeForBalance || !isUnlimitedLeaveType(leaveTypeForBalance.code)) {
+      const startYear = new Date(request.start_date).getFullYear();
+      const { data: balance } = await supabase
         .from('leave_balances')
-        .update({
-          pending_days: Math.max(0, balance.pending_days - request.days_requested),
-        })
+        .select('pending_days')
         .eq('employee_id', request.employee_id)
         .eq('leave_type_id', request.leave_type_id)
-        .eq('year', startYear);
+        .eq('year', startYear)
+        .single();
+
+      if (balance) {
+        await supabase
+          .from('leave_balances')
+          .update({
+            pending_days: Math.max(0, balance.pending_days - request.days_requested),
+          })
+          .eq('employee_id', request.employee_id)
+          .eq('leave_type_id', request.leave_type_id)
+          .eq('year', startYear);
+      }
     }
 
     // Delete remote work weeks if applicable

@@ -1,6 +1,6 @@
 // Time-Off module types
 
-export type LeaveTypeCode = 'vacation' | 'pow_days' | 'study' | 'remote_work';
+export type LeaveTypeCode = 'vacation' | 'pow_days' | 'study' | 'remote_work' | 'remote_work_trip';
 
 // Two-level approval workflow statuses
 export type LeaveRequestStatus = 

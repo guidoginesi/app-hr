@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
 import { MondayDatePicker } from '@/components/MondayDatePicker';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 // Parse date string as local date to avoid timezone issues
 function parseLocalDate(dateStr: string): Date {
@@ -98,9 +99,15 @@ export default function NewTimeOffRequestPage() {
   }
 
   function getAvailableDays(typeId: string): number {
+    const type = leaveTypes.find((t) => t.id === typeId);
+    if (type && isUnlimitedLeaveType(type.code)) return Infinity;
     const balance = getBalanceForType(typeId);
     if (!balance) return 0;
     return balance.available_days;
+  }
+
+  function isTypeSelectable(type: LeaveType): boolean {
+    return isUnlimitedLeaveType(type.code) || getAvailableDays(type.id) > 0;
   }
 
   // Check if selected type is vacation
@@ -109,10 +116,20 @@ export default function NewTimeOffRequestPage() {
     return type?.code === 'vacation';
   }
 
-  // Check if selected type is remote work
+  // Check if selected type is remote work (full weeks)
   function isRemoteWorkType(): boolean {
     const type = leaveTypes.find((t) => t.id === selectedType);
     return type?.code === 'remote_work';
+  }
+
+  // Check if selected type is remote work trip (single days / travel — ART notification)
+  function isRemoteWorkTripType(): boolean {
+    const type = leaveTypes.find((t) => t.id === selectedType);
+    return type?.code === 'remote_work_trip';
+  }
+
+  function requiresRemoteLocationFields(): boolean {
+    return isRemoteWorkType() || isRemoteWorkTripType();
   }
 
   // Check if selected type requires week-based selection (Monday to Sunday)
@@ -247,18 +264,22 @@ export default function NewTimeOffRequestPage() {
         setError('Las semanas de trabajo remoto deben terminar un domingo');
         return;
       }
-      
-      // Validate required remote work fields
+    }
+
+    if (requiresRemoteLocationFields()) {
       if (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()) {
-        setError('Por favor completa todos los campos de información de trabajo remoto');
+        setError('Por favor completa todos los campos de ubicación y contacto de emergencia');
         return;
       }
     }
 
-    // Build notes with remote work info if applicable
+    // Build notes with remote location info if applicable
     let finalNotes = notes;
-    if (selectedLeaveType?.code === 'remote_work') {
-      const remoteInfo = `📍 INFORMACIÓN DE TRABAJO REMOTO\n` +
+    if (requiresRemoteLocationFields()) {
+      const label = selectedLeaveType?.code === 'remote_work_trip'
+        ? 'NOTIFICACIÓN ART / SEGURO — TRABAJO FUERA DE DOMICILIO'
+        : 'INFORMACIÓN DE TRABAJO REMOTO';
+      const remoteInfo = `📍 ${label}\n` +
         `Destino: ${remoteDestino}\n` +
         `Domicilio: ${remoteDomicilio}\n` +
         `Contacto de emergencia: ${remoteContactoNombre} - Tel: ${remoteContactoTelefono}` +
@@ -320,7 +341,7 @@ export default function NewTimeOffRequestPage() {
 
         <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
           <h1 className="text-2xl font-semibold text-zinc-900">Nueva solicitud</h1>
-          <p className="mt-1 text-sm text-zinc-500">Solicita vacaciones, días Pow u otras licencias</p>
+          <p className="mt-1 text-sm text-zinc-500">Solicita vacaciones, días Pow, trabajo remoto u otras licencias</p>
 
           {error && (
             <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -332,7 +353,7 @@ export default function NewTimeOffRequestPage() {
             {/* Tipo de licencia */}
             <div>
               <label className="block text-sm font-medium text-zinc-700">Tipo de licencia</label>
-              {leaveTypes.filter((type) => getAvailableDays(type.id) > 0).length === 0 ? (
+              {leaveTypes.filter(isTypeSelectable).length === 0 ? (
                 <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4">
                   <p className="text-sm text-amber-800">
                     No tienes días disponibles para solicitar licencias en este momento.
@@ -347,11 +368,14 @@ export default function NewTimeOffRequestPage() {
                 >
                   <option value="">Selecciona un tipo</option>
                   {leaveTypes
-                    .filter((type) => getAvailableDays(type.id) > 0)
+                    .filter(isTypeSelectable)
                     .map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.name} - Disponible: {getAvailableDays(type.id)}{' '}
-                        {type.count_type === 'weeks' ? 'semanas' : 'días'}
+                        {isUnlimitedLeaveType(type.code)
+                          ? `${type.name} - Ilimitada`
+                          : `${type.name} - Disponible: ${getAvailableDays(type.id)} ${
+                              type.count_type === 'weeks' ? 'semanas' : 'días'
+                            }`}
                       </option>
                     ))}
                 </select>
@@ -428,98 +452,112 @@ export default function NewTimeOffRequestPage() {
                   </div>
                 )}
 
-                {/* Remote work additional fields */}
-                {isRemoteWorkType() && (
-                  <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-sm text-blue-800">
-                      En el caso de que trabajes temporalmente desde otro lugar que no sea el habitual 
-                      declarado al momento del ingreso, deberás completar la siguiente información:
-                    </p>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-blue-900">
-                        Destino <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={remoteDestino}
-                        onChange={(e) => setRemoteDestino(e.target.value)}
-                        placeholder="Ej: Córdoba, Argentina"
-                        className="mt-1 block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-blue-900">
-                        Domicilio <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={remoteDomicilio}
-                        onChange={(e) => setRemoteDomicilio(e.target.value)}
-                        placeholder="Ej: Av. Colón 1234, Piso 5, Depto B"
-                        className="mt-1 block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-blue-900">
-                        Contacto de emergencia
-                      </label>
-                      <div className="mt-1 grid grid-cols-2 gap-3">
-                        <div>
-                          <input
-                            type="text"
-                            value={remoteContactoNombre}
-                            onChange={(e) => setRemoteContactoNombre(e.target.value)}
-                            placeholder="Nombre y vínculo"
-                            className="block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            required
-                          />
-                          <p className="mt-1 text-xs text-blue-600">Ej: Juan Pérez (hermano)</p>
-                        </div>
-                        <div>
-                          <input
-                            type="tel"
-                            value={remoteContactoTelefono}
-                            onChange={(e) => setRemoteContactoTelefono(e.target.value)}
-                            placeholder="Teléfono"
-                            className="block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            required
-                          />
-                          <p className="mt-1 text-xs text-blue-600">Ej: +54 11 1234-5678</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Fechas - Otros tipos (Días Pow, Estudio) */}
+            {/* Fechas - Días Pow, Estudio, Trabajo fuera de domicilio */}
             {selectedType && !isWeekBasedType() && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {isRemoteWorkTripType() && (
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <p className="text-sm text-blue-800">
+                      Usá este tipo cuando trabajes fuera de tu domicilio habitual por{' '}
+                      <strong>días sueltos o viajes</strong> (no semanas completas).
+                      Es una notificación obligatoria para ART y seguro. La solicitud va{' '}
+                      <strong>directamente a HR</strong> para su revisión (sin aprobación del líder).
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700">Fecha de inicio</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700">Fecha de fin</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Location fields — remote work (weeks) or trip (days) */}
+            {requiresRemoteLocationFields() && (
+              <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <p className="text-sm text-blue-800">
+                  {isRemoteWorkTripType()
+                    ? 'Completá la información del lugar donde vas a trabajar para la notificación a ART y seguro:'
+                    : 'En el caso de que trabajes temporalmente desde otro lugar que no sea el habitual declarado al momento del ingreso, deberás completar la siguiente información:'}
+                </p>
+
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Fecha de inicio</label>
+                  <label className="block text-sm font-medium text-blue-900">
+                    Destino <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    type="text"
+                    value={remoteDestino}
+                    onChange={(e) => setRemoteDestino(e.target.value)}
+                    placeholder="Ej: Córdoba, Argentina"
+                    className="mt-1 block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700">Fecha de fin</label>
+                  <label className="block text-sm font-medium text-blue-900">
+                    Domicilio <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    type="text"
+                    value={remoteDomicilio}
+                    onChange={(e) => setRemoteDomicilio(e.target.value)}
+                    placeholder="Ej: Av. Colón 1234, Piso 5, Depto B"
+                    className="mt-1 block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900">
+                    Contacto de emergencia
+                  </label>
+                  <div className="mt-1 grid grid-cols-2 gap-3">
+                    <div>
+                      <input
+                        type="text"
+                        value={remoteContactoNombre}
+                        onChange={(e) => setRemoteContactoNombre(e.target.value)}
+                        placeholder="Nombre y vínculo"
+                        className="block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                      <p className="mt-1 text-xs text-blue-600">Ej: Juan Pérez (hermano)</p>
+                    </div>
+                    <div>
+                      <input
+                        type="tel"
+                        value={remoteContactoTelefono}
+                        onChange={(e) => setRemoteContactoTelefono(e.target.value)}
+                        placeholder="Teléfono"
+                        className="block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                      <p className="mt-1 text-xs text-blue-600">Ej: +54 11 1234-5678</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -569,7 +607,7 @@ export default function NewTimeOffRequestPage() {
                   submitting || 
                   !selectedType || 
                   daysCalculated <= 0 ||
-                  (isRemoteWorkType() && (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()))
+                  (requiresRemoteLocationFields() && (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()))
                 }
                 className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >

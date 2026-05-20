@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 const UpdateRequestSchema = z.object({
   status: z.enum(['pending', 'pending_leader', 'pending_hr', 'approved', 'rejected', 'rejected_leader', 'rejected_hr', 'cancelled']).optional(),
@@ -130,10 +131,17 @@ export async function PUT(
         updateData.hr_rejection_reason = parsed.data.rejection_reason || null;
       }
 
-      // Update balance based on status change
+      // Update balance based on status change (skip for unlimited types)
+      const { data: leaveTypeForBalance } = await supabase
+        .from('leave_types')
+        .select('code')
+        .eq('id', currentRequest.leave_type_id)
+        .single();
+
+      const tracksBalance = leaveTypeForBalance && !isUnlimitedLeaveType(leaveTypeForBalance.code);
       const startYear = new Date(currentRequest.start_date).getFullYear();
 
-      if (isPendingStatus && newStatus === 'approved') {
+      if (tracksBalance && isPendingStatus && newStatus === 'approved') {
         // Move from pending to used
         const { data: balance, error: balanceFetchError } = await supabase
           .from('leave_balances')
@@ -162,7 +170,7 @@ export async function PUT(
         } else {
           console.log('No balance found for this request - skipping balance update');
         }
-      } else if (isPendingStatus && (isRejectedStatus || newStatus === 'cancelled')) {
+      } else if (tracksBalance && isPendingStatus && (isRejectedStatus || newStatus === 'cancelled')) {
         // Remove from pending
         const { data: balance } = await supabase
           .from('leave_balances')
@@ -238,24 +246,32 @@ export async function DELETE(
 
     // If pending (any pending status), restore the balance
     if (['pending', 'pending_leader', 'pending_hr'].includes(request.status)) {
-      const startYear = new Date(request.start_date).getFullYear();
-      const { data: balance } = await supabase
-        .from('leave_balances')
-        .select('pending_days')
-        .eq('employee_id', request.employee_id)
-        .eq('leave_type_id', request.leave_type_id)
-        .eq('year', startYear)
+      const { data: leaveTypeForBalance } = await supabase
+        .from('leave_types')
+        .select('code')
+        .eq('id', request.leave_type_id)
         .single();
 
-      if (balance) {
-        await supabase
+      if (leaveTypeForBalance && !isUnlimitedLeaveType(leaveTypeForBalance.code)) {
+        const startYear = new Date(request.start_date).getFullYear();
+        const { data: balance } = await supabase
           .from('leave_balances')
-          .update({
-            pending_days: Math.max(0, balance.pending_days - request.days_requested),
-          })
+          .select('pending_days')
           .eq('employee_id', request.employee_id)
           .eq('leave_type_id', request.leave_type_id)
-          .eq('year', startYear);
+          .eq('year', startYear)
+          .single();
+
+        if (balance) {
+          await supabase
+            .from('leave_balances')
+            .update({
+              pending_days: Math.max(0, balance.pending_days - request.days_requested),
+            })
+            .eq('employee_id', request.employee_id)
+            .eq('leave_type_id', request.leave_type_id)
+            .eq('year', startYear);
+        }
       }
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 // GET /api/portal/time-off/requests/[id] - Get a specific request
 export async function GET(
@@ -80,25 +81,32 @@ export async function DELETE(
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    // Restore pending days in balance
-    const startYear = new Date(request.start_date).getFullYear();
-    const { data: balance } = await supabase
-      .from('leave_balances')
-      .select('pending_days')
-      .eq('employee_id', auth.employee.id)
-      .eq('leave_type_id', request.leave_type_id)
-      .eq('year', startYear)
+    const { data: leaveTypeForBalance } = await supabase
+      .from('leave_types')
+      .select('code')
+      .eq('id', request.leave_type_id)
       .single();
 
-    if (balance) {
-      await supabase
+    if (!leaveTypeForBalance || !isUnlimitedLeaveType(leaveTypeForBalance.code)) {
+      const startYear = new Date(request.start_date).getFullYear();
+      const { data: balance } = await supabase
         .from('leave_balances')
-        .update({
-          pending_days: Math.max(0, balance.pending_days - request.days_requested),
-        })
+        .select('pending_days')
         .eq('employee_id', auth.employee.id)
         .eq('leave_type_id', request.leave_type_id)
-        .eq('year', startYear);
+        .eq('year', startYear)
+        .single();
+
+      if (balance) {
+        await supabase
+          .from('leave_balances')
+          .update({
+            pending_days: Math.max(0, balance.pending_days - request.days_requested),
+          })
+          .eq('employee_id', auth.employee.id)
+          .eq('leave_type_id', request.leave_type_id)
+          .eq('year', startYear);
+      }
     }
 
     // Delete remote work weeks if applicable

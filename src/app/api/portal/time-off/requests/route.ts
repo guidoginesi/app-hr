@@ -4,6 +4,7 @@ import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
+import { isUnlimitedLeaveType, isHrOnlyApprovalType } from '@/lib/leaveTypes';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -181,24 +182,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check balance
+    // Check balance (skip for unlimited / notification-only types)
     const startYear = parseLocalDate(parsed.data.start_date).getFullYear();
-    const { data: balance } = await supabase
-      .from('leave_balances')
-      .select('*')
-      .eq('employee_id', auth.employee.id)
-      .eq('leave_type_id', parsed.data.leave_type_id)
-      .eq('year', startYear)
-      .single();
+    if (!isUnlimitedLeaveType(leaveType.code)) {
+      const { data: balance } = await supabase
+        .from('leave_balances')
+        .select('*')
+        .eq('employee_id', auth.employee.id)
+        .eq('leave_type_id', parsed.data.leave_type_id)
+        .eq('year', startYear)
+        .single();
 
-    if (balance) {
-      const available =
-        balance.entitled_days + (balance.bonus_days ?? 0) + balance.carried_over - balance.used_days - balance.pending_days;
-      if (parsed.data.days_requested > available) {
-        return NextResponse.json(
-          { error: `No tienes suficientes días disponibles. Disponible: ${available}` },
-          { status: 400 }
-        );
+      if (balance) {
+        const available =
+          balance.entitled_days + (balance.bonus_days ?? 0) + balance.carried_over - balance.used_days - balance.pending_days;
+        if (parsed.data.days_requested > available) {
+          return NextResponse.json(
+            { error: `No tienes suficientes días disponibles. Disponible: ${available}` },
+            { status: 400 }
+          );
+        }
       }
     }
 
@@ -217,7 +220,9 @@ export async function POST(req: NextRequest) {
       const existingCode = (Array.isArray(lt) ? lt[0] : lt as unknown as { code: string } | null)?.code;
       if (
         (leaveType.code === 'pow_days' && existingCode === 'remote_work') ||
-        (leaveType.code === 'remote_work' && existingCode === 'pow_days')
+        (leaveType.code === 'remote_work' && existingCode === 'pow_days') ||
+        (leaveType.code === 'remote_work_trip' && existingCode === 'remote_work') ||
+        (leaveType.code === 'remote_work' && existingCode === 'remote_work_trip')
       ) return false;
       return true;
     });
@@ -229,27 +234,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get employee's manager for two-level approval flow
+    // Get employee's manager for two-level approval (not required for HR-only types)
+    const hrOnlyApproval = isHrOnlyApprovalType(leaveType.code);
+
     const { data: employee } = await supabase
       .from('employees')
       .select('manager_id')
       .eq('id', auth.employee.id)
       .single();
 
-    if (!employee?.manager_id) {
+    if (!hrOnlyApproval && !employee?.manager_id) {
       return NextResponse.json(
         { error: 'No tienes un líder asignado. Contacta a HR para configurar tu manager.' },
         { status: 400 }
       );
     }
 
-    // Create the request with pending_leader status and assigned leader
+    // Create the request — HR-only types skip leader and go straight to pending_hr
     const { data, error } = await supabase
       .from('leave_requests')
       .insert({
         employee_id: auth.employee.id,
-        status: 'pending_leader',
-        leader_id: employee.manager_id,
+        status: hrOnlyApproval ? 'pending_hr' : 'pending_leader',
+        leader_id: hrOnlyApproval ? null : employee!.manager_id,
         ...parsed.data,
       })
       .select()
@@ -260,22 +267,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update pending days in balance
-    if (balance) {
-      await supabase
+    // Update pending days in balance (skip for unlimited types)
+    if (!isUnlimitedLeaveType(leaveType.code)) {
+      const { data: balance } = await supabase
         .from('leave_balances')
-        .update({
-          pending_days: balance.pending_days + parsed.data.days_requested,
-        })
-        .eq('id', balance.id);
-    } else {
-      // Create balance if not exists
-      await supabase.from('leave_balances').insert({
-        employee_id: auth.employee.id,
-        leave_type_id: parsed.data.leave_type_id,
-        year: startYear,
-        pending_days: parsed.data.days_requested,
-      });
+        .select('*')
+        .eq('employee_id', auth.employee.id)
+        .eq('leave_type_id', parsed.data.leave_type_id)
+        .eq('year', startYear)
+        .single();
+
+      if (balance) {
+        await supabase
+          .from('leave_balances')
+          .update({
+            pending_days: balance.pending_days + parsed.data.days_requested,
+          })
+          .eq('id', balance.id);
+      } else {
+        await supabase.from('leave_balances').insert({
+          employee_id: auth.employee.id,
+          leave_type_id: parsed.data.leave_type_id,
+          year: startYear,
+          pending_days: parsed.data.days_requested,
+        });
+      }
     }
 
     // Handle remote work weeks
@@ -340,7 +356,9 @@ export async function POST(req: NextRequest) {
       createSystemNotification({
         userIds: [auth.user.id],
         title: 'Solicitud de licencia enviada',
-        body: `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`,
+        body: hrOnlyApproval
+          ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
+          : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`,
         priority: 'info',
         deepLink: '/portal/time-off',
         metadata: { entity_type: 'leave_request', entity_id: data.id },
@@ -348,81 +366,117 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error('Error creating employee submission in-app notification:', err));
     }
 
-    // Email to leader: new request to approve (with retry for transient DB failures)
-    const managerResult = await withRetry(async () =>
-      supabase
-        .from('employees')
-        .select('first_name, personal_email, work_email, user_id')
-        .eq('id', employee.manager_id)
-        .single()
-    ).catch(() => ({ data: null as null }));
-    const manager = managerResult?.data ?? null;
+    if (hrOnlyApproval) {
+      // Notify HR directly — no leader step
+      const { data: admins } = await supabase.from('admins').select('user_id').limit(5);
 
-    if (!manager) {
-      console.error(
-        `[TimeOff] manager_id=${employee.manager_id} not found in employees for leave_request=${data.id}`
-      );
-      // Log to DB so it's visible in diagnostic queries
-      logTimeOffEmail({
-        leaveRequestId: data.id,
-        recipientEmail: 'unknown',
-        templateKey: 'time_off_leader_notification',
-        subject: 'ERROR: manager not found',
-        body: '',
-        error: `manager_id=${employee.manager_id} not found in employees table`,
-      }).catch(() => {});
-    }
+      if (admins && admins.length > 0) {
+        const adminUserIds = admins.map((a) => a.user_id);
+        const { data: hrEmployees } = await supabase
+          .from('employees')
+          .select('personal_email, work_email')
+          .in('user_id', adminUserIds);
 
-    if (manager) {
-      let managerEmail: string | null = manager.work_email || manager.personal_email;
-
-      // Fallback: if the employee record has no email, try the auth account email
-      if (!managerEmail && manager.user_id) {
-        const { data: authUser } = await supabase.auth.admin.getUserById(manager.user_id);
-        if (authUser?.user?.email) {
-          managerEmail = authUser.user.email;
-          console.warn(
-            `[TimeOff] Manager ${employee.manager_id} has no work/personal email — falling back to auth email for leave_request=${data.id}`
-          );
+        for (const hr of hrEmployees || []) {
+          const hrEmail = hr.work_email || hr.personal_email;
+          if (hrEmail) {
+            sendTimeOffEmail({
+              templateKey: 'time_off_hr_notification',
+              to: hrEmail,
+              variables: {
+                nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
+                nombre_lider: '—',
+                ...emailVariables,
+              },
+              leaveRequestId: data.id,
+            }).catch((err) => console.error('Error sending HR notification email:', err));
+          }
         }
-      }
 
-      if (managerEmail) {
-        sendTimeOffEmail({
-          templateKey: 'time_off_leader_notification',
-          to: managerEmail,
-          variables: {
-            nombre_lider: manager.first_name,
-            nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
-            ...emailVariables,
-          },
-          leaveRequestId: data.id,
-        }).catch((err) => console.error('Error sending leader notification email:', err));
-      } else {
+        createSystemNotification({
+          userIds: adminUserIds,
+          title: 'Notificación de trabajo fuera de domicilio',
+          body: `${auth.employee.first_name} ${auth.employee.last_name} registró ${parsed.data.days_requested} día(s) de ${leaveType.name} que requiere tu revisión.`,
+          priority: 'info',
+          deepLink: '/admin/time-off/requests',
+          metadata: { entity_type: 'leave_request', entity_id: data.id },
+          dedupeKey: `leave_request:${data.id}:pending_hr`,
+        }).catch((err) => console.error('Error creating HR in-app notification:', err));
+      }
+    } else if (employee?.manager_id) {
+      // Email to leader: new request to approve (with retry for transient DB failures)
+      const managerResult = await withRetry(async () =>
+        supabase
+          .from('employees')
+          .select('first_name, personal_email, work_email, user_id')
+          .eq('id', employee.manager_id)
+          .single()
+      ).catch(() => ({ data: null as null }));
+      const manager = managerResult?.data ?? null;
+
+      if (!manager) {
         console.error(
-          `[TimeOff] Cannot notify leader ${employee.manager_id}: no email found anywhere for leave_request=${data.id}`
+          `[TimeOff] manager_id=${employee.manager_id} not found in employees for leave_request=${data.id}`
         );
         logTimeOffEmail({
           leaveRequestId: data.id,
           recipientEmail: 'unknown',
           templateKey: 'time_off_leader_notification',
-          subject: 'ERROR: no email available for leader',
+          subject: 'ERROR: manager not found',
           body: '',
-          error: `manager_id=${employee.manager_id} has no work_email, personal_email, or auth email`,
+          error: `manager_id=${employee.manager_id} not found in employees table`,
         }).catch(() => {});
       }
 
-      // In-app notification to leader
-      if (manager.user_id) {
-        createSystemNotification({
-          userIds: [manager.user_id],
-          title: 'Nueva solicitud de licencia pendiente',
-          body: `${auth.employee.first_name} ${auth.employee.last_name} solicitó ${parsed.data.days_requested} día(s) de ${leaveType.name}.`,
-          priority: 'info',
-          deepLink: '/portal/team',
-          metadata: { entity_type: 'leave_request', entity_id: data.id },
-          dedupeKey: `leave_request:${data.id}:pending_leader`,
-        }).catch((err) => console.error('Error creating leader in-app notification:', err));
+      if (manager) {
+        let managerEmail: string | null = manager.work_email || manager.personal_email;
+
+        if (!managerEmail && manager.user_id) {
+          const { data: authUser } = await supabase.auth.admin.getUserById(manager.user_id);
+          if (authUser?.user?.email) {
+            managerEmail = authUser.user.email;
+            console.warn(
+              `[TimeOff] Manager ${employee.manager_id} has no work/personal email — falling back to auth email for leave_request=${data.id}`
+            );
+          }
+        }
+
+        if (managerEmail) {
+          sendTimeOffEmail({
+            templateKey: 'time_off_leader_notification',
+            to: managerEmail,
+            variables: {
+              nombre_lider: manager.first_name,
+              nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
+              ...emailVariables,
+            },
+            leaveRequestId: data.id,
+          }).catch((err) => console.error('Error sending leader notification email:', err));
+        } else {
+          console.error(
+            `[TimeOff] Cannot notify leader ${employee.manager_id}: no email found anywhere for leave_request=${data.id}`
+          );
+          logTimeOffEmail({
+            leaveRequestId: data.id,
+            recipientEmail: 'unknown',
+            templateKey: 'time_off_leader_notification',
+            subject: 'ERROR: no email available for leader',
+            body: '',
+            error: `manager_id=${employee.manager_id} has no work_email, personal_email, or auth email`,
+          }).catch(() => {});
+        }
+
+        if (manager.user_id) {
+          createSystemNotification({
+            userIds: [manager.user_id],
+            title: 'Nueva solicitud de licencia pendiente',
+            body: `${auth.employee.first_name} ${auth.employee.last_name} solicitó ${parsed.data.days_requested} día(s) de ${leaveType.name}.`,
+            priority: 'info',
+            deepLink: '/portal/team',
+            metadata: { entity_type: 'leave_request', entity_id: data.id },
+            dedupeKey: `leave_request:${data.id}:pending_leader`,
+          }).catch((err) => console.error('Error creating leader in-app notification:', err));
+        }
       }
     }
 
