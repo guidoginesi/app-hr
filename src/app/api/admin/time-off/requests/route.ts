@@ -58,11 +58,13 @@ export async function GET(req: NextRequest) {
     }
 
     if (from_date) {
-      query = query.gte('start_date', from_date);
+      // Requests that overlap the range: end_date >= from_date
+      query = query.gte('end_date', from_date);
     }
 
     if (to_date) {
-      query = query.lte('end_date', to_date);
+      // Requests that overlap the range: start_date <= to_date
+      query = query.lte('start_date', to_date);
     }
 
     const { data, error } = await query;

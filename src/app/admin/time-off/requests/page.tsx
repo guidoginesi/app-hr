@@ -33,6 +33,27 @@ const NOV_STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800',
 };
 
+function parseRemoteLocationFromNotes(notes: string | null) {
+  if (!notes) {
+    return { destino: '', domicilio: '', contacto: '', notasAdicionales: '' };
+  }
+  const destino = notes.match(/^Destino:\s*(.+)$/m)?.[1]?.trim() ?? '';
+  const domicilio = notes.match(/^Domicilio:\s*(.+)$/m)?.[1]?.trim() ?? '';
+  const contacto = notes.match(/^Contacto de emergencia:\s*(.+)$/m)?.[1]?.trim() ?? '';
+  const notasAdicionales = notes.match(/Notas adicionales:\s*([\s\S]+)/)?.[1]?.trim() ?? '';
+  return { destino, domicilio, contacto, notasAdicionales };
+}
+
+function formatDuration(request: LeaveRequestWithDetails): string {
+  if (request.count_type === 'weeks') {
+    return `${request.days_requested} semana${request.days_requested !== 1 ? 's' : ''}`;
+  }
+  if (request.count_type === 'business_days') {
+    return `${request.days_requested} día${request.days_requested !== 1 ? 's' : ''} hábiles`;
+  }
+  return `${request.days_requested} día${request.days_requested !== 1 ? 's' : ''}`;
+}
+
 interface Novedad {
   id: string;
   employee_name: string;
@@ -78,6 +99,8 @@ export default function TimeOffRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [nameFilter, setNameFilter] = useState<string>('');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -102,7 +125,7 @@ export default function TimeOffRequestsPage() {
 
   const currentYear = new Date().getFullYear();
 
-  useEffect(() => { fetchData(); }, [statusFilter, typeFilter]);
+  useEffect(() => { fetchData(); }, [statusFilter, typeFilter, dateFrom, dateTo]);
 
   const fetchNovedades = useCallback(async () => {
     setNovLoading(true);
@@ -131,6 +154,8 @@ export default function TimeOffRequestsPage() {
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
       if (typeFilter) params.set('leave_type_id', typeFilter);
+      if (dateFrom) params.set('from_date', dateFrom);
+      if (dateTo) params.set('to_date', dateTo);
 
       const [requestsRes, typesRes, bonusRes] = await Promise.all([
         fetch(`/api/admin/time-off/requests?${params}`),
@@ -385,6 +410,40 @@ export default function TimeOffRequestsPage() {
       )
     : requests;
 
+  function exportRequestsXLSX() {
+    const rows = filteredRequests.map((r) => {
+      const location = parseRemoteLocationFromNotes(r.notes);
+      const hasLocationFields = location.destino || location.domicilio || location.contacto;
+      return {
+        Empleado: r.employee_name,
+        'Tipo de licencia': r.leave_type_name,
+        'Fecha inicio': formatDateLocal(r.start_date),
+        'Fecha fin': formatDateLocal(r.end_date),
+        Duración: formatDuration(r),
+        Estado: getStatusText(r.status),
+        Destino: location.destino,
+        Domicilio: location.domicilio,
+        'Contacto de emergencia': location.contacto,
+        Observaciones: hasLocationFields
+          ? location.notasAdicionales
+          : (r.notes ?? ''),
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Solicitudes');
+
+    const parts = ['solicitudes'];
+    if (dateFrom) parts.push(`desde-${dateFrom}`);
+    if (dateTo) parts.push(`hasta-${dateTo}`);
+    if (typeFilter) {
+      const typeName = leaveTypes.find((t) => t.id === typeFilter)?.name;
+      if (typeName) parts.push(typeName.replace(/\s+/g, '-').toLowerCase());
+    }
+    XLSX.writeFile(wb, `${parts.join('-')}.xlsx`);
+  }
+
   return (
     <TimeOffShell active="requests">
       <div className="space-y-6">
@@ -424,7 +483,7 @@ export default function TimeOffRequestsPage() {
         {activeTab === 'requests' && (
           <>
             {/* Filters */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-end gap-3">
               {/* Search by name */}
               <div className="relative">
                 <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -473,6 +532,45 @@ export default function TimeOffRequestsPage() {
                   </option>
                 ))}
               </select>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">Desde</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-zinc-500">Hasta</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => { setDateFrom(''); setDateTo(''); }}
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+                >
+                  Limpiar fechas
+                </button>
+              )}
+              <div className="ml-auto flex items-end">
+                <button
+                  onClick={exportRequestsXLSX}
+                  disabled={loading || filteredRequests.length === 0}
+                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Exportar XLSX
+                </button>
+              </div>
             </div>
 
         {/* Table */}
@@ -483,7 +581,11 @@ export default function TimeOffRequestsPage() {
             </div>
           ) : filteredRequests.length === 0 ? (
             <div className="py-12 text-center text-sm text-zinc-500">
-              {nameFilter ? `Sin resultados para "${nameFilter}"` : 'No hay solicitudes'}
+              {nameFilter
+                ? `Sin resultados para "${nameFilter}"`
+                : dateFrom || dateTo
+                  ? 'No hay solicitudes en el rango de fechas seleccionado'
+                  : 'No hay solicitudes'}
             </div>
           ) : (
             <table className="w-full">
