@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['resend'],
+  serverExternalPackages: ['resend', 'pdf-lib'],
   images: {
     remotePatterns: [
       {

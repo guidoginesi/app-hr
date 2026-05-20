@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/daily-automations",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/art-teletrabajo",
+      "schedule": "0 10 * * *"
     }
   ]
 }
