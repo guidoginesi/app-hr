@@ -1,14 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import {
-  PDFDocument,
-  PDFTextField,
-  StandardFonts,
-  type PDFFont,
-} from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, rgb, type PDFFont } from 'pdf-lib';
 import type { ArtTeletrabajoConfig, TeleworkEmployeeRow } from './types';
 
 const TEMPLATE_PATH = path.join(process.cwd(), 'assets/templates/berkley-teletrabajo.pdf');
+const FONT_SIZE = 7;
+const EMPLOYER_FONT_SIZE = 8;
 
 const ROW_VALUES = (row: TeleworkEmployeeRow) => [
   row.apellido,
@@ -24,11 +21,21 @@ const ROW_VALUES = (row: TeleworkEmployeeRow) => [
   row.hsSemanales,
 ];
 
-interface FieldSlot {
-  pageIndex: number;
-  y: number;
+/** Posiciones de celdas extraídas del template Berkley. */
+interface GridCell {
   x: number;
-  field: PDFTextField;
+  y: number;
+}
+
+interface GridRow {
+  pageIndex: number;
+  cells: GridCell[];
+}
+
+interface EmployerSlot {
+  pageIndex: number;
+  name: GridCell;
+  cuit: GridCell;
 }
 
 function loadTemplateBytes(): Buffer {
@@ -38,10 +45,12 @@ function loadTemplateBytes(): Buffer {
   return fs.readFileSync(TEMPLATE_PATH);
 }
 
-function collectFieldSlots(pdf: PDFDocument): FieldSlot[] {
+/** Lee las coordenadas de las celdas desde los campos del template y luego los elimina. */
+function extractGridAndClearForm(pdf: PDFDocument): { rows: GridRow[]; employer: EmployerSlot | null } {
   const form = pdf.getForm();
   const pages = pdf.getPages();
-  const slots: FieldSlot[] = [];
+  const rowMap = new Map<string, GridRow>();
+  let employer: EmployerSlot | null = null;
 
   for (const field of form.getFields()) {
     if (!(field instanceof PDFTextField)) continue;
@@ -50,70 +59,106 @@ function collectFieldSlots(pdf: PDFDocument): FieldSlot[] {
     const pageIndex = pages.findIndex((page) => page.ref === widget.P());
     if (pageIndex < 0) continue;
 
-    slots.push({
-      pageIndex,
-      y: Math.round(rect.y),
-      x: Math.round(rect.x),
-      field,
-    });
-  }
-
-  return slots;
-}
-
-/** Agrupa los 11 campos de cada fila de empleado (misma página + misma Y). */
-function groupEmployeeRows(slots: FieldSlot[]): FieldSlot[][] {
-  const rows: FieldSlot[][] = [];
-
-  for (const slot of slots) {
-    // Fila de empleador en página 1 (solo razón social + CUIT)
-    if (slot.pageIndex === 0 && slot.y >= 420) continue;
-
-    const existing = rows.find(
-      (row) =>
-        row[0].pageIndex === slot.pageIndex && Math.abs(row[0].y - slot.y) <= 6,
-    );
-    if (existing) {
-      existing.push(slot);
-    } else {
-      rows.push([slot]);
+    // Fila empleador (solo página 1)
+    if (pageIndex === 0 && rect.y >= 420) {
+      if (!employer) {
+        employer = {
+          pageIndex: 0,
+          name: { x: 0, y: 0 },
+          cuit: { x: 0, y: 0 },
+        };
+      }
+      if (rect.x < 400) {
+        employer.name = { x: rect.x, y: rect.y };
+      } else {
+        employer.cuit = { x: rect.x, y: rect.y };
+      }
+      continue;
     }
+
+    const yKey = `${pageIndex}:${Math.round(rect.y)}`;
+    let row = rowMap.get(yKey);
+    if (!row) {
+      row = { pageIndex, cells: [] };
+      rowMap.set(yKey, row);
+    }
+    row.cells.push({ x: rect.x, y: rect.y });
   }
 
-  return rows
-    .filter((row) => row.length >= 8)
-    .map((row) => row.sort((a, b) => a.x - b.x))
+  // Eliminar campos del formulario (si no, las cajas vacías tapan el texto dibujado)
+  for (const field of [...form.getFields()]) {
+    form.removeField(field);
+  }
+
+  const rows = [...rowMap.values()]
+    .filter((row) => row.cells.length >= 8)
+    .map((row) => ({
+      pageIndex: row.pageIndex,
+      cells: row.cells.sort((a, b) => a.x - b.x),
+    }))
     .sort((a, b) => {
-      if (a[0].pageIndex !== b[0].pageIndex) return a[0].pageIndex - b[0].pageIndex;
-      return b[0].y - a[0].y;
+      const yA = a.cells[0]?.y ?? 0;
+      const yB = b.cells[0]?.y ?? 0;
+      if (a.pageIndex !== b.pageIndex) return a.pageIndex - b.pageIndex;
+      return yB - yA;
     });
+
+  return { rows, employer };
 }
 
-function fillEmployerFields(slots: FieldSlot[], config: ArtTeletrabajoConfig) {
-  const employerFields = slots
-    .filter((slot) => slot.pageIndex === 0 && slot.y >= 420 && slot.x >= 180)
-    .sort((a, b) => a.x - b.x);
-
-  if (employerFields[0]) employerFields[0].field.setText(config.employerName);
-  if (employerFields[1]) employerFields[1].field.setText(config.employerCuit);
+function truncateToWidth(text: string, maxChars: number): string {
+  const value = (text ?? '').trim();
+  if (value.length <= maxChars) return value;
+  return value.slice(0, maxChars);
 }
 
-function applyFieldStyle(field: PDFTextField, font: PDFFont) {
-  try {
-    field.setFontSize(7);
-    field.updateAppearances(font);
-  } catch {
-    // algunos campos encriptados pueden fallar; seguimos con el resto
-  }
-}
+/** Límites aproximados según ancho de celda en el template. */
+const MAX_CHARS = [18, 14, 13, 18, 4, 3, 3, 14, 14, 3, 3];
 
-function fillEmployeeRow(rowSlots: FieldSlot[], row: TeleworkEmployeeRow, font: PDFFont) {
-  const values = ROW_VALUES(row);
-  rowSlots.forEach((slot, index) => {
-    if (index >= values.length) return;
-    slot.field.setText(values[index] ?? '');
-    applyFieldStyle(slot.field, font);
+function drawCellText(
+  font: PDFFont,
+  page: ReturnType<PDFDocument['getPages']>[number],
+  cell: GridCell,
+  text: string,
+  maxChars: number,
+) {
+  const value = truncateToWidth(text, maxChars);
+  if (!value) return;
+
+  page.drawText(value, {
+    x: cell.x + 1.5,
+    y: cell.y + 2.5,
+    size: FONT_SIZE,
+    font,
+    color: rgb(0, 0, 0),
   });
+}
+
+function drawEmployerText(
+  font: PDFFont,
+  pdf: PDFDocument,
+  employer: EmployerSlot,
+  config: ArtTeletrabajoConfig,
+) {
+  const page = pdf.getPages()[employer.pageIndex];
+  if (config.employerName) {
+    page.drawText(config.employerName, {
+      x: employer.name.x + 2,
+      y: employer.name.y + 3,
+      size: EMPLOYER_FONT_SIZE,
+      font,
+      color: rgb(0, 0, 0),
+    });
+  }
+  if (config.employerCuit) {
+    page.drawText(config.employerCuit, {
+      x: employer.cuit.x + 2,
+      y: employer.cuit.y + 3,
+      size: EMPLOYER_FONT_SIZE,
+      font,
+      color: rgb(0, 0, 0),
+    });
+  }
 }
 
 export async function generateArtTeletrabajoPdf(
@@ -122,35 +167,32 @@ export async function generateArtTeletrabajoPdf(
 ): Promise<Uint8Array> {
   const pdf = await PDFDocument.load(loadTemplateBytes(), { ignoreEncryption: true });
   const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const form = pdf.getForm();
-  const slots = collectFieldSlots(pdf);
-  const employeeRows = groupEmployeeRows(slots);
+  const pages = pdf.getPages();
+  const { rows: gridRows, employer } = extractGridAndClearForm(pdf);
 
-  fillEmployerFields(slots, config);
-  for (const slot of slots.filter((s) => s.pageIndex === 0 && s.y >= 420 && s.x >= 180)) {
-    applyFieldStyle(slot.field, font);
+  if (employer) {
+    drawEmployerText(font, pdf, employer, config);
   }
 
-  const maxRows = employeeRows.length;
+  const maxRows = gridRows.length;
   if (rows.length > maxRows) {
     throw new Error(
       `El PDF admite ${maxRows} filas y hay ${rows.length} empleados en relación de dependencia.`,
     );
   }
 
-  rows.forEach((row, index) => {
-    if (employeeRows[index]) {
-      fillEmployeeRow(employeeRows[index], row, font);
-    }
+  rows.forEach((employee, index) => {
+    const gridRow = gridRows[index];
+    if (!gridRow) return;
+
+    const page = pages[gridRow.pageIndex];
+    const values = ROW_VALUES(employee);
+
+    gridRow.cells.forEach((cell, colIndex) => {
+      drawCellText(font, page, cell, values[colIndex] ?? '', MAX_CHARS[colIndex] ?? 20);
+    });
   });
 
-  try {
-    form.updateFieldAppearances(font);
-  } catch {
-    // fallback: las apariencias por campo ya se intentaron arriba
-  }
-
-  form.flatten();
   return pdf.save();
 }
 
