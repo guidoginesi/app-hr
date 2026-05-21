@@ -129,7 +129,7 @@ export function getArtTeletrabajoConfig(): ArtTeletrabajoConfig {
 
   return {
     employerName: process.env.ART_EMPLOYER_NAME ?? 'Pow S.A.',
-    employerCuit: process.env.ART_EMPLOYER_CUIT ?? '',
+    employerCuit: process.env.ART_EMPLOYER_CUIT ?? '30-71439537-4',
     recipients,
     defaultDays: process.env.ART_TELETRABAJO_DEFAULT_DAYS ?? '5',
     defaultWeeklyHours: process.env.ART_TELETRABAJO_DEFAULT_HOURS ?? '40',
