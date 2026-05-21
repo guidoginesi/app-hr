@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { PDFDocument, PDFTextField } from 'pdf-lib';
+import {
+  PDFDocument,
+  PDFTextField,
+  StandardFonts,
+  type PDFFont,
+} from 'pdf-lib';
 import type { ArtTeletrabajoConfig, TeleworkEmployeeRow } from './types';
 
 const TEMPLATE_PATH = path.join(process.cwd(), 'assets/templates/berkley-teletrabajo.pdf');
@@ -56,19 +61,17 @@ function collectFieldSlots(pdf: PDFDocument): FieldSlot[] {
   return slots;
 }
 
+/** Agrupa los 11 campos de cada fila de empleado (misma página + misma Y). */
 function groupEmployeeRows(slots: FieldSlot[]): FieldSlot[][] {
-  const employeeSlots = slots.filter((slot) => slot.x <= 80);
   const rows: FieldSlot[][] = [];
-  const sorted = [...employeeSlots].sort((a, b) => {
-    if (a.pageIndex !== b.pageIndex) return a.pageIndex - b.pageIndex;
-    if (Math.abs(a.y - b.y) > 6) return b.y - a.y;
-    return a.x - b.x;
-  });
 
-  for (const slot of sorted) {
+  for (const slot of slots) {
+    // Fila de empleador en página 1 (solo razón social + CUIT)
+    if (slot.pageIndex === 0 && slot.y >= 420) continue;
+
     const existing = rows.find(
       (row) =>
-        row[0]?.pageIndex === slot.pageIndex && Math.abs(row[0].y - slot.y) <= 6,
+        row[0].pageIndex === slot.pageIndex && Math.abs(row[0].y - slot.y) <= 6,
     );
     if (existing) {
       existing.push(slot);
@@ -78,6 +81,7 @@ function groupEmployeeRows(slots: FieldSlot[]): FieldSlot[][] {
   }
 
   return rows
+    .filter((row) => row.length >= 8)
     .map((row) => row.sort((a, b) => a.x - b.x))
     .sort((a, b) => {
       if (a[0].pageIndex !== b[0].pageIndex) return a[0].pageIndex - b[0].pageIndex;
@@ -86,18 +90,29 @@ function groupEmployeeRows(slots: FieldSlot[]): FieldSlot[][] {
 }
 
 function fillEmployerFields(slots: FieldSlot[], config: ArtTeletrabajoConfig) {
-  const employerRow = slots.filter((slot) => slot.pageIndex === 0 && slot.y >= 420 && slot.x >= 180);
-  const sorted = employerRow.sort((a, b) => a.x - b.x);
-  if (sorted[0]) sorted[0].field.setText(config.employerName);
-  if (sorted[1]) sorted[1].field.setText(config.employerCuit);
+  const employerFields = slots
+    .filter((slot) => slot.pageIndex === 0 && slot.y >= 420 && slot.x >= 180)
+    .sort((a, b) => a.x - b.x);
+
+  if (employerFields[0]) employerFields[0].field.setText(config.employerName);
+  if (employerFields[1]) employerFields[1].field.setText(config.employerCuit);
 }
 
-function fillEmployeeRow(rowSlots: FieldSlot[], row: TeleworkEmployeeRow) {
+function applyFieldStyle(field: PDFTextField, font: PDFFont) {
+  try {
+    field.setFontSize(7);
+    field.updateAppearances(font);
+  } catch {
+    // algunos campos encriptados pueden fallar; seguimos con el resto
+  }
+}
+
+function fillEmployeeRow(rowSlots: FieldSlot[], row: TeleworkEmployeeRow, font: PDFFont) {
   const values = ROW_VALUES(row);
   rowSlots.forEach((slot, index) => {
-    if (index < values.length) {
-      slot.field.setText(values[index] ?? '');
-    }
+    if (index >= values.length) return;
+    slot.field.setText(values[index] ?? '');
+    applyFieldStyle(slot.field, font);
   });
 }
 
@@ -106,10 +121,15 @@ export async function generateArtTeletrabajoPdf(
   config: ArtTeletrabajoConfig,
 ): Promise<Uint8Array> {
   const pdf = await PDFDocument.load(loadTemplateBytes(), { ignoreEncryption: true });
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const form = pdf.getForm();
   const slots = collectFieldSlots(pdf);
   const employeeRows = groupEmployeeRows(slots);
 
   fillEmployerFields(slots, config);
+  for (const slot of slots.filter((s) => s.pageIndex === 0 && s.y >= 420 && s.x >= 180)) {
+    applyFieldStyle(slot.field, font);
+  }
 
   const maxRows = employeeRows.length;
   if (rows.length > maxRows) {
@@ -120,11 +140,17 @@ export async function generateArtTeletrabajoPdf(
 
   rows.forEach((row, index) => {
     if (employeeRows[index]) {
-      fillEmployeeRow(employeeRows[index], row);
+      fillEmployeeRow(employeeRows[index], row, font);
     }
   });
 
-  pdf.getForm().flatten();
+  try {
+    form.updateFieldAppearances(font);
+  } catch {
+    // fallback: las apariencias por campo ya se intentaron arriba
+  }
+
+  form.flatten();
   return pdf.save();
 }
 
