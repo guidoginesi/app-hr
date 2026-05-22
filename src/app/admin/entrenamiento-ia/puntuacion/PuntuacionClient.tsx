@@ -11,7 +11,6 @@ type ScoreRow = {
   last_name: string;
   department_name: string | null;
   attended: boolean;
-  camera_on: boolean;
   participation_count: number;
   exam_score: number | '';
   activity_on_time: boolean;
@@ -37,7 +36,6 @@ function emptyScoreRow(emp: {
   return {
     ...emp,
     attended: false,
-    camera_on: false,
     participation_count: 0,
     exam_score: '',
     activity_on_time: false,
@@ -51,7 +49,6 @@ function emptyScoreRow(emp: {
 function computePoints(row: ScoreRow) {
   return calculateSessionPoints({
     attended: row.attended,
-    camera_on: row.camera_on,
     participation_count: row.participation_count,
     exam_score: row.exam_score === '' ? null : Number(row.exam_score),
     activity_on_time: row.activity_on_time,
@@ -94,7 +91,6 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
         const row: ScoreRow = {
           ...base,
           attended: s.attended,
-          camera_on: s.camera_on,
           participation_count: s.participation_count ?? 0,
           exam_score: s.exam_score ?? '',
           activity_on_time: s.activity_on_time,
@@ -156,7 +152,6 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
           (row) =>
             row.hasExisting ||
             row.attended ||
-            row.camera_on ||
             row.participation_count > 0 ||
             row.exam_score !== '' ||
             row.activity_on_time ||
@@ -166,7 +161,6 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
         .map((row) => ({
           employee_id: row.employee_id,
           attended: row.attended,
-          camera_on: row.camera_on,
           participation_count: row.participation_count,
           exam_score: row.exam_score === '' ? null : Number(row.exam_score),
           activity_on_time: row.activity_on_time,
@@ -266,12 +260,11 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
         <>
           <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-[1100px] w-full text-sm">
+              <table className="min-w-[980px] w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
                     <th className="px-3 py-3 sticky left-0 bg-zinc-50 z-10 min-w-[180px]">Colaborador</th>
                     <th className="px-2 py-3 text-center">Asistió</th>
-                    <th className="px-2 py-3 text-center">Cámara</th>
                     <th className="px-2 py-3 text-center">Particip.</th>
                     <th className="px-2 py-3 text-center">Examen %</th>
                     <th className="px-2 py-3 text-center">Actividad</th>
@@ -294,13 +287,6 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
                           type="checkbox"
                           checked={row.attended}
                           onChange={(e) => updateRow(row.employee_id, { attended: e.target.checked })}
-                        />
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={row.camera_on}
-                          onChange={(e) => updateRow(row.employee_id, { camera_on: e.target.checked })}
                         />
                       </td>
                       <td className="px-2 py-2 text-center">

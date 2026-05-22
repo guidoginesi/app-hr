@@ -135,7 +135,6 @@ export function PortalEntrenamientoClient({
               {history.map((entry) => {
                 const breakdown = buildScoreBreakdown({
                   attended: entry.attended,
-                  camera_on: entry.camera_on,
                   participation_count: entry.participation_count,
                   exam_score: entry.exam_score,
                   activity_on_time: entry.activity_on_time,

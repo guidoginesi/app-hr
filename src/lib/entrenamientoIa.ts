@@ -10,7 +10,6 @@ export function buildScorePayload(input: AiTrainingScoreInput, recordedBy?: stri
 
   const normalized: AiTrainingScoreInput = {
     attended: !!input.attended,
-    camera_on: !!input.camera_on,
     participation_count,
     exam_score,
     activity_on_time: !!input.activity_on_time,

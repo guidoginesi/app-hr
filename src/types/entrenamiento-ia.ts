@@ -21,7 +21,6 @@ export interface AiTrainingSession {
 
 export interface AiTrainingScoreInput {
   attended: boolean;
-  camera_on: boolean;
   participation_count: number;
   exam_score: number | null;
   activity_on_time: boolean;
@@ -75,7 +74,6 @@ export function calculateSessionPoints(input: AiTrainingScoreInput): number {
   let points = 0;
 
   if (input.attended) points += 10;
-  if (input.camera_on) points += 5;
 
   const participationPoints = Math.min(Math.max(input.participation_count, 0), 3) * 5;
   points += participationPoints;
@@ -94,7 +92,6 @@ export function buildScoreBreakdown(input: AiTrainingScoreInput): ScoreBreakdown
   const lines: ScoreBreakdownLine[] = [];
 
   if (input.attended) lines.push({ label: 'Asistencia', points: 10 });
-  if (input.camera_on) lines.push({ label: 'Cámara prendida', points: 5 });
 
   const participations = Math.min(Math.max(input.participation_count, 0), 3);
   if (participations > 0) {
@@ -122,7 +119,6 @@ export function buildScoreBreakdown(input: AiTrainingScoreInput): ScoreBreakdown
 
 export const SCORING_RULES = [
   { action: 'Asistir a la capacitación', points: '10 pts' },
-  { action: 'Cámara prendida durante la sesión', points: '5 pts' },
   { action: 'Participar (micrófono / preguntas)', points: '5 pts c/u, máx. 15 pts' },
   { action: 'Aprobar el examen (≥ 70%)', points: '15 pts' },
   { action: 'Nota perfecta en el examen (100%)', points: '5 pts bonus' },

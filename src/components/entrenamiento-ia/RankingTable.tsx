@@ -129,7 +129,6 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
 export function ScoringRulesCard() {
   const rules = [
     { action: 'Asistir a la capacitación', points: '10 pts' },
-    { action: 'Cámara prendida durante la sesión', points: '5 pts' },
     { action: 'Participar (micrófono / preguntas)', points: '5 pts c/u, máx. 15 pts' },
     { action: 'Aprobar el examen (≥ 70%)', points: '15 pts' },
     { action: 'Nota perfecta en el examen (100%)', points: '5 pts bonus' },
