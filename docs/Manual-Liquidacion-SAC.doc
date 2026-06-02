@@ -38,7 +38,26 @@ code { font-family: Consolas, monospace; font-size: 10pt; background: #f4f4f5; p
 <p><strong>Manual para el equipo de HR — Pow</strong><br>
 Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 
-<h2>1. ¿Qué es el SAC?</h2>
+<h2>1. ¿Qué cambió en el sistema?</h2>
+<p>Hasta ahora, en <strong>Liquidaciones</strong> solo se podían crear períodos <strong>mensuales</strong> (Enero, Febrero, Marzo…). Eso obligaba a mezclar el aguinaldo (SAC) con la liquidación del mes de Junio o Diciembre, o a registrarlo de forma poco clara.</p>
+
+<p>Con este cambio, al crear un <strong>Nuevo periodo</strong> aparece un selector de <strong>Tipo de periodo</strong> con tres opciones:</p>
+<ul>
+<li><strong>Liquidación mensual</strong> — igual que antes</li>
+<li><strong>SAC 1</strong> — Sueldo Anual Complementario del 1er semestre</li>
+<li><strong>SAC 2</strong> — Sueldo Anual Complementario del 2do semestre</li>
+</ul>
+
+<p>El resto del flujo <strong>no cambia</strong>: misma grilla, mismo Excel, mismo envío por email, mismas facturas (Monotributo) y mismos recibos PDF (Relación de dependencia). Lo único nuevo es que el SAC tiene su propio período identificado, visible en admin, emails y portal.</p>
+
+<div class="note">
+<strong>Ejemplo práctico — Junio 2026:</strong><br>
+• Período 1: <em>Junio 2026</em> (mensual) → sueldo del mes<br>
+• Período 2: <em>SAC 1 — Junio 2026</em> → aguinaldo del semestre Ene–Jun<br>
+Son dos filas distintas en la lista de períodos y dos liquidaciones separadas por empleado.
+</div>
+
+<h2>2. ¿Qué es el SAC?</h2>
 <p>El <strong>Sueldo Anual Complementario (SAC)</strong>, también conocido como aguinaldo, es una liquidación semestral obligatoria en Argentina. Pow la procesa como un <strong>período de liquidación aparte</strong> de la liquidación mensual habitual.</p>
 
 <table>
@@ -67,7 +86,7 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 <strong>Portal empleados:</strong> Monotributo ve la liquidación en <strong>Liquidaciones</strong>; Relación de dependencia en <strong>Recibos de sueldo</strong>.
 </div>
 
-<h2>2. Diferencia con la liquidación mensual</h2>
+<h2>3. Diferencia con la liquidación mensual</h2>
 <table>
 <tr>
 <th>Característica</th>
@@ -96,7 +115,7 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 </tr>
 </table>
 
-<h2>3. Crear un período SAC</h2>
+<h2>4. Crear un período SAC</h2>
 <ol>
 <li>Ir a <strong>Admin → Liquidaciones → Periodos</strong>.</li>
 <li>Clic en <strong>Nuevo periodo</strong>.</li>
@@ -117,7 +136,7 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 <strong>Importante:</strong> No crear dos SAC 1 (ni dos SAC 2) para el mismo año. Si ya existe, el sistema mostrará un error de período duplicado.
 </div>
 
-<h2>4. Cargar montos del SAC</h2>
+<h2>5. Cargar montos del SAC</h2>
 <p>El flujo es idéntico al de una liquidación mensual de Monotributo:</p>
 
 <ol>
@@ -170,17 +189,17 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 <li>Revisar totales en pantalla antes de enviar.</li>
 </ol>
 
-<h2>5. Relación de dependencia</h2>
+<h2>6. Relación de dependencia</h2>
 <p>Para empleados en relación de dependencia, el SAC se gestiona subiendo el <strong>recibo de sueldo PDF</strong> por empleado (igual que en liquidaciones mensuales). El colaborador lo descarga desde el Portal → <strong>Recibos de sueldo</strong>, donde verá el label <em>SAC 1 — Junio 2026</em> o <em>SAC 2 — Diciembre 2026</em>.</p>
 
-<h2>6. Qué ven los empleados</h2>
+<h2>7. Qué ven los empleados</h2>
 <ul>
 <li><strong>Monotributo:</strong> Portal → Liquidaciones. Aparece el período con etiqueta SAC (ej. <em>SAC 1 — Junio 2026</em>) con el detalle de conceptos y total a facturar.</li>
 <li><strong>Relación de dependencia:</strong> Portal → Recibos de sueldo. Descarga del PDF del recibo del SAC.</li>
 <li>El email de notificación también indica el nombre correcto del período (incluye “SAC 1” o “SAC 2”).</li>
 </ul>
 
-<h2>7. Calendario sugerido</h2>
+<h2>8. Calendario sugerido</h2>
 <table>
 <tr>
 <th>Período</th>
@@ -199,7 +218,7 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 </tr>
 </table>
 
-<h2>8. Checklist SAC</h2>
+<h2>9. Checklist SAC</h2>
 <ul class="checklist">
 <li>Crear período SAC 1 o SAC 2 con el año correcto</li>
 <li>Verificar que se generaron liquidaciones para todos los empleados activos</li>
@@ -211,7 +230,7 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 <li>Cerrar período</li>
 </ul>
 
-<h2>9. Preguntas frecuentes</h2>
+<h2>10. Preguntas frecuentes</h2>
 
 <h3>¿Puedo tener Junio mensual y SAC 1 al mismo tiempo?</h3>
 <p>Sí. Son períodos independientes. Creás uno como <em>Liquidación mensual → Junio</em> y otro como <em>SAC 1</em> para el mismo año.</p>
@@ -225,7 +244,7 @@ Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
 <h3>¿Dónde cargo el monto del aguinaldo?</h3>
 <p>En la columna <strong>Aguinaldo</strong> de la grilla de Monotributo, o en la columna homónima del Excel exportado.</p>
 
-<h2>10. Resumen rápido</h2>
+<h2>11. Resumen rápido</h2>
 <table>
 <tr>
 <th>Paso</th>
