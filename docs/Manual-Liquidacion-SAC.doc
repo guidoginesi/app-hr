@@ -1,0 +1,258 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<title>Manual — Liquidación SAC</title>
+<!--[if gte mso 9]><xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+</w:WordDocument>
+</xml><![endif]-->
+<style>
+@page { size: 21cm 29.7cm; margin: 2.5cm 2.5cm 2.5cm 2.5cm; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; }
+h1 { font-size: 20pt; color: #1a1a1a; border-bottom: 2px solid #4f46e5; padding-bottom: 6pt; margin-top: 0; }
+h2 { font-size: 14pt; color: #292524; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { font-size: 12pt; color: #44403c; margin-top: 14pt; margin-bottom: 4pt; }
+p { margin: 0 0 8pt 0; }
+ul, ol { margin: 0 0 10pt 0; }
+li { margin-bottom: 4pt; }
+table { border-collapse: collapse; width: 100%; margin: 10pt 0 14pt 0; }
+th, td { border: 1px solid #d4d4d8; padding: 6pt 8pt; text-align: left; vertical-align: top; }
+th { background: #eef2ff; font-weight: bold; }
+.note { background: #eef2ff; border: 1px solid #a5b4fc; padding: 10pt; margin: 12pt 0; }
+.warning { background: #fffbeb; border: 1px solid #fcd34d; padding: 10pt; margin: 12pt 0; }
+.footer { font-size: 9pt; color: #71717a; margin-top: 24pt; border-top: 1px solid #e4e4e7; padding-top: 8pt; }
+.checklist { list-style: none; padding-left: 0; }
+.checklist li:before { content: "☐ "; }
+code { font-family: Consolas, monospace; font-size: 10pt; background: #f4f4f5; padding: 1pt 4pt; }
+</style>
+</head>
+<body>
+
+<h1>Liquidación de SAC (Sueldo Anual Complementario)</h1>
+<p><strong>Manual para el equipo de HR — Pow</strong><br>
+Versión: Junio 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin → Liquidaciones)</p>
+
+<h2>1. ¿Qué es el SAC?</h2>
+<p>El <strong>Sueldo Anual Complementario (SAC)</strong>, también conocido como aguinaldo, es una liquidación semestral obligatoria en Argentina. Pow la procesa como un <strong>período de liquidación aparte</strong> de la liquidación mensual habitual.</p>
+
+<table>
+<tr>
+<th>Período</th>
+<th>Semestre que cubre</th>
+<th>Mes de referencia en el sistema</th>
+<th>Cuándo se liquida (habitual)</th>
+</tr>
+<tr>
+<td><strong>SAC 1</strong></td>
+<td>Enero – Junio</td>
+<td>Junio del mismo año</td>
+<td>Junio</td>
+</tr>
+<tr>
+<td><strong>SAC 2</strong></td>
+<td>Julio – Diciembre</td>
+<td>Diciembre del mismo año</td>
+<td>Diciembre</td>
+</tr>
+</table>
+
+<div class="note">
+<strong>Acceso:</strong> HR Admin → <strong>Liquidaciones</strong> → Periodos de Liquidación<br>
+<strong>Portal empleados:</strong> Monotributo ve la liquidación en <strong>Liquidaciones</strong>; Relación de dependencia en <strong>Recibos de sueldo</strong>.
+</div>
+
+<h2>2. Diferencia con la liquidación mensual</h2>
+<table>
+<tr>
+<th>Característica</th>
+<th>Liquidación mensual</th>
+<th>SAC 1 / SAC 2</th>
+</tr>
+<tr>
+<td>Tipo en el sistema</td>
+<td>Liquidación mensual</td>
+<td>SAC 1 o SAC 2</td>
+</tr>
+<tr>
+<td>Frecuencia</td>
+<td>Cada mes</td>
+<td>2 veces al año</td>
+</tr>
+<tr>
+<td>Convive con el mes</td>
+<td>—</td>
+<td>Sí: podés tener <em>Junio 2026</em> (mensual) y <em>SAC 1 — Junio 2026</em> como períodos distintos</td>
+</tr>
+<tr>
+<td>Flujo de carga</td>
+<td>Igual</td>
+<td>Igual (Excel, grilla, envío, facturas)</td>
+</tr>
+</table>
+
+<h2>3. Crear un período SAC</h2>
+<ol>
+<li>Ir a <strong>Admin → Liquidaciones → Periodos</strong>.</li>
+<li>Clic en <strong>Nuevo periodo</strong>.</li>
+<li>En <strong>Tipo de periodo</strong>, elegir:
+<ul>
+<li><strong>SAC 1</strong> — 1er semestre (Ene–Jun)</li>
+<li><strong>SAC 2</strong> — 2do semestre (Jul–Dic)</li>
+</ul>
+</li>
+<li>Seleccionar el <strong>Año</strong> correspondiente.</li>
+<li>No hace falta elegir mes: el sistema asigna automáticamente Junio (SAC 1) o Diciembre (SAC 2).</li>
+<li>Clic en <strong>Crear periodo</strong>.</li>
+</ol>
+
+<p>El sistema genera automáticamente una liquidación en borrador para <strong>cada empleado activo</strong>, igual que en un período mensual.</p>
+
+<div class="warning">
+<strong>Importante:</strong> No crear dos SAC 1 (ni dos SAC 2) para el mismo año. Si ya existe, el sistema mostrará un error de período duplicado.
+</div>
+
+<h2>4. Cargar montos del SAC</h2>
+<p>El flujo es idéntico al de una liquidación mensual de Monotributo:</p>
+
+<ol>
+<li>Entrar al período desde <strong>Ver detalle</strong> (ej. <em>SAC 1 — Junio 2026</em>).</li>
+<li>Cargar montos por empleado en la grilla, o importar desde Excel.</li>
+<li>Para SAC, el monto principal suele ir en la columna <strong>Aguinaldo</strong> (y/o las columnas que correspondan según el acuerdo con cada colaborador).</li>
+<li>Validar filas → marcar como <strong>Listo para enviar</strong>.</li>
+<li>Enviar liquidaciones al portal / email de cada empleado.</li>
+<li>Monotributistas: solicitar factura si aplica (botón <strong>Reclamar facturas</strong>).</li>
+<li>Cerrar el período cuando todo esté enviado y conciliado.</li>
+</ol>
+
+<h3>Columnas habituales (Monotributo)</h3>
+<table>
+<tr>
+<th>Columna</th>
+<th>Uso típico en SAC</th>
+</tr>
+<tr>
+<td>Sueldo</td>
+<td>Generalmente en 0 o no aplica en SAC puro</td>
+</tr>
+<tr>
+<td>Aguinaldo</td>
+<td><strong>Principal:</strong> monto del SAC del semestre</td>
+</tr>
+<tr>
+<td>Bonificación Anual</td>
+<td>Solo si aplica algún concepto adicional acordado</td>
+</tr>
+<tr>
+<td>Reintegros / Plus vacacional</td>
+<td>Solo si corresponde en casos puntuales</td>
+</tr>
+<tr>
+<td>Adelanto de sueldo</td>
+<td>Descontar adelantos previos del SAC si los hubo</td>
+</tr>
+<tr>
+<td>Total a facturar</td>
+<td>Calculado automáticamente</td>
+</tr>
+</table>
+
+<h3>Importación desde Excel</h3>
+<ol>
+<li>En el detalle del período SAC, clic en <strong>Exportar Excel</strong> para obtener la plantilla con todos los empleados.</li>
+<li>Completar montos (especialmente <strong>Aguinaldo</strong>).</li>
+<li><strong>Importar Excel</strong> con el archivo actualizado.</li>
+<li>Revisar totales en pantalla antes de enviar.</li>
+</ol>
+
+<h2>5. Relación de dependencia</h2>
+<p>Para empleados en relación de dependencia, el SAC se gestiona subiendo el <strong>recibo de sueldo PDF</strong> por empleado (igual que en liquidaciones mensuales). El colaborador lo descarga desde el Portal → <strong>Recibos de sueldo</strong>, donde verá el label <em>SAC 1 — Junio 2026</em> o <em>SAC 2 — Diciembre 2026</em>.</p>
+
+<h2>6. Qué ven los empleados</h2>
+<ul>
+<li><strong>Monotributo:</strong> Portal → Liquidaciones. Aparece el período con etiqueta SAC (ej. <em>SAC 1 — Junio 2026</em>) con el detalle de conceptos y total a facturar.</li>
+<li><strong>Relación de dependencia:</strong> Portal → Recibos de sueldo. Descarga del PDF del recibo del SAC.</li>
+<li>El email de notificación también indica el nombre correcto del período (incluye “SAC 1” o “SAC 2”).</li>
+</ul>
+
+<h2>7. Calendario sugerido</h2>
+<table>
+<tr>
+<th>Período</th>
+<th>Crear período en app-hr</th>
+<th>Cargar y enviar</th>
+</tr>
+<tr>
+<td>SAC 1</td>
+<td>Primera quincena de Junio</td>
+<td>Antes del pago de SAC (según calendario Pow)</td>
+</tr>
+<tr>
+<td>SAC 2</td>
+<td>Primera quincena de Diciembre</td>
+<td>Antes del pago de SAC de fin de año</td>
+</tr>
+</table>
+
+<h2>8. Checklist SAC</h2>
+<ul class="checklist">
+<li>Crear período SAC 1 o SAC 2 con el año correcto</li>
+<li>Verificar que se generaron liquidaciones para todos los empleados activos</li>
+<li>Cargar montos (grilla o Excel) — principalmente Aguinaldo</li>
+<li>Revisar totales y validar filas</li>
+<li>Enviar liquidaciones</li>
+<li>Reclamar facturas (Monotributo) si corresponde</li>
+<li>Subir recibos PDF (Relación de dependencia)</li>
+<li>Cerrar período</li>
+</ul>
+
+<h2>9. Preguntas frecuentes</h2>
+
+<h3>¿Puedo tener Junio mensual y SAC 1 al mismo tiempo?</h3>
+<p>Sí. Son períodos independientes. Creás uno como <em>Liquidación mensual → Junio</em> y otro como <em>SAC 1</em> para el mismo año.</p>
+
+<h3>¿El SAC reemplaza la liquidación de Junio/Diciembre?</h3>
+<p>No. El SAC es un período adicional. Si además hay sueldo del mes, se liquida por separado en el período mensual correspondiente.</p>
+
+<h3>¿Qué pasa si me equivoco de tipo?</h3>
+<p>Solo podés eliminar períodos en estado <strong>Borrador</strong> sin liquidaciones enviadas. Si ya enviaste, contactá al equipo técnico.</p>
+
+<h3>¿Dónde cargo el monto del aguinaldo?</h3>
+<p>En la columna <strong>Aguinaldo</strong> de la grilla de Monotributo, o en la columna homónima del Excel exportado.</p>
+
+<h2>10. Resumen rápido</h2>
+<table>
+<tr>
+<th>Paso</th>
+<th>Acción</th>
+</tr>
+<tr>
+<td>1</td>
+<td>Admin → Liquidaciones → Nuevo periodo → SAC 1 o SAC 2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Ver detalle → cargar Aguinaldo por empleado (Excel o grilla)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Validar → Enviar → Reclamar facturas / subir recibos</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Cerrar período</td>
+</tr>
+</table>
+
+<div class="footer">
+Pow HR — app-hr &nbsp;|&nbsp; Manual Liquidación SAC &nbsp;|&nbsp; Junio 2026<br>
+Consultas técnicas: equipo de desarrollo / Guido Ginesi
+</div>
+
+</body>
+</html>

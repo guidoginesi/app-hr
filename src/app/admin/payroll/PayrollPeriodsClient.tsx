@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+import {
+  formatPayrollPeriodLabelFromKey,
+  MONTH_NAMES,
+  PAYROLL_PERIOD_TYPE_OPTIONS,
+  periodTypeBadge,
+  type PayrollPeriodType,
+} from '@/lib/payrollPeriods';
 
 type PeriodStatus = 'DRAFT' | 'IN_REVIEW' | 'SENT' | 'CLOSED';
 
@@ -14,6 +16,7 @@ type PayrollPeriod = {
   id: string;
   year: number;
   month: number;
+  period_type: PayrollPeriodType;
   status: PeriodStatus;
   settlement_counts: {
     total: number;
@@ -24,7 +27,6 @@ type PayrollPeriod = {
   created_at: string;
 };
 
-
 export function PayrollPeriodsClient() {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,7 @@ export function PayrollPeriodsClient() {
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
+    period_type: 'MONTHLY' as PayrollPeriodType,
   });
 
   const fetchPeriods = async () => {
@@ -60,10 +63,15 @@ export function PayrollPeriodsClient() {
     setMessage(null);
 
     try {
+      const payload =
+        formData.period_type === 'MONTHLY'
+          ? formData
+          : { year: formData.year, period_type: formData.period_type };
+
       const res = await fetch('/api/admin/payroll/periods', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -82,13 +90,15 @@ export function PayrollPeriodsClient() {
     }
   };
 
+  const selectedType = PAYROLL_PERIOD_TYPE_OPTIONS.find((o) => o.value === formData.period_type);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Periodos de Liquidación</h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Gestiona los periodos de liquidación mensual
+            Gestiona liquidaciones mensuales y períodos de SAC (Sueldo Anual Complementario)
           </p>
         </div>
         <button
@@ -110,7 +120,6 @@ export function PayrollPeriodsClient() {
         </div>
       )}
 
-      {/* New Period Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
@@ -121,6 +130,28 @@ export function PayrollPeriodsClient() {
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4 p-6">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-zinc-700">Tipo de periodo *</label>
+                    <select
+                      value={formData.period_type}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          period_type: e.target.value as PayrollPeriodType,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    >
+                      {PAYROLL_PERIOD_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedType && (
+                      <p className="mt-1 text-xs text-zinc-500">{selectedType.description}</p>
+                    )}
+                  </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-zinc-700">Año *</label>
                     <input
@@ -133,21 +164,29 @@ export function PayrollPeriodsClient() {
                       className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
                     />
                   </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-zinc-700">Mes *</label>
-                    <select
-                      value={formData.month}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, month: parseInt(e.target.value) }))}
-                      required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
-                    >
-                      {MONTH_NAMES.map((name, idx) => (
-                        <option key={idx + 1} value={idx + 1}>
-                          {name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {formData.period_type === 'MONTHLY' ? (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-zinc-700">Mes *</label>
+                      <select
+                        value={formData.month}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, month: parseInt(e.target.value) }))}
+                        required
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                      >
+                        {MONTH_NAMES.map((name, idx) => (
+                          <option key={idx + 1} value={idx + 1}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm text-indigo-800">
+                      {formData.period_type === 'SAC_1'
+                        ? 'Se liquidará en Junio (1er semestre: Enero–Junio).'
+                        : 'Se liquidará en Diciembre (2do semestre: Julio–Diciembre).'}
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
                   <button
@@ -171,7 +210,6 @@ export function PayrollPeriodsClient() {
         </div>
       )}
 
-      {/* Periods Table */}
       <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
         {loading ? (
           <div className="px-6 py-12 text-center">
@@ -195,13 +233,24 @@ export function PayrollPeriodsClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
-                {periods.map((period) => (
+                {periods.map((period) => {
+                  const badge = periodTypeBadge(period.period_type ?? 'MONTHLY');
+                  return (
                     <tr key={period.id} className="transition-colors hover:bg-zinc-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-zinc-900">
-                            {MONTH_NAMES[period.month - 1]} {period.year}
+                            {formatPayrollPeriodLabelFromKey({
+                              year: period.year,
+                              month: period.month,
+                              period_type: period.period_type ?? 'MONTHLY',
+                            })}
                           </span>
+                          {badge && (
+                            <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                              {badge}
+                            </span>
+                          )}
                           {period.status === 'CLOSED' && (
                             <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
                               Cerrado
@@ -221,7 +270,8 @@ export function PayrollPeriodsClient() {
                         </Link>
                       </td>
                     </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

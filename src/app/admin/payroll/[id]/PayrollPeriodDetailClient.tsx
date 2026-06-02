@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import {
+  formatPayrollPeriodLabelFromKey,
+  type PayrollPeriodType,
+} from '@/lib/payrollPeriods';
 
 async function openPayslipPdf(settlementId: string): Promise<void> {
   const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip`);
@@ -22,11 +26,6 @@ async function openPayslipPdf(settlementId: string): Promise<void> {
   }
 }
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
-
 type PeriodStatus = 'DRAFT' | 'IN_REVIEW' | 'SENT' | 'CLOSED';
 type SettlementStatus = 'DRAFT' | 'READY_TO_SEND' | 'SENT';
 type ContractType = 'MONOTRIBUTO' | 'RELACION_DEPENDENCIA';
@@ -36,6 +35,7 @@ type PayrollPeriod = {
   id: string;
   year: number;
   month: number;
+  period_type?: PayrollPeriodType;
   status: PeriodStatus;
 };
 
@@ -331,7 +331,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `liquidaciones_${MONTH_NAMES[period.month - 1]}_${period.year}.xlsx`;
+      a.download = `liquidaciones_${formatPayrollPeriodLabelFromKey(period).replace(/\s+/g, '_')}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -448,7 +448,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            Liquidación {MONTH_NAMES[period.month - 1]} {period.year}
+            Liquidación {formatPayrollPeriodLabelFromKey(period)}
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
             {settlements.length} liquidaciones · {filteredSettlements.length} mostradas

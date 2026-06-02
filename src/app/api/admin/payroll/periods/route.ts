@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import {
+  buildPeriodKey,
+  formatPayrollPeriodLabel,
+  resolvePeriodMonth,
+  type PayrollPeriodType,
+} from '@/lib/payrollPeriods';
 
 const CreatePeriodSchema = z.object({
   year: z.number().int().min(2020).max(2100),
-  month: z.number().int().min(1).max(12),
+  month: z.number().int().min(1).max(12).optional(),
+  period_type: z.enum(['MONTHLY', 'SAC_1', 'SAC_2']).default('MONTHLY'),
 });
 
 // GET /api/admin/payroll/periods - List all periods with settlement counts
@@ -22,7 +29,8 @@ export async function GET() {
       .from('payroll_periods')
       .select('*')
       .order('year', { ascending: false })
-      .order('month', { ascending: false });
+      .order('month', { ascending: false })
+      .order('period_type', { ascending: true });
 
     if (error) {
       console.error('Error fetching payroll periods:', error);
@@ -72,8 +80,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { year, month } = parsed.data;
-    const period_key = `${year}-${String(month).padStart(2, '0')}`;
+    const { year, period_type: periodTypeRaw } = parsed.data;
+    const period_type = periodTypeRaw as PayrollPeriodType;
+
+    if (period_type === 'MONTHLY' && !parsed.data.month) {
+      return NextResponse.json(
+        { error: 'El mes es obligatorio para liquidaciones mensuales' },
+        { status: 400 }
+      );
+    }
+
+    const month = resolvePeriodMonth(period_type, parsed.data.month);
+    const period_key = buildPeriodKey(year, period_type, month);
+    const periodLabel = formatPayrollPeriodLabel(year, month, period_type);
 
     const supabase = getSupabaseServer();
 
@@ -86,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: `Ya existe un período para ${period_key}` },
+        { error: `Ya existe un período para ${periodLabel}` },
         { status: 400 }
       );
     }
@@ -97,6 +116,7 @@ export async function POST(req: NextRequest) {
       .insert({
         year,
         month,
+        period_type,
         period_key,
         status: 'DRAFT',
         created_by: user.id,

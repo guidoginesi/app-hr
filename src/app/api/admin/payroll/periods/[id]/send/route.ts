@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendBatchEmails } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
+import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -63,11 +64,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
       });
     }
 
-    const MONTH_NAMES = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-    ];
-
     const formatARS = (n: number) =>
       new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2 }).format(n);
 
@@ -86,7 +82,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
         console.warn(`[Payroll Send] Settlement ${s.id} has no email_to, skipping email`);
       }
 
-      const periodLabel = `${MONTH_NAMES[(s.period_month as number) - 1]} ${s.period_year}`;
+      const periodLabel = formatPayrollPeriodLabelFromKey({
+        year: s.period_year as number,
+        month: s.period_month as number,
+        period_type: (s.period_type as PayrollPeriodType | null) ?? 'MONTHLY',
+      });
       const employeeName = `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim();
 
       let emailHtml: string;

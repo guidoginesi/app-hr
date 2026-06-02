@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import * as XLSX from 'xlsx';
+import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
 
 // GET /api/admin/payroll/periods/[id]/export-excel - Export settlements as xlsx
 export async function GET(_req: NextRequest, context: RouteContext) {
@@ -23,7 +19,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
 
     const { data: period, error: periodError } = await supabase
       .from('payroll_periods')
-      .select('year, month')
+      .select('year, month, period_type')
       .eq('id', id)
       .single();
 
@@ -73,7 +69,11 @@ export async function GET(_req: NextRequest, context: RouteContext) {
     XLSX.utils.book_append_sheet(wb, ws, 'Liquidaciones');
 
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    const periodLabel = `${MONTH_NAMES[period.month - 1]}_${period.year}`;
+    const periodLabel = formatPayrollPeriodLabelFromKey({
+      year: period.year,
+      month: period.month,
+      period_type: (period.period_type as PayrollPeriodType | null) ?? 'MONTHLY',
+    }).replace(/\s+/g, '_');
 
     return new NextResponse(buffer, {
       headers: {

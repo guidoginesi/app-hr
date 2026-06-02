@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
 type Settlement = {
   id: string;
   period_year: number;
   period_month: number;
+  period_type?: PayrollPeriodType | null;
   pdf_storage_path: string | null;
   pdf_filename: string | null;
   pdf_uploaded_at: string | null;
@@ -14,11 +16,6 @@ type Settlement = {
 type RecibosClientProps = {
   settlements: Settlement[];
 };
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
 
 export function RecibosClient({ settlements }: RecibosClientProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -102,7 +99,11 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
                   </div>
                   <div>
                     <p className="font-medium text-zinc-900">
-                      {MONTH_NAMES[settlement.period_month - 1]} {settlement.period_year}
+                      {formatPayrollPeriodLabelFromKey({
+                        year: settlement.period_year,
+                        month: settlement.period_month,
+                        period_type: settlement.period_type ?? 'MONTHLY',
+                      })}
                     </p>
                     {settlement.pdf_uploaded_at && (
                       <p className="text-xs text-zinc-500">

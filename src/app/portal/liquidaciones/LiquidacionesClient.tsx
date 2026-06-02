@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
 type Settlement = {
   id: string;
   employee_id: string;
   period_year: number;
   period_month: number;
+  period_type?: PayrollPeriodType | null;
   period_key: string;
   period_status: string;
   contract_type_snapshot: string;
@@ -29,11 +31,6 @@ type Settlement = {
 type LiquidacionesClientProps = {
   settlements: Settlement[];
 };
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
 
 function formatCurrency(value: number | null): string {
   if (value === null || value === undefined) return '-';
@@ -171,7 +168,11 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
           </div>
           <div className="text-left">
             <p className="font-semibold text-zinc-900">
-              {MONTH_NAMES[settlement.period_month - 1]} {settlement.period_year}
+              {formatPayrollPeriodLabelFromKey({
+                year: settlement.period_year,
+                month: settlement.period_month,
+                period_type: settlement.period_type ?? 'MONTHLY',
+              })}
             </p>
             {settlement.contract_type_snapshot === 'MONOTRIBUTO' && settlement.total_a_facturar != null && (
               <p className="text-xs text-zinc-500">
