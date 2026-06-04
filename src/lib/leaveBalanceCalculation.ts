@@ -1,6 +1,7 @@
 /**
  * Shared leave balance calculation (LCT + reglas Pow).
- * El período anual de vacaciones/Pow/remoto se abre el 1° de octubre.
+ * Vacaciones y Pow: período anual desde el 1° de octubre.
+ * Trabajo remoto: 8 semanas prorrateadas por días en el año calendario (disponibles desde el ingreso).
  */
 
 export type LeaveBalanceEmployee = {
@@ -62,6 +63,29 @@ export function calculateMonthsWorked(hireDate: Date, referenceDate: Date): numb
   return Math.max(0, totalMonths);
 }
 
+function daysInYear(year: number): number {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+}
+
+/** 8 semanas anuales prorrateadas por días trabajados en el año calendario (desde ingreso o 1/1). */
+export function calculateRemoteWorkWeeks(hireDate: Date, year: number): number {
+  const startOfYear = new Date(year, 0, 1);
+  startOfYear.setHours(0, 0, 0, 0);
+  const endOfYear = new Date(year, 11, 31);
+  endOfYear.setHours(0, 0, 0, 0);
+
+  const hire = new Date(hireDate);
+  hire.setHours(0, 0, 0, 0);
+
+  if (hire > endOfYear) return 0;
+
+  const workStart = hire > startOfYear ? hire : startOfYear;
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysWorked = Math.floor((endOfYear.getTime() - workStart.getTime()) / msPerDay) + 1;
+
+  return Math.floor((8 * daysWorked) / daysInYear(year));
+}
+
 export function calculateEntitledDays(
   leaveTypeCode: string,
   employee: LeaveBalanceEmployee,
@@ -87,7 +111,7 @@ export function calculateEntitledDays(
       return employee.is_studying ? 10 : 0;
 
     case 'remote_work':
-      return periodOpen ? 8 : 0;
+      return calculateRemoteWorkWeeks(hireDate, year);
 
     default:
       return 0;

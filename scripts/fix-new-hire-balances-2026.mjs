@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Reset 2026 leave balances for employees hired in 2026 (before Oct 1 accrual).
+ * Vacaciones y Pow → 0 hasta el 1/oct. Remoto → prorrateo proporcional al ingreso.
  *
  * Usage:
  *   node --env-file=.env.local scripts/fix-new-hire-balances-2026.mjs
@@ -9,7 +10,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 const YEAR = 2026;
-const ACCRUAL_TYPES = ['vacation', 'pow_days', 'remote_work'];
+const OCT_GATED_TYPES = ['vacation', 'pow_days'];
+const REMOTE_TYPE = 'remote_work';
 
 function isAnnualLeavePeriodOpen(year) {
   const today = new Date();
@@ -19,9 +21,31 @@ function isAnnualLeavePeriodOpen(year) {
   return today >= periodStart;
 }
 
-function entitledForNewHire(code, year) {
-  if (!isAnnualLeavePeriodOpen(year)) {
-    return ACCRUAL_TYPES.includes(code) ? 0 : null;
+function daysInYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+}
+
+function calculateRemoteWorkWeeks(hireDate, year) {
+  const startOfYear = new Date(year, 0, 1);
+  startOfYear.setHours(0, 0, 0, 0);
+  const endOfYear = new Date(year, 11, 31);
+  endOfYear.setHours(0, 0, 0, 0);
+  const hire = new Date(hireDate);
+  hire.setHours(0, 0, 0, 0);
+  if (hire > endOfYear) return 0;
+  const workStart = hire > startOfYear ? hire : startOfYear;
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysWorked = Math.floor((endOfYear.getTime() - workStart.getTime()) / msPerDay) + 1;
+  return Math.floor((8 * daysWorked) / daysInYear(year));
+}
+
+function entitledForNewHire(code, employee, year) {
+  if (code === REMOTE_TYPE) {
+    if (!employee.hire_date) return 0;
+    return calculateRemoteWorkWeeks(new Date(employee.hire_date), year);
+  }
+  if (OCT_GATED_TYPES.includes(code) && !isAnnualLeavePeriodOpen(year)) {
+    return 0;
   }
   return null;
 }
@@ -47,7 +71,7 @@ async function main() {
   const { data: leaveTypes, error: ltError } = await supabase
     .from('leave_types')
     .select('id, code')
-    .in('code', ACCRUAL_TYPES);
+    .in('code', [...OCT_GATED_TYPES, REMOTE_TYPE]);
 
   if (ltError || !leaveTypes?.length) {
     console.error('Error fetching leave types:', ltError?.message);
@@ -86,7 +110,7 @@ async function main() {
     console.log(`${emp.first_name} ${emp.last_name} (hire: ${emp.hire_date})`);
 
     for (const lt of leaveTypes) {
-      const resetValue = entitledForNewHire(lt.code, YEAR);
+      const resetValue = entitledForNewHire(lt.code, emp, YEAR);
       if (resetValue === null) continue;
       const entitled = resetValue;
 

@@ -494,7 +494,9 @@ export default function TimeOffBalancesPage() {
                               <span className="text-xl font-bold text-green-600">
                                 {remote.available_days}
                               </span>
-                              <span className="text-sm text-zinc-400"> / 8</span>
+                              <span className="text-sm text-zinc-400">
+                                {' '}/ {Number(remote.entitled_days) + Number(remote.bonus_days || 0)} sem
+                              </span>
                             </div>
                           ) : (
                             <span className="text-sm text-zinc-400">~8</span>
