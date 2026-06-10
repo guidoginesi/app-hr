@@ -294,13 +294,16 @@ export default function TimeOffRequestsPage() {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}&src=${calId}`;
   }
 
-  // Check if HR can cancel an approved request (before it starts)
   function canCancel(request: LeaveRequestWithDetails): boolean {
-    if (request.status !== 'approved') return false;
+    return request.status === 'approved';
+  }
+
+  function isLeaveInProgress(request: LeaveRequestWithDetails): boolean {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const startDate = parseLocalDate(request.start_date);
-    return startDate > today;
+    const endDate = parseLocalDate(request.end_date);
+    return startDate <= today && endDate >= today;
   }
 
   async function handleCancel(id: string) {
@@ -728,6 +731,11 @@ export default function TimeOffRequestsPage() {
                             <>
                               {cancellingId === request.id ? (
                                 <div className="flex flex-col gap-2">
+                                  {isLeaveInProgress(request) && (
+                                    <p className="text-xs text-amber-700 max-w-48">
+                                      Licencia en curso: se devolverá el saldo completo al empleado.
+                                    </p>
+                                  )}
                                   <input
                                     type="text"
                                     value={cancelReason}

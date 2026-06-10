@@ -10,7 +10,7 @@ const CancelSchema = z.object({
   cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido'),
 });
 
-// PUT /api/admin/time-off/requests/[id]/cancel - HR Admin cancels an approved leave request
+// PUT /api/admin/time-off/requests/[id]/cancel - HR Admin cancels an approved leave request (including in-progress)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -56,18 +56,6 @@ export async function PUT(
     if (request.status !== 'approved') {
       return NextResponse.json(
         { error: 'Solo se pueden cancelar solicitudes aprobadas' },
-        { status: 400 }
-      );
-    }
-
-    // Check that the request hasn't started yet
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startDate = new Date(request.start_date);
-    
-    if (startDate <= today) {
-      return NextResponse.json(
-        { error: 'No se pueden cancelar solicitudes que ya iniciaron o están en curso' },
         { status: 400 }
       );
     }
