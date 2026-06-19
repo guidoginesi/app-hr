@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendGoogleChatMessage } from '@/lib/googleChat';
+import { sendTimeOffEmail } from '@/lib/emailService';
+import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -22,6 +24,26 @@ function textToHtml(text: string): string {
       return bold ? `<p>${bold}</p>` : '<br/>';
     })
     .join('');
+}
+
+function getArgentinaDateString(offsetDays = 0): string {
+  const todayStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+  }).format(new Date());
+  const date = parseLocalDate(todayStr);
+  date.setDate(date.getDate() + offsetDays);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatLeaveDate(date: string): string {
+  return formatDateLocal(date, 'es-AR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 async function createInternalMessage(
@@ -72,13 +94,18 @@ export async function GET(req: NextRequest) {
   const todayDay = today.getUTCDate();
   const currentYear = today.getUTCFullYear();
 
-  const results = { birthdays: [] as string[], anniversaries: [] as string[], errors: [] as string[] };
+  const results = {
+    birthdays: [] as string[],
+    anniversaries: [] as string[],
+    preLeaveReminders: [] as string[],
+    errors: [] as string[],
+  };
 
   // Fetch active automation templates
   const { data: templates } = await supabase
     .from('email_templates')
     .select('template_key, subject, body, is_active, send_internal_message, internal_message_text, send_to_google_chat')
-    .in('template_key', ['birthday_greeting', 'work_anniversary'])
+    .in('template_key', ['birthday_greeting', 'work_anniversary', 'time_off_pre_leave_reminder'])
     .eq('is_active', true);
 
   const templateMap: Record<string, any> = {};
@@ -213,6 +240,97 @@ export async function GET(req: NextRequest) {
             }
           }
         }
+      }
+    }
+  }
+
+  // ── PRE-LEAVE REMINDER (1 day before approved leave) ───────────
+  const preLeaveTemplate = templateMap['time_off_pre_leave_reminder'];
+  if (preLeaveTemplate) {
+    const tomorrow = getArgentinaDateString(1);
+
+    const { data: upcomingLeaves } = await supabase
+      .from('leave_requests')
+      .select(`
+        id,
+        start_date,
+        end_date,
+        days_requested,
+        employee_id,
+        employees (
+          id,
+          first_name,
+          last_name,
+          work_email,
+          personal_email,
+          user_id
+        ),
+        leave_types (
+          name,
+          count_type
+        )
+      `)
+      .eq('status', 'approved')
+      .eq('start_date', tomorrow);
+
+    for (const leave of upcomingLeaves || []) {
+      const employee = Array.isArray(leave.employees) ? leave.employees[0] : leave.employees;
+      const leaveType = Array.isArray(leave.leave_types) ? leave.leave_types[0] : leave.leave_types;
+      if (!employee) continue;
+
+      const emailTo = employee.work_email || employee.personal_email;
+      const fullName = `${employee.first_name} ${employee.last_name}`;
+
+      const { data: alreadySent } = await supabase
+        .from('time_off_email_logs')
+        .select('id')
+        .eq('leave_request_id', leave.id)
+        .eq('template_key', 'time_off_pre_leave_reminder')
+        .is('error', null)
+        .maybeSingle();
+
+      if (alreadySent) continue;
+
+      if (!emailTo) {
+        results.errors.push(`Pre-leave ${fullName}: sin email configurado`);
+        continue;
+      }
+
+      const firstName = employee.first_name?.split(' ')[0] || employee.first_name || 'equipo';
+      const vars = {
+        nombre: firstName,
+        fecha_inicio: formatLeaveDate(leave.start_date),
+        fecha_fin: formatLeaveDate(leave.end_date),
+        cantidad_dias: String(leave.days_requested),
+        unidad_tiempo: leaveType?.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
+        tipo_licencia: leaveType?.name || 'Licencia',
+      };
+
+      try {
+        const sendResult = await sendTimeOffEmail({
+          templateKey: 'time_off_pre_leave_reminder',
+          to: emailTo,
+          variables: vars,
+          leaveRequestId: leave.id,
+        });
+
+        if (!sendResult.success) {
+          results.errors.push(`Pre-leave ${fullName}: ${sendResult.error}`);
+          continue;
+        }
+
+        if (preLeaveTemplate.send_internal_message && employee.user_id && preLeaveTemplate.internal_message_text) {
+          await createInternalMessage(
+            supabase,
+            employee.user_id,
+            replaceVariables(preLeaveTemplate.subject, vars),
+            replaceVariables(preLeaveTemplate.internal_message_text, vars)
+          );
+        }
+
+        results.preLeaveReminders.push(`${fullName} (${leave.start_date})`);
+      } catch (e: any) {
+        results.errors.push(`Pre-leave ${fullName}: ${e.message}`);
       }
     }
   }

@@ -26,6 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const TEMPLATE_NAMES: Record<string, string> = {
   birthday_greeting: 'Saludo de Cumpleaños',
   work_anniversary: 'Aniversario de Trabajo',
+  time_off_pre_leave_reminder: 'Recordatorio pre-licencia (Fuera de oficina)',
   time_off_request_submitted: 'Solicitud enviada (al empleado)',
   time_off_leader_notification: 'Nueva solicitud (al líder)',
   time_off_hr_notification: 'Requiere aprobación final (a HR)',
