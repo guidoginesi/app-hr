@@ -16,7 +16,8 @@ export type SystemNotificationParams = {
 export type BroadcastAudience =
   | { all: true }
   | { roles: string[] }
-  | { test: true };
+  | { test: true }
+  | { employment_type: 'monotributista' | 'dependency' };
 
 export type BroadcastMessageParams = {
   createdBy: string; // auth.users id
@@ -122,7 +123,7 @@ const TEST_AUDIENCE_MEMBERS = [
 
 /**
  * Resolve user IDs from audience filter.
- * Supports { all: true }, { roles: string[] }, or { test: true }.
+ * Supports { all: true }, { roles: string[] }, { employment_type }, or { test: true }.
  */
 export async function resolveAudienceUserIds(
   audience: BroadcastAudience
@@ -134,6 +135,17 @@ export async function resolveAudienceUserIds(
       .from('employees')
       .select('user_id')
       .eq('status', 'active')
+      .not('user_id', 'is', null);
+
+    return (data ?? []).map((e: any) => e.user_id as string).filter(Boolean);
+  }
+
+  if ('employment_type' in audience) {
+    const { data } = await supabase
+      .from('employees')
+      .select('user_id')
+      .eq('status', 'active')
+      .eq('employment_type', audience.employment_type)
       .not('user_id', 'is', null);
 
     return (data ?? []).map((e: any) => e.user_id as string).filter(Boolean);

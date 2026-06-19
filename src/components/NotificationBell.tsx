@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getMessageBodyPlainText } from '@/lib/messageBody';
 
 type MessageItem = {
   id: string;
@@ -284,7 +285,7 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
 
                         {/* Body preview */}
                         <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">
-                          {msg.body}
+                          {getMessageBodyPlainText(msg.body)}
                         </p>
 
                         {/* Timestamp */}

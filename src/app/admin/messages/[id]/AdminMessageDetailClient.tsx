@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { MessageBody } from '@/components/MessageBody';
 
 type Message = {
   id: string;
@@ -124,7 +125,7 @@ export function AdminMessageDetailClient({
         </div>
 
         <div className="mt-4 rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">{message.body}</p>
+          <MessageBody body={message.body} />
         </div>
       </div>
 

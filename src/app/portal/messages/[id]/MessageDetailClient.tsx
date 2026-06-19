@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { MessageBody } from '@/components/MessageBody';
 
 type Message = {
   id: string;
@@ -138,9 +139,7 @@ export function MessageDetailClient({
 
         {/* Body */}
         <div className="px-6 py-5">
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
-            {message.body}
-          </div>
+          <MessageBody body={message.body} />
         </div>
 
         {/* Actions */}
