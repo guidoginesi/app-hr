@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getMessageBodyPlainText } from '@/lib/messageBody';
 
 type MessageItem = {
   id: string;
@@ -185,7 +186,7 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
                     >
                       {msg.title}
                     </p>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{msg.body}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{getMessageBodyPlainText(msg.body)}</p>
                   </div>
 
                   <div className="flex-shrink-0 text-right">

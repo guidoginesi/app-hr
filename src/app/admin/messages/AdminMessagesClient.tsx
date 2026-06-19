@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
+import { RichTextEditor } from '../RichTextEditor';
+import { isMessageBodyEmpty } from '@/lib/messageBody';
 
 type Message = {
   id: string;
@@ -40,7 +42,7 @@ type CreateForm = {
   priority: 'info' | 'warning' | 'critical';
   require_confirmation: boolean;
   expires_at: string;
-  audience: 'all' | 'leaders' | 'employees' | 'test';
+  audience: 'all' | 'leaders' | 'employees' | 'monotributista' | 'dependency' | 'test';
   send_to_google_chat: boolean;
 };
 
@@ -58,7 +60,13 @@ function audienceLabel(audience: Record<string, unknown> | null): string {
   if (!audience) return 'Todos';
   if (audience.all) return 'Todos';
   if (audience.test) return '🧪 Test';
-  if (Array.isArray(audience.roles)) return `Roles: ${audience.roles.join(', ')}`;
+  if (audience.employment_type === 'monotributista') return 'Monotributo';
+  if (audience.employment_type === 'dependency') return 'Relación de dependencia';
+  if (Array.isArray(audience.roles)) {
+    if (audience.roles.length === 1 && audience.roles[0] === 'leader') return 'Solo líderes';
+    if (audience.roles.length === 1 && audience.roles[0] === 'employee') return 'Solo empleados';
+    return `Roles: ${audience.roles.join(', ')}`;
+  }
   return 'Personalizado';
 }
 
@@ -76,12 +84,14 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
     if (a === 'all') return { all: true };
     if (a === 'leaders') return { roles: ['leader'] };
     if (a === 'employees') return { roles: ['employee'] };
+    if (a === 'monotributista') return { employment_type: 'monotributista' as const };
+    if (a === 'dependency') return { employment_type: 'dependency' as const };
     if (a === 'test') return { test: true };
     return { all: true };
   };
 
   const handleCreate = async (publishNow: boolean) => {
-    if (!form.title.trim() || !form.body.trim()) {
+    if (!form.title.trim() || isMessageBodyEmpty(form.body)) {
       setError('Título y cuerpo son requeridos');
       return;
     }
@@ -92,7 +102,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
     try {
       const payload: Record<string, unknown> = {
         title: form.title.trim(),
-        body: form.body.trim(),
+        body: form.body,
         priority: form.priority,
         require_confirmation: form.require_confirmation,
         send_to_google_chat: form.send_to_google_chat,
@@ -279,7 +289,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                   </button>
                 </div>
 
-                <div className="space-y-4 px-6 py-5">
+                <div className="max-h-[70vh] space-y-4 overflow-y-auto px-6 py-5">
                   {/* Title */}
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Título</label>
@@ -295,12 +305,10 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                   {/* Body */}
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Cuerpo</label>
-                    <textarea
-                      value={form.body}
-                      onChange={(e) => setForm({ ...form, body: e.target.value })}
-                      rows={5}
+                    <RichTextEditor
+                      content={form.body}
+                      onChange={(html) => setForm({ ...form, body: html })}
                       placeholder="Redactá el contenido del mensaje..."
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
                     />
                   </div>
 
@@ -329,6 +337,8 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                         <option value="all">Todos los empleados</option>
                         <option value="leaders">Solo líderes</option>
                         <option value="employees">Solo empleados</option>
+                        <option value="monotributista">Empleados monotributo</option>
+                        <option value="dependency">Empleados relación de dependencia</option>
                         <option value="test">🧪 Test (Agustina, Guido, Antonella)</option>
                       </select>
                     </div>

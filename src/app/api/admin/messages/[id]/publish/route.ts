@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { resolveAudienceUserIds } from '@/lib/notificationService';
 import { sendGoogleChatMessage } from '@/lib/googleChat';
+import { getMessageBodyPlainText } from '@/lib/messageBody';
 
 const BATCH_SIZE = 500;
 
@@ -93,7 +94,7 @@ export async function POST(
     if (message.send_to_google_chat) {
       try {
         const priorityEmoji = message.priority === 'critical' ? '🚨' : message.priority === 'warning' ? '⚠️' : 'ℹ️';
-        const chatText = `${priorityEmoji} *${message.title}*\n\n${message.body}`;
+        const chatText = `${priorityEmoji} *${message.title}*\n\n${getMessageBodyPlainText(message.body)}`;
         await sendGoogleChatMessage(chatText);
       } catch (chatError: any) {
         console.error('[publish] Google Chat error:', chatError.message);
