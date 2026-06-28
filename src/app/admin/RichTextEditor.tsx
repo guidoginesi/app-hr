@@ -33,7 +33,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 			Link.configure({
 				openOnClick: false,
 				HTMLAttributes: {
-					class: 'text-blue-600 underline hover:text-blue-800'
+					class: 'text-accent-foreground underline hover:text-accent-foreground'
 				}
 			}),
 			Placeholder.configure({
@@ -70,15 +70,15 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 	};
 
 	return (
-		<div className="rounded-lg border border-zinc-300 bg-white focus-within:border-black focus-within:ring-1 focus-within:ring-black">
+		<div className="rounded-lg border border-[var(--border)] bg-white focus-within:border-black focus-within:ring-1 focus-within:ring-black">
 			{/* Toolbar */}
-			<div className="flex flex-wrap items-center gap-1 border-b border-zinc-200 p-2">
+			<div className="flex flex-wrap items-center gap-1 border-b border-[var(--border)] p-2">
 				{/* Bold */}
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleBold().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('bold') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('bold') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Negrita (Ctrl+B)"
 				>
@@ -91,8 +91,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleItalic().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('italic') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('italic') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Cursiva (Ctrl+I)"
 				>
@@ -105,8 +105,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleUnderline().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('underline') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('underline') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Subrayado (Ctrl+U)"
 				>
@@ -119,8 +119,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleStrike().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('strike') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('strike') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Tachado"
 				>
@@ -129,14 +129,14 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 					</svg>
 				</button>
 
-				<div className="w-px h-6 bg-zinc-300 mx-1" />
+				<div className="w-px h-6 bg-secondary mx-1" />
 
 				{/* Bullet List */}
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleBulletList().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('bulletList') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('bulletList') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Lista con viñetas"
 				>
@@ -149,8 +149,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleOrderedList().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('orderedList') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('orderedList') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Lista numerada"
 				>
@@ -159,14 +159,14 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 					</svg>
 				</button>
 
-				<div className="w-px h-6 bg-zinc-300 mx-1" />
+				<div className="w-px h-6 bg-secondary mx-1" />
 
 				{/* Code */}
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleCode().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('code') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('code') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Código inline"
 				>
@@ -179,8 +179,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 				<button
 					type="button"
 					onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('codeBlock') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('codeBlock') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Bloque de código"
 				>
@@ -193,8 +193,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 				<button
 					type="button"
 					onClick={setLink}
-					className={`rounded p-2 hover:bg-zinc-100 transition-colors ${
-						editor.isActive('link') ? 'bg-zinc-200 text-black' : 'text-zinc-600'
+					className={`rounded p-2 hover:bg-secondary transition-colors ${
+						editor.isActive('link') ? 'bg-secondary text-black' : 'text-muted-foreground'
 					}`}
 					title="Insertar enlace"
 				>
@@ -208,7 +208,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 					<button
 						type="button"
 						onClick={() => editor.chain().focus().unsetLink().run()}
-						className="rounded p-2 hover:bg-zinc-100 transition-colors text-zinc-600"
+						className="rounded p-2 hover:bg-secondary transition-colors text-muted-foreground"
 						title="Quitar enlace"
 					>
 						<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

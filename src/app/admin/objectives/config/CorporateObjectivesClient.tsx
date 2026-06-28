@@ -183,14 +183,14 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Objetivos Corporativos</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-xl font-semibold text-foreground">Objetivos Corporativos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona los objetivos de Facturación y NPS de la empresa
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[var(--red-600)] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -201,27 +201,27 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
 
       {/* Messages */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
           {error}
         </div>
       )}
       {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-lg border border-success/20 bg-success-subtle px-4 py-3 text-sm text-[var(--green-700)]">
           {success}
         </div>
       )}
 
       {/* Objectives List */}
       {sortedYears.length === 0 ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center shadow-sm">
-          <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center shadow-sm">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
-          <h3 className="mt-4 text-base font-medium text-zinc-900">No hay objetivos corporativos</h3>
-          <p className="mt-1 text-sm text-zinc-500">Crea tu primer objetivo de Facturación o NPS</p>
+          <h3 className="mt-4 text-base font-medium text-foreground">No hay objetivos corporativos</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Crea tu primer objetivo de Facturación o NPS</p>
           <button
             onClick={openCreateModal}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)]"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -232,49 +232,49 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
       ) : (
         <div className="space-y-6">
           {sortedYears.map(year => (
-            <div key={year} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 bg-zinc-50 px-6 py-3">
-                <h2 className="text-lg font-semibold text-zinc-900">{year}</h2>
+            <div key={year} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--border)] bg-muted px-6 py-3">
+                <h2 className="text-lg font-semibold text-foreground">{year}</h2>
               </div>
-              <div className="divide-y divide-zinc-100">
+              <div className="divide-y divide-[var(--border)]">
                 {objectivesByYear[year].map(obj => {
                   const progress = obj.target_value && obj.actual_value
                     ? Math.round((obj.actual_value / obj.target_value) * 100)
                     : null;
                   
                   return (
-                    <div key={obj.id} className="flex items-center justify-between px-6 py-4 hover:bg-zinc-50">
+                    <div key={obj.id} className="flex items-center justify-between px-6 py-4 hover:bg-muted">
                       <div className="flex items-center gap-4">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          obj.objective_type === 'billing' ? 'bg-emerald-100' : 'bg-blue-100'
+                          obj.objective_type === 'billing' ? 'bg-success-subtle' : 'bg-accent'
                         }`}>
                           {obj.objective_type === 'billing' ? (
-                            <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           ) : (
-                            <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-zinc-900">{obj.title}</h3>
+                            <h3 className="font-medium text-foreground">{obj.title}</h3>
                             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                               obj.objective_type === 'billing' 
-                                ? 'bg-emerald-100 text-emerald-700' 
-                                : 'bg-blue-100 text-blue-700'
+                                ? 'bg-success-subtle text-[var(--green-700)]' 
+                                : 'bg-accent text-accent-foreground'
                             }`}>
                               {OBJECTIVE_TYPE_LABELS[obj.objective_type]}
                             </span>
                             {obj.quarter && (
-                              <span className="text-xs text-zinc-500">
+                              <span className="text-xs text-muted-foreground">
                                 {QUARTER_LABELS[obj.quarter]}
                               </span>
                             )}
                           </div>
-                          <div className="mt-1 flex items-center gap-4 text-sm text-zinc-500">
+                          <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
                             {obj.target_value !== null && (
                               <span>Meta: {obj.objective_type === 'billing' ? '$' : ''}{obj.target_value.toLocaleString('es-AR')}</span>
                             )}
@@ -282,7 +282,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                               <span>Actual: {obj.objective_type === 'billing' ? '$' : ''}{obj.actual_value.toLocaleString('es-AR')}</span>
                             )}
                             {progress !== null && (
-                              <span className={`font-medium ${progress >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                              <span className={`font-medium ${progress >= 100 ? 'text-[var(--green-700)]' : 'text-[var(--amber-600)]'}`}>
                                 {progress}%
                               </span>
                             )}
@@ -292,14 +292,14 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => openEditModal(obj)}
-                          className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                          className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => handleDelete(obj)}
                           disabled={deleting === obj.id}
-                          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          className="rounded-lg border border-danger/20 bg-white px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                         >
                           {deleting === obj.id ? 'Eliminando...' : 'Eliminar'}
                         </button>
@@ -320,13 +320,13 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
             <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={closeModal} />
             
             <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
+              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">
                   {editingObjective ? 'Editar objetivo' : 'Nuevo objetivo corporativo'}
                 </h2>
                 <button
                   onClick={closeModal}
-                  className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                  className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -336,34 +336,34 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
 
               <div className="p-6 space-y-4">
                 {error && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
                     {error}
                   </div>
                 )}
 
                 {/* Type selector */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Tipo de objetivo</label>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-2">Tipo de objetivo</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, objective_type: 'billing', quarter: null }))}
                       className={`flex items-center gap-3 rounded-lg border-2 p-4 transition-all ${
                         formData.objective_type === 'billing'
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-zinc-200 hover:border-zinc-300'
+                          ? 'border-success/20 bg-success-subtle'
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}
                     >
                       <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        formData.objective_type === 'billing' ? 'bg-emerald-100' : 'bg-zinc-100'
+                        formData.objective_type === 'billing' ? 'bg-success-subtle' : 'bg-secondary'
                       }`}>
-                        <svg className={`h-5 w-5 ${formData.objective_type === 'billing' ? 'text-emerald-600' : 'text-zinc-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className={`h-5 w-5 ${formData.objective_type === 'billing' ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div className="text-left">
-                        <p className={`font-medium ${formData.objective_type === 'billing' ? 'text-emerald-700' : 'text-zinc-700'}`}>Facturación</p>
-                        <p className="text-xs text-zinc-500">Objetivo anual</p>
+                        <p className={`font-medium ${formData.objective_type === 'billing' ? 'text-[var(--green-700)]' : 'text-secondary-foreground'}`}>Facturación</p>
+                        <p className="text-xs text-muted-foreground">Objetivo anual</p>
                       </div>
                     </button>
                     <button
@@ -371,20 +371,20 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       onClick={() => setFormData(prev => ({ ...prev, objective_type: 'nps', quarter: 'q1' }))}
                       className={`flex items-center gap-3 rounded-lg border-2 p-4 transition-all ${
                         formData.objective_type === 'nps'
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-zinc-200 hover:border-zinc-300'
+                          ? 'border-brand bg-accent'
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}
                     >
                       <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        formData.objective_type === 'nps' ? 'bg-blue-100' : 'bg-zinc-100'
+                        formData.objective_type === 'nps' ? 'bg-accent' : 'bg-secondary'
                       }`}>
-                        <svg className={`h-5 w-5 ${formData.objective_type === 'nps' ? 'text-blue-600' : 'text-zinc-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className={`h-5 w-5 ${formData.objective_type === 'nps' ? 'text-accent-foreground' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div className="text-left">
-                        <p className={`font-medium ${formData.objective_type === 'nps' ? 'text-blue-700' : 'text-zinc-700'}`}>NPS</p>
-                        <p className="text-xs text-zinc-500">Objetivo trimestral</p>
+                        <p className={`font-medium ${formData.objective_type === 'nps' ? 'text-accent-foreground' : 'text-secondary-foreground'}`}>NPS</p>
+                        <p className="text-xs text-muted-foreground">Objetivo trimestral</p>
                       </div>
                     </button>
                   </div>
@@ -393,11 +393,11 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                 {/* Year and Quarter */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Año</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Año</label>
                     <select
                       value={formData.year}
                       onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
-                      className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       {years.map(y => (
                         <option key={y} value={y}>{y}</option>
@@ -406,11 +406,11 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                   </div>
                   {formData.objective_type === 'nps' && (
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Trimestre</label>
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Trimestre</label>
                       <select
                         value={formData.quarter || 'q1'}
                         onChange={(e) => setFormData(prev => ({ ...prev, quarter: e.target.value as Quarter }))}
-                        className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                       >
                         {QUARTERS.map(q => (
                           <option key={q} value={q}>{QUARTER_LABELS[q]}</option>
@@ -422,8 +422,8 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
 
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Título <span className="text-zinc-400 font-normal">(opcional)</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Título <span className="text-muted-foreground font-normal">(opcional)</span>
                   </label>
                   <input
                     type="text"
@@ -433,27 +433,27 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       ? `Facturación ${formData.year}` 
                       : `NPS ${formData.quarter ? QUARTER_LABELS[formData.quarter] : ''} ${formData.year}`
                     }
-                    className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Descripción <span className="text-zinc-400 font-normal">(opcional)</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Descripción <span className="text-muted-foreground font-normal">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Values */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">
                       {formData.objective_type === 'billing' ? 'Meta ($)' : 'Meta (puntos)'}
                     </label>
                     <input
@@ -461,11 +461,11 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       value={formData.target_value}
                       onChange={(e) => setFormData(prev => ({ ...prev, target_value: e.target.value }))}
                       placeholder={formData.objective_type === 'billing' ? '1000000' : '75'}
-                      className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">
                       {formData.objective_type === 'billing' ? 'Actual ($)' : 'Actual (puntos)'}
                     </label>
                     <input
@@ -473,7 +473,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       value={formData.actual_value}
                       onChange={(e) => setFormData(prev => ({ ...prev, actual_value: e.target.value }))}
                       placeholder="0"
-                      className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -482,38 +482,38 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                 {formData.objective_type === 'billing' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Gate (%)</label>
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Gate (%)</label>
                       <input
                         type="number"
                         value={formData.gate_percentage}
                         onChange={(e) => setFormData(prev => ({ ...prev, gate_percentage: Number(e.target.value) }))}
                         min={0}
                         max={100}
-                        className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                       />
-                      <p className="mt-1 text-xs text-zinc-500">Mínimo para aplicar bono</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Mínimo para aplicar bono</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Cap (%)</label>
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Cap (%)</label>
                       <input
                         type="number"
                         value={formData.cap_percentage}
                         onChange={(e) => setFormData(prev => ({ ...prev, cap_percentage: Number(e.target.value) }))}
                         min={100}
                         max={200}
-                        className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                       />
-                      <p className="mt-1 text-xs text-zinc-500">Máximo multiplicador</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Máximo multiplicador</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                 >
                   Cancelar
                 </button>
@@ -521,7 +521,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                  className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
                 </button>

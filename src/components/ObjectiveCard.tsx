@@ -44,58 +44,58 @@ export function ObjectiveCard({
   const displayProgress = objective.calculated_progress ?? objective.progress_percentage;
 
   return (
-    <div className="rounded-lg border border-zinc-200 p-4 hover:border-zinc-300 transition-colors">
+    <div className="rounded-lg border border-[var(--border)] p-4 hover:border-[var(--border)] transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {/* Objective Number */}
             {objective.objective_number && (
-              <span className="text-xs font-bold text-white bg-purple-600 px-2 py-0.5 rounded">
+              <span className="text-xs font-bold text-white bg-cat-violet px-2 py-0.5 rounded">
                 #{objective.objective_number}
               </span>
             )}
-            <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+            <span className="text-xs font-medium text-cat-violet bg-cat-violet-subtle px-2 py-0.5 rounded">
               {objective.year}
             </span>
             {/* Periodicity badge */}
-            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+            <span className="text-xs font-medium text-accent-foreground bg-accent px-2 py-0.5 rounded">
               {PERIODICITY_LABELS[periodicity]?.split(' ')[0] || 'Anual'}
             </span>
             {/* Weight badge */}
-            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+            <span className="text-xs font-medium text-[var(--amber-600)] bg-warning-subtle px-2 py-0.5 rounded">
               Peso: {objective.weight_pct ?? 50}%
             </span>
             <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor.bg} ${statusColor.text}`}>
               {STATUS_LABELS[objective.status]}
             </span>
             {hasAchievement && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-success-subtle text-[var(--green-700)]">
                 Evaluado: {objective.achievement_percentage}%
               </span>
             )}
             {objective.is_locked && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-500">
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-secondary text-muted-foreground">
                 Bloqueado
               </span>
             )}
           </div>
-          <h4 className="font-medium text-zinc-900">{objective.title}</h4>
+          <h4 className="font-medium text-foreground">{objective.title}</h4>
           {objective.description && (
-            <p className="mt-1 text-sm text-zinc-500">{objective.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{objective.description}</p>
           )}
           
           {/* Progress Bar */}
           <div className="mt-3">
-            <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
               <span>Progreso {hasSubObjectives ? '(calculado)' : ''}</span>
               <span>{displayProgress}%</span>
             </div>
-            <div className="h-2 w-full rounded-full bg-zinc-100">
+            <div className="h-2 w-full rounded-full bg-secondary">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  displayProgress === 100 ? 'bg-green-500' :
-                  displayProgress >= 50 ? 'bg-purple-500' :
-                  'bg-yellow-500'
+                  displayProgress === 100 ? 'bg-success' :
+                  displayProgress >= 50 ? 'bg-cat-violet' :
+                  'bg-warning'
                 }`}
                 style={{ width: `${Math.min(displayProgress, 100)}%` }}
               />
@@ -104,13 +104,13 @@ export function ObjectiveCard({
 
           {/* Sub-objectives section */}
           {requiredSubObjectives > 0 && (
-            <div className="mt-4 border-t border-zinc-100 pt-3">
+            <div className="mt-4 border-t border-[var(--border)] pt-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-zinc-700">
+                <span className="text-xs font-medium text-secondary-foreground">
                   Sub-objetivos ({actualSubObjectives}/{requiredSubObjectives})
                 </span>
                 {!subObjectivesComplete && (
-                  <span className="text-xs text-amber-600">
+                  <span className="text-xs text-[var(--amber-600)]">
                     Faltan {requiredSubObjectives - actualSubObjectives} sub-objetivo(s)
                   </span>
                 )}
@@ -121,39 +121,39 @@ export function ObjectiveCard({
                   {objective.sub_objectives!.map((sub, idx) => {
                     const subHasAchievement = sub.achievement_percentage !== null && sub.achievement_percentage !== undefined;
                     return (
-                    <div key={sub.id} className="rounded-lg bg-zinc-50 p-3">
+                    <div key={sub.id} className="rounded-lg bg-muted p-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                        <span className="text-xs font-semibold text-cat-violet bg-cat-violet-subtle px-2 py-0.5 rounded">
                           {SUB_OBJECTIVE_LABELS[periodicity]?.[idx] || `#${idx + 1}`}
                         </span>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-zinc-700">{sub.title}</p>
+                          <p className="text-sm font-medium text-secondary-foreground">{sub.title}</p>
                           {sub.description && (
-                            <p className="text-xs text-zinc-500 mt-0.5">{sub.description}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{sub.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-3">
                           {subHasAchievement ? (
-                            <span className="text-xs font-medium px-2 py-1 rounded bg-emerald-100 text-emerald-700">
+                            <span className="text-xs font-medium px-2 py-1 rounded bg-success-subtle text-[var(--green-700)]">
                               {sub.achievement_percentage}%
                             </span>
                           ) : (
                             <>
                               <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 rounded-full bg-zinc-200">
+                                <div className="w-16 h-1.5 rounded-full bg-secondary">
                                   <div 
-                                    className="h-1.5 rounded-full bg-purple-500"
+                                    className="h-1.5 rounded-full bg-cat-violet"
                                     style={{ width: `${sub.progress_percentage}%` }}
                                   />
                                 </div>
-                                <span className="text-xs text-zinc-500">{sub.progress_percentage}%</span>
+                                <span className="text-xs text-muted-foreground">{sub.progress_percentage}%</span>
                               </div>
                             </>
                           )}
                           {!readOnly && canEvaluate && onEvaluateSubObjective && (
                             <button
                               onClick={() => onEvaluateSubObjective(sub)}
-                              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                              className="text-xs font-medium text-foreground hover:text-[var(--primary-hover)] hover:underline"
                             >
                               {subHasAchievement ? 'Editar' : 'Evaluar'}
                             </button>
@@ -161,7 +161,7 @@ export function ObjectiveCard({
                         </div>
                       </div>
                       {subHasAchievement && sub.achievement_notes && (
-                        <div className="mt-2 text-xs text-emerald-600 bg-emerald-50 rounded p-2">
+                        <div className="mt-2 text-xs text-[var(--green-700)] bg-success-subtle rounded p-2">
                           {sub.achievement_notes}
                         </div>
                       )}
@@ -169,7 +169,7 @@ export function ObjectiveCard({
                   );})}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-400 italic">
+                <p className="text-sm text-muted-foreground italic">
                   Agrega sub-objetivos para este objetivo {periodicity}
                 </p>
               )}
@@ -178,9 +178,9 @@ export function ObjectiveCard({
 
           {/* Achievement Notes */}
           {hasAchievement && objective.achievement_notes && (
-            <div className="mt-3 rounded-lg bg-emerald-50 p-3">
-              <p className="text-xs font-medium text-emerald-700 mb-1">Notas de evaluación:</p>
-              <p className="text-sm text-emerald-600">{objective.achievement_notes}</p>
+            <div className="mt-3 rounded-lg bg-success-subtle p-3">
+              <p className="text-xs font-medium text-[var(--green-700)] mb-1">Notas de evaluación:</p>
+              <p className="text-sm text-[var(--green-700)]">{objective.achievement_notes}</p>
             </div>
           )}
         </div>
@@ -190,7 +190,7 @@ export function ObjectiveCard({
             {canEvaluate && onEvaluate && (
               <button
                 onClick={onEvaluate}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                className="flex items-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-medium text-white hover:bg-success"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -203,7 +203,7 @@ export function ObjectiveCard({
                 {onEdit && (
                   <button
                     onClick={onEdit}
-                    className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                    className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                     title="Editar"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,7 +214,7 @@ export function ObjectiveCard({
                 {onDelete && (
                   <button
                     onClick={onDelete}
-                    className="rounded p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                    className="rounded p-1.5 text-muted-foreground hover:bg-danger-subtle hover:text-[var(--red-600)]"
                     title="Eliminar"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -17,10 +17,10 @@ function rankBadge(rank: number) {
 }
 
 function rankStyle(rank: number) {
-  if (rank === 1) return 'bg-amber-50 border-amber-200';
-  if (rank === 2) return 'bg-zinc-100 border-zinc-200';
-  if (rank === 3) return 'bg-orange-50 border-orange-200';
-  return 'bg-white border-zinc-200';
+  if (rank === 1) return 'bg-warning-subtle border-warning/30';
+  if (rank === 2) return 'bg-secondary border-[var(--border)]';
+  if (rank === 3) return 'bg-accent border-[var(--orange-100)]';
+  return 'bg-white border-[var(--border)]';
 }
 
 export function RankingTable({ rows, highlightEmployeeId, showSessions = true }: Props) {
@@ -36,18 +36,18 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-12 text-center">
-        <p className="text-sm text-zinc-500">Todavía no hay participantes en este ciclo.</p>
+      <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-12 text-center">
+        <p className="text-sm text-muted-foreground">Todavía no hay participantes en este ciclo.</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <tr className="border-b border-[var(--border)] bg-muted text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <th className="px-4 py-3 w-16">#</th>
               <th className="px-4 py-3">Colaborador</th>
               <th className="px-4 py-3 hidden md:table-cell">Área</th>
@@ -56,7 +56,7 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
               <th className="px-4 py-3 hidden sm:table-cell w-40">Progreso</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-[var(--border)]">
             {sorted.map((row, index) => {
               const rank = index + 1;
               const name = employeeDisplayName(row.first_name, row.last_name);
@@ -66,9 +66,9 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
               return (
                 <tr
                   key={row.employee_id}
-                  className={`${rankStyle(rank)} ${isMe ? 'ring-2 ring-inset ring-sky-400' : ''}`}
+                  className={`${rankStyle(rank)} ${isMe ? 'ring-2 ring-inset ring-ring' : ''}`}
                 >
-                  <td className="px-4 py-3 font-bold text-zinc-700">{rankBadge(rank)}</td>
+                  <td className="px-4 py-3 font-bold text-secondary-foreground">{rankBadge(rank)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {row.photo_url ? (
@@ -78,40 +78,40 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
                           className="h-9 w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-xs font-semibold text-sky-700">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
                           {employeeInitials(row.first_name, row.last_name)}
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-zinc-900">
+                        <p className="font-medium text-foreground">
                           {name}
                           {isMe && (
-                            <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-sky-700">
+                            <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase text-accent-foreground">
                               Vos
                             </span>
                           )}
                         </p>
                         {row.job_title && (
-                          <p className="text-xs text-zinc-500 md:hidden">{row.job_title}</p>
+                          <p className="text-xs text-muted-foreground md:hidden">{row.job_title}</p>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 hidden md:table-cell text-zinc-600">
+                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">
                     {row.department_name ?? '—'}
                   </td>
                   {showSessions && (
-                    <td className="px-4 py-3 hidden lg:table-cell text-center text-zinc-600">
+                    <td className="px-4 py-3 hidden lg:table-cell text-center text-muted-foreground">
                       {row.sessions_scored}
                     </td>
                   )}
                   <td className="px-4 py-3 text-right">
-                    <span className="text-lg font-bold text-sky-700">{row.total_points}</span>
+                    <span className="text-lg font-bold text-accent-foreground">{row.total_points}</span>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <div className="h-2 w-full rounded-full bg-zinc-100">
+                    <div className="h-2 w-full rounded-full bg-secondary">
                       <div
-                        className="h-2 rounded-full bg-sky-500 transition-all"
+                        className="h-2 rounded-full bg-primary transition-all"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -136,14 +136,14 @@ export function ScoringRulesCard() {
   ];
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <h3 className="text-sm font-semibold text-zinc-900">Cómo sumar puntos</h3>
-      <p className="mt-1 text-xs text-zinc-500">Por cada sesión de capacitación</p>
+    <div className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm">
+      <h3 className="text-sm font-semibold text-foreground">Cómo sumar puntos</h3>
+      <p className="mt-1 text-xs text-muted-foreground">Por cada sesión de capacitación</p>
       <ul className="mt-4 space-y-2">
         {rules.map((rule) => (
           <li key={rule.action} className="flex items-start justify-between gap-4 text-sm">
-            <span className="text-zinc-700">{rule.action}</span>
-            <span className="shrink-0 font-semibold text-sky-700">{rule.points}</span>
+            <span className="text-secondary-foreground">{rule.action}</span>
+            <span className="shrink-0 font-semibold text-accent-foreground">{rule.points}</span>
           </li>
         ))}
       </ul>

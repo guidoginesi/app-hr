@@ -321,17 +321,17 @@ export default function NewTimeOffRequestPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div className="min-h-screen bg-muted px-4 py-8">
       <div className="mx-auto max-w-2xl">
         <Link
           href="/portal/time-off"
-          className="mb-6 inline-flex items-center text-sm text-zinc-500 hover:text-zinc-900"
+          className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
         >
           <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -339,12 +339,12 @@ export default function NewTimeOffRequestPage() {
           Volver a Time Off
         </Link>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-semibold text-zinc-900">Nueva solicitud</h1>
-          <p className="mt-1 text-sm text-zinc-500">Solicita vacaciones, días Pow, trabajo remoto u otras licencias</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
+          <h1 className="text-2xl font-semibold text-foreground">Nueva solicitud</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Solicita vacaciones, días Pow, trabajo remoto u otras licencias</p>
 
           {error && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mt-4 rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
               {error}
             </div>
           )}
@@ -352,10 +352,10 @@ export default function NewTimeOffRequestPage() {
           <form onSubmit={handleSubmit} className="mt-6 space-y-6">
             {/* Tipo de licencia */}
             <div>
-              <label className="block text-sm font-medium text-zinc-700">Tipo de licencia</label>
+              <label className="block text-sm font-medium text-secondary-foreground">Tipo de licencia</label>
               {leaveTypes.filter(isTypeSelectable).length === 0 ? (
-                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm text-amber-800">
+                <div className="mt-2 rounded-lg border border-warning/30 bg-warning-subtle p-4">
+                  <p className="text-sm text-[var(--amber-600)]">
                     No tienes días disponibles para solicitar licencias en este momento.
                   </p>
                 </div>
@@ -363,7 +363,7 @@ export default function NewTimeOffRequestPage() {
                 <select
                   value={selectedType}
                   onChange={(e) => handleTypeChange(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   required
                 >
                   <option value="">Selecciona un tipo</option>
@@ -381,15 +381,15 @@ export default function NewTimeOffRequestPage() {
                 </select>
               )}
               {selectedLeaveType && (
-                <p className="mt-1 text-xs text-zinc-500">{selectedLeaveType.description}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{selectedLeaveType.description}</p>
               )}
             </div>
 
             {/* Fechas - Vacaciones y Trabajo Remoto (semanas completas) */}
             {isWeekBasedType() && (
               <div className="space-y-4">
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <ul className="text-sm text-amber-800 space-y-1">
+                <div className="rounded-lg border border-warning/30 bg-warning-subtle p-4">
+                  <ul className="text-sm text-[var(--amber-600)] space-y-1">
                     <li>
                       • {isVacationType() 
                         ? 'Las vacaciones deben ser en '
@@ -406,7 +406,7 @@ export default function NewTimeOffRequestPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700">
+                    <label className="block text-sm font-medium text-secondary-foreground">
                       Fecha de inicio
                     </label>
                     <MondayDatePicker
@@ -417,11 +417,11 @@ export default function NewTimeOffRequestPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700">Duración</label>
+                    <label className="block text-sm font-medium text-secondary-foreground">Duración</label>
                     <select
                       value={vacationWeeks}
                       onChange={(e) => handleVacationWeeksChange(Number(e.target.value))}
-                      className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8].slice(0, getMaxVacationWeeks() || 8).map((weeks) => (
                         <option key={weeks} value={weeks}>
@@ -433,8 +433,8 @@ export default function NewTimeOffRequestPage() {
                 </div>
 
                 {startDate && endDate && (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                    <p className="text-sm text-emerald-800">
+                  <div className="rounded-lg border border-brand bg-success-subtle p-4">
+                    <p className="text-sm text-[var(--green-700)]">
                       <strong>Período:</strong>{' '}
                       {parseLocalDate(startDate).toLocaleDateString('es-AR', {
                         weekday: 'long',
@@ -459,8 +459,8 @@ export default function NewTimeOffRequestPage() {
             {selectedType && !isWeekBasedType() && (
               <div className="space-y-4">
                 {isRemoteWorkTripType() && (
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-sm text-blue-800">
+                  <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                    <p className="text-sm text-foreground">
                       Usá este tipo cuando trabajes fuera de tu domicilio habitual por{' '}
                       <strong>días sueltos o viajes</strong> (no semanas completas).
                       Es una notificación obligatoria para ART y seguro. La solicitud va{' '}
@@ -470,22 +470,22 @@ export default function NewTimeOffRequestPage() {
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700">Fecha de inicio</label>
+                    <label className="block text-sm font-medium text-secondary-foreground">Fecha de inicio</label>
                     <input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700">Fecha de fin</label>
+                    <label className="block text-sm font-medium text-secondary-foreground">Fecha de fin</label>
                     <input
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       required
                     />
                   </div>
@@ -495,43 +495,43 @@ export default function NewTimeOffRequestPage() {
 
             {/* Location fields — remote work (weeks) or trip (days) */}
             {requiresRemoteLocationFields() && (
-              <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p className="text-sm text-blue-800">
+              <div className="space-y-4 rounded-lg border border-[var(--border)] bg-muted p-4">
+                <p className="text-sm text-foreground">
                   {isRemoteWorkTripType()
                     ? 'Completá la información del lugar donde vas a trabajar para la notificación a ART y seguro:'
                     : 'En el caso de que trabajes temporalmente desde otro lugar que no sea el habitual declarado al momento del ingreso, deberás completar la siguiente información:'}
                 </p>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-900">
-                    Destino <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-foreground">
+                    Destino <span className="text-[var(--red-600)]">*</span>
                   </label>
                   <input
                     type="text"
                     value={remoteDestino}
                     onChange={(e) => setRemoteDestino(e.target.value)}
                     placeholder="Ej: Córdoba, Argentina"
-                    className="mt-1 block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-900">
-                    Domicilio <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-accent-foreground">
+                    Domicilio <span className="text-[var(--red-600)]">*</span>
                   </label>
                   <input
                     type="text"
                     value={remoteDomicilio}
                     onChange={(e) => setRemoteDomicilio(e.target.value)}
                     placeholder="Ej: Av. Colón 1234, Piso 5, Depto B"
-                    className="mt-1 block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-900">
+                  <label className="block text-sm font-medium text-accent-foreground">
                     Contacto de emergencia
                   </label>
                   <div className="mt-1 grid grid-cols-2 gap-3">
@@ -541,10 +541,10 @@ export default function NewTimeOffRequestPage() {
                         value={remoteContactoNombre}
                         onChange={(e) => setRemoteContactoNombre(e.target.value)}
                         placeholder="Nombre y vínculo"
-                        className="block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         required
                       />
-                      <p className="mt-1 text-xs text-blue-600">Ej: Juan Pérez (hermano)</p>
+                      <p className="mt-1 text-xs text-accent-foreground">Ej: Juan Pérez (hermano)</p>
                     </div>
                     <div>
                       <input
@@ -552,10 +552,10 @@ export default function NewTimeOffRequestPage() {
                         value={remoteContactoTelefono}
                         onChange={(e) => setRemoteContactoTelefono(e.target.value)}
                         placeholder="Teléfono"
-                        className="block w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         required
                       />
-                      <p className="mt-1 text-xs text-blue-600">Ej: +54 11 1234-5678</p>
+                      <p className="mt-1 text-xs text-accent-foreground">Ej: +54 11 1234-5678</p>
                     </div>
                   </div>
                 </div>
@@ -564,8 +564,8 @@ export default function NewTimeOffRequestPage() {
 
             {/* Días calculados - solo para tipos que no son vacaciones */}
             {daysCalculated > 0 && selectedLeaveType && !isVacationType() && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                <p className="text-sm text-emerald-800">
+              <div className="rounded-lg border border-brand bg-success-subtle p-4">
+                <p className="text-sm text-[var(--green-700)]">
                   <strong>{daysCalculated}</strong>{' '}
                   {selectedLeaveType.count_type === 'weeks'
                     ? `semana${daysCalculated > 1 ? 's' : ''}`
@@ -578,8 +578,8 @@ export default function NewTimeOffRequestPage() {
 
             {/* Advertencia de anticipación - solo para tipos que no son week-based (ya está incluido arriba) */}
             {selectedLeaveType && selectedLeaveType.advance_notice_days > 0 && !isWeekBasedType() && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm text-amber-800">
+              <div className="rounded-lg border border-warning/30 bg-warning-subtle p-4">
+                <p className="text-sm text-[var(--amber-600)]">
                   Este tipo de licencia requiere{' '}
                   <strong>{selectedLeaveType.advance_notice_days} días de anticipación</strong>.
                 </p>
@@ -589,13 +589,13 @@ export default function NewTimeOffRequestPage() {
 
             {/* Notas */}
             <div>
-              <label className="block text-sm font-medium text-zinc-700">Notas (opcional)</label>
+              <label className="block text-sm font-medium text-secondary-foreground">Notas (opcional)</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="Agrega cualquier comentario adicional..."
-                className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
 
@@ -609,13 +609,13 @@ export default function NewTimeOffRequestPage() {
                   daysCalculated <= 0 ||
                   (requiresRemoteLocationFields() && (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()))
                 }
-                className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? 'Enviando...' : 'Enviar solicitud'}
               </button>
               <Link
                 href="/portal/time-off"
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-muted"
               >
                 Cancelar
               </Link>

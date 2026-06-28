@@ -70,7 +70,7 @@ function EmployeeCard({ employee, isRoot = false }: { employee: OrgNode; isRoot?
   return (
     <div className={`
       flex items-center gap-3 rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md
-      ${isRoot ? 'border-emerald-200 ring-2 ring-emerald-100' : 'border-zinc-200'}
+      ${isRoot ? 'border-success/20 ring-2 ring-ring' : 'border-[var(--border)]'}
     `}>
       <div className="relative h-12 w-12 flex-shrink-0">
         {employee.photo_url ? (
@@ -83,25 +83,25 @@ function EmployeeCard({ employee, isRoot = false }: { employee: OrgNode; isRoot?
         ) : (
           <div className={`
             flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold
-            ${isRoot ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}
+            ${isRoot ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-secondary text-muted-foreground'}
           `}>
             {initials}
           </div>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-zinc-900">
+        <p className="truncate font-medium text-foreground">
           {employee.first_name} {employee.last_name}
         </p>
         {employee.job_title && (
-          <p className="truncate text-sm text-zinc-500">{employee.job_title}</p>
+          <p className="truncate text-sm text-muted-foreground">{employee.job_title}</p>
         )}
         {employee.department && (
-          <p className="truncate text-xs text-zinc-400">{employee.department.name}</p>
+          <p className="truncate text-xs text-muted-foreground">{employee.department.name}</p>
         )}
       </div>
       {employee.children.length > 0 && (
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600">
+        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-muted-foreground">
           {employee.children.length}
         </div>
       )}
@@ -117,7 +117,7 @@ function OrgTreeNode({ node, isLast = false }: { node: OrgNode; isLast?: boolean
     <div className="relative">
       {/* Vertical line from parent */}
       {node.level > 0 && (
-        <div className="absolute -top-4 left-6 h-4 w-px bg-zinc-300" />
+        <div className="absolute -top-4 left-6 h-4 w-px bg-secondary" />
       )}
       
       <div className="relative flex items-start gap-2">
@@ -125,7 +125,7 @@ function OrgTreeNode({ node, isLast = false }: { node: OrgNode; isLast?: boolean
         {hasChildren ? (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="mt-4 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-zinc-300 bg-white text-zinc-500 hover:bg-zinc-50"
+            className="mt-4 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-[var(--border)] bg-white text-muted-foreground hover:bg-muted"
           >
             <svg className={`h-3 w-3 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -142,7 +142,7 @@ function OrgTreeNode({ node, isLast = false }: { node: OrgNode; isLast?: boolean
       
       {/* Children */}
       {hasChildren && expanded && (
-        <div className="relative ml-2.5 mt-4 space-y-4 border-l border-zinc-300 pl-8">
+        <div className="relative ml-2.5 mt-4 space-y-4 border-l border-[var(--border)] pl-8">
           {node.children.map((child, idx) => (
             <OrgTreeNode
               key={child.id}
@@ -232,16 +232,16 @@ export function OrgChart({ employees }: OrgChartProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-zinc-900">Organigrama</h2>
-          <p className="text-sm text-zinc-500">Estructura organizacional de la empresa</p>
+          <h2 className="text-xl font-semibold text-foreground">Organigrama</h2>
+          <p className="text-sm text-muted-foreground">Estructura organizacional de la empresa</p>
         </div>
         
         {/* View mode toggle */}
-        <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-1">
+        <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-white p-1">
           <button
             onClick={() => setViewMode('tree')}
             className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              viewMode === 'tree' ? 'bg-emerald-100 text-emerald-700' : 'text-zinc-600 hover:bg-zinc-50'
+              viewMode === 'tree' ? 'bg-success-subtle text-[var(--green-700)]' : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +252,7 @@ export function OrgChart({ employees }: OrgChartProps) {
           <button
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              viewMode === 'list' ? 'bg-emerald-100 text-emerald-700' : 'text-zinc-600 hover:bg-zinc-50'
+              viewMode === 'list' ? 'bg-success-subtle text-[var(--green-700)]' : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,28 +265,28 @@ export function OrgChart({ employees }: OrgChartProps) {
       
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-2xl font-semibold text-zinc-900">{stats.totalEmployees}</p>
-          <p className="text-sm text-zinc-500">Empleados activos</p>
+        <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+          <p className="text-2xl font-semibold text-foreground">{stats.totalEmployees}</p>
+          <p className="text-sm text-muted-foreground">Empleados activos</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-2xl font-semibold text-zinc-900">{stats.rootEmployees}</p>
-          <p className="text-sm text-zinc-500">Sin supervisor</p>
+        <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+          <p className="text-2xl font-semibold text-foreground">{stats.rootEmployees}</p>
+          <p className="text-sm text-muted-foreground">Sin supervisor</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-2xl font-semibold text-zinc-900">{stats.withManagers}</p>
-          <p className="text-sm text-zinc-500">Con supervisor</p>
+        <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+          <p className="text-2xl font-semibold text-foreground">{stats.withManagers}</p>
+          <p className="text-sm text-muted-foreground">Con supervisor</p>
         </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-2xl font-semibold text-zinc-900">{stats.deptCount}</p>
-          <p className="text-sm text-zinc-500">Departamentos</p>
+        <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+          <p className="text-2xl font-semibold text-foreground">{stats.deptCount}</p>
+          <p className="text-sm text-muted-foreground">Departamentos</p>
         </div>
       </div>
       
       {/* Filters */}
-      <div className="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="flex items-center gap-4 rounded-lg border border-[var(--border)] bg-white p-4">
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -294,13 +294,13 @@ export function OrgChart({ employees }: OrgChartProps) {
             placeholder="Buscar empleado..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-zinc-200 py-2 pl-10 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-[var(--border)] py-2 pl-10 pr-4 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
         <select
           value={selectedDepartment}
           onChange={(e) => setSelectedDepartment(e.target.value)}
-          className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="">Todos los departamentos</option>
           {departments.map(([id, name]) => (
@@ -310,7 +310,7 @@ export function OrgChart({ employees }: OrgChartProps) {
         {(searchQuery || selectedDepartment) && (
           <button
             onClick={() => { setSearchQuery(''); setSelectedDepartment(''); }}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+            className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
           >
             Limpiar filtros
           </button>
@@ -318,17 +318,17 @@ export function OrgChart({ employees }: OrgChartProps) {
       </div>
       
       {/* Org chart */}
-      <div className="rounded-lg border border-zinc-200 bg-white p-6">
+      <div className="rounded-lg border border-[var(--border)] bg-white p-6">
         {filteredTree.length === 0 ? (
           <div className="py-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className="mt-4 text-zinc-500">No se encontraron empleados</p>
+            <p className="mt-4 text-muted-foreground">No se encontraron empleados</p>
             {(searchQuery || selectedDepartment) && (
               <button
                 onClick={() => { setSearchQuery(''); setSelectedDepartment(''); }}
-                className="mt-2 text-sm text-emerald-600 hover:text-emerald-700"
+                className="mt-2 text-sm text-foreground hover:text-[var(--primary-hover)]"
               >
                 Limpiar filtros
               </button>
@@ -345,7 +345,7 @@ export function OrgChart({ employees }: OrgChartProps) {
             {flattenedList.map(emp => (
               <div
                 key={emp.id}
-                className="flex items-center gap-4 rounded-lg border border-zinc-100 p-3 hover:bg-zinc-50"
+                className="flex items-center gap-4 rounded-lg border border-[var(--border)] p-3 hover:bg-muted"
                 style={{ marginLeft: `${emp.level * 24}px` }}
               >
                 <div className="relative h-10 w-10 flex-shrink-0">
@@ -357,22 +357,22 @@ export function OrgChart({ employees }: OrgChartProps) {
                       className="rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-sm font-medium text-zinc-600">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-medium text-muted-foreground">
                       {emp.first_name[0]}{emp.last_name[0]}
                     </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-zinc-900">{emp.first_name} {emp.last_name}</p>
-                  <p className="text-sm text-zinc-500">{emp.job_title || 'Sin cargo'}</p>
+                  <p className="font-medium text-foreground">{emp.first_name} {emp.last_name}</p>
+                  <p className="text-sm text-muted-foreground">{emp.job_title || 'Sin cargo'}</p>
                 </div>
                 {emp.department && (
-                  <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                  <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
                     {emp.department.name}
                   </span>
                 )}
                 {emp.children.length > 0 && (
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-muted-foreground">
                     {emp.children.length} reportes directos
                   </span>
                 )}

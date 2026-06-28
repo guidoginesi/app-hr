@@ -71,9 +71,9 @@ const currencyFormatter = new Intl.NumberFormat('es-AR', {
 
 
 const settlementStatusConfig: Record<SettlementStatus, { label: string; classes: string }> = {
-  DRAFT: { label: 'Borrador', classes: 'bg-zinc-100 text-zinc-700' },
-  READY_TO_SEND: { label: 'Listo para enviar', classes: 'bg-amber-100 text-amber-700' },
-  SENT: { label: 'Enviado', classes: 'bg-emerald-100 text-emerald-700' },
+  DRAFT: { label: 'Borrador', classes: 'bg-secondary text-secondary-foreground' },
+  READY_TO_SEND: { label: 'Listo para enviar', classes: 'bg-warning-subtle text-[var(--amber-600)]' },
+  SENT: { label: 'Enviado', classes: 'bg-success-subtle text-[var(--green-700)]' },
 };
 
 type PayrollPeriodDetailClientProps = {
@@ -396,16 +396,16 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     const dir = isActive ? sortConfig!.direction : null;
     return (
       <th
-        className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 cursor-pointer select-none hover:text-zinc-800 ${className}`}
+        className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none hover:text-foreground ${className}`}
         onClick={() => handleSort(sortKey)}
       >
         <span className="inline-flex items-center gap-1">
           {label}
           <span className="inline-flex flex-col leading-none">
-            <svg className={`h-2.5 w-2.5 ${isActive && dir === 'asc' ? 'text-indigo-600' : 'text-zinc-300'}`} viewBox="0 0 10 6" fill="currentColor">
+            <svg className={`h-2.5 w-2.5 ${isActive && dir === 'asc' ? 'text-accent-foreground' : 'text-muted-foreground'}`} viewBox="0 0 10 6" fill="currentColor">
               <path d="M5 0L10 6H0L5 0Z"/>
             </svg>
-            <svg className={`h-2.5 w-2.5 ${isActive && dir === 'desc' ? 'text-indigo-600' : 'text-zinc-300'}`} viewBox="0 0 10 6" fill="currentColor">
+            <svg className={`h-2.5 w-2.5 ${isActive && dir === 'desc' ? 'text-accent-foreground' : 'text-muted-foreground'}`} viewBox="0 0 10 6" fill="currentColor">
               <path d="M5 6L0 0H10L5 6Z"/>
             </svg>
           </span>
@@ -417,7 +417,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-sm text-zinc-500">Cargando periodo...</p>
+        <p className="text-sm text-muted-foreground">Cargando periodo...</p>
       </div>
     );
   }
@@ -426,14 +426,14 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         {message && (
-          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800 max-w-md text-center">
+          <div className="rounded-lg bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)] max-w-md text-center">
             {message.text}
           </div>
         )}
         {!message && (
-          <p className="text-sm font-medium text-zinc-500">Periodo no encontrado</p>
+          <p className="text-sm font-medium text-muted-foreground">Periodo no encontrado</p>
         )}
-        <Link href="/admin/payroll" className="text-sm text-indigo-600 hover:text-indigo-700">
+        <Link href="/admin/payroll" className="text-sm text-accent-foreground hover:text-accent-foreground">
           Volver a periodos
         </Link>
       </div>
@@ -447,10 +447,10 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Liquidación {formatPayrollPeriodLabelFromKey(period)}
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             {settlements.length} liquidaciones · {filteredSettlements.length} mostradas
           </p>
         </div>
@@ -458,13 +458,13 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           {/* Excel export (solo Monotributo) */}
           <button
             onClick={handleExport}
-            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
           >
             ↓ Excel Monotributo
           </button>
 
           {/* Excel import */}
-          <label className={`cursor-pointer rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
+          <label className={`cursor-pointer rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
             {importing ? 'Importando...' : '↑ Importar Excel'}
             <input
               ref={importInputRef}
@@ -480,7 +480,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           <button
             onClick={handleClaimInvoices}
             disabled={claimingInvoices}
-            className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+            className="rounded-lg border border-warning/30 bg-warning-subtle px-4 py-2 text-sm font-medium text-[var(--amber-600)] hover:bg-warning-subtle disabled:opacity-50"
           >
             {claimingInvoices ? 'Enviando...' : '⚠ Reclamar facturas'}
           </button>
@@ -489,7 +489,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
             <button
               onClick={() => handlePeriodAction('send-all')}
               disabled={actionLoading}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {actionLoading ? 'Enviando...' : 'Enviar a todos'}
             </button>
@@ -499,7 +499,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
       {message && (
         <div className={`rounded-lg p-4 text-sm ${
-          message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+          message.type === 'success' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
         }`}>
           {message.text}
           <button onClick={() => setMessage(null)} className="ml-2 text-xs underline">
@@ -509,7 +509,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       )}
 
       {/* Filter Tabs */}
-      <div className="flex gap-1 rounded-lg bg-zinc-100 p-1">
+      <div className="flex gap-1 rounded-lg bg-secondary p-1">
         {([
           { key: 'all' as FilterTab, label: 'Todos' },
           { key: 'MONOTRIBUTO' as FilterTab, label: 'Monotributo' },
@@ -520,8 +520,8 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
             onClick={() => setActiveFilter(tab.key)}
             className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
               activeFilter === tab.key
-                ? 'bg-white text-zinc-900 shadow-sm'
-                : 'text-zinc-600 hover:text-zinc-900'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {tab.label}
@@ -531,8 +531,8 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
       {/* Selection toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
-          <span className="text-sm font-medium text-indigo-700">
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--orange-100)] bg-accent px-4 py-3">
+          <span className="text-sm font-medium text-accent-foreground">
             {selectedIds.size} {selectedIds.size === 1 ? 'liquidación seleccionada' : 'liquidaciones seleccionadas'}
           </span>
           <div className="ml-auto flex items-center gap-2">
@@ -540,14 +540,14 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
               <button
                 onClick={() => handlePeriodAction('send-all', Array.from(selectedIds))}
                 disabled={actionLoading}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
               >
                 Enviar seleccionados
               </button>
             )}
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
             >
               Deseleccionar
             </button>
@@ -556,11 +556,11 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       )}
 
       {/* Settlements Table */}
-      <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {filteredSettlements.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm font-medium text-zinc-500">No hay liquidaciones para mostrar</p>
-            <p className="mt-1 text-xs text-zinc-400">
+            <p className="text-sm font-medium text-muted-foreground">No hay liquidaciones para mostrar</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               {settlements.length === 0
                 ? 'No se encontraron liquidaciones en este periodo'
                 : 'No hay liquidaciones con el filtro seleccionado'}
@@ -570,7 +570,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-200 bg-zinc-50 text-left">
+                <tr className="border-b border-[var(--border)] bg-muted text-left">
                   <th className="w-10 px-4 py-3">
                     <input
                       type="checkbox"
@@ -579,7 +579,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                         if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < filteredSettlements.length;
                       }}
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                      className="h-4 w-4 rounded border-[var(--border)] text-accent-foreground focus:ring-ring"
                     />
                   </th>
                   <SortableHeader label="Empleado" sortKey="employee_name" />
@@ -598,16 +598,16 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                     </>
                   )}
                   {activeFilter === 'RELACION_DEPENDENCIA' && (
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">PDF</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">PDF</th>
                   )}
                   {(activeFilter === 'MONOTRIBUTO' || activeFilter === 'all') && (
                     <SortableHeader label="Factura" sortKey="invoice_uploaded_at" />
                   )}
                   <SortableHeader label="Estado" sortKey="status" />
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Acciones</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredSettlements.map((settlement) => (
                   <SettlementRow
                     key={settlement.id}
@@ -740,19 +740,19 @@ function SettlementRow({
   };
 
   return (
-    <tr className={`transition-colors hover:bg-zinc-50 ${isSelected ? 'bg-indigo-50' : ''}`}>
+    <tr className={`transition-colors hover:bg-muted ${isSelected ? 'bg-accent' : ''}`}>
       <td className="w-10 px-4 py-3">
         <input
           type="checkbox"
           checked={isSelected}
           onChange={() => onToggleSelect(settlement.id)}
-          className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+          className="h-4 w-4 rounded border-[var(--border)] text-accent-foreground focus:ring-ring"
         />
       </td>
-      <td className="px-4 py-3 text-sm font-medium text-zinc-900">{settlement.employee_name}</td>
+      <td className="px-4 py-3 text-sm font-medium text-foreground">{settlement.employee_name}</td>
       <td className="px-4 py-3">
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-          isMonotributo ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+          isMonotributo ? 'bg-accent text-accent-foreground' : 'bg-cat-violet-subtle text-cat-violet'
         }`}>
           {isMonotributo ? 'Monotributo' : 'Rel. Dep.'}
         </span>
@@ -770,25 +770,25 @@ function SettlementRow({
                       type="number"
                       value={getFieldValue(settlement, field.key)}
                       onChange={(e) => onFieldChange(settlement.id, field.key, parseFloat(e.target.value) || 0)}
-                      className="w-28 rounded-lg border border-zinc-300 px-2 py-1.5 text-right text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                      className="w-28 rounded-lg border border-[var(--border)] px-2 py-1.5 text-right text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       min={0}
                       step={1}
                     />
                   ) : (
-                    <span className="text-sm text-zinc-600">
+                    <span className="text-sm text-muted-foreground">
                       {currencyFormatter.format(settlement[field.key] as number)}
                     </span>
                   )}
                 </td>
               ))}
-              <td className="px-4 py-3 text-sm font-semibold text-zinc-900">
+              <td className="px-4 py-3 text-sm font-semibold text-foreground">
                 {currencyFormatter.format(isEditable ? getRowTotal(settlement) : settlement.total)}
               </td>
             </>
           ) : (
             <>
               {/* Rel. Dep. rows in mixed view: span all 9 numeric columns (Sueldo→Total) */}
-              <td colSpan={9} className="px-4 py-3 text-center text-xs text-zinc-400">—</td>
+              <td colSpan={9} className="px-4 py-3 text-center text-xs text-muted-foreground">—</td>
             </>
           )}
         </>
@@ -801,12 +801,12 @@ function SettlementRow({
             <button
               onClick={handleViewPdf}
               disabled={loadingPdf}
-              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
+              className="text-xs font-medium text-foreground hover:text-[var(--primary-hover)] disabled:opacity-50"
             >
               {loadingPdf ? 'Abriendo...' : '✓ Ver PDF'}
             </button>
           ) : (
-            <span className="text-xs text-zinc-400">No cargado</span>
+            <span className="text-xs text-muted-foreground">No cargado</span>
           )}
         </td>
       )}
@@ -819,15 +819,15 @@ function SettlementRow({
               <button
                 onClick={async () => { setDownloadingInvoice(true); await onDownloadInvoice(); setDownloadingInvoice(false); }}
                 disabled={downloadingInvoice}
-                className="text-xs font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
+                className="text-xs font-medium text-foreground hover:text-[var(--primary-hover)] disabled:opacity-50"
               >
                 {downloadingInvoice ? 'Abriendo...' : '✓ Ver factura'}
               </button>
             ) : (
-              <span className="text-xs font-medium text-amber-600">Pendiente</span>
+              <span className="text-xs font-medium text-[var(--amber-600)]">Pendiente</span>
             )
           ) : (
-            <span className="text-xs text-zinc-300">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </td>
       )}
@@ -843,7 +843,7 @@ function SettlementRow({
             <button
               onClick={() => onSave(settlement.id)}
               disabled={isSaving}
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {isSaving ? 'Guardando...' : 'Guardar'}
             </button>
@@ -853,12 +853,12 @@ function SettlementRow({
               <button
                 onClick={handleDeletePdf}
                 disabled={deletingPdf}
-                className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                className="rounded-lg border border-danger/20 bg-danger-subtle px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
               >
                 {deletingPdf ? 'Eliminando...' : 'Eliminar PDF'}
               </button>
             ) : (
-              <label className="cursor-pointer rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+              <label className="cursor-pointer rounded-lg border border-[var(--orange-100)] bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent">
                 {isUploading ? 'Subiendo...' : 'Subir PDF'}
                 <input
                   type="file"

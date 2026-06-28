@@ -65,20 +65,20 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Encuesta de Salida</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Encuesta de Salida</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Tu encuesta de salida no está disponible
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100">
-            <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+            <svg className="h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h3 className="mt-4 text-lg font-semibold text-zinc-900">Encuesta no habilitada</h3>
-          <p className="mt-2 text-sm text-zinc-500">
+          <h3 className="mt-4 text-lg font-semibold text-foreground">Encuesta no habilitada</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             La encuesta de salida no ha sido habilitada para tu cuenta.<br />
             Si crees que esto es un error, contacta al equipo de Recursos Humanos.
           </p>
@@ -93,25 +93,25 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Encuesta de Salida</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Encuesta de Salida</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {employee.firstName}, gracias por completar la encuesta
           </p>
         </div>
 
-        <div className="rounded-xl border border-green-200 bg-green-50 p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-brand bg-success-subtle p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+            <svg className="h-6 w-6 text-secondary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h3 className="mt-4 text-lg font-semibold text-green-900">Encuesta enviada</h3>
-          <p className="mt-2 text-sm text-green-700">
+          <h3 className="mt-4 text-lg font-semibold text-[var(--green-700)]">Encuesta enviada</h3>
+          <p className="mt-2 text-sm text-[var(--green-700)]">
             Gracias por tomarte el tiempo de completar nuestra encuesta de salida.
             Tu feedback es muy valioso para nosotros y nos ayudará a mejorar.
           </p>
           {submittedDate && (
-            <p className="mt-4 text-xs text-green-600">
+            <p className="mt-4 text-xs text-[var(--green-700)]">
               Enviada el {new Date(submittedDate).toLocaleDateString('es-AR', {
                 day: 'numeric',
                 month: 'long',
@@ -123,9 +123,9 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
           )}
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-zinc-900 mb-4">Te deseamos lo mejor</h2>
-          <p className="text-sm text-zinc-600">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Te deseamos lo mejor</h2>
+          <p className="text-sm text-muted-foreground">
             Esperamos que tu experiencia con nosotros haya sido positiva y te deseamos mucho éxito
             en tus futuros proyectos. Las puertas siempre estarán abiertas.
           </p>
@@ -138,22 +138,22 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Encuesta de Salida</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Encuesta de Salida</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           {employee.firstName}, nos gustaría conocer tu experiencia en la empresa
         </p>
       </div>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+      <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4">
         <div className="flex gap-3">
-          <svg className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-5 w-5 text-[var(--amber-600)] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-amber-800">
+            <p className="text-sm font-medium text-[var(--amber-600)]">
               Tu feedback es importante para nosotros
             </p>
-            <p className="mt-1 text-xs text-amber-700">
+            <p className="mt-1 text-xs text-[var(--amber-600)]">
               Esta encuesta es confidencial y nos ayudará a mejorar como organización.
               Tus respuestas serán tratadas de forma anónima.
             </p>
@@ -163,12 +163,12 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800">
+          <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">
             {error}
           </div>
         )}
 
-        <div className="rounded-xl border border-zinc-200 bg-white divide-y divide-zinc-200">
+        <div className="rounded-xl border border-[var(--border)] bg-white divide-y divide-[var(--border)]">
           {OFFBOARDING_QUESTIONS.map((question, index) => (
             <QuestionField
               key={question.id}
@@ -184,7 +184,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md disabled:opacity-50"
+            className="rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50"
           >
             {isSubmitting ? 'Enviando...' : 'Enviar encuesta'}
           </button>
@@ -209,16 +209,16 @@ function QuestionField({
   return (
     <div className="p-6">
       <div className="flex items-start gap-3">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-medium text-muted-foreground">
           {index}
         </span>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-zinc-900">
+          <label className="block text-sm font-medium text-foreground">
             {question.label}
-            {question.required && <span className="text-red-500 ml-1">*</span>}
+            {question.required && <span className="text-[var(--red-600)] ml-1">*</span>}
           </label>
           {question.description && (
-            <p className="mt-1 text-xs text-zinc-500">{question.description}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{question.description}</p>
           )}
 
           <div className="mt-3">
@@ -227,7 +227,7 @@ function QuestionField({
                 type="text"
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
             )}
 
@@ -236,7 +236,7 @@ function QuestionField({
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
                 rows={4}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
             )}
 
@@ -249,8 +249,8 @@ function QuestionField({
                     onClick={() => onChange(rating)}
                     className={`flex h-10 w-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
                       value === rating
-                        ? 'border-zinc-900 bg-zinc-900 text-white'
-                        : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50'
+                        ? 'border-foreground bg-foreground text-white'
+                        : 'border-[var(--border)] bg-white text-secondary-foreground hover:border-[var(--border)] hover:bg-muted'
                     }`}
                   >
                     {rating}
@@ -266,8 +266,8 @@ function QuestionField({
                   onClick={() => onChange(true)}
                   className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
                     value === true
-                      ? 'border-green-600 bg-green-50 text-green-700'
-                      : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50'
+                      ? 'border-brand bg-success-subtle text-[var(--green-700)]'
+                      : 'border-[var(--border)] bg-white text-secondary-foreground hover:border-[var(--border)] hover:bg-muted'
                   }`}
                 >
                   Sí
@@ -277,8 +277,8 @@ function QuestionField({
                   onClick={() => onChange(false)}
                   className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
                     value === false
-                      ? 'border-red-600 bg-red-50 text-red-700'
-                      : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50'
+                      ? 'border-danger/30 bg-danger-subtle text-[var(--red-600)]'
+                      : 'border-[var(--border)] bg-white text-secondary-foreground hover:border-[var(--border)] hover:bg-muted'
                   }`}
                 >
                   No
@@ -293,8 +293,8 @@ function QuestionField({
                     key={option.value}
                     className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
                       value === option.value
-                        ? 'border-zinc-900 bg-zinc-50'
-                        : 'border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
+                        ? 'border-foreground bg-muted'
+                        : 'border-[var(--border)] hover:border-[var(--border)] hover:bg-muted'
                     }`}
                   >
                     <input
@@ -303,9 +303,9 @@ function QuestionField({
                       value={option.value}
                       checked={value === option.value}
                       onChange={() => onChange(option.value)}
-                      className="h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                      className="h-4 w-4 border-[var(--border)] text-foreground focus:ring-ring"
                     />
-                    <span className="text-sm text-zinc-700">{option.label}</span>
+                    <span className="text-sm text-secondary-foreground">{option.label}</span>
                   </label>
                 ))}
               </div>
@@ -320,8 +320,8 @@ function QuestionField({
                       key={option.value}
                       className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
                         selected
-                          ? 'border-zinc-900 bg-zinc-50'
-                          : 'border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
+                          ? 'border-foreground bg-muted'
+                          : 'border-[var(--border)] hover:border-[var(--border)] hover:bg-muted'
                       }`}
                     >
                       <input
@@ -335,9 +335,9 @@ function QuestionField({
                             onChange(currentValue.filter((v: string) => v !== option.value));
                           }
                         }}
-                        className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        className="h-4 w-4 rounded border-[var(--border)] text-foreground focus:ring-ring"
                       />
-                      <span className="text-sm text-zinc-700">{option.label}</span>
+                      <span className="text-sm text-secondary-foreground">{option.label}</span>
                     </label>
                   );
                 })}

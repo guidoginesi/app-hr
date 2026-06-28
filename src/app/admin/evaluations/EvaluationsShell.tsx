@@ -12,19 +12,19 @@ type EvaluationsShellProps = {
 export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="flex min-h-screen bg-muted text-foreground">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-zinc-200 bg-white shadow-sm">
-        <div className="flex h-16 items-center border-b border-zinc-200 px-6">
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-[var(--border)] bg-white shadow-sm">
+        <div className="flex h-16 items-center border-b border-[var(--border)] px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-              <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cat-violet-subtle">
+              <svg className="h-5 w-5 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-900">Evaluaciones</p>
-              <p className="text-xs text-zinc-500">Desempeño</p>
+              <p className="text-sm font-semibold text-foreground">Evaluaciones</p>
+              <p className="text-xs text-muted-foreground">Desempeño</p>
             </div>
           </div>
         </div>
@@ -33,8 +33,8 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
             href="/admin/evaluations"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'dashboard'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-cat-violet text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Dashboard</span>
@@ -46,8 +46,8 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
             href="/admin/evaluations/periods"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'periods'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-cat-violet text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Períodos</span>
@@ -59,8 +59,8 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
             href="/admin/evaluations/dimensions"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'dimensions'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-cat-violet text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Dimensiones</span>
@@ -72,8 +72,8 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
             href="/admin/evaluations/open-questions"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'open_questions'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-cat-violet text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Preguntas Abiertas</span>
@@ -81,13 +81,13 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
             )}
           </Link>
-          <div className="my-3 border-t border-zinc-200" />
+          <div className="my-3 border-t border-[var(--border)]" />
           <Link
             href="/admin/evaluations/all"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'all'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-cat-violet text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Todas las evaluaciones</span>
@@ -99,8 +99,8 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
             href="/admin/evaluations/recategorizations"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'recategorizations'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-cat-violet text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Recategorizaciones</span>
@@ -109,10 +109,10 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
             )}
           </Link>
         </nav>
-        <div className="border-t border-zinc-200 px-3 py-3">
+        <div className="border-t border-[var(--border)] px-3 py-3">
           <Link
             href="/admin"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-500 transition-all duration-150 hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-secondary hover:text-foreground"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -124,17 +124,17 @@ export function EvaluationsShell({ children, active }: EvaluationsShellProps) {
 
       {/* Main content */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-8 shadow-sm">
+        <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-white px-8 shadow-sm">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-900">Evaluaciones de Desempeño</h1>
-            <p className="mt-0.5 text-xs font-normal text-zinc-500">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Evaluaciones de Desempeño</h1>
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
               Configuración y seguimiento
             </p>
           </div>
           <AdminProfileDropdown />
         </header>
 
-        <main className="min-w-0 flex-1 bg-zinc-50 px-8 py-8">{children}</main>
+        <main className="min-w-0 flex-1 bg-muted px-8 py-8">{children}</main>
       </div>
     </div>
   );

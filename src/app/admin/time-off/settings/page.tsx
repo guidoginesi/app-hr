@@ -110,45 +110,45 @@ export default function TimeOffSettingsPage() {
     <TimeOffShell active="settings">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Configuración</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Configuración</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Administra los tipos de licencia y permisos de empleados
           </p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
           </div>
         ) : (
           <>
             {/* Leave Types */}
-            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">Tipos de Licencia</h2>
-                <p className="mt-1 text-sm text-zinc-500">
+            <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">Tipos de Licencia</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Configura los tipos de licencia disponibles
                 </p>
               </div>
-              <div className="divide-y divide-zinc-200">
+              <div className="divide-y divide-[var(--border)]">
                 {leaveTypes.map((type) => (
                   <div key={type.id} className="px-6 py-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-medium text-zinc-900">{type.name}</h3>
+                          <h3 className="font-medium text-foreground">{type.name}</h3>
                           <span
                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                               type.is_active
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-zinc-100 text-zinc-500'
+                                ? 'bg-success-subtle text-[var(--green-700)]'
+                                : 'bg-secondary text-muted-foreground'
                             }`}
                           >
                             {type.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm text-zinc-500">{type.description}</p>
-                        <div className="mt-2 flex flex-wrap gap-4 text-xs text-zinc-500">
+                        <p className="mt-1 text-sm text-muted-foreground">{type.description}</p>
+                        <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
                           <span>Tipo: {type.count_type === 'calendar_days' ? 'Días corridos' : type.count_type === 'business_days' ? 'Días hábiles' : 'Semanas'}</span>
                           {type.requires_attachment && <span>Requiere comprobante</span>}
                           {type.is_accumulative && <span>Acumulable</span>}
@@ -156,7 +156,7 @@ export default function TimeOffSettingsPage() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <label className="text-xs text-zinc-500">Anticipación:</label>
+                          <label className="text-xs text-muted-foreground">Anticipación:</label>
                           <input
                             type="number"
                             min="0"
@@ -165,17 +165,17 @@ export default function TimeOffSettingsPage() {
                               handleUpdateAdvanceNotice(type, parseInt(e.target.value) || 0)
                             }
                             disabled={savingType === type.id}
-                            className="w-16 rounded border border-zinc-300 px-2 py-1 text-sm"
+                            className="w-16 rounded border border-[var(--border)] px-2 py-1 text-sm"
                           />
-                          <span className="text-xs text-zinc-500">días</span>
+                          <span className="text-xs text-muted-foreground">días</span>
                         </div>
                         <button
                           onClick={() => handleToggleType(type)}
                           disabled={savingType === type.id}
                           className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
                             type.is_active
-                              ? 'border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50'
-                              : 'bg-green-600 text-white hover:bg-green-700'
+                              ? 'border border-[var(--border)] bg-white text-muted-foreground hover:bg-muted'
+                              : 'bg-success text-white hover:bg-success'
                           }`}
                         >
                           {savingType === type.id
@@ -192,10 +192,10 @@ export default function TimeOffSettingsPage() {
             </div>
 
             {/* Study Status Management */}
-            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">Licencia por Estudio</h2>
-                <p className="mt-1 text-sm text-zinc-500">
+            <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">Licencia por Estudio</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Marca a los empleados que están estudiando para habilitarles la licencia por
                   estudio
                 </p>
@@ -204,25 +204,25 @@ export default function TimeOffSettingsPage() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {/* Studying */}
                   <div>
-                    <h3 className="mb-3 text-sm font-semibold text-zinc-900">
+                    <h3 className="mb-3 text-sm font-semibold text-foreground">
                       Estudiando ({studyingEmployees.length})
                     </h3>
-                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-green-200 bg-green-50 p-3">
+                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-success/20 bg-success-subtle p-3">
                       {studyingEmployees.length === 0 ? (
-                        <p className="text-sm text-zinc-500">No hay empleados marcados como estudiando</p>
+                        <p className="text-sm text-muted-foreground">No hay empleados marcados como estudiando</p>
                       ) : (
                         studyingEmployees.map((employee) => (
                           <div
                             key={employee.id}
                             className="flex items-center justify-between rounded bg-white p-2 shadow-sm"
                           >
-                            <span className="text-sm text-zinc-900">
+                            <span className="text-sm text-foreground">
                               {employee.first_name} {employee.last_name}
                             </span>
                             <button
                               onClick={() => handleToggleStudying(employee)}
                               disabled={savingEmployee === employee.id}
-                              className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                              className="rounded px-2 py-1 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
                             >
                               {savingEmployee === employee.id ? '...' : 'Quitar'}
                             </button>
@@ -234,22 +234,22 @@ export default function TimeOffSettingsPage() {
 
                   {/* Not studying */}
                   <div>
-                    <h3 className="mb-3 text-sm font-semibold text-zinc-900">
+                    <h3 className="mb-3 text-sm font-semibold text-foreground">
                       No estudiando ({notStudyingEmployees.length})
                     </h3>
-                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-[var(--border)] bg-muted p-3">
                       {notStudyingEmployees.map((employee) => (
                         <div
                           key={employee.id}
                           className="flex items-center justify-between rounded bg-white p-2 shadow-sm"
                         >
-                          <span className="text-sm text-zinc-900">
+                          <span className="text-sm text-foreground">
                             {employee.first_name} {employee.last_name}
                           </span>
                           <button
                             onClick={() => handleToggleStudying(employee)}
                             disabled={savingEmployee === employee.id}
-                            className="rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50"
+                            className="rounded px-2 py-1 text-xs font-medium text-[var(--green-700)] hover:bg-success-subtle"
                           >
                             {savingEmployee === employee.id ? '...' : 'Marcar'}
                           </button>
@@ -262,10 +262,10 @@ export default function TimeOffSettingsPage() {
             </div>
 
             {/* Email Templates */}
-            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">Plantillas de Email</h2>
-                <p className="mt-1 text-sm text-zinc-500">
+            <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">Plantillas de Email</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Configura los emails automáticos que se envían durante el proceso de solicitudes
                 </p>
               </div>
@@ -275,9 +275,9 @@ export default function TimeOffSettingsPage() {
             </div>
 
             {/* Info Box */}
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6">
-              <h3 className="font-semibold text-blue-900">Información sobre licencias</h3>
-              <div className="mt-3 space-y-2 text-sm text-blue-800">
+            <div className="rounded-xl border border-[var(--orange-100)] bg-accent p-6">
+              <h3 className="font-semibold text-accent-foreground">Información sobre licencias</h3>
+              <div className="mt-3 space-y-2 text-sm text-accent-foreground">
                 <p>
                   <strong>Vacaciones:</strong> Según Ley 20.744, corresponden 14, 21, 28 o 35 días
                   corridos según antigüedad al 31/12.

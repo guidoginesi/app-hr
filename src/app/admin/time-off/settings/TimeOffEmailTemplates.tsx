@@ -128,19 +128,19 @@ export function TimeOffEmailTemplates() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
       </div>
     );
   }
 
   if (templates.length === 0) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
-        <p className="text-sm text-amber-800">
+      <div className="rounded-lg border border-warning/30 bg-warning-subtle p-6 text-center">
+        <p className="text-sm text-[var(--amber-600)]">
           No se encontraron plantillas de email para Time-Off.
         </p>
-        <p className="mt-2 text-xs text-amber-600">
-          Ejecuta la migración <code className="rounded bg-amber-100 px-1">migration-time-off-emails.sql</code> para crearlas.
+        <p className="mt-2 text-xs text-[var(--amber-600)]">
+          Ejecuta la migración <code className="rounded bg-warning-subtle px-1">migration-time-off-emails.sql</code> para crearlas.
         </p>
       </div>
     );
@@ -157,20 +157,20 @@ export function TimeOffEmailTemplates() {
               onClick={() => selectTemplate(template)}
               className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-colors ${
                 selectedTemplate?.id === template.id
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                  ? 'bg-warning text-white shadow-sm'
+                  : 'bg-white border border-[var(--border)] text-secondary-foreground hover:bg-muted'
               }`}
             >
               <div className="font-medium">
                 {TEMPLATE_NAMES[template.template_key] || template.template_key}
               </div>
               <div className={`text-xs mt-1 flex items-center gap-2 ${
-                selectedTemplate?.id === template.id ? 'text-amber-100' : 'text-zinc-500'
+                selectedTemplate?.id === template.id ? 'text-[var(--amber-600)]' : 'text-muted-foreground'
               }`}>
                 <span className={`inline-flex h-2 w-2 rounded-full ${
                   template.is_active 
-                    ? selectedTemplate?.id === template.id ? 'bg-green-300' : 'bg-green-500'
-                    : selectedTemplate?.id === template.id ? 'bg-zinc-300' : 'bg-zinc-400'
+                    ? selectedTemplate?.id === template.id ? 'bg-success' : 'bg-success'
+                    : selectedTemplate?.id === template.id ? 'bg-secondary' : 'bg-secondary'
                 }`} />
                 {template.is_active ? 'Activo' : 'Inactivo'}
               </div>
@@ -182,24 +182,24 @@ export function TimeOffEmailTemplates() {
       {/* Editor */}
       <div className="col-span-8">
         {selectedTemplate ? (
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-6">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-zinc-900">
+                <h3 className="text-lg font-semibold text-foreground">
                   {TEMPLATE_NAMES[selectedTemplate.template_key] || selectedTemplate.template_key}
                 </h3>
-                <p className="text-sm text-zinc-500 mt-1">{selectedTemplate.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.description}</p>
               </div>
               
               <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${editedIsActive ? 'text-green-700' : 'text-zinc-500'}`}>
+                <span className={`text-sm font-medium ${editedIsActive ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
                   {editedIsActive ? 'Activo' : 'Desactivado'}
                 </span>
                 <button
                   type="button"
                   onClick={() => setEditedIsActive(!editedIsActive)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    editedIsActive ? 'bg-green-600' : 'bg-zinc-300'
+                    editedIsActive ? 'bg-success' : 'bg-secondary'
                   }`}
                 >
                   <span
@@ -212,13 +212,13 @@ export function TimeOffEmailTemplates() {
             </div>
 
             {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-                <h4 className="text-sm font-semibold text-amber-900 mb-2">Variables disponibles</h4>
+              <div className="rounded-lg bg-warning-subtle border border-warning/30 p-4">
+                <h4 className="text-sm font-semibold text-[var(--amber-600)] mb-2">Variables disponibles</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedTemplate.variables.map((variable) => (
                     <code
                       key={variable}
-                      className="px-2 py-1 bg-white rounded text-xs font-mono text-amber-700 border border-amber-300"
+                      className="px-2 py-1 bg-white rounded text-xs font-mono text-[var(--amber-600)] border border-warning/30"
                     >
                       {`{{${variable}}}`}
                     </code>
@@ -228,7 +228,7 @@ export function TimeOffEmailTemplates() {
             )}
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-zinc-900 mb-2">
+              <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-2">
                 Asunto
               </label>
               <input
@@ -236,12 +236,12 @@ export function TimeOffEmailTemplates() {
                 type="text"
                 value={editedSubject}
                 onChange={(e) => setEditedSubject(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
 
             <div>
-              <label htmlFor="body" className="block text-sm font-medium text-zinc-900 mb-2">
+              <label htmlFor="body" className="block text-sm font-medium text-foreground mb-2">
                 Cuerpo del Email
               </label>
               <RichTextEditor
@@ -255,8 +255,8 @@ export function TimeOffEmailTemplates() {
               <div
                 className={`rounded-lg border p-4 ${
                   message.type === 'success'
-                    ? 'bg-green-50 border-green-200 text-green-800'
-                    : 'bg-red-50 border-red-200 text-red-800'
+                    ? 'bg-success-subtle border-success/20 text-[var(--green-700)]'
+                    : 'bg-danger-subtle border-danger/20 text-[var(--red-600)]'
                 }`}
               >
                 <p className="text-sm font-medium">{message.text}</p>
@@ -267,22 +267,22 @@ export function TimeOffEmailTemplates() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-50"
+                className="rounded-lg bg-warning px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-warning disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Guardar Cambios'}
               </button>
               <button
                 onClick={handleReset}
                 disabled={saving}
-                className="rounded-lg border border-zinc-300 bg-white px-6 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50"
+                className="rounded-lg border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-semibold text-secondary-foreground shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
               >
                 Restablecer
               </button>
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-            <p className="text-sm text-zinc-500">Selecciona una plantilla para editar</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+            <p className="text-sm text-muted-foreground">Selecciona una plantilla para editar</p>
           </div>
         )}
       </div>

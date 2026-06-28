@@ -36,8 +36,8 @@ export function JobsClient({ jobs }: JobsClientProps) {
 			<div className="space-y-8">
 				<div className="flex items-start justify-between">
 					<div>
-						<h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Búsquedas</h1>
-						<p className="mt-1 text-sm text-zinc-500">
+						<h1 className="text-2xl font-semibold tracking-tight text-foreground">Búsquedas</h1>
+						<p className="mt-1 text-sm text-muted-foreground">
 							Gestiona todas las posiciones abiertas y crea nuevas búsquedas
 						</p>
 					</div>
@@ -45,53 +45,53 @@ export function JobsClient({ jobs }: JobsClientProps) {
 						<button
 							type="button"
 							onClick={() => setIsBenefitsModalOpen(true)}
-							className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 hover:shadow-md"
+							className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-secondary-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md"
 						>
 							Beneficios
 						</button>
 						<button
 							type="button"
 							onClick={() => setIsCreateModalOpen(true)}
-							className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md"
+							className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md"
 						>
 							Crear Nueva búsqueda
 						</button>
 					</div>
 				</div>
 
-				<div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-					<div className="border-b border-zinc-200 px-6 py-4">
-						<h2 className="text-base font-semibold text-zinc-900">Búsquedas activas</h2>
-						<p className="mt-1 text-xs text-zinc-500">
+				<div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+					<div className="border-b border-[var(--border)] px-6 py-4">
+						<h2 className="text-base font-semibold text-foreground">Búsquedas activas</h2>
+						<p className="mt-1 text-xs text-muted-foreground">
 							{jobs?.filter((j) => j.is_published).length ?? 0} publicadas · {jobs?.length ?? 0} total
 						</p>
 					</div>
-					<ul className="divide-y divide-zinc-200">
+					<ul className="divide-y divide-[var(--border)]">
 						{jobs && jobs.length > 0 ? (
 							jobs.map((job) => (
-								<li key={job.id} className="px-6 py-5 transition-colors hover:bg-zinc-50">
+								<li key={job.id} className="px-6 py-5 transition-colors hover:bg-muted">
 									<div className="flex items-start justify-between gap-4">
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2.5">
-												<h3 className="text-base font-semibold text-zinc-900">{job.title}</h3>
+												<h3 className="text-base font-semibold text-foreground">{job.title}</h3>
 												{job.is_published ? (
 													<span className="inline-flex items-center rounded-full bg-black px-2.5 py-0.5 text-xs font-semibold text-white">
 														Publicada
 													</span>
 												) : (
-													<span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700">
+													<span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
 														Oculta
 													</span>
 												)}
 											</div>
-											<p className="mt-1.5 text-sm font-medium text-zinc-600">
+											<p className="mt-1.5 text-sm font-medium text-muted-foreground">
 												{job.department ? `${job.department} · ` : ''}
 												{job.location ?? 'Remoto'}
 											</p>
 											{job.description && (
-												<p className="mt-2.5 line-clamp-2 text-sm text-zinc-500">{job.description}</p>
+												<p className="mt-2.5 line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
 											)}
-											<p className="mt-3 text-xs font-medium text-zinc-400">
+											<p className="mt-3 text-xs font-medium text-muted-foreground">
 												Creada el {new Date(job.created_at).toLocaleDateString('es-AR', {
 													day: 'numeric',
 													month: 'long',
@@ -102,7 +102,7 @@ export function JobsClient({ jobs }: JobsClientProps) {
 										<button
 											type="button"
 											onClick={() => setEditingJobId(job.id)}
-											className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
+											className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted hover:text-black"
 										>
 											Editar
 										</button>
@@ -111,8 +111,8 @@ export function JobsClient({ jobs }: JobsClientProps) {
 							))
 						) : (
 							<li className="px-6 py-12 text-center">
-								<p className="text-sm font-medium text-zinc-500">No hay búsquedas creadas todavía</p>
-								<p className="mt-1 text-xs text-zinc-400">Crea una nueva usando el botón de arriba</p>
+								<p className="text-sm font-medium text-muted-foreground">No hay búsquedas creadas todavía</p>
+								<p className="mt-1 text-xs text-muted-foreground">Crea una nueva usando el botón de arriba</p>
 							</li>
 						)}
 					</ul>

@@ -92,11 +92,11 @@ export default function TeamTimeOffPage() {
   const pendingCount = requests.filter((r) => r.status === 'pending_leader' || r.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div className="min-h-screen bg-muted px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <Link
           href="/portal/team"
-          className="mb-6 inline-flex items-center text-sm text-zinc-500 hover:text-zinc-900"
+          className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
         >
           <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -105,23 +105,23 @@ export default function TeamTimeOffPage() {
         </Link>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-zinc-900">Solicitudes de Time Off del Equipo</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold text-foreground">Solicitudes de Time Off del Equipo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Aprueba o rechaza las solicitudes de vacaciones y licencias de tu equipo
           </p>
         </div>
 
         {/* Info about two-level approval */}
-        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <div className="mb-6 rounded-xl border border-[var(--border)] bg-muted p-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-foreground">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-900">Flujo de aprobación de 2 niveles</p>
-              <p className="mt-1 text-xs text-blue-700">
+              <p className="text-sm font-medium text-accent-foreground">Flujo de aprobación de 2 niveles</p>
+              <p className="mt-1 text-xs text-accent-foreground">
                 Tu aprobación es el <strong>primer paso</strong>. Luego HR dará la aprobación final.
               </p>
             </div>
@@ -130,15 +130,15 @@ export default function TeamTimeOffPage() {
 
         {/* Pending banner */}
         {statusFilter !== 'pending_leader' && pendingCount > 0 && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="mb-6 rounded-xl border border-warning/30 bg-warning-subtle p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-amber-800">
+              <p className="text-sm text-[var(--amber-600)]">
                 Tienes <strong>{pendingCount}</strong> solicitud{pendingCount > 1 ? 'es' : ''}{' '}
                 esperando tu aprobación
               </p>
               <button
                 onClick={() => setStatusFilter('pending_leader')}
-                className="text-sm font-medium text-amber-700 hover:text-amber-800"
+                className="text-sm font-medium text-[var(--amber-600)] hover:text-[var(--amber-600)]"
               >
                 Ver pendientes
               </button>
@@ -151,7 +151,7 @@ export default function TeamTimeOffPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">Todos los estados</option>
             <option value="pending_leader">Pendientes de mi aprobación</option>
@@ -163,17 +163,17 @@ export default function TeamTimeOffPage() {
         </div>
 
         {/* Requests list */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             </div>
           ) : requests.length === 0 ? (
-            <div className="py-12 text-center text-sm text-zinc-500">
+            <div className="py-12 text-center text-sm text-muted-foreground">
               No hay solicitudes {statusFilter === 'pending' ? 'pendientes' : ''}
             </div>
           ) : (
-            <ul className="divide-y divide-zinc-200">
+            <ul className="divide-y divide-[var(--border)]">
               {requests.map((request) => (
                 <li key={request.id} className="px-6 py-5">
                   <div className="flex items-start justify-between gap-4">
@@ -185,8 +185,8 @@ export default function TeamTimeOffPage() {
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-                          <span className="text-sm font-semibold text-emerald-700">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
+                          <span className="text-sm font-semibold text-secondary-foreground">
                             {request.employee_name
                               ?.split(' ')
                               .map((n) => n[0])
@@ -197,7 +197,7 @@ export default function TeamTimeOffPage() {
                       )}
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-zinc-900">{request.employee_name}</h3>
+                          <h3 className="font-semibold text-foreground">{request.employee_name}</h3>
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(
                               request.status as LeaveRequestStatus
@@ -206,13 +206,13 @@ export default function TeamTimeOffPage() {
                             {getStatusText(request.status as LeaveRequestStatus)}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm font-medium text-zinc-700">
+                        <p className="mt-1 text-sm font-medium text-secondary-foreground">
                           {request.leave_type_name} • {request.days_requested}{' '}
                           {request.count_type === 'weeks' 
                             ? `semana${request.days_requested > 1 ? 's' : ''}`
                             : `día${request.days_requested > 1 ? 's' : ''}`}
                         </p>
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-muted-foreground">
                           {new Date(request.start_date).toLocaleDateString('es-AR', {
                             weekday: 'short',
                             day: 'numeric',
@@ -227,24 +227,24 @@ export default function TeamTimeOffPage() {
                           })}
                         </p>
                         {request.notes && (
-                          <p className="mt-2 text-sm text-zinc-500">"{request.notes}"</p>
+                          <p className="mt-2 text-sm text-muted-foreground">"{request.notes}"</p>
                         )}
                         
                         {/* Two-level approval status */}
                         {(request.status === 'pending_hr' || request.status === 'approved' || request.status === 'rejected_hr') && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+                          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <svg className="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="h-3 w-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
                               Aprobado por ti {request.leader_approved_at && `(${new Date(request.leader_approved_at).toLocaleDateString('es-AR')})`}
                             </span>
                             {request.status === 'pending_hr' && (
-                              <span className="text-blue-600">→ Esperando HR</span>
+                              <span className="text-accent-foreground">→ Esperando HR</span>
                             )}
                             {request.status === 'approved' && request.hr_approver_name && (
                               <span className="flex items-center gap-1">
-                                <svg className="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="h-3 w-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                                 HR: {request.hr_approver_name}
@@ -255,18 +255,18 @@ export default function TeamTimeOffPage() {
                         
                         {/* Rejection reasons */}
                         {request.leader_rejection_reason && (
-                          <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                          <p className="mt-2 rounded bg-danger-subtle px-3 py-2 text-sm text-[var(--red-600)]">
                             <strong>Motivo (Líder):</strong> {request.leader_rejection_reason}
                           </p>
                         )}
                         {request.hr_rejection_reason && (
-                          <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                          <p className="mt-2 rounded bg-danger-subtle px-3 py-2 text-sm text-[var(--red-600)]">
                             <strong>Motivo (HR):</strong> {request.hr_rejection_reason}
                           </p>
                         )}
                         {/* Legacy rejection reason fallback */}
                         {request.rejection_reason && !request.leader_rejection_reason && !request.hr_rejection_reason && (
-                          <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                          <p className="mt-2 rounded bg-danger-subtle px-3 py-2 text-sm text-[var(--red-600)]">
                             <strong>Motivo rechazo:</strong> {request.rejection_reason}
                           </p>
                         )}
@@ -282,13 +282,13 @@ export default function TeamTimeOffPage() {
                               onChange={(e) => setRejectReason(e.target.value)}
                               placeholder="Motivo del rechazo..."
                               rows={2}
-                              className="w-48 rounded border border-zinc-300 px-2 py-1 text-sm"
+                              className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm"
                             />
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleReject(request.id)}
                                 disabled={!rejectReason.trim() || actionLoading === request.id}
-                                className="flex-1 rounded bg-red-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                className="flex-1 rounded bg-danger px-2 py-1.5 text-xs font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
                               >
                                 {actionLoading === request.id ? '...' : 'Rechazar'}
                               </button>
@@ -297,7 +297,7 @@ export default function TeamTimeOffPage() {
                                   setRejectingId(null);
                                   setRejectReason('');
                                 }}
-                                className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                                className="rounded border border-[var(--border)] bg-white px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                               >
                                 Cancelar
                               </button>
@@ -308,17 +308,17 @@ export default function TeamTimeOffPage() {
                             <button
                               onClick={() => handleApprove(request.id)}
                               disabled={actionLoading === request.id}
-                              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
                             >
                               {actionLoading === request.id ? '...' : 'Aprobar'}
                             </button>
                             <button
                               onClick={() => setRejectingId(request.id)}
-                              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+                              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
                             >
                               Rechazar
                             </button>
-                            <p className="mt-1 text-center text-xs text-zinc-400">
+                            <p className="mt-1 text-center text-xs text-muted-foreground">
                               Paso 1 de 2
                             </p>
                           </>

@@ -67,11 +67,11 @@ export default function TimeOffRequestsHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div className="min-h-screen bg-muted px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <Link
           href="/portal/time-off"
-          className="mb-6 inline-flex items-center text-sm text-zinc-500 hover:text-zinc-900"
+          className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
         >
           <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -81,12 +81,12 @@ export default function TimeOffRequestsHistoryPage() {
 
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-900">Historial de solicitudes</h1>
-            <p className="mt-1 text-sm text-zinc-500">Todas tus solicitudes de vacaciones y licencias</p>
+            <h1 className="text-2xl font-semibold text-foreground">Historial de solicitudes</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Todas tus solicitudes de vacaciones y licencias</p>
           </div>
           <Link
             href="/portal/time-off/new"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
           >
             Nueva solicitud
           </Link>
@@ -97,7 +97,7 @@ export default function TimeOffRequestsHistoryPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">Todos los estados</option>
             <option value="pending_leader">Pendiente Líder</option>
@@ -110,21 +110,21 @@ export default function TimeOffRequestsHistoryPage() {
         </div>
 
         {/* Requests list */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             </div>
           ) : requests.length === 0 ? (
-            <div className="py-12 text-center text-sm text-zinc-500">No hay solicitudes</div>
+            <div className="py-12 text-center text-sm text-muted-foreground">No hay solicitudes</div>
           ) : (
-            <ul className="divide-y divide-zinc-200">
+            <ul className="divide-y divide-[var(--border)]">
               {requests.map((request) => (
                 <li key={request.id} className="px-6 py-5">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-zinc-900">{request.leave_type_name}</h3>
+                        <h3 className="font-semibold text-foreground">{request.leave_type_name}</h3>
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(
                             request.status as LeaveRequestStatus
@@ -133,7 +133,7 @@ export default function TimeOffRequestsHistoryPage() {
                           {getStatusText(request.status as LeaveRequestStatus)}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-zinc-600">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {formatDateLocal(request.start_date, 'es-AR', {
                           weekday: 'long',
                           year: 'numeric',
@@ -148,7 +148,7 @@ export default function TimeOffRequestsHistoryPage() {
                           day: 'numeric',
                         })}
                       </p>
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {request.days_requested}{' '}
                         {request.count_type === 'weeks' 
                           ? `semana${request.days_requested > 1 ? 's' : ''}`
@@ -162,10 +162,10 @@ export default function TimeOffRequestsHistoryPage() {
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`flex h-5 w-5 items-center justify-center rounded-full ${
                             request.leader_approved_at 
-                              ? 'bg-green-100 text-green-600' 
+                              ? 'bg-success-subtle text-[var(--green-700)]' 
                               : request.status === 'rejected_leader'
-                              ? 'bg-red-100 text-red-600'
-                              : 'bg-zinc-100 text-zinc-400'
+                              ? 'bg-danger-subtle text-[var(--red-600)]'
+                              : 'bg-secondary text-muted-foreground'
                           }`}>
                             {request.leader_approved_at ? (
                               <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -177,10 +177,10 @@ export default function TimeOffRequestsHistoryPage() {
                               </svg>
                             ) : '1'}
                           </span>
-                          <span className="text-zinc-600">
+                          <span className="text-muted-foreground">
                             Líder: {request.leader_name || 'Pendiente'}
                             {request.leader_approved_at && (
-                              <span className="text-zinc-400"> ({new Date(request.leader_approved_at).toLocaleDateString('es-AR')})</span>
+                              <span className="text-muted-foreground"> ({new Date(request.leader_approved_at).toLocaleDateString('es-AR')})</span>
                             )}
                           </span>
                         </div>
@@ -189,10 +189,10 @@ export default function TimeOffRequestsHistoryPage() {
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`flex h-5 w-5 items-center justify-center rounded-full ${
                             request.hr_approved_at && request.status === 'approved'
-                              ? 'bg-green-100 text-green-600' 
+                              ? 'bg-success-subtle text-[var(--green-700)]' 
                               : request.status === 'rejected_hr'
-                              ? 'bg-red-100 text-red-600'
-                              : 'bg-zinc-100 text-zinc-400'
+                              ? 'bg-danger-subtle text-[var(--red-600)]'
+                              : 'bg-secondary text-muted-foreground'
                           }`}>
                             {request.hr_approved_at && request.status === 'approved' ? (
                               <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -204,10 +204,10 @@ export default function TimeOffRequestsHistoryPage() {
                               </svg>
                             ) : '2'}
                           </span>
-                          <span className="text-zinc-600">
+                          <span className="text-muted-foreground">
                             HR: {request.hr_approver_name || 'Pendiente'}
                             {request.hr_approved_at && (
-                              <span className="text-zinc-400"> ({new Date(request.hr_approved_at).toLocaleDateString('es-AR')})</span>
+                              <span className="text-muted-foreground"> ({new Date(request.hr_approved_at).toLocaleDateString('es-AR')})</span>
                             )}
                           </span>
                         </div>
@@ -215,18 +215,18 @@ export default function TimeOffRequestsHistoryPage() {
                       
                       {/* Rejection reasons */}
                       {request.leader_rejection_reason && (
-                        <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <p className="mt-2 rounded bg-danger-subtle px-3 py-2 text-sm text-[var(--red-600)]">
                           <strong>Motivo (Líder):</strong> {request.leader_rejection_reason}
                         </p>
                       )}
                       {request.hr_rejection_reason && (
-                        <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <p className="mt-2 rounded bg-danger-subtle px-3 py-2 text-sm text-[var(--red-600)]">
                           <strong>Motivo (HR):</strong> {request.hr_rejection_reason}
                         </p>
                       )}
                       {/* Legacy rejection reason fallback */}
                       {request.rejection_reason && !request.leader_rejection_reason && !request.hr_rejection_reason && (
-                        <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+                        <p className="mt-2 rounded bg-danger-subtle px-3 py-2 text-sm text-[var(--red-600)]">
                           <strong>Motivo:</strong> {request.rejection_reason}
                         </p>
                       )}
@@ -235,7 +235,7 @@ export default function TimeOffRequestsHistoryPage() {
                       <button
                         onClick={() => handleCancel(request.id)}
                         disabled={cancellingId === request.id}
-                        className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50"
+                        className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-50"
                       >
                         {cancellingId === request.id ? 'Cancelando...' : 'Cancelar'}
                       </button>

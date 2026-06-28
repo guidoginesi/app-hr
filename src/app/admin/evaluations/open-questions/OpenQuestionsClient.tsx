@@ -152,7 +152,7 @@ export function OpenQuestionsClient() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-cat-violet border-t-transparent" />
       </div>
     );
   }
@@ -162,14 +162,14 @@ export function OpenQuestionsClient() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Preguntas Abiertas</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-bold text-foreground">Preguntas Abiertas</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Configura las preguntas abiertas que aparecen en las evaluaciones
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-purple-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-cat-violet px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cat-violet"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -179,7 +179,7 @@ export function OpenQuestionsClient() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+        <div className="rounded-lg bg-danger-subtle border border-danger/20 p-4 text-sm text-[var(--red-600)]">
           {error}
         </div>
       )}
@@ -187,11 +187,11 @@ export function OpenQuestionsClient() {
       {/* Questions List */}
       <div className="space-y-4">
         {questions.length === 0 ? (
-          <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-            <p className="text-zinc-500">No hay preguntas configuradas</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+            <p className="text-muted-foreground">No hay preguntas configuradas</p>
             <button
               onClick={openCreateModal}
-              className="mt-4 text-purple-600 hover:text-purple-700 font-medium"
+              className="mt-4 text-cat-violet hover:text-cat-violet font-medium"
             >
               Crear primera pregunta
             </button>
@@ -201,17 +201,17 @@ export function OpenQuestionsClient() {
             <div
               key={question.id}
               className={`rounded-xl border bg-white p-6 shadow-sm transition-all ${
-                question.is_active ? 'border-zinc-200' : 'border-zinc-200 opacity-60'
+                question.is_active ? 'border-[var(--border)]' : 'border-[var(--border)] opacity-60'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm font-semibold text-purple-600">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-cat-violet-subtle text-sm font-semibold text-cat-violet">
                       {index + 1}
                     </span>
                     {!question.is_active && (
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                         Inactiva
                       </span>
                     )}
@@ -219,21 +219,21 @@ export function OpenQuestionsClient() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-1">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
                         Autoevaluación
                       </p>
-                      <p className="text-sm text-zinc-700">{question.label_self}</p>
+                      <p className="text-sm text-secondary-foreground">{question.label_self}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-1">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
                         Evaluación del líder
                       </p>
-                      <p className="text-sm text-zinc-700">{question.label_leader}</p>
+                      <p className="text-sm text-secondary-foreground">{question.label_leader}</p>
                     </div>
                   </div>
 
                   {question.description && (
-                    <p className="text-sm text-zinc-500">{question.description}</p>
+                    <p className="text-sm text-muted-foreground">{question.description}</p>
                   )}
                 </div>
 
@@ -242,8 +242,8 @@ export function OpenQuestionsClient() {
                     onClick={() => toggleActive(question)}
                     className={`rounded-lg p-2 transition-colors ${
                       question.is_active
-                        ? 'text-emerald-600 hover:bg-emerald-50'
-                        : 'text-zinc-400 hover:bg-zinc-100'
+                        ? 'text-[var(--green-700)] hover:bg-success-subtle'
+                        : 'text-muted-foreground hover:bg-secondary'
                     }`}
                     title={question.is_active ? 'Desactivar' : 'Activar'}
                   >
@@ -257,7 +257,7 @@ export function OpenQuestionsClient() {
                   </button>
                   <button
                     onClick={() => openEditModal(question)}
-                    className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                    className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     title="Editar"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,7 +266,7 @@ export function OpenQuestionsClient() {
                   </button>
                   <button
                     onClick={() => handleDelete(question)}
-                    className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                    className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-danger-subtle hover:text-[var(--red-600)]"
                     title="Eliminar"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,19 +284,19 @@ export function OpenQuestionsClient() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-xl font-semibold text-zinc-900 mb-6">
+            <h2 className="text-xl font-semibold text-foreground mb-6">
               {editingQuestion ? 'Editar pregunta' : 'Nueva pregunta'}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-secondary-foreground mb-1">
                   Pregunta para autoevaluación *
                 </label>
                 <textarea
                   value={formData.label_self}
                   onChange={(e) => setFormData({ ...formData, label_self: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                   rows={2}
                   placeholder="¿Cuáles consideras que son tus principales fortalezas?"
                   required
@@ -304,13 +304,13 @@ export function OpenQuestionsClient() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-secondary-foreground mb-1">
                   Pregunta para evaluación del líder *
                 </label>
                 <textarea
                   value={formData.label_leader}
                   onChange={(e) => setFormData({ ...formData, label_leader: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                   rows={2}
                   placeholder="¿Cuáles consideras que son las principales fortalezas del colaborador?"
                   required
@@ -318,13 +318,13 @@ export function OpenQuestionsClient() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-secondary-foreground mb-1">
                   Descripción / Instrucciones (opcional)
                 </label>
                 <textarea
                   value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                   rows={2}
                   placeholder="Instrucciones adicionales para responder esta pregunta..."
                 />
@@ -332,14 +332,14 @@ export function OpenQuestionsClient() {
 
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
                     Orden
                   </label>
                   <input
                     type="number"
                     value={formData.sort_order}
                     onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
-                    className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     min={0}
                   />
                 </div>
@@ -349,15 +349,15 @@ export function OpenQuestionsClient() {
                       type="checkbox"
                       checked={formData.is_active}
                       onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      className="h-4 w-4 rounded border-zinc-300 text-purple-600 focus:ring-purple-500"
+                      className="h-4 w-4 rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                     />
-                    <span className="text-sm font-medium text-zinc-700">Activa</span>
+                    <span className="text-sm font-medium text-secondary-foreground">Activa</span>
                   </label>
                 </div>
               </div>
 
               {error && (
-                <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                <div className="rounded-lg bg-danger-subtle border border-danger/20 p-3 text-sm text-[var(--red-600)]">
                   {error}
                 </div>
               )}
@@ -366,14 +366,14 @@ export function OpenQuestionsClient() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                  className="flex-1 rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-cat-violet px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cat-violet disabled:opacity-50"
                 >
                   {isSaving ? 'Guardando...' : editingQuestion ? 'Guardar cambios' : 'Crear pregunta'}
                 </button>

@@ -66,21 +66,21 @@ export default function SetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="max-w-md w-full mx-4">
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-zinc-900">
+            <h1 className="text-2xl font-bold text-foreground">
               ¡Bienvenido{user?.user_metadata?.first_name ? `, ${user.user_metadata.first_name}` : ''}!
             </h1>
-            <p className="text-zinc-600 mt-2">
+            <p className="text-muted-foreground mt-2">
               Configurá tu contraseña para acceder al portal
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-zinc-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-secondary-foreground mb-1">
                 Nueva contraseña
               </label>
               <div className="relative">
@@ -89,7 +89,7 @@ export default function SetPasswordPage() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 pr-10 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 pr-10 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder="Mínimo 6 caracteres"
                   required
                   minLength={6}
@@ -97,7 +97,7 @@ export default function SetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -115,7 +115,7 @@ export default function SetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-secondary-foreground mb-1">
                 Confirmar contraseña
               </label>
               <div className="relative">
@@ -124,14 +124,14 @@ export default function SetPasswordPage() {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 pr-10 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 pr-10 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder="Repetí tu contraseña"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? (
@@ -149,7 +149,7 @@ export default function SetPasswordPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              <div className="bg-danger-subtle border border-danger/20 rounded-lg p-3 text-sm text-[var(--red-600)]">
                 {error}
               </div>
             )}
@@ -157,7 +157,7 @@ export default function SetPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Guardando...' : 'Guardar contraseña y continuar'}
             </button>

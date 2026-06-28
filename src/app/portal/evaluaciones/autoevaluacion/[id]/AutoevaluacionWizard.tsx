@@ -245,18 +245,18 @@ export function AutoevaluacionWizard({
   const currentDimension = currentDimensionIndex >= 0 ? dimensions[currentDimensionIndex] : null;
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-10 border-b border-[var(--border)] bg-white shadow-sm">
         <div className="mx-auto max-w-4xl px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-zinc-900">Autoevaluación</h1>
-              <p className="text-sm text-zinc-500">{evaluation.period?.name}</p>
+              <h1 className="text-lg font-semibold text-foreground">Autoevaluación</h1>
+              <p className="text-sm text-muted-foreground">{evaluation.period?.name}</p>
             </div>
             <button
               onClick={() => router.push('/portal/evaluaciones')}
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Guardar y salir
             </button>
@@ -270,15 +270,15 @@ export function AutoevaluacionWizard({
       {/* Content */}
       <main className="mx-auto max-w-4xl px-6 py-8">
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+          <div className="mb-6 rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
         )}
 
         {/* Instructions Step */}
         {currentStep === 'instructions' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <h2 className="text-xl font-semibold text-zinc-900">Instrucciones</h2>
-              <div className="mt-6 space-y-4 text-zinc-600">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <h2 className="text-xl font-semibold text-foreground">Instrucciones</h2>
+              <div className="mt-6 space-y-4 text-muted-foreground">
                 <p>A continuación completarás tu autoevaluación de desempeño para el período {evaluation.period?.year}.</p>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>Respondé con honestidad, basándote en hechos concretos.</li>
@@ -288,13 +288,13 @@ export function AutoevaluacionWizard({
                 </ul>
               </div>
               
-              <div className="mt-8 p-4 rounded-lg bg-purple-50 border border-purple-200">
-                <h3 className="text-sm font-semibold text-purple-900 mb-3">Escala de evaluación</h3>
+              <div className="mt-8 p-4 rounded-lg bg-secondary border border-[var(--border)]">
+                <h3 className="text-sm font-semibold text-foreground mb-3">Escala de evaluación</h3>
                 <div className="space-y-2">
                   {SCALE_DEFINITIONS.map((def) => (
                     <div key={def.min} className="flex items-center gap-2">
-                      <span className="w-10 text-sm font-semibold text-purple-700">{def.min}-{def.max}</span>
-                      <span className="text-sm text-purple-600">{def.label}</span>
+                      <span className="w-10 text-sm font-semibold text-foreground">{def.min}-{def.max}</span>
+                      <span className="text-sm text-foreground">{def.label}</span>
                     </div>
                   ))}
                 </div>
@@ -306,15 +306,15 @@ export function AutoevaluacionWizard({
         {/* Dimension Steps */}
         {currentDimension && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
               <div className="flex items-center gap-3 mb-6">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-lg font-semibold text-purple-600">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-lg font-semibold text-secondary-foreground">
                   {currentDimensionIndex + 1}
                 </span>
                 <div>
-                  <h2 className="text-xl font-semibold text-zinc-900">{currentDimension.name}</h2>
+                  <h2 className="text-xl font-semibold text-foreground">{currentDimension.name}</h2>
                   {currentDimension.description && (
-                    <p className="text-sm text-zinc-500">{currentDimension.description}</p>
+                    <p className="text-sm text-muted-foreground">{currentDimension.description}</p>
                   )}
                 </div>
               </div>
@@ -323,17 +323,17 @@ export function AutoevaluacionWizard({
                 {currentDimension.items.map((item, idx) => (
                   <div key={item.id} className={`space-y-4 p-4 rounded-lg border ${
                     !responses[item.id]?.score && error?.includes('puntuación')
-                      ? 'bg-red-50 border-red-200'
-                      : 'bg-zinc-50 border-zinc-200'
+                      ? 'bg-danger-subtle border-danger/20'
+                      : 'bg-muted border-[var(--border)]'
                   }`}>
-                    <p className="font-medium text-zinc-800">
+                    <p className="font-medium text-secondary-foreground">
                       {idx + 1}. {item.statement}
                     </p>
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-zinc-500">Puntuación <span className="text-red-500">*</span></span>
+                        <span className="text-xs font-medium text-muted-foreground">Puntuación <span className="text-[var(--red-600)]">*</span></span>
                         {!responses[item.id]?.score && error?.includes('puntuación') && (
-                          <span className="text-xs text-red-500">Requerido</span>
+                          <span className="text-xs text-[var(--red-600)]">Requerido</span>
                         )}
                       </div>
                       <ScaleInput
@@ -342,23 +342,23 @@ export function AutoevaluacionWizard({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-zinc-500 mb-1">
-                        Explicá tu puntuación <span className="text-red-500">*</span>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Explicá tu puntuación <span className="text-[var(--red-600)]">*</span>
                       </label>
                       <textarea
                         value={responses[item.id]?.explanation || ''}
                         onChange={(e) => handleResponseChange(item.id, 'explanation', e.target.value)}
                         rows={2}
                         required
-                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 ${
+                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] ${
                           responses[item.id]?.score && !responses[item.id]?.explanation?.trim() 
-                            ? 'border-red-300 bg-red-50' 
-                            : 'border-zinc-300'
+                            ? 'border-danger/20 bg-danger-subtle' 
+                            : 'border-[var(--border)]'
                         }`}
                         placeholder="Comentarios o ejemplos (obligatorio)..."
                       />
                       {responses[item.id]?.score && !responses[item.id]?.explanation?.trim() && (
-                        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                        <p className="mt-1 text-xs text-[var(--red-600)]">Este campo es obligatorio</p>
                       )}
                     </div>
                   </div>
@@ -371,20 +371,20 @@ export function AutoevaluacionWizard({
         {/* Open Questions Step */}
         {currentStep === 'open_questions' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <h2 className="text-xl font-semibold text-zinc-900 mb-6">Preguntas abiertas</h2>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <h2 className="text-xl font-semibold text-foreground mb-6">Preguntas abiertas</h2>
               
               <div className="space-y-6">
                 {selfOpenQuestions.map((q) => (
                   <div key={q.key} className="space-y-2">
-                    <label className="block text-sm font-medium text-zinc-700">
+                    <label className="block text-sm font-medium text-secondary-foreground">
                       {q.label}
                     </label>
                     <textarea
                       value={openQuestions[q.key] || ''}
                       onChange={(e) => handleOpenQuestionChange(q.key, e.target.value)}
                       rows={4}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                     />
                   </div>
                 ))}
@@ -396,28 +396,28 @@ export function AutoevaluacionWizard({
         {/* Review Step */}
         {currentStep === 'review' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <h2 className="text-xl font-semibold text-zinc-900 mb-6">Revisión y envío</h2>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <h2 className="text-xl font-semibold text-foreground mb-6">Revisión y envío</h2>
               
               {(() => {
                 const { dimensionScores, totalScore } = calculateScores();
                 return (
                   <>
-                    <div className="mb-8 p-6 rounded-lg bg-purple-50 border border-purple-200 text-center">
-                      <p className="text-sm font-medium text-purple-700">Puntaje total</p>
-                      <p className="text-4xl font-bold text-purple-900 mt-2">
-                        {totalScore.toFixed(1)}<span className="text-lg text-purple-600">/10</span>
+                    <div className="mb-8 p-6 rounded-lg bg-secondary border border-[var(--border)] text-center">
+                      <p className="text-sm font-medium text-foreground">Puntaje total</p>
+                      <p className="text-4xl font-bold text-foreground mt-2">
+                        {totalScore.toFixed(1)}<span className="text-lg text-foreground">/10</span>
                       </p>
                     </div>
 
-                    <h3 className="text-sm font-semibold text-zinc-700 mb-4">Puntaje por dimensión</h3>
+                    <h3 className="text-sm font-semibold text-secondary-foreground mb-4">Puntaje por dimensión</h3>
                     <div className="space-y-3 mb-8">
                       {dimensions.map((dim) => {
                         const score = dimensionScores[dim.id];
                         return (
-                          <div key={dim.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-50">
-                            <span className="text-sm text-zinc-700">{dim.name}</span>
-                            <span className="text-sm font-semibold text-zinc-900">
+                          <div key={dim.id} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                            <span className="text-sm text-secondary-foreground">{dim.name}</span>
+                            <span className="text-sm font-semibold text-foreground">
                               {score ? score.toFixed(1) : '-'}/10
                             </span>
                           </div>
@@ -428,8 +428,8 @@ export function AutoevaluacionWizard({
                 );
               })()}
 
-              <div className="border-t border-zinc-200 pt-6">
-                <p className="text-sm text-zinc-500 mb-4">
+              <div className="border-t border-[var(--border)] pt-6">
+                <p className="text-sm text-muted-foreground mb-4">
                   Una vez enviada la evaluación no podrás modificarla. ¿Estás seguro de enviar?
                 </p>
               </div>
@@ -442,7 +442,7 @@ export function AutoevaluacionWizard({
           <button
             onClick={goPrev}
             disabled={currentStep === 'instructions' || saving}
-            className="rounded-lg border border-zinc-300 bg-white px-6 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+            className="rounded-lg border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
           >
             Anterior
           </button>
@@ -451,7 +451,7 @@ export function AutoevaluacionWizard({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {submitting ? 'Enviando...' : 'Enviar evaluación'}
             </button>
@@ -459,7 +459,7 @@ export function AutoevaluacionWizard({
             <button
               onClick={goNext}
               disabled={saving}
-              className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {saving ? 'Guardando...' : 'Siguiente'}
             </button>
@@ -468,9 +468,9 @@ export function AutoevaluacionWizard({
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200 bg-white py-4">
+      <footer className="border-t border-[var(--border)] bg-white py-4">
         <div className="mx-auto max-w-4xl px-6">
-          <p className="text-xs text-zinc-500 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Evaluación de Desempeño {evaluation.period?.year} — {employee.first_name} {employee.last_name}
           </p>
         </div>

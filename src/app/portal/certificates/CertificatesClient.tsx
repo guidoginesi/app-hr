@@ -9,9 +9,9 @@ const CERTIFICATE_TYPE_LABELS: Record<string, string> = {
 };
 
 const CERTIFICATE_TYPE_COLORS: Record<string, string> = {
-  exam: 'bg-blue-100 text-blue-700',
-  medical: 'bg-red-100 text-red-700',
-  travel_assistance: 'bg-purple-100 text-purple-700',
+  exam: 'bg-accent text-accent-foreground',
+  medical: 'bg-danger-subtle text-[var(--red-600)]',
+  travel_assistance: 'bg-secondary text-foreground',
 };
 
 type Certificate = {
@@ -128,14 +128,14 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Certificados</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Certificados</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Cargá tus certificados médicos, de exámen o comprobantes de viaje
           </p>
         </div>
         <button
           onClick={openModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -146,26 +146,26 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
 
       {/* List */}
       {certificates.length === 0 ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="mt-4 text-sm text-zinc-500">No tenés certificados cargados aún</p>
+          <p className="mt-4 text-sm text-muted-foreground">No tenés certificados cargados aún</p>
           <button
             onClick={openModal}
-            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-[var(--primary-hover)]"
           >
             Cargar tu primer certificado →
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-          <ul className="divide-y divide-zinc-100">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
+          <ul className="divide-y divide-[var(--border)]">
             {certificates.map((cert) => (
               <li key={cert.id} className="flex items-center gap-4 px-6 py-4">
                 {/* Icon */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100">
-                  <svg className="h-5 w-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                  <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
@@ -173,23 +173,23 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-zinc-900 truncate">{cert.file_name}</p>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CERTIFICATE_TYPE_COLORS[cert.type] || 'bg-zinc-100 text-zinc-600'}`}>
+                    <p className="text-sm font-medium text-foreground truncate">{cert.file_name}</p>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CERTIFICATE_TYPE_COLORS[cert.type] || 'bg-secondary text-muted-foreground'}`}>
                       {CERTIFICATE_TYPE_LABELS[cert.type] || cert.type}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       {new Date(cert.uploaded_at).toLocaleDateString('es-AR', {
                         day: 'numeric', month: 'long', year: 'numeric',
                       })}
                     </p>
                     {cert.file_size && (
-                      <p className="text-xs text-zinc-400">{formatFileSize(cert.file_size)}</p>
+                      <p className="text-xs text-muted-foreground">{formatFileSize(cert.file_size)}</p>
                     )}
                   </div>
                   {cert.notes && (
-                    <p className="mt-1 text-xs text-zinc-500 italic">{cert.notes}</p>
+                    <p className="mt-1 text-xs text-muted-foreground italic">{cert.notes}</p>
                   )}
                 </div>
 
@@ -198,14 +198,14 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
                   <button
                     onClick={() => handleDownload(cert)}
                     disabled={downloadingId === cert.id}
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                    className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                   >
                     {downloadingId === cert.id ? 'Descargando...' : 'Descargar'}
                   </button>
                   <button
                     onClick={() => handleDelete(cert)}
                     disabled={deletingId === cert.id}
-                    className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg border border-danger/20 bg-white px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                   >
                     {deletingId === cert.id ? '...' : 'Eliminar'}
                   </button>
@@ -222,9 +222,9 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/50" onClick={closeModal} />
             <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">Cargar certificado</h2>
-                <button onClick={closeModal} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100">
+              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">Cargar certificado</h2>
+                <button onClick={closeModal} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -234,13 +234,13 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
               <div className="p-6 space-y-4">
                 {/* Type */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Tipo de certificado <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Tipo de certificado <span className="text-[var(--red-600)]">*</span>
                   </label>
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">Seleccioná un tipo</option>
                     <option value="exam">Certificado de exámen</option>
@@ -251,29 +251,29 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
 
                 {/* File */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Archivo <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Archivo <span className="text-[var(--red-600)]">*</span>
                   </label>
                   <div
-                    className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 p-6 hover:border-emerald-400 hover:bg-emerald-50 transition-colors"
+                    className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--border)] p-6 hover:border-brand hover:bg-success-subtle transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {form.file ? (
                       <div className="text-center">
-                        <svg className="mx-auto h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="mx-auto h-8 w-8 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="mt-2 text-sm font-medium text-zinc-900">{form.file.name}</p>
-                        <p className="text-xs text-zinc-500">{formatFileSize(form.file.size)}</p>
-                        <p className="mt-1 text-xs text-emerald-600">Click para cambiar</p>
+                        <p className="mt-2 text-sm font-medium text-foreground">{form.file.name}</p>
+                        <p className="text-xs text-muted-foreground">{formatFileSize(form.file.size)}</p>
+                        <p className="mt-1 text-xs text-[var(--green-700)]">Click para cambiar</p>
                       </div>
                     ) : (
                       <div className="text-center">
-                        <svg className="mx-auto h-8 w-8 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="mx-auto h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        <p className="mt-2 text-sm font-medium text-zinc-700">Click para seleccionar archivo</p>
-                        <p className="text-xs text-zinc-500">PDF, JPG, PNG hasta 10 MB</p>
+                        <p className="mt-2 text-sm font-medium text-secondary-foreground">Click para seleccionar archivo</p>
+                        <p className="text-xs text-muted-foreground">PDF, JPG, PNG hasta 10 MB</p>
                       </div>
                     )}
                     <input
@@ -288,37 +288,37 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Observaciones <span className="text-zinc-400 font-normal">(opcional)</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Observaciones <span className="text-muted-foreground font-normal">(opcional)</span>
                   </label>
                   <textarea
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                     rows={3}
                     placeholder="Ej: Certificado del exámen del 15/03, materia Cálculo II..."
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {uploadError && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                    <p className="text-sm text-red-700">{uploadError}</p>
+                  <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3">
+                    <p className="text-sm text-[var(--red-600)]">{uploadError}</p>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                 <button
                   onClick={closeModal}
                   disabled={uploading}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleUpload}
                   disabled={uploading || !form.type || !form.file}
-                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
                     <>

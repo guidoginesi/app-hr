@@ -226,8 +226,8 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 	return (
 		<Modal isOpen={true} onClose={onClose} title="" maxWidth="max-w-6xl">
 			{loading && (
-				<div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-center">
-					<p className="text-xs text-zinc-600">Actualizando datos...</p>
+				<div className="mb-4 rounded-lg border border-[var(--border)] bg-muted p-3 text-center">
+					<p className="text-xs text-muted-foreground">Actualizando datos...</p>
 				</div>
 			)}
 
@@ -235,24 +235,24 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 			<div className="mb-6">
 				<div className="flex items-start justify-between">
 					<div>
-						<h2 className="text-2xl font-bold text-zinc-900">{displayCandidate.name}</h2>
+						<h2 className="text-2xl font-bold text-foreground">{displayCandidate.name}</h2>
 						{mainApplication && (
 							<div className="flex items-center gap-2 mt-1">
-								<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 								</svg>
-								<p className="text-sm text-zinc-600">{mainApplication.job_title}</p>
+								<p className="text-sm text-muted-foreground">{mainApplication.job_title}</p>
 							</div>
 						)}
 					</div>
 					{mainApplication?.current_stage && (
 						<div className="flex items-center gap-2">
-							<span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800">
+							<span className="inline-flex items-center gap-1.5 rounded-full bg-warning-subtle px-3 py-1 text-xs font-medium text-[var(--amber-600)]">
 								{currentStageLabel}
 								<button
 									type="button"
 									onClick={() => {}}
-									className="text-yellow-600 hover:text-yellow-800"
+									className="text-[var(--amber-600)] hover:text-[var(--amber-600)]"
 								>
 									<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -267,86 +267,86 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 			{/* Tres tarjetas horizontales */}
 			<div className="grid grid-cols-3 gap-4 mb-6">
 				{/* Información de Contacto */}
-				<div className="rounded-lg border border-zinc-200 bg-white p-4">
+				<div className="rounded-lg border border-[var(--border)] bg-white p-4">
 					<div className="flex items-center gap-2 mb-3">
-						<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
 						</svg>
-						<h3 className="text-sm font-semibold text-zinc-900">Información de Contacto</h3>
+						<h3 className="text-sm font-semibold text-foreground">Información de Contacto</h3>
 					</div>
 					<div className="space-y-2">
 						<div className="flex items-center gap-2">
-							<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 							</svg>
-							<a href={`mailto:${displayCandidate.email}`} className="text-sm text-zinc-700 hover:text-black">
+							<a href={`mailto:${displayCandidate.email}`} className="text-sm text-secondary-foreground hover:text-black">
 								{displayCandidate.email}
 							</a>
 						</div>
 						{displayCandidate.phone && (
 							<div className="flex items-center gap-2">
-								<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
 								</svg>
-								<a href={`tel:${displayCandidate.phone}`} className="text-sm text-zinc-700 hover:text-black">
+								<a href={`tel:${displayCandidate.phone}`} className="text-sm text-secondary-foreground hover:text-black">
 									{displayCandidate.phone}
 								</a>
 							</div>
 						)}
 						{displayCandidate.provincia && (
 							<div className="flex items-center gap-2">
-								<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
 								</svg>
-								<span className="text-sm text-zinc-700">{displayCandidate.provincia}</span>
+								<span className="text-sm text-secondary-foreground">{displayCandidate.provincia}</span>
 							</div>
 						)}
 					</div>
 				</div>
 
 				{/* Datos de la Aplicación */}
-				<div className="rounded-lg border border-zinc-200 bg-white p-4">
+				<div className="rounded-lg border border-[var(--border)] bg-white p-4">
 					<div className="flex items-center gap-2 mb-3">
-						<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 						</svg>
-						<h3 className="text-sm font-semibold text-zinc-900">Datos de la Aplicación</h3>
+						<h3 className="text-sm font-semibold text-foreground">Datos de la Aplicación</h3>
 					</div>
 					<div className="space-y-2">
 						{mainApplication && (
 							<>
 								<div className="flex items-center gap-2">
-									<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 									</svg>
 									<div className="flex flex-col">
-										<span className="text-sm text-zinc-700">
+										<span className="text-sm text-secondary-foreground">
 											{new Date(mainApplication.created_at).toLocaleDateString('es-AR', {
 												day: 'numeric',
 												month: 'long',
 												year: 'numeric'
 											})}
 										</span>
-										<span className="text-xs text-zinc-500">
+										<span className="text-xs text-muted-foreground">
 											Hace {getStageDuration(mainApplication.created_at)}
 										</span>
 									</div>
 								</div>
 								{mainApplication.salary_expectation && (
 									<div className="flex items-center gap-2">
-										<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 										</svg>
-										<span className="text-sm text-zinc-700">Expectativa salarial: {formatCurrency(mainApplication.salary_expectation)}</span>
+										<span className="text-sm text-secondary-foreground">Expectativa salarial: {formatCurrency(mainApplication.salary_expectation)}</span>
 									</div>
 								)}
 								{mainApplication.english_level && (
 									<div className="flex items-center gap-2">
-										<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
 										</svg>
-										<span className="text-sm text-zinc-700">Nivel de inglés: {mainApplication.english_level}</span>
+										<span className="text-sm text-secondary-foreground">Nivel de inglés: {mainApplication.english_level}</span>
 									</div>
 								)}
 							</>
@@ -355,12 +355,12 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 				</div>
 
 				{/* Enlaces Externos */}
-				<div className="rounded-lg border border-zinc-200 bg-white p-4">
+				<div className="rounded-lg border border-[var(--border)] bg-white p-4">
 					<div className="flex items-center gap-2 mb-3">
-						<svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
 						</svg>
-						<h3 className="text-sm font-semibold text-zinc-900">Enlaces Externos</h3>
+						<h3 className="text-sm font-semibold text-foreground">Enlaces Externos</h3>
 					</div>
 					<div className="space-y-2">
 						{displayCandidate.linkedin_url ? (
@@ -368,7 +368,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								href={displayCandidate.linkedin_url}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+								className="flex items-center gap-2 text-sm text-accent-foreground hover:text-accent-foreground hover:underline"
 							>
 								<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
 									<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -376,14 +376,14 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								LinkedIn
 							</a>
 						) : (
-							<p className="text-sm text-zinc-400">Sin LinkedIn registrado</p>
+							<p className="text-sm text-muted-foreground">Sin LinkedIn registrado</p>
 						)}
 						{mainApplication?.resume_url && (
 							<a
 								href={mainApplication.resume_url}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="flex items-center gap-2 text-sm text-zinc-700 hover:text-black"
+								className="flex items-center gap-2 text-sm text-secondary-foreground hover:text-black"
 							>
 								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -392,7 +392,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 							</a>
 						)}
 						{!displayCandidate.linkedin_url && !mainApplication?.resume_url && (
-							<p className="text-sm text-zinc-400">Sin enlaces registrados</p>
+							<p className="text-sm text-muted-foreground">Sin enlaces registrados</p>
 						)}
 					</div>
 				</div>
@@ -416,20 +416,20 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 					
 					{/* Convert to Employee button - only show when HIRED */}
 					{mainApplication.final_outcome === FinalOutcome.HIRED && (
-						<div className="mt-4 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+						<div className="mt-4 flex items-center gap-3 rounded-lg border border-success/20 bg-success-subtle p-4">
 							<div className="flex-shrink-0">
-								<svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<svg className="h-6 w-6 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
 							</div>
 							<div className="flex-1">
-								<p className="text-sm font-semibold text-green-800">Candidato contratado</p>
-								<p className="text-xs text-green-700">Este candidato fue seleccionado para el puesto</p>
+								<p className="text-sm font-semibold text-[var(--green-700)]">Candidato contratado</p>
+								<p className="text-xs text-[var(--green-700)]">Este candidato fue seleccionado para el puesto</p>
 							</div>
 							<button
 								type="button"
 								onClick={() => setShowConvertModal(true)}
-								className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+								className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success transition-colors"
 							>
 								Convertir a Empleado
 							</button>
@@ -440,14 +440,14 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 
 			{/* Tabs */}
 			<div className="mb-4">
-				<div className="flex gap-1 border-b border-zinc-200">
+				<div className="flex gap-1 border-b border-[var(--border)]">
 					<button
 						type="button"
 						onClick={() => setActiveTab('history')}
 						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
 							activeTab === 'history'
 								? 'border-b-2 border-black text-black'
-								: 'text-zinc-600 hover:text-zinc-900'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -461,7 +461,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
 							activeTab === 'cv'
 								? 'border-b-2 border-black text-black'
-								: 'text-zinc-600 hover:text-zinc-900'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -475,7 +475,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
 							activeTab === 'notes'
 								? 'border-b-2 border-black text-black'
-								: 'text-zinc-600 hover:text-zinc-900'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -489,7 +489,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 						className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
 							activeTab === 'rating'
 								? 'border-b-2 border-black text-black'
-								: 'text-zinc-600 hover:text-zinc-900'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -524,8 +524,8 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 							
 							if (combinedHistory.length === 0) {
 								return (
-									<div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
-										<p className="text-sm text-zinc-500">No hay historial disponible</p>
+									<div className="rounded-lg border border-[var(--border)] bg-white p-8 text-center">
+										<p className="text-sm text-muted-foreground">No hay historial disponible</p>
 									</div>
 								);
 							}
@@ -554,7 +554,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 										: getStageDuration(entry.changed_at); // Etapa actual
 									
 									return (
-										<div key={`stage-${entry.id}`} className="rounded-lg border border-zinc-200 bg-white p-4">
+										<div key={`stage-${entry.id}`} className="rounded-lg border border-[var(--border)] bg-white p-4">
 										<div className="flex items-start justify-between gap-4">
 											<div className="flex-1 space-y-2">
 												{/* Título y fecha en la misma línea */}
@@ -562,36 +562,36 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 													<div className="flex items-center gap-2">
 														{entry.from_stage && (
 															<>
-																<span className="text-sm text-zinc-500">
+																<span className="text-sm text-muted-foreground">
 																	{StageLabels[entry.from_stage]}
 																</span>
-																<svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 																</svg>
 															</>
 														)}
-														<span className="text-sm font-semibold text-zinc-900">
+														<span className="text-sm font-semibold text-foreground">
 															{StageLabels[entry.to_stage]}
 														</span>
-														<span className="text-xs text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-100">
+														<span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-secondary">
 															{StageStatusLabels[entry.status]}
 														</span>
 													</div>
 													
 													{/* Fecha y duración alineadas a la derecha */}
-													<div className="flex items-center gap-3 text-xs text-zinc-500">
+													<div className="flex items-center gap-3 text-xs text-muted-foreground">
 														<div className="flex items-center gap-1.5">
 															<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 															</svg>
 															<span className="whitespace-nowrap">{dateStr} - {timeStr}</span>
 														</div>
-														<span className="text-zinc-300">·</span>
+														<span className="text-muted-foreground">·</span>
 														<div className="flex items-center gap-1.5">
 															<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 															</svg>
-															<span className="font-medium text-zinc-600 whitespace-nowrap">
+															<span className="font-medium text-muted-foreground whitespace-nowrap">
 																{nextStageEntry ? `Duración: ${duration}` : `Lleva: ${duration}`}
 															</span>
 														</div>
@@ -599,14 +599,14 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												</div>
 												
 												{entry.notes && entry.notes.trim() !== '' && (
-													<div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+													<div className="mt-3 rounded-lg bg-warning-subtle border border-warning/30 px-3 py-2">
 														<div className="flex items-start gap-2">
-															<svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<svg className="w-4 h-4 text-[var(--amber-600)] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
 															</svg>
 															<div className="flex-1">
-																<p className="text-xs font-semibold text-amber-900 mb-1">Notas:</p>
-																<div className="text-sm text-amber-800 leading-relaxed space-y-0.5">
+																<p className="text-xs font-semibold text-[var(--amber-600)] mb-1">Notas:</p>
+																<div className="text-sm text-[var(--amber-600)] leading-relaxed space-y-0.5">
 																	{entry.notes.split(/\.\s+/).filter(Boolean).map((line, i, arr) => (
 																		<p key={i}>{line}{i < arr.length - 1 ? '.' : ''}</p>
 																	))}
@@ -634,10 +634,10 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								});
 								
 								return (
-									<div key={`note-${note.id}`} className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+									<div key={`note-${note.id}`} className="rounded-lg border-2 border-[var(--orange-100)] bg-accent p-4">
 										<div className="flex items-start gap-3">
 											<div className="flex-shrink-0 mt-0.5">
-												<div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+												<div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
 													<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
 													</svg>
@@ -646,15 +646,15 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 											<div className="flex-1 space-y-2">
 												{/* Título y fecha en la misma línea */}
 												<div className="flex items-center justify-between gap-4">
-													<span className="text-sm font-semibold text-blue-900">Nota del Reclutador</span>
-													<div className="flex items-center gap-1.5 text-xs text-blue-700">
+													<span className="text-sm font-semibold text-accent-foreground">Nota del Reclutador</span>
+													<div className="flex items-center gap-1.5 text-xs text-accent-foreground">
 														<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 														</svg>
 														<span className="whitespace-nowrap">{dateStr} - {timeStr}</span>
 													</div>
 												</div>
-												<div className="mt-1 text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">
+												<div className="mt-1 text-sm text-accent-foreground leading-relaxed whitespace-pre-wrap">
 													{note.content}
 												</div>
 											</div>
@@ -676,10 +676,10 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								});
 								
 								return (
-									<div key={`email-${email.id}`} className="rounded-lg border-2 border-green-200 bg-green-50 p-4">
+									<div key={`email-${email.id}`} className="rounded-lg border-2 border-success/20 bg-success-subtle p-4">
 										<div className="flex items-start gap-3">
 											<div className="flex-shrink-0 mt-0.5">
-												<div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+												<div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
 													<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 													</svg>
@@ -689,14 +689,14 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												{/* Título y fecha en la misma línea */}
 												<div className="flex items-center justify-between gap-4">
 													<div className="flex items-center gap-2">
-														<span className="text-sm font-semibold text-green-900">Email Enviado</span>
+														<span className="text-sm font-semibold text-[var(--green-700)]">Email Enviado</span>
 														{email.error && (
-															<span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700">
+															<span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-danger-subtle text-[var(--red-600)]">
 																Error
 															</span>
 														)}
 													</div>
-													<div className="flex items-center gap-1.5 text-xs text-green-700">
+													<div className="flex items-center gap-1.5 text-xs text-[var(--green-700)]">
 														<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 														</svg>
@@ -706,9 +706,9 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												
 												{/* Subject and Body combined */}
 												<div className="mt-2 space-y-1">
-													<p className="text-xs font-semibold text-green-900">{email.subject}</p>
+													<p className="text-xs font-semibold text-[var(--green-700)]">{email.subject}</p>
 													<div>
-														<p className={`text-xs text-green-800 leading-snug whitespace-pre-wrap ${!expandedEmails.has(email.id) ? 'line-clamp-3' : ''}`}>
+														<p className={`text-xs text-[var(--green-700)] leading-snug whitespace-pre-wrap ${!expandedEmails.has(email.id) ? 'line-clamp-3' : ''}`}>
 															{email.body}
 														</p>
 														{email.body.length > 150 && (
@@ -725,7 +725,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 																		return newSet;
 																	});
 																}}
-																className="mt-1 text-xs font-medium text-green-700 hover:text-green-900 underline"
+																className="mt-1 text-xs font-medium text-foreground hover:text-[var(--primary-hover)] underline"
 															>
 																{expandedEmails.has(email.id) ? 'Ver menos' : 'Ver más'}
 															</button>
@@ -735,9 +735,9 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												
 												{/* Error message if any */}
 												{email.error && (
-													<div className="mt-2 p-2 rounded bg-red-100 border border-red-200">
-														<p className="text-xs font-medium text-red-800 mb-1">Error:</p>
-														<p className="text-xs text-red-700">{email.error}</p>
+													<div className="mt-2 p-2 rounded bg-danger-subtle border border-danger/20">
+														<p className="text-xs font-medium text-[var(--red-600)] mb-1">Error:</p>
+														<p className="text-xs text-[var(--red-600)]">{email.error}</p>
 													</div>
 												)}
 											</div>
@@ -759,10 +759,10 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								});
 								
 								return (
-									<div key={`rating-${rating.id}`} className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4">
+									<div key={`rating-${rating.id}`} className="rounded-lg border-2 border-warning/30 bg-warning-subtle p-4">
 										<div className="flex items-start gap-3">
 											<div className="flex-shrink-0 mt-0.5">
-												<div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center">
+												<div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
 													<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
 														<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
 													</svg>
@@ -772,7 +772,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												{/* Título y fecha en la misma línea */}
 												<div className="flex items-center justify-between gap-4">
 													<div className="flex items-center gap-2">
-														<span className="text-sm font-semibold text-yellow-900">Calificación</span>
+														<span className="text-sm font-semibold text-[var(--amber-600)]">Calificación</span>
 														{/* Estrellas pequeñas */}
 														<div className="inline-flex items-center gap-0.5">
 															{[1, 2, 3, 4, 5].map((star) => (
@@ -780,8 +780,8 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 																	key={star}
 																	className={`w-3.5 h-3.5 ${
 																		rating.rating >= star
-																			? 'text-yellow-500 fill-yellow-500'
-																			: 'text-yellow-200'
+																			? 'text-warning text-[var(--amber-600)]'
+																			: 'text-[var(--amber-600)]'
 																	}`}
 																	fill={rating.rating >= star ? 'currentColor' : 'none'}
 																	stroke="currentColor"
@@ -796,9 +796,9 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 																</svg>
 															))}
 														</div>
-														<span className="text-sm font-bold text-yellow-900">({rating.rating}/5)</span>
+														<span className="text-sm font-bold text-[var(--amber-600)]">({rating.rating}/5)</span>
 													</div>
-													<div className="flex items-center gap-1.5 text-xs text-yellow-700">
+													<div className="flex items-center gap-1.5 text-xs text-[var(--amber-600)]">
 														<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 														</svg>
@@ -809,7 +809,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												{/* Nota si existe */}
 												{rating.note && (
 													<div className="mt-2">
-														<p className="text-sm text-yellow-900 leading-relaxed whitespace-pre-wrap">
+														<p className="text-sm text-[var(--amber-600)] leading-relaxed whitespace-pre-wrap">
 															{rating.note}
 														</p>
 													</div>
@@ -828,12 +828,12 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 				{activeTab === 'cv' && (
 					<div>
 						{mainApplication?.resume_url ? (
-							<div className="rounded-lg border border-zinc-200 bg-white p-4">
+							<div className="rounded-lg border border-[var(--border)] bg-white p-4">
 								<a
 									href={mainApplication.resume_url}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-secondary"
 								>
 									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -842,8 +842,8 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								</a>
 							</div>
 						) : (
-							<div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
-								<p className="text-sm text-zinc-500">No hay CV disponible</p>
+							<div className="rounded-lg border border-[var(--border)] bg-white p-8 text-center">
+								<p className="text-sm text-muted-foreground">No hay CV disponible</p>
 							</div>
 						)}
 					</div>
@@ -851,9 +851,9 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 
 				{activeTab === 'notes' && (
 					<div className="space-y-4">
-						<div className="rounded-lg border border-zinc-200 bg-white p-4">
-							<h4 className="text-sm font-semibold text-zinc-900 mb-3">Agregar Nueva Nota</h4>
-							<p className="text-xs text-zinc-500 mb-3">
+						<div className="rounded-lg border border-[var(--border)] bg-white p-4">
+							<h4 className="text-sm font-semibold text-foreground mb-3">Agregar Nueva Nota</h4>
+							<p className="text-xs text-muted-foreground mb-3">
 								Agrega una nota interna sobre este candidato. Cada nota se guardará en el historial con fecha y hora. Las notas son privadas y solo visibles para el equipo de reclutamiento.
 							</p>
 							<textarea
@@ -861,7 +861,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 								onChange={(e) => setNotes(e.target.value)}
 								rows={8}
 								disabled={savingNotes}
-								className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
 								placeholder="Escribe tus notas sobre este candidato...&#10;&#10;Por ejemplo:&#10;- Impresiones de la entrevista&#10;- Skills destacadas&#10;- Observaciones sobre fit cultural&#10;- Próximos pasos"
 							/>
 							<div className="mt-4 flex items-center gap-3">
@@ -869,7 +869,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 									type="button"
 									onClick={handleSaveNotes}
 									disabled={savingNotes || !notes.trim()}
-									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+									className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									{savingNotes ? (
 										<>
@@ -888,7 +888,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 									)}
 								</button>
 								{notesSaved && (
-									<span className="inline-flex items-center gap-1.5 text-sm text-green-600">
+									<span className="inline-flex items-center gap-1.5 text-sm text-[var(--green-700)]">
 										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 										</svg>
@@ -902,9 +902,9 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 
 			{activeTab === 'rating' && (
 				<div className="space-y-4">
-					<div className="rounded-lg border border-zinc-200 bg-white p-6">
-						<h4 className="text-sm font-semibold text-zinc-900 mb-3">Calificar Candidato</h4>
-						<p className="text-xs text-zinc-500 mb-6">
+					<div className="rounded-lg border border-[var(--border)] bg-white p-6">
+						<h4 className="text-sm font-semibold text-foreground mb-3">Calificar Candidato</h4>
+						<p className="text-xs text-muted-foreground mb-6">
 							Evalúa al candidato con una calificación de 1 a 5 estrellas según tu criterio profesional. Opcionalmente, puedes agregar una nota.
 						</p>
 						
@@ -953,8 +953,8 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 											<svg
 												className={`w-10 h-10 ${
 													isSelected
-														? 'text-yellow-400 fill-yellow-400'
-														: 'text-zinc-300 hover:text-yellow-400'
+														? 'text-[var(--amber-600)] text-[var(--amber-600)]'
+														: 'text-muted-foreground hover:text-[var(--amber-600)]'
 												} transition-colors`}
 												fill={isSelected ? 'currentColor' : 'none'}
 												stroke="currentColor"
@@ -974,7 +974,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 							
 							{/* Nota opcional */}
 							<div className="w-full mt-2">
-								<label className="block text-xs font-medium text-zinc-700 mb-1">
+								<label className="block text-xs font-medium text-secondary-foreground mb-1">
 									Nota (opcional)
 								</label>
 								<textarea
@@ -982,15 +982,15 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 									onChange={(e) => setRatingNote(e.target.value)}
 									placeholder="Agrega comentarios sobre la calificación..."
 									rows={3}
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 								/>
 							</div>
 							
 							{/* Rating display */}
 							{mainApplication?.recruiter_rating && (
 								<div className="text-center">
-									<p className="text-sm font-medium text-zinc-700">
-										Calificación actual: <span className="text-lg font-bold text-yellow-600">{mainApplication.recruiter_rating}</span> / 5
+									<p className="text-sm font-medium text-secondary-foreground">
+										Calificación actual: <span className="text-lg font-bold text-[var(--amber-600)]">{mainApplication.recruiter_rating}</span> / 5
 									</p>
 									<button
 										type="button"
@@ -1020,7 +1020,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 												alert('Error al eliminar la calificación. Por favor intenta nuevamente.');
 											}
 										}}
-										className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+										className="mt-2 text-xs text-[var(--red-600)] hover:text-[var(--red-600)] underline"
 									>
 										Eliminar calificación
 									</button>

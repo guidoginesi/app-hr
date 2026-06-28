@@ -15,8 +15,8 @@ export default async function RecruitingConfigPage() {
     <RecruitingShell active="configuracion">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Configuración de Reclutamiento</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Configuración de Reclutamiento</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Administra las plantillas de email para el proceso de selección
           </p>
         </div>

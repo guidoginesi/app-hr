@@ -37,9 +37,9 @@ type InboxResponse = {
 const POLL_INTERVAL_MS = 30_000;
 
 const priorityColors = {
-  info: 'bg-blue-100 text-blue-700',
-  warning: 'bg-amber-100 text-amber-700',
-  critical: 'bg-red-100 text-red-700',
+  info: 'bg-accent text-accent-foreground',
+  warning: 'bg-warning-subtle text-[var(--amber-600)]',
+  critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
 const typeLabel = {
@@ -59,7 +59,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
 }
 
-export function NotificationBell({ detailBasePath = '/portal/messages' }: { detailBasePath?: string }) {
+export function NotificationBell({ detailBasePath = '/portal/messages', direction = 'down' }: { detailBasePath?: string; direction?: 'down' | 'up' }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [inbox, setInbox] = useState<InboxResponse | null>(null);
@@ -179,7 +179,7 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
         type="button"
         onClick={handleOpen}
         aria-label="Notificaciones"
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
@@ -192,7 +192,7 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
 
         {/* Badge */}
         {!loading && badgeCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white shadow">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white shadow">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         )}
@@ -200,13 +200,13 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
 
       {/* Dropdown drawer */}
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
+        <div className={`absolute z-50 w-96 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-xl ${direction === 'up' ? 'bottom-full left-0 mb-2' : 'right-0 top-full mt-2'}`}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-zinc-900">Notificaciones</h3>
+              <h3 className="text-sm font-semibold text-foreground">Notificaciones</h3>
               {badgeCount > 0 && (
-                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                <span className="rounded-full bg-danger-subtle px-2 py-0.5 text-xs font-semibold text-[var(--red-600)]">
                   {badgeCount} nueva{badgeCount !== 1 ? 's' : ''}
                 </span>
               )}
@@ -214,7 +214,7 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
             <Link
               href={detailBasePath}
               onClick={() => setIsOpen(false)}
-              className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+              className="text-xs font-medium text-foreground hover:text-[var(--primary-hover)]"
             >
               Ver todo
             </Link>
@@ -224,17 +224,17 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
           <div className="max-h-[480px] overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-emerald-600" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border)] border-t-primary" />
               </div>
             ) : items.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100">
-                  <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+                  <svg className="h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-zinc-700">Sin notificaciones</p>
-                <p className="text-xs text-zinc-400">Todo al día</p>
+                <p className="text-sm font-medium text-secondary-foreground">Sin notificaciones</p>
+                <p className="text-xs text-muted-foreground">Todo al día</p>
               </div>
             ) : (
               items.map((item) => {
@@ -248,15 +248,15 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
                     key={item.id}
                     type="button"
                     onClick={() => handleItemClick(item)}
-                    className={`w-full border-b border-zinc-50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-zinc-50 ${
-                      isUnread ? 'bg-blue-50/50' : ''
+                    className={`w-full border-b border-[var(--border)] px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted ${
+                      isUnread ? 'bg-accent/50' : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {/* Unread dot */}
                       <div className="mt-1.5 flex-shrink-0">
                         {isUnread ? (
-                          <span className="block h-2 w-2 rounded-full bg-blue-500" />
+                          <span className="block h-2 w-2 rounded-full bg-primary" />
                         ) : (
                           <span className="block h-2 w-2 rounded-full bg-transparent" />
                         )}
@@ -272,27 +272,27 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
                             {typeLabel[msg.type]}
                           </span>
                           {needsConfirm && (
-                            <span className="rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
+                            <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
                               Requiere confirmación
                             </span>
                           )}
                         </div>
 
                         {/* Title */}
-                        <p className={`text-sm leading-snug ${isUnread ? 'font-semibold text-zinc-900' : 'font-medium text-zinc-700'}`}>
+                        <p className={`text-sm leading-snug ${isUnread ? 'font-semibold text-foreground' : 'font-medium text-secondary-foreground'}`}>
                           {msg.title}
                         </p>
 
                         {/* Body preview */}
-                        <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                           {getMessageBodyPlainText(msg.body)}
                         </p>
 
                         {/* Timestamp */}
-                        <p className="mt-1.5 text-[11px] text-zinc-400">
+                        <p className="mt-1.5 text-[11px] text-muted-foreground">
                           {timeAgo(item.delivered_at)}
                           {item.confirmed_at && (
-                            <span className="ml-2 font-medium text-emerald-600">✓ Confirmado</span>
+                            <span className="ml-2 font-medium text-[var(--green-700)]">✓ Confirmado</span>
                           )}
                         </p>
                       </div>
@@ -305,11 +305,11 @@ export function NotificationBell({ detailBasePath = '/portal/messages' }: { deta
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-zinc-100 px-4 py-2.5">
+            <div className="border-t border-[var(--border)] px-4 py-2.5">
               <Link
                 href={detailBasePath}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-800"
+                className="flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
               >
                 Ver todas las notificaciones
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

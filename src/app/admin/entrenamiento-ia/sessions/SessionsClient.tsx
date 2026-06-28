@@ -60,16 +60,16 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-zinc-900">Sesiones</h2>
-        <p className="mt-1 text-sm text-zinc-500">Gestioná las sesiones de capacitación por ciclo</p>
+        <h2 className="text-2xl font-bold text-foreground">Sesiones</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Gestioná las sesiones de capacitación por ciclo</p>
       </div>
 
       <div className="max-w-xs">
-        <label className="block text-xs font-medium text-zinc-500 mb-1">Ciclo</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Ciclo</label>
         <select
           value={selectedCycleId ?? ''}
           onChange={(e) => handleCycleChange(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
         >
           {cycles.map((cycle) => (
             <option key={cycle.id} value={cycle.id}>
@@ -79,70 +79,70 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
         </select>
       </div>
 
-      <form onSubmit={handleCreate} className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4 max-w-xl">
-        <h3 className="text-sm font-semibold text-zinc-900">Nueva sesión</h3>
+      <form onSubmit={handleCreate} className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm space-y-4 max-w-xl">
+        <h3 className="text-sm font-semibold text-foreground">Nueva sesión</h3>
         <div>
-          <label className="block text-xs font-medium text-zinc-500 mb-1">Título</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Título</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
             placeholder="Ej. Introducción a prompts"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-zinc-500 mb-1">Fecha</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Fecha</label>
           <input
             type="date"
             value={sessionDate}
             onChange={(e) => setSessionDate(e.target.value)}
             required
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-zinc-500 mb-1">Descripción (opcional)</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Descripción (opcional)</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
           />
         </div>
-        {error && <p className="text-sm text-rose-600">{error}</p>}
+        {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
         <button
           type="submit"
           disabled={saving || !selectedCycleId}
-          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
         >
           {saving ? 'Creando…' : 'Crear sesión'}
         </button>
       </form>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-zinc-200 px-6 py-4">
-          <h3 className="text-sm font-semibold text-zinc-900">
+      <div className="rounded-2xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
+        <div className="border-b border-[var(--border)] px-6 py-4">
+          <h3 className="text-sm font-semibold text-foreground">
             Sesiones del ciclo ({cycleSessions.length})
           </h3>
         </div>
         {cycleSessions.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-zinc-500">No hay sesiones en este ciclo.</p>
+          <p className="px-6 py-8 text-sm text-muted-foreground">No hay sesiones en este ciclo.</p>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-[var(--border)]">
             {cycleSessions.map((session) => (
               <li key={session.id} className="flex items-center justify-between px-6 py-4">
                 <div>
-                  <p className="font-medium text-zinc-900">{session.title}</p>
-                  <p className="text-xs text-zinc-500">{session.session_date}</p>
+                  <p className="font-medium text-foreground">{session.title}</p>
+                  <p className="text-xs text-muted-foreground">{session.session_date}</p>
                   {session.description && (
-                    <p className="mt-1 text-sm text-zinc-600">{session.description}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{session.description}</p>
                   )}
                 </div>
                 <a
                   href={`/admin/entrenamiento-ia/puntuacion?cycle_id=${selectedCycleId}&session_id=${session.id}`}
-                  className="text-sm font-medium text-sky-700 hover:text-sky-800"
+                  className="text-sm font-medium text-accent-foreground hover:text-accent-foreground"
                 >
                   Cargar puntos →
                 </a>

@@ -29,8 +29,8 @@ export default async function ResultadosPage() {
   if (!period) {
     return (
       <PortalShell employee={auth.employee} isLeader={isLeader} active="evaluaciones">
-        <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
-          <p className="text-zinc-500">No hay resultados de evaluación disponibles.</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-8 text-center">
+          <p className="text-muted-foreground">No hay resultados de evaluación disponibles.</p>
         </div>
       </PortalShell>
     );

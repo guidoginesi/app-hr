@@ -125,19 +125,19 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-zinc-900">Configuración de Mensajes</h2>
-        <p className="mt-1 text-sm text-zinc-500">Administrá las automatizaciones y plantillas de email enviadas a empleados</p>
+        <h2 className="text-xl font-semibold text-foreground">Configuración de Mensajes</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Administrá las automatizaciones y plantillas de email enviadas a empleados</p>
       </div>
 
       <div className="grid grid-cols-12 gap-6">
         {/* Left: template list */}
         <div className="col-span-4">
-          <div className="rounded-xl border border-zinc-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-zinc-900 mb-3">Plantillas</h3>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Plantillas</h3>
             <div className="space-y-4">
               {Object.entries(grouped).map(([cat, tpls]) => (
                 <div key={cat}>
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-1 mb-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">
                     {CATEGORY_LABELS[cat] ?? cat}
                   </p>
                   <div className="space-y-1">
@@ -147,15 +147,15 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                         onClick={() => selectTemplate(t)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                           selected?.template_key === t.template_key
-                            ? 'bg-violet-600 text-white'
-                            : 'text-zinc-700 hover:bg-zinc-100'
+                            ? 'bg-cat-violet text-white'
+                            : 'text-secondary-foreground hover:bg-secondary'
                         }`}
                       >
                         <div className="font-medium">
                           {TEMPLATE_NAMES[t.template_key] ?? t.template_key}
                         </div>
                         {t.description && (
-                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-violet-200' : 'text-zinc-500'}`}>
+                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-cat-violet' : 'text-muted-foreground'}`}>
                             {t.description}
                           </div>
                         )}
@@ -171,23 +171,23 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
         {/* Right: editor */}
         <div className="col-span-8">
           {selected ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-6">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-6 space-y-6">
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-zinc-900">
+                  <h2 className="text-lg font-semibold text-foreground">
                     {TEMPLATE_NAMES[selected.template_key] ?? selected.template_key}
                   </h2>
-                  <p className="text-sm text-zinc-500 mt-1">{selected.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm font-medium ${editActive ? 'text-violet-700' : 'text-zinc-500'}`}>
+                  <span className={`text-sm font-medium ${editActive ? 'text-cat-violet' : 'text-muted-foreground'}`}>
                     {editActive ? 'Activo' : 'Desactivado'}
                   </span>
                   <button
                     type="button"
                     onClick={() => setEditActive(v => !v)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-violet-600' : 'bg-zinc-300'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-cat-violet' : 'bg-secondary'}`}
                   >
                     <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${editActive ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -196,11 +196,11 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
 
               {/* Variables */}
               {selected.variables && selected.variables.length > 0 && (
-                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-2">Variables disponibles</h3>
+                <div className="rounded-lg bg-accent border border-[var(--orange-100)] p-4">
+                  <h3 className="text-sm font-semibold text-accent-foreground mb-2">Variables disponibles</h3>
                   <div className="flex flex-wrap gap-2">
                     {selected.variables.map((v: string) => (
-                      <code key={v} className="px-2 py-1 bg-white rounded text-xs font-mono text-blue-700 border border-blue-300">
+                      <code key={v} className="px-2 py-1 bg-white rounded text-xs font-mono text-accent-foreground border border-[var(--orange-100)]">
                         {`{{${v}}}`}
                       </code>
                     ))}
@@ -211,17 +211,17 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
               {/* Canales (solo para automation) */}
               {selected.category === 'automation' && (
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Canales de envío</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Canales de envío</label>
                   <div className="flex flex-wrap gap-5">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary-foreground">
                       <input type="checkbox" checked readOnly className="accent-violet-600 w-4 h-4" />
                       📧 Email
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary-foreground">
                       <input type="checkbox" checked={editSendMessage} onChange={e => setEditSendMessage(e.target.checked)} className="accent-violet-600 w-4 h-4" />
                       💬 Mensaje interno en el portal
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary-foreground">
                       <input type="checkbox" checked={editSendGoogleChat} onChange={e => setEditSendGoogleChat(e.target.checked)} className="accent-violet-600 w-4 h-4" />
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
                       Chat grupal de Pow (Google Chat)
@@ -232,39 +232,39 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
 
               {/* Subject */}
               <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-2">Asunto</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Asunto</label>
                 <input
                   type="text"
                   value={editSubject}
                   onChange={e => setEditSubject(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                 />
               </div>
 
               {/* Body */}
               <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-2">Cuerpo del Email</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Cuerpo del Email</label>
                 <RichTextEditor content={editBody} onChange={setEditBody} />
               </div>
 
               {/* Internal message text */}
               {selected.category === 'automation' && editSendMessage && (
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">
-                    Texto del mensaje interno <span className="font-normal text-zinc-400">(portal del empleado)</span>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Texto del mensaje interno <span className="font-normal text-muted-foreground">(portal del empleado)</span>
                   </label>
                   <textarea
                     rows={3}
                     value={editMessageText}
                     onChange={e => setEditMessageText(e.target.value)}
                     placeholder="Texto corto que aparecerá como notificación en el portal..."
-                    className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                    className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                   />
                 </div>
               )}
 
               {feedback && (
-                <div className={`rounded-lg px-4 py-3 text-sm ${feedback.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                <div className={`rounded-lg px-4 py-3 text-sm ${feedback.type === 'success' ? 'bg-success-subtle border border-success/20 text-[var(--green-700)]' : 'bg-danger-subtle border border-danger/20 text-[var(--red-600)]'}`}>
                   {feedback.text}
                 </div>
               )}
@@ -273,21 +273,21 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
+                  className="rounded-lg bg-cat-violet px-5 py-2 text-sm font-semibold text-white hover:bg-cat-violet disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
                 <button
                   onClick={handleReset}
                   disabled={saving}
-                  className="rounded-lg border border-zinc-300 bg-white px-5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                  className="rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                 >
                   Restablecer
                 </button>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center text-sm text-zinc-400">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center text-sm text-muted-foreground">
               Seleccioná un template para editarlo
             </div>
           )}

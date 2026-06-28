@@ -101,19 +101,19 @@ function InvoiceSection({ settlement, onUploaded }: { settlement: Settlement; on
   };
 
   return (
-    <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-4">
+    <div className="mt-4 rounded-lg border border-[var(--border)] bg-muted px-4 py-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-zinc-800">Factura</p>
+          <p className="text-sm font-semibold text-secondary-foreground">Factura</p>
           {invoicePath ? (
-            <p className="mt-0.5 text-xs text-zinc-500">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {invoiceFilename} · Cargada el{' '}
               {invoiceUploadedAt
                 ? new Date(invoiceUploadedAt).toLocaleDateString('es-AR')
                 : '-'}
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-zinc-500">Pendiente de carga</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Pendiente de carga</p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -121,12 +121,12 @@ function InvoiceSection({ settlement, onUploaded }: { settlement: Settlement; on
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
             >
               {downloading ? 'Descargando...' : 'Ver factura'}
             </button>
           )}
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)]">
             {uploading ? 'Subiendo...' : invoicePath ? 'Reemplazar' : 'Adjuntar factura'}
             <input
               ref={inputRef}
@@ -143,7 +143,7 @@ function InvoiceSection({ settlement, onUploaded }: { settlement: Settlement; on
           </label>
         </div>
       </div>
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-[var(--red-600)]">{error}</p>}
     </div>
   );
 }
@@ -153,21 +153,21 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
   const [invoicePath, setInvoicePath] = useState(settlement.invoice_storage_path);
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
       {/* Header — always visible, clickable to expand/collapse */}
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-zinc-50"
+        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-muted"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-            <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+            <svg className="h-5 w-5 text-secondary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
           <div className="text-left">
-            <p className="font-semibold text-zinc-900">
+            <p className="font-semibold text-foreground">
               {formatPayrollPeriodLabelFromKey({
                 year: settlement.period_year,
                 month: settlement.period_month,
@@ -175,7 +175,7 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
               })}
             </p>
             {settlement.contract_type_snapshot === 'MONOTRIBUTO' && settlement.total_a_facturar != null && (
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Total a facturar: {formatCurrency(settlement.total_a_facturar)}
               </p>
             )}
@@ -185,17 +185,17 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
           {settlement.contract_type_snapshot === 'MONOTRIBUTO' && (
             <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
               invoicePath
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-amber-100 text-amber-700'
+                ? 'bg-success-subtle text-[var(--green-700)]'
+                : 'bg-warning-subtle text-[var(--amber-600)]'
             }`}>
               <span className={`h-1.5 w-1.5 rounded-full ${
-                invoicePath ? 'bg-emerald-500' : 'bg-amber-500'
+                invoicePath ? 'bg-primary' : 'bg-warning'
               }`} />
               {invoicePath ? 'Factura cargada' : 'Factura pendiente'}
             </span>
           )}
           <svg
-            className={`h-4 w-4 text-zinc-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
             fill="none" viewBox="0 0 24 24" stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -205,45 +205,45 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
 
       {/* Collapsible body */}
       {expanded && (
-        <div className="border-t border-zinc-100 px-6 py-5">
+        <div className="border-t border-[var(--border)] px-6 py-5">
           {settlement.contract_type_snapshot === 'MONOTRIBUTO' ? (
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-600">Sueldo</span>
-                  <span className="font-medium text-zinc-900">{formatCurrency(settlement.sueldo)}</span>
+                  <span className="text-muted-foreground">Sueldo</span>
+                  <span className="font-medium text-foreground">{formatCurrency(settlement.sueldo)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-600">Monotributo</span>
-                  <span className="font-medium text-zinc-900">{formatCurrency(settlement.monotributo)}</span>
+                  <span className="text-muted-foreground">Monotributo</span>
+                  <span className="font-medium text-foreground">{formatCurrency(settlement.monotributo)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-600">Reintegro Internet</span>
-                  <span className="font-medium text-zinc-900">{formatCurrency(settlement.reintegro_internet)}</span>
+                  <span className="text-muted-foreground">Reintegro Internet</span>
+                  <span className="font-medium text-foreground">{formatCurrency(settlement.reintegro_internet)}</span>
                 </div>
                 {(settlement.reintegro_extraordinario ?? 0) > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-600">Reintegro Extraordinario</span>
-                    <span className="font-medium text-zinc-900">{formatCurrency(settlement.reintegro_extraordinario)}</span>
+                    <span className="text-muted-foreground">Reintegro Extraordinario</span>
+                    <span className="font-medium text-foreground">{formatCurrency(settlement.reintegro_extraordinario)}</span>
                   </div>
                 )}
                 {(settlement.plus_vacacional ?? 0) > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-600">Plus Vacacional</span>
-                    <span className="font-medium text-zinc-900">{formatCurrency(settlement.plus_vacacional)}</span>
+                    <span className="text-muted-foreground">Plus Vacacional</span>
+                    <span className="font-medium text-foreground">{formatCurrency(settlement.plus_vacacional)}</span>
                   </div>
                 )}
               </div>
 
-              <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3">
+              <div className="rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-indigo-900">Total a Facturar</span>
-                  <span className="text-lg font-bold text-indigo-700">{formatCurrency(settlement.total_a_facturar)}</span>
+                  <span className="text-sm font-semibold text-accent-foreground">Total a Facturar</span>
+                  <span className="text-lg font-bold text-accent-foreground">{formatCurrency(settlement.total_a_facturar)}</span>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                <p className="text-sm text-amber-800">
+              <div className="rounded-lg border border-warning/30 bg-warning-subtle px-4 py-3">
+                <p className="text-sm text-[var(--amber-600)]">
                   <span className="font-medium">Recordá:</span> emití la factura por el Total a Facturar y adjuntala aquí dentro de 1 día hábil.
                 </p>
               </div>
@@ -251,8 +251,8 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
               <InvoiceSection settlement={settlement} onUploaded={(path) => setInvoicePath(path)} />
             </div>
           ) : (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-              <p className="text-sm text-blue-800">
+            <div className="rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
+              <p className="text-sm text-accent-foreground">
                 Tu recibo está disponible en la sección <strong>Recibos de sueldo</strong>.
               </p>
             </div>
@@ -268,17 +268,17 @@ export function LiquidacionesClient({ settlements }: LiquidacionesClientProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Mis Liquidaciones</h1>
-          <p className="mt-1 text-sm text-zinc-500">Detalle de tus liquidaciones mensuales</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mis Liquidaciones</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Detalle de tus liquidaciones mensuales</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white px-6 py-12 text-center shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100">
-            <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-[var(--border)] bg-white px-6 py-12 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+            <svg className="h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <p className="mt-4 text-sm font-medium text-zinc-900">No hay liquidaciones enviadas</p>
-          <p className="mt-1 text-sm text-zinc-500">Cuando se procesen tus liquidaciones, aparecerán aquí.</p>
+          <p className="mt-4 text-sm font-medium text-foreground">No hay liquidaciones enviadas</p>
+          <p className="mt-1 text-sm text-muted-foreground">Cuando se procesen tus liquidaciones, aparecerán aquí.</p>
         </div>
       </div>
     );
@@ -287,8 +287,8 @@ export function LiquidacionesClient({ settlements }: LiquidacionesClientProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Mis Liquidaciones</h1>
-        <p className="mt-1 text-sm text-zinc-500">Detalle de tus liquidaciones mensuales</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mis Liquidaciones</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Detalle de tus liquidaciones mensuales</p>
       </div>
 
       <div className="space-y-4">

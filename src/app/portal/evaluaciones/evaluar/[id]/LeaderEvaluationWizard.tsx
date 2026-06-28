@@ -324,22 +324,22 @@ export function LeaderEvaluationWizard({
   const employeeInfo = evaluation.employee;
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-10 border-b border-[var(--border)] bg-white shadow-sm">
         <div className="mx-auto max-w-4xl px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-zinc-900">
+              <h1 className="text-lg font-semibold text-foreground">
                 Evaluación de {employeeInfo?.first_name} {employeeInfo?.last_name}
               </h1>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-muted-foreground">
                 {employeeInfo?.job_title || 'Sin puesto'} — {evaluation.period?.name}
               </p>
             </div>
             <button
               onClick={() => router.push('/portal/evaluaciones')}
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Guardar y salir
             </button>
@@ -353,34 +353,34 @@ export function LeaderEvaluationWizard({
       {/* Content */}
       <main className="mx-auto max-w-4xl px-6 py-8">
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+          <div className="mb-6 rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
         )}
 
         {/* Preview Step - Self evaluation results */}
         {currentStep === 'preview' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-purple-200 bg-purple-50 p-8">
-              <h2 className="text-xl font-semibold text-purple-900 mb-4">
+            <div className="rounded-xl border border-[var(--border)] bg-secondary p-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 Resultados de la autoevaluación de {employeeInfo?.first_name}
               </h2>
               {selfEvaluationSummary && selfEvaluationSummary.status === 'submitted' ? (
                 <>
-                  <p className="text-sm text-purple-700 mb-4">
+                  <p className="text-sm text-foreground mb-4">
                     Antes de comenzar tu evaluación, revisá cómo se autoevaluó {employeeInfo?.first_name}.
                   </p>
-                  <div className="p-4 rounded-lg bg-white border border-purple-200 text-center mb-6">
-                    <p className="text-sm text-purple-600">Puntaje autoevaluación</p>
-                    <p className="text-3xl font-bold text-purple-900">
-                      {selfEvaluationSummary.total_score?.toFixed(1) || '-'}<span className="text-lg text-purple-600">/10</span>
+                  <div className="p-4 rounded-lg bg-white border border-[var(--border)] text-center mb-6">
+                    <p className="text-sm text-foreground">Puntaje autoevaluación</p>
+                    <p className="text-3xl font-bold text-foreground">
+                      {selfEvaluationSummary.total_score?.toFixed(1) || '-'}<span className="text-lg text-foreground">/10</span>
                     </p>
                   </div>
                   {selfEvaluationSummary.dimension_scores && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-purple-800 mb-2">Por dimensión:</p>
+                      <p className="text-sm font-medium text-foreground mb-2">Por dimensión:</p>
                       {dimensions.map(dim => (
                         <div key={dim.id} className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2">
-                          <span className="text-purple-700">{dim.name}</span>
-                          <span className="font-semibold text-purple-900">
+                          <span className="text-foreground">{dim.name}</span>
+                          <span className="font-semibold text-foreground">
                             {selfEvaluationSummary.dimension_scores?.[dim.id]?.toFixed(1) || '-'}/10
                           </span>
                         </div>
@@ -389,7 +389,7 @@ export function LeaderEvaluationWizard({
                   )}
                 </>
               ) : (
-                <p className="text-sm text-purple-700">
+                <p className="text-sm text-foreground">
                   {employeeInfo?.first_name} aún no ha completado su autoevaluación.
                 </p>
               )}
@@ -400,21 +400,21 @@ export function LeaderEvaluationWizard({
         {/* Instructions Step */}
         {currentStep === 'instructions' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <div className="mb-6 p-4 rounded-lg bg-zinc-50 border border-zinc-200">
-                <p className="text-sm text-zinc-600">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <div className="mb-6 p-4 rounded-lg bg-muted border border-[var(--border)]">
+                <p className="text-sm text-muted-foreground">
                   <strong>Colaborador:</strong> {employeeInfo?.first_name} {employeeInfo?.last_name}
                 </p>
-                <p className="text-sm text-zinc-600">
+                <p className="text-sm text-muted-foreground">
                   <strong>Puesto:</strong> {employeeInfo?.job_title || 'Sin puesto'}
                 </p>
-                <p className="text-sm text-zinc-600">
+                <p className="text-sm text-muted-foreground">
                   <strong>Período:</strong> Enero - Diciembre {evaluation.period?.year}
                 </p>
               </div>
 
-              <h2 className="text-xl font-semibold text-zinc-900">Instrucciones</h2>
-              <div className="mt-6 space-y-4 text-zinc-600">
+              <h2 className="text-xl font-semibold text-foreground">Instrucciones</h2>
+              <div className="mt-6 space-y-4 text-muted-foreground">
                 <ul className="list-disc pl-5 space-y-2">
                   <li>Evaluá el desempeño observado durante el período.</li>
                   <li>Considerá resultados, comportamientos y evolución.</li>
@@ -423,13 +423,13 @@ export function LeaderEvaluationWizard({
                 </ul>
               </div>
               
-              <div className="mt-8 p-4 rounded-lg bg-purple-50 border border-purple-200">
-                <h3 className="text-sm font-semibold text-purple-900 mb-3">Escala de evaluación</h3>
+              <div className="mt-8 p-4 rounded-lg bg-secondary border border-[var(--border)]">
+                <h3 className="text-sm font-semibold text-foreground mb-3">Escala de evaluación</h3>
                 <div className="space-y-2">
                   {SCALE_DEFINITIONS.map((def) => (
                     <div key={def.min} className="flex items-center gap-2">
-                      <span className="w-10 text-sm font-semibold text-purple-700">{def.min}-{def.max}</span>
-                      <span className="text-sm text-purple-600">{def.label}</span>
+                      <span className="w-10 text-sm font-semibold text-foreground">{def.min}-{def.max}</span>
+                      <span className="text-sm text-foreground">{def.label}</span>
                     </div>
                   ))}
                 </div>
@@ -441,15 +441,15 @@ export function LeaderEvaluationWizard({
         {/* Dimension Steps */}
         {currentDimension && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
               <div className="flex items-center gap-3 mb-6">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-lg font-semibold text-purple-600">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-lg font-semibold text-secondary-foreground">
                   {currentDimensionIndex + 1}
                 </span>
                 <div>
-                  <h2 className="text-xl font-semibold text-zinc-900">{currentDimension.name}</h2>
+                  <h2 className="text-xl font-semibold text-foreground">{currentDimension.name}</h2>
                   {currentDimension.description && (
-                    <p className="text-sm text-zinc-500">{currentDimension.description}</p>
+                    <p className="text-sm text-muted-foreground">{currentDimension.description}</p>
                   )}
                 </div>
               </div>
@@ -458,17 +458,17 @@ export function LeaderEvaluationWizard({
                 {currentDimension.items.map((item, idx) => (
                   <div key={item.id} className={`space-y-4 p-4 rounded-lg border ${
                     !responses[item.id]?.score && error?.includes('puntuación')
-                      ? 'bg-red-50 border-red-200'
-                      : 'bg-zinc-50 border-zinc-200'
+                      ? 'bg-danger-subtle border-danger/20'
+                      : 'bg-muted border-[var(--border)]'
                   }`}>
-                    <p className="font-medium text-zinc-800">
+                    <p className="font-medium text-secondary-foreground">
                       {idx + 1}. {item.statement}
                     </p>
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-zinc-500">Puntuación <span className="text-red-500">*</span></span>
+                        <span className="text-xs font-medium text-muted-foreground">Puntuación <span className="text-[var(--red-600)]">*</span></span>
                         {!responses[item.id]?.score && error?.includes('puntuación') && (
-                          <span className="text-xs text-red-500">Requerido</span>
+                          <span className="text-xs text-[var(--red-600)]">Requerido</span>
                         )}
                       </div>
                       <ScaleInput
@@ -477,23 +477,23 @@ export function LeaderEvaluationWizard({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-zinc-500 mb-1">
-                        Explicá tu puntuación <span className="text-red-500">*</span>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Explicá tu puntuación <span className="text-[var(--red-600)]">*</span>
                       </label>
                       <textarea
                         value={responses[item.id]?.explanation || ''}
                         onChange={(e) => handleResponseChange(item.id, 'explanation', e.target.value)}
                         rows={2}
                         required
-                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 ${
+                        className={`w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] ${
                           responses[item.id]?.score && !responses[item.id]?.explanation?.trim() 
-                            ? 'border-red-300 bg-red-50' 
-                            : 'border-zinc-300'
+                            ? 'border-danger/20 bg-danger-subtle' 
+                            : 'border-[var(--border)]'
                         }`}
                         placeholder="Comentarios o ejemplos (obligatorio)..."
                       />
                       {responses[item.id]?.score && !responses[item.id]?.explanation?.trim() && (
-                        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                        <p className="mt-1 text-xs text-[var(--red-600)]">Este campo es obligatorio</p>
                       )}
                     </div>
                   </div>
@@ -506,20 +506,20 @@ export function LeaderEvaluationWizard({
         {/* Open Questions Step */}
         {currentStep === 'open_questions' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <h2 className="text-xl font-semibold text-zinc-900 mb-6">Preguntas abiertas</h2>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <h2 className="text-xl font-semibold text-foreground mb-6">Preguntas abiertas</h2>
               
               <div className="space-y-6">
                 {leaderOpenQuestions.map((q) => (
                   <div key={q.key} className="space-y-2">
-                    <label className="block text-sm font-medium text-zinc-700">
+                    <label className="block text-sm font-medium text-secondary-foreground">
                       {q.label}
                     </label>
                     <textarea
                       value={openQuestions[q.key] || ''}
                       onChange={(e) => handleOpenQuestionChange(q.key, e.target.value)}
                       rows={4}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                     />
                   </div>
                 ))}
@@ -531,36 +531,36 @@ export function LeaderEvaluationWizard({
         {/* Objectives Step */}
         {objectivesEnabled && currentStep === 'objectives' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <h2 className="text-xl font-semibold text-zinc-900 mb-6">Cumplimiento de Objetivos</h2>
-              <p className="text-sm text-zinc-500 mb-6">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <h2 className="text-xl font-semibold text-foreground mb-6">Cumplimiento de Objetivos</h2>
+              <p className="text-sm text-muted-foreground mb-6">
                 Registrá los objetivos de cada trimestre y su porcentaje de cumplimiento.
               </p>
               
               <div className="space-y-6">
                 {[1, 2, 3, 4].map((quarter) => (
-                  <div key={quarter} className="p-4 rounded-lg bg-zinc-50 border border-zinc-200">
-                    <h3 className="text-sm font-semibold text-zinc-700 mb-3">{quarter}° Trimestre</h3>
+                  <div key={quarter} className="p-4 rounded-lg bg-muted border border-[var(--border)]">
+                    <h3 className="text-sm font-semibold text-secondary-foreground mb-3">{quarter}° Trimestre</h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-xs font-medium text-zinc-500 mb-1">Objetivos</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Objetivos</label>
                         <textarea
                           value={objectives[quarter]?.description || ''}
                           onChange={(e) => handleObjectiveChange(quarter, 'description', e.target.value)}
                           rows={2}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                           placeholder="Describí los objetivos del trimestre..."
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-zinc-500 mb-1">% Cumplimiento</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">% Cumplimiento</label>
                         <input
                           type="number"
                           min={0}
                           max={100}
                           value={objectives[quarter]?.percentage ?? ''}
                           onChange={(e) => handleObjectiveChange(quarter, 'percentage', parseInt(e.target.value) || 0)}
-                          className="w-24 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-24 rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                         />
                       </div>
                     </div>
@@ -574,8 +574,8 @@ export function LeaderEvaluationWizard({
         {/* Recategorization Step */}
         {recategorizationEnabled && currentStep === 'recategorization' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
-              <h2 className="text-xl font-semibold text-zinc-900 mb-6">Resultados y Recategorización</h2>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
+              <h2 className="text-xl font-semibold text-foreground mb-6">Resultados y Recategorización</h2>
               
               {(() => {
                 const { dimensionScores, totalScore } = calculateScores();
@@ -587,100 +587,100 @@ export function LeaderEvaluationWizard({
                   <>
                     {/* Scores Summary */}
                     <div className="grid grid-cols-3 gap-4 mb-8">
-                      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-center">
-                        <p className="text-xs font-medium text-blue-600">Autoevaluación</p>
-                        <p className="text-2xl font-bold text-blue-900">{selfScore?.toFixed(1) || '-'}</p>
+                      <div className="p-4 rounded-lg bg-accent border border-[var(--orange-100)] text-center">
+                        <p className="text-xs font-medium text-accent-foreground">Autoevaluación</p>
+                        <p className="text-2xl font-bold text-accent-foreground">{selfScore?.toFixed(1) || '-'}</p>
                       </div>
-                      <div className="p-4 rounded-lg bg-purple-50 border border-purple-200 text-center">
-                        <p className="text-xs font-medium text-purple-600">Evaluación Líder</p>
-                        <p className="text-2xl font-bold text-purple-900">{totalScore.toFixed(1)}</p>
+                      <div className="p-4 rounded-lg bg-secondary border border-[var(--border)] text-center">
+                        <p className="text-xs font-medium text-foreground">Evaluación Líder</p>
+                        <p className="text-2xl font-bold text-foreground">{totalScore.toFixed(1)}</p>
                       </div>
-                      <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 text-center">
-                        <p className="text-xs font-medium text-zinc-600">GAP</p>
-                        <p className={`text-2xl font-bold ${gap && parseFloat(gap) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className="p-4 rounded-lg bg-muted border border-[var(--border)] text-center">
+                        <p className="text-xs font-medium text-muted-foreground">GAP</p>
+                        <p className={`text-2xl font-bold ${gap && parseFloat(gap) >= 0 ? 'text-[var(--green-700)]' : 'text-[var(--red-600)]'}`}>
                           {gap ? (parseFloat(gap) >= 0 ? '+' : '') + gap : '-'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 mb-8">
-                      <p className="text-sm font-medium text-amber-800">
+                    <div className="p-4 rounded-lg bg-warning-subtle border border-warning/30 mb-8">
+                      <p className="text-sm font-medium text-[var(--amber-600)]">
                         Cumplimiento de objetivos promedio: {objectivesAvg.toFixed(0)}%
                       </p>
                     </div>
 
                     {/* Dimension Comparison */}
-                    <h3 className="text-sm font-semibold text-zinc-700 mb-4">Comparativa por dimensión</h3>
+                    <h3 className="text-sm font-semibold text-secondary-foreground mb-4">Comparativa por dimensión</h3>
                     <div className="space-y-2 mb-8">
                       {dimensions.map((dim) => {
                         const selfDimScore = selfEvaluationSummary?.dimension_scores?.[dim.id];
                         const leaderDimScore = dimensionScores[dim.id];
                         return (
-                          <div key={dim.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 text-sm">
-                            <span className="text-zinc-700 flex-1">{dim.name}</span>
-                            <span className="w-20 text-center text-blue-600">{selfDimScore?.toFixed(1) || '-'}</span>
-                            <span className="w-20 text-center text-purple-600 font-semibold">{leaderDimScore?.toFixed(1) || '-'}</span>
+                          <div key={dim.id} className="flex items-center justify-between p-3 rounded-lg bg-muted text-sm">
+                            <span className="text-secondary-foreground flex-1">{dim.name}</span>
+                            <span className="w-20 text-center text-accent-foreground">{selfDimScore?.toFixed(1) || '-'}</span>
+                            <span className="w-20 text-center text-foreground font-semibold">{leaderDimScore?.toFixed(1) || '-'}</span>
                           </div>
                         );
                       })}
                     </div>
 
                     {/* Recategorization */}
-                    <h3 className="text-sm font-semibold text-zinc-700 mb-4">Recategorización</h3>
+                    <h3 className="text-sm font-semibold text-secondary-foreground mb-4">Recategorización</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm text-zinc-600 mb-2">Recategorización dentro del nivel</label>
+                        <label className="block text-sm text-muted-foreground mb-2">Recategorización dentro del nivel</label>
                         <div className="flex gap-4">
                           <label className="flex items-center gap-2">
                             <input
                               type="radio"
                               checked={recategorization.level === 'approved'}
                               onChange={() => setRecategorization(prev => ({ ...prev, level: 'approved' }))}
-                              className="text-purple-600 focus:ring-purple-600"
+                              className="text-foreground focus:ring-[var(--ring)]"
                             />
-                            <span className="text-sm text-zinc-700">Aprobado</span>
+                            <span className="text-sm text-secondary-foreground">Aprobado</span>
                           </label>
                           <label className="flex items-center gap-2">
                             <input
                               type="radio"
                               checked={recategorization.level === 'not_approved'}
                               onChange={() => setRecategorization(prev => ({ ...prev, level: 'not_approved' }))}
-                              className="text-purple-600 focus:ring-purple-600"
+                              className="text-foreground focus:ring-[var(--ring)]"
                             />
-                            <span className="text-sm text-zinc-700">No aprobado</span>
+                            <span className="text-sm text-secondary-foreground">No aprobado</span>
                           </label>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm text-zinc-600 mb-2">Recategorización de nivel</label>
+                        <label className="block text-sm text-muted-foreground mb-2">Recategorización de nivel</label>
                         <div className="flex gap-4">
                           <label className="flex items-center gap-2">
                             <input
                               type="radio"
                               checked={recategorization.position === 'approved'}
                               onChange={() => setRecategorization(prev => ({ ...prev, position: 'approved' }))}
-                              className="text-purple-600 focus:ring-purple-600"
+                              className="text-foreground focus:ring-[var(--ring)]"
                             />
-                            <span className="text-sm text-zinc-700">Aprobado</span>
+                            <span className="text-sm text-secondary-foreground">Aprobado</span>
                           </label>
                           <label className="flex items-center gap-2">
                             <input
                               type="radio"
                               checked={recategorization.position === 'not_approved'}
                               onChange={() => setRecategorization(prev => ({ ...prev, position: 'not_approved' }))}
-                              className="text-purple-600 focus:ring-purple-600"
+                              className="text-foreground focus:ring-[var(--ring)]"
                             />
-                            <span className="text-sm text-zinc-700">No aprobado</span>
+                            <span className="text-sm text-secondary-foreground">No aprobado</span>
                           </label>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm text-zinc-600 mb-2">Notas adicionales</label>
+                        <label className="block text-sm text-muted-foreground mb-2">Notas adicionales</label>
                         <textarea
                           value={recategorization.notes}
                           onChange={(e) => setRecategorization(prev => ({ ...prev, notes: e.target.value }))}
                           rows={3}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                           placeholder="Comentarios finales..."
                         />
                       </div>
@@ -697,7 +697,7 @@ export function LeaderEvaluationWizard({
           <button
             onClick={goPrev}
             disabled={currentStep === 'preview' || saving}
-            className="rounded-lg border border-zinc-300 bg-white px-6 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+            className="rounded-lg border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
           >
             Anterior
           </button>
@@ -706,7 +706,7 @@ export function LeaderEvaluationWizard({
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {submitting ? 'Enviando...' : 'Enviar evaluación'}
             </button>
@@ -714,7 +714,7 @@ export function LeaderEvaluationWizard({
             <button
               onClick={goNext}
               disabled={saving}
-              className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {saving ? 'Guardando...' : 'Siguiente'}
             </button>
@@ -723,9 +723,9 @@ export function LeaderEvaluationWizard({
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200 bg-white py-4">
+      <footer className="border-t border-[var(--border)] bg-white py-4">
         <div className="mx-auto max-w-4xl px-6">
-          <p className="text-xs text-zinc-500 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Evaluación de Desempeño {evaluation.period?.year} — Evaluando a: {employeeInfo?.first_name} {employeeInfo?.last_name}
           </p>
         </div>

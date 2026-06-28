@@ -26,9 +26,9 @@ type MessageItem = {
 };
 
 const priorityBadge = {
-  info: 'bg-blue-100 text-blue-700',
-  warning: 'bg-amber-100 text-amber-700',
-  critical: 'bg-red-100 text-red-700',
+  info: 'bg-accent text-accent-foreground',
+  warning: 'bg-warning-subtle text-[var(--amber-600)]',
+  critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
 function timeAgo(dateStr: string): string {
@@ -84,8 +84,8 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Mensajes</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mensajes</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Tu centro de notificaciones y anuncios
         </p>
       </div>
@@ -105,15 +105,15 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
             onClick={() => setFilter(tab.key)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               filter === tab.key
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-white text-zinc-600 hover:bg-zinc-100 border border-zinc-200'
+                ? 'bg-primary text-white shadow-sm'
+                : 'bg-white text-muted-foreground hover:bg-secondary border border-[var(--border)]'
             }`}
           >
             {tab.label}
             {tab.count > 0 && (
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
-                  filter === tab.key ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-600'
+                  filter === tab.key ? 'bg-white/20 text-white' : 'bg-secondary text-muted-foreground'
                 }`}
               >
                 {tab.count}
@@ -125,16 +125,16 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white py-16 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100">
-            <svg className="h-7 w-7 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-white py-16 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
+            <svg className="h-7 w-7 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <p className="mt-3 text-sm font-medium text-zinc-700">No hay mensajes en este filtro</p>
+          <p className="mt-3 text-sm font-medium text-secondary-foreground">No hay mensajes en este filtro</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {filtered.map((item, idx) => {
             if (!item.messages) return null;
             const msg = item.messages;
@@ -146,17 +146,17 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
                 key={item.id}
                 type="button"
                 onClick={() => handleClick(item)}
-                className={`w-full border-b border-zinc-100 px-6 py-4 text-left transition-colors last:border-0 hover:bg-zinc-50 ${
-                  isUnread ? 'bg-blue-50/40' : ''
+                className={`w-full border-b border-[var(--border)] px-6 py-4 text-left transition-colors last:border-0 hover:bg-muted ${
+                  isUnread ? 'bg-accent/40' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
                   {/* Unread indicator */}
                   <div className="mt-2 flex-shrink-0">
                     {isUnread ? (
-                      <span className="block h-2.5 w-2.5 rounded-full bg-blue-500" />
+                      <span className="block h-2.5 w-2.5 rounded-full bg-primary" />
                     ) : (
-                      <span className="block h-2.5 w-2.5 rounded-full bg-zinc-200" />
+                      <span className="block h-2.5 w-2.5 rounded-full bg-secondary" />
                     )}
                   </div>
 
@@ -168,12 +168,12 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
                         {msg.type === 'broadcast' ? 'Anuncio' : 'Sistema'}
                       </span>
                       {needsConfirm && (
-                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
                           Requiere confirmación
                         </span>
                       )}
                       {item.confirmed_at && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                        <span className="rounded-full bg-success-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--green-700)]">
                           ✓ Confirmado
                         </span>
                       )}
@@ -181,18 +181,18 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
 
                     <p
                       className={`mt-1 text-sm leading-snug ${
-                        isUnread ? 'font-semibold text-zinc-900' : 'font-medium text-zinc-700'
+                        isUnread ? 'font-semibold text-foreground' : 'font-medium text-secondary-foreground'
                       }`}
                     >
                       {msg.title}
                     </p>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{getMessageBodyPlainText(msg.body)}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{getMessageBodyPlainText(msg.body)}</p>
                   </div>
 
                   <div className="flex-shrink-0 text-right">
-                    <p className="text-xs text-zinc-400">{timeAgo(item.delivered_at)}</p>
+                    <p className="text-xs text-muted-foreground">{timeAgo(item.delivered_at)}</p>
                     <svg
-                      className="ml-auto mt-2 h-4 w-4 text-zinc-300"
+                      className="ml-auto mt-2 h-4 w-4 text-muted-foreground"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

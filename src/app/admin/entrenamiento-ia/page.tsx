@@ -27,7 +27,7 @@ export default async function EntrenamientoIAPage({
 
   return (
     <EntrenamientoIAShell active="ranking">
-      <Suspense fallback={<div className="text-sm text-zinc-500">Cargando ranking…</div>}>
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Cargando ranking…</div>}>
         <AdminRankingClient
           cycles={cycles}
           ranking={ranking}

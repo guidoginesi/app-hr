@@ -39,7 +39,7 @@ export default async function PortalEntrenamientoPage({
 
   return (
     <PortalShell employee={auth.employee} isLeader={auth.isLeader} active="entrenamiento-ia">
-      <Suspense fallback={<div className="text-sm text-zinc-500">Cargando…</div>}>
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Cargando…</div>}>
         <PortalEntrenamientoClient
           cycles={cycles}
           ranking={ranking}

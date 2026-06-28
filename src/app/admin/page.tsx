@@ -41,9 +41,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: `${activeJobs} búsquedas activas`,
-      color: 'bg-blue-600',
-      bgLight: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      color: 'bg-primary',
+      bgLight: 'bg-accent',
+      textColor: 'text-accent-foreground',
       available: true,
     },
     {
@@ -57,9 +57,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: `${activeEmployees} empleados activos`,
-      color: 'bg-emerald-600',
-      bgLight: 'bg-emerald-50',
-      textColor: 'text-emerald-600',
+      color: 'bg-success',
+      bgLight: 'bg-success-subtle',
+      textColor: 'text-[var(--green-700)]',
       available: true,
     },
     {
@@ -73,9 +73,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: 'Vacaciones y licencias',
-      color: 'bg-amber-600',
-      bgLight: 'bg-amber-50',
-      textColor: 'text-amber-600',
+      color: 'bg-warning',
+      bgLight: 'bg-warning-subtle',
+      textColor: 'text-[var(--amber-600)]',
       available: true,
     },
     {
@@ -89,9 +89,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: activeEvaluationPeriods > 0 ? `${activeEvaluationPeriods} período${activeEvaluationPeriods > 1 ? 's' : ''} activo${activeEvaluationPeriods > 1 ? 's' : ''}` : 'Sin períodos activos',
-      color: 'bg-purple-600',
-      bgLight: 'bg-purple-50',
-      textColor: 'text-purple-600',
+      color: 'bg-cat-violet',
+      bgLight: 'bg-cat-violet-subtle',
+      textColor: 'text-cat-violet',
       available: true,
     },
     {
@@ -105,9 +105,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: 'Sin objetivos activos',
-      color: 'bg-rose-600',
-      bgLight: 'bg-rose-50',
-      textColor: 'text-rose-600',
+      color: 'bg-danger',
+      bgLight: 'bg-danger-subtle',
+      textColor: 'text-[var(--red-600)]',
       available: true,
     },
     {
@@ -121,9 +121,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: 'Ranking de capacitaciones',
-      color: 'bg-sky-600',
-      bgLight: 'bg-sky-50',
-      textColor: 'text-sky-600',
+      color: 'bg-primary',
+      bgLight: 'bg-accent',
+      textColor: 'text-accent-foreground',
       available: true,
     },
     {
@@ -137,9 +137,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: activePayrollPeriods > 0 ? `${activePayrollPeriods} periodo${activePayrollPeriods !== 1 ? 's' : ''} abierto${activePayrollPeriods !== 1 ? 's' : ''}` : 'Sin periodos abiertos',
-      color: 'bg-indigo-600',
-      bgLight: 'bg-indigo-50',
-      textColor: 'text-indigo-600',
+      color: 'bg-primary',
+      bgLight: 'bg-accent',
+      textColor: 'text-accent-foreground',
       available: true,
     },
     {
@@ -153,9 +153,9 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: `${activeRooms} sala${activeRooms !== 1 ? 's' : ''} activa${activeRooms !== 1 ? 's' : ''}`,
-      color: 'bg-cyan-600',
-      bgLight: 'bg-cyan-50',
-      textColor: 'text-cyan-600',
+      color: 'bg-cat-cyan',
+      bgLight: 'bg-cat-cyan-subtle',
+      textColor: 'text-cat-cyan',
       available: true,
     },
     {
@@ -169,22 +169,22 @@ export default async function AdminHome() {
         </svg>
       ),
       stats: 'Centro de comunicación',
-      color: 'bg-violet-600',
-      bgLight: 'bg-violet-50',
-      textColor: 'text-violet-600',
+      color: 'bg-cat-violet',
+      bgLight: 'bg-cat-violet-subtle',
+      textColor: 'text-cat-violet',
       available: true,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <header className="border-b border-zinc-200 bg-white">
+      <header className="border-b border-[var(--border)] bg-white">
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900">HR Admin</h1>
-              <p className="mt-1 text-sm text-zinc-500">Sistema de Recursos Humanos</p>
+              <h1 className="text-2xl font-bold text-foreground">HR Admin</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Sistema de Recursos Humanos</p>
             </div>
             <AdminProfileDropdown />
           </div>
@@ -194,8 +194,8 @@ export default async function AdminHome() {
       {/* Main content */}
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-zinc-900">Módulos</h2>
-          <p className="mt-1 text-sm text-zinc-500">Selecciona un módulo para comenzar</p>
+          <h2 className="text-lg font-semibold text-foreground">Módulos</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Selecciona un módulo para comenzar</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -204,17 +204,17 @@ export default async function AdminHome() {
               {module.available ? (
                 <Link
                   href={module.href}
-                  className="group flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-zinc-300 hover:shadow-md"
+                  className="group flex h-full flex-col rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-all hover:border-[var(--border)] hover:shadow-md"
                 >
                   <div className={`inline-flex rounded-lg ${module.bgLight} p-3 self-start`}>
                     <span className={module.textColor}>{module.icon}</span>
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-zinc-900 group-hover:text-black">
+                  <h3 className="mt-4 text-lg font-semibold text-foreground group-hover:text-black">
                     {module.name}
                   </h3>
-                  <p className="mt-2 flex-1 text-sm text-zinc-500">{module.description}</p>
+                  <p className="mt-2 flex-1 text-sm text-muted-foreground">{module.description}</p>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm font-medium text-zinc-600">{module.stats}</span>
+                    <span className="text-sm font-medium text-muted-foreground">{module.stats}</span>
                     <span className={`inline-flex items-center gap-1 text-sm font-medium ${module.textColor}`}>
                       Ir al módulo
                       <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -224,14 +224,14 @@ export default async function AdminHome() {
                   </div>
                 </Link>
               ) : (
-                <div className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-6 opacity-60">
-                  <div className={`inline-flex rounded-lg bg-zinc-100 p-3 self-start`}>
-                    <span className="text-zinc-400">{module.icon}</span>
+                <div className="flex h-full flex-col rounded-xl border border-[var(--border)] bg-white p-6 opacity-60">
+                  <div className={`inline-flex rounded-lg bg-secondary p-3 self-start`}>
+                    <span className="text-muted-foreground">{module.icon}</span>
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-zinc-500">{module.name}</h3>
-                  <p className="mt-2 flex-1 text-sm text-zinc-400">{module.description}</p>
+                  <h3 className="mt-4 text-lg font-semibold text-muted-foreground">{module.name}</h3>
+                  <p className="mt-2 flex-1 text-sm text-muted-foreground">{module.description}</p>
                   <div className="mt-4">
-                    <span className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500">
+                    <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
                       Próximamente
                     </span>
                   </div>

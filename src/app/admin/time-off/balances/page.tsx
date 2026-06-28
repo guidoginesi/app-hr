@@ -278,15 +278,15 @@ export default function TimeOffBalancesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Balances de Time Off</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Balances de Time Off</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Días disponibles por empleado (incluye acumulados de años anteriores)
             </p>
           </div>
           <button
             onClick={handleRecalculate}
             disabled={recalculating}
-            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded-lg bg-warning px-4 py-2 text-sm font-medium text-white hover:bg-warning disabled:opacity-50"
           >
             {recalculating ? 'Recalculando...' : 'Recalcular balances'}
           </button>
@@ -299,12 +299,12 @@ export default function TimeOffBalancesPage() {
             placeholder="Buscar empleado..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-64 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
         {/* Info box */}
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+        <div className="rounded-lg border border-[var(--orange-100)] bg-accent p-4 text-sm text-accent-foreground">
           <div><strong>Ley 20.744 - Vacaciones:</strong></div>
           <div className="mt-1">
             <span className="font-medium">Art. 150 (escala):</span> 0-5 años = 14 días | 5-10 = 21 | 10-20 = 28 | +20 = 35 días (antigüedad al 31/12)
@@ -318,57 +318,57 @@ export default function TimeOffBalancesPage() {
           <div className="mt-1">
             <span className="font-medium">Período:</span> Las vacaciones del año se habilitan a partir del 1° de octubre (período legal: oct - abril).
           </div>
-          <div className="mt-2 text-blue-600">Los días Pow y vacaciones no gozadas se acumulan año a año.</div>
+          <div className="mt-2 text-accent-foreground">Los días Pow y vacaciones no gozadas se acumulan año a año.</div>
         </div>
 
         {/* Vacation period status */}
         {!isVacationPeriodOpen && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-lg border border-warning/30 bg-warning-subtle p-4 text-sm text-[var(--amber-600)]">
             <strong>Período {currentYear} aún no abierto.</strong> Las vacaciones y días Pow del período {currentYear} se habilitarán a partir del 1° de octubre de {currentYear}.
             Los empleados actualmente pueden usar días acumulados de períodos anteriores.
           </div>
         )}
 
         {/* Table */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
             </div>
           ) : filteredEmployees.length === 0 ? (
-            <div className="py-12 text-center text-sm text-zinc-500">
+            <div className="py-12 text-center text-sm text-muted-foreground">
               {searchTerm ? 'No se encontraron empleados' : 'No hay empleados activos'}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  <tr className="border-b border-[var(--border)] bg-muted text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <th className="px-6 py-3">Empleado</th>
                     <th className="px-6 py-3 text-center">Antigüedad</th>
                     <th className="px-6 py-3 text-center">
                       <div>Vacaciones {currentYear}</div>
-                      <div className="text-[10px] font-normal normal-case text-zinc-400">
+                      <div className="text-[10px] font-normal normal-case text-muted-foreground">
                         {isVacationPeriodOpen ? 'disponibles / total' : 'acumulados'}
                       </div>
                     </th>
                     <th className="px-6 py-3 text-center">
                       <div>Días Pow {currentYear}</div>
-                      <div className="text-[10px] font-normal normal-case text-zinc-400">
+                      <div className="text-[10px] font-normal normal-case text-muted-foreground">
                         {isVacationPeriodOpen ? 'disponibles / total' : 'acumulados'}
                       </div>
                     </th>
                     <th className="px-6 py-3 text-center">
                       <div>Estudio</div>
-                      <div className="text-[10px] font-normal normal-case text-zinc-400">disponibles / 10</div>
+                      <div className="text-[10px] font-normal normal-case text-muted-foreground">disponibles / 10</div>
                     </th>
                     <th className="px-6 py-3 text-center">
                       <div>Remoto</div>
-                      <div className="text-[10px] font-normal normal-case text-zinc-400">semanas / 8</div>
+                      <div className="text-[10px] font-normal normal-case text-muted-foreground">semanas / 8</div>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200">
+                <tbody className="divide-y divide-[var(--border)]">
                   {filteredEmployees.map((emp) => {
                     const vacEstimate = estimateVacationDays(emp.hire_date);
                     const vac = emp.balances.vacation;
@@ -377,53 +377,53 @@ export default function TimeOffBalancesPage() {
                     const remote = emp.balances.remote_work;
 
                     return (
-                      <tr key={emp.id} className="hover:bg-zinc-50">
+                      <tr key={emp.id} className="hover:bg-muted">
                         <td className="px-6 py-4">
                           <div>
-                            <p className="font-medium text-zinc-900">{emp.name}</p>
+                            <p className="font-medium text-foreground">{emp.name}</p>
                             {emp.hire_date && (
-                              <p className="text-xs text-zinc-500">
+                              <p className="text-xs text-muted-foreground">
                                 Ingreso: {formatDateLocal(emp.hire_date)}
                               </p>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span className="text-sm font-medium text-zinc-900">
+                          <span className="text-sm font-medium text-foreground">
                             {emp.seniority_years} año{emp.seniority_years !== 1 ? 's' : ''}
                           </span>
-                          <p className="text-[10px] text-zinc-400">al 31/12</p>
+                          <p className="text-[10px] text-muted-foreground">al 31/12</p>
                         </td>
                         <td className="px-6 py-4 text-center">
                           {vac ? (
                             <div>
-                              <span className="text-xl font-bold text-blue-600">
+                              <span className="text-xl font-bold text-accent-foreground">
                                 {Number(vac.available_days)}
                               </span>
                               {(Number(vac.entitled_days) > 0 || Number(vac.carried_over) > 0 || Number(vac.bonus_days) > 0) && (
-                                <span className="text-sm text-zinc-400">
+                                <span className="text-sm text-muted-foreground">
                                   {' '}/ {Number(vac.entitled_days) + Number(vac.carried_over) + Number(vac.bonus_days || 0)}
                                 </span>
                               )}
                               {Number(vac.carried_over) > 0 && Number(vac.entitled_days) === 0 && !Number(vac.bonus_days) && (
-                                <p className="text-[10px] text-green-600">solo acum. período anterior</p>
+                                <p className="text-[10px] text-[var(--green-700)]">solo acum. período anterior</p>
                               )}
                               {Number(vac.carried_over) > 0 && Number(vac.entitled_days) > 0 && (
-                                <p className="text-[10px] text-green-600">+{Number(vac.carried_over)} acum.</p>
+                                <p className="text-[10px] text-[var(--green-700)]">+{Number(vac.carried_over)} acum.</p>
                               )}
                               {Number(vac.bonus_days) > 0 && (
-                                <p className="text-[10px] text-blue-600">+{Number(vac.bonus_days)} bonus</p>
+                                <p className="text-[10px] text-accent-foreground">+{Number(vac.bonus_days)} bonus</p>
                               )}
                             </div>
                           ) : (
-                            <div className="text-sm text-zinc-400">
+                            <div className="text-sm text-muted-foreground">
                               {vacEstimate.periodNotOpen ? (
                                 <span className="text-[10px]">período {currentYear} no abierto</span>
                               ) : (
                                 <>
                                   ~{vacEstimate.days}d
                                   {vacEstimate.isProportional && (
-                                    <p className="text-[10px] text-amber-500">proporcional</p>
+                                    <p className="text-[10px] text-warning">proporcional</p>
                                   )}
                                 </>
                               )}
@@ -434,27 +434,27 @@ export default function TimeOffBalancesPage() {
                           {pow ? (
                             <div className="flex items-center justify-center gap-2">
                               <div>
-                                <span className="text-xl font-bold text-purple-600">
+                                <span className="text-xl font-bold text-cat-violet">
                                   {Number(pow.available_days)}
                                 </span>
                                 {(Number(pow.entitled_days) > 0 || Number(pow.carried_over) > 0 || Number(pow.bonus_days) > 0) && (
-                                  <span className="text-sm text-zinc-400">
+                                  <span className="text-sm text-muted-foreground">
                                     {' '}/ {Number(pow.entitled_days) + Number(pow.carried_over) + Number(pow.bonus_days || 0)}
                                   </span>
                                 )}
                                 {Number(pow.carried_over) > 0 && Number(pow.entitled_days) === 0 && !Number(pow.bonus_days) && (
-                                  <p className="text-[10px] text-green-600">solo acum. período anterior</p>
+                                  <p className="text-[10px] text-[var(--green-700)]">solo acum. período anterior</p>
                                 )}
                                 {Number(pow.carried_over) > 0 && Number(pow.entitled_days) > 0 && (
-                                  <p className="text-[10px] text-green-600">+{Number(pow.carried_over)} acum.</p>
+                                  <p className="text-[10px] text-[var(--green-700)]">+{Number(pow.carried_over)} acum.</p>
                                 )}
                                 {Number(pow.bonus_days) > 0 && (
-                                  <p className="text-[10px] text-purple-600">+{Number(pow.bonus_days)} bonus</p>
+                                  <p className="text-[10px] text-cat-violet">+{Number(pow.bonus_days)} bonus</p>
                                 )}
                               </div>
                               <button
                                 onClick={() => openBonusModal(emp.id, emp.name, pow.leave_type_id, 'Días Pow')}
-                                className="rounded-full bg-purple-100 p-1 text-purple-600 hover:bg-purple-200"
+                                className="rounded-full bg-cat-violet-subtle p-1 text-cat-violet hover:bg-cat-violet-subtle"
                                 title="Agregar días bonus"
                               >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -463,7 +463,7 @@ export default function TimeOffBalancesPage() {
                               </button>
                             </div>
                           ) : (
-                            <div className="text-sm text-zinc-400">
+                            <div className="text-sm text-muted-foreground">
                               {!isVacationPeriodOpen ? (
                                 <span className="text-[10px]">período {currentYear} no abierto</span>
                               ) : (
@@ -476,30 +476,30 @@ export default function TimeOffBalancesPage() {
                           {emp.is_studying ? (
                             study ? (
                               <div>
-                                <span className="text-xl font-bold text-amber-600">
+                                <span className="text-xl font-bold text-[var(--amber-600)]">
                                   {study.available_days}
                                 </span>
-                                <span className="text-sm text-zinc-400"> / 10</span>
+                                <span className="text-sm text-muted-foreground"> / 10</span>
                               </div>
                             ) : (
-                              <span className="text-sm text-zinc-400">~10d</span>
+                              <span className="text-sm text-muted-foreground">~10d</span>
                             )
                           ) : (
-                            <span className="text-xs text-zinc-300">—</span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className="px-6 py-4 text-center">
                           {remote ? (
                             <div>
-                              <span className="text-xl font-bold text-green-600">
+                              <span className="text-xl font-bold text-[var(--green-700)]">
                                 {remote.available_days}
                               </span>
-                              <span className="text-sm text-zinc-400">
+                              <span className="text-sm text-muted-foreground">
                                 {' '}/ {Number(remote.entitled_days) + Number(remote.bonus_days || 0)} sem
                               </span>
                             </div>
                           ) : (
-                            <span className="text-sm text-zinc-400">~8</span>
+                            <span className="text-sm text-muted-foreground">~8</span>
                           )}
                         </td>
                       </tr>
@@ -513,7 +513,7 @@ export default function TimeOffBalancesPage() {
 
         {/* Summary */}
         {!loading && filteredEmployees.length > 0 && (
-          <div className="text-sm text-zinc-500">
+          <div className="text-sm text-muted-foreground">
             {filteredEmployees.length} empleado{filteredEmployees.length !== 1 ? 's' : ''} activo{filteredEmployees.length !== 1 ? 's' : ''}
           </div>
         )}
@@ -523,16 +523,16 @@ export default function TimeOffBalancesPage() {
       {bonusModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-zinc-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Agregar {bonusModal.leaveTypeName}
             </h3>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               Agregar días bonus a <strong>{bonusModal.employeeName}</strong>
             </p>
 
             <div className="mt-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700">
+                <label className="block text-sm font-medium text-secondary-foreground">
                   Cantidad de días
                 </label>
                 <input
@@ -542,20 +542,20 @@ export default function TimeOffBalancesPage() {
                   step="0.5"
                   value={bonusDays}
                   onChange={(e) => setBonusDays(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700">
-                  Motivo <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-secondary-foreground">
+                  Motivo <span className="text-[var(--red-600)]">*</span>
                 </label>
                 <textarea
                   value={bonusReason}
                   onChange={(e) => setBonusReason(e.target.value)}
                   placeholder="Ej: Premio por desempeño Q4 2025"
                   rows={3}
-                  className="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                 />
               </div>
             </div>
@@ -564,13 +564,13 @@ export default function TimeOffBalancesPage() {
               <button
                 onClick={handleAddBonus}
                 disabled={addingBonus || !bonusReason.trim()}
-                className="flex-1 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet disabled:opacity-50"
               >
                 {addingBonus ? 'Agregando...' : `Agregar ${bonusDays || '0'} día${parseFloat(bonusDays) !== 1 ? 's' : ''}`}
               </button>
               <button
                 onClick={closeBonusModal}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
               >
                 Cancelar
               </button>

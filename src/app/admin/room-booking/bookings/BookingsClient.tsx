@@ -116,8 +116,8 @@ export function BookingsClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Reservas</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reservas</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Listado de reservas de salas de reunión
         </p>
       </div>
@@ -127,7 +127,7 @@ export function BookingsClient() {
         <select
           value={roomFilter}
           onChange={(e) => setRoomFilter(e.target.value)}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan"
         >
           <option value="">Todas las salas</option>
           {rooms.map((room) => (
@@ -137,21 +137,21 @@ export function BookingsClient() {
           ))}
         </select>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-zinc-500">Desde:</label>
+          <label className="text-sm text-muted-foreground">Desde:</label>
           <input
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan"
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-zinc-500">Hasta:</label>
+          <label className="text-sm text-muted-foreground">Hasta:</label>
           <input
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan"
           />
         </div>
         {(roomFilter || fromDate || toDate) && (
@@ -161,7 +161,7 @@ export function BookingsClient() {
               setFromDate('');
               setToDate('');
             }}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
           >
             Limpiar filtros
           </button>
@@ -169,17 +169,17 @@ export function BookingsClient() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-600 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-cat-cyan border-t-transparent" />
           </div>
         ) : bookings.length === 0 ? (
-          <div className="py-12 text-center text-sm text-zinc-500">No hay reservas</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">No hay reservas</div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              <tr className="border-b border-[var(--border)] bg-muted text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <th className="px-6 py-3">Fecha</th>
                 <th className="px-6 py-3">Horario</th>
                 <th className="px-6 py-3">Sala</th>
@@ -189,28 +189,28 @@ export function BookingsClient() {
                 <th className="px-6 py-3">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200">
+            <tbody className="divide-y divide-[var(--border)]">
               {bookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-zinc-50">
-                  <td className="px-6 py-4 text-sm text-zinc-600">
+                <tr key={booking.id} className="hover:bg-muted">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
                     {formatDate(booking.start_at)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-zinc-600">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
                     {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-medium text-zinc-900">{booking.room_name}</p>
+                    <p className="font-medium text-foreground">{booking.room_name}</p>
                     {booking.room_floor && (
-                      <p className="text-xs text-zinc-500">Piso {booking.room_floor}</p>
+                      <p className="text-xs text-muted-foreground">Piso {booking.room_floor}</p>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-zinc-600">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
                     {booking.employee_first_name} {booking.employee_last_name}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-zinc-900">{booking.title}</p>
+                    <p className="text-sm text-foreground">{booking.title}</p>
                     {booking.notes && (
-                      <p className="mt-0.5 text-xs text-zinc-400 truncate max-w-xs" title={booking.notes}>
+                      <p className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs" title={booking.notes}>
                         {booking.notes}
                       </p>
                     )}
@@ -219,8 +219,8 @@ export function BookingsClient() {
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         booking.status === 'confirmed'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-zinc-100 text-zinc-600'
+                          ? 'bg-success-subtle text-[var(--green-700)]'
+                          : 'bg-secondary text-muted-foreground'
                       }`}
                     >
                       {booking.status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
@@ -231,7 +231,7 @@ export function BookingsClient() {
                       <button
                         onClick={() => handleCancel(booking.id)}
                         disabled={cancellingId === booking.id}
-                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                       >
                         {cancellingId === booking.id ? '...' : 'Cancelar'}
                       </button>
@@ -245,7 +245,7 @@ export function BookingsClient() {
       </div>
 
       {!loading && bookings.length > 0 && (
-        <div className="text-sm text-zinc-500">
+        <div className="text-sm text-muted-foreground">
           {bookings.length} reserva{bookings.length !== 1 ? 's' : ''} ·{' '}
           {bookings.filter((b) => b.status === 'confirmed').length} confirmada
           {bookings.filter((b) => b.status === 'confirmed').length !== 1 ? 's' : ''}

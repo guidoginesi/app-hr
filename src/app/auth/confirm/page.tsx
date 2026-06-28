@@ -117,38 +117,38 @@ function AuthConfirmContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="max-w-md w-full mx-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
           {status === 'loading' && (
             <>
-              <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-zinc-600">{message}</p>
+              <div className="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--border)] rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">{message}</p>
             </>
           )}
           
           {status === 'success' && (
             <>
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-12 h-12 bg-success-subtle rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-zinc-900 font-medium">{message}</p>
+              <p className="text-foreground font-medium">{message}</p>
             </>
           )}
           
           {status === 'error' && (
             <>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-12 h-12 bg-danger-subtle rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[var(--red-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <p className="text-zinc-900 font-medium">{message}</p>
+              <p className="text-foreground font-medium">{message}</p>
               <button
                 onClick={() => router.push('/portal/login')}
-                className="mt-4 text-sm text-zinc-600 hover:text-zinc-900 underline"
+                className="mt-4 text-sm text-muted-foreground hover:text-foreground underline"
               >
                 Ir al login
               </button>
@@ -163,11 +163,11 @@ function AuthConfirmContent() {
 export default function AuthConfirmPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <div className="max-w-md w-full mx-4">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-zinc-600">Procesando tu acceso...</p>
+            <div className="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--border)] rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Procesando tu acceso...</p>
           </div>
         </div>
       </div>

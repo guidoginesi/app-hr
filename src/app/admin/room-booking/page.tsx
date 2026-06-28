@@ -68,57 +68,57 @@ export default async function RoomBookingDashboardPage() {
     <RoomBookingShell active="dashboard">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Dashboard de Reserva de Salas
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Resumen general de salas y reservas
           </p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Salas activas
             </p>
-            <p className="mt-3 text-4xl font-bold text-cyan-600">{activeRooms}</p>
-            <p className="mt-2 text-xs text-zinc-500">Disponibles para reservar</p>
+            <p className="mt-3 text-4xl font-bold text-cat-cyan">{activeRooms}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Disponibles para reservar</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Reservas hoy
             </p>
-            <p className="mt-3 text-4xl font-bold text-cyan-600">{todayBookings}</p>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-3 text-4xl font-bold text-cat-cyan">{todayBookings}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
               {buenosAires}
             </p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Reservas esta semana
             </p>
-            <p className="mt-3 text-4xl font-bold text-cyan-600">{weekBookings}</p>
-            <p className="mt-2 text-xs text-zinc-500">Confirmadas</p>
+            <p className="mt-3 text-4xl font-bold text-cat-cyan">{weekBookings}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Confirmadas</p>
           </div>
         </div>
 
         {/* Today's bookings */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-zinc-900">Reservas de hoy</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">Reservas de hoy</h3>
           </div>
           {todayDetails.length > 0 ? (
-            <ul className="divide-y divide-zinc-200">
+            <ul className="divide-y divide-[var(--border)]">
               {todayDetails.map((booking: Record<string, string>) => (
                 <li key={booking.id} className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-zinc-900">{booking.room_name}</p>
-                      <p className="text-sm text-zinc-500">{booking.title}</p>
+                      <p className="font-medium text-foreground">{booking.room_name}</p>
+                      <p className="text-sm text-muted-foreground">{booking.title}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-zinc-900">
+                      <p className="text-sm font-medium text-foreground">
                         {new Date(booking.start_at).toLocaleTimeString('es-AR', {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -131,7 +131,7 @@ export default async function RoomBookingDashboardPage() {
                           timeZone: 'America/Argentina/Buenos_Aires',
                         })}
                       </p>
-                      <p className="text-sm text-zinc-500">
+                      <p className="text-sm text-muted-foreground">
                         {booking.employee_first_name} {booking.employee_last_name}
                       </p>
                     </div>
@@ -140,26 +140,26 @@ export default async function RoomBookingDashboardPage() {
               ))}
             </ul>
           ) : (
-            <div className="px-6 py-8 text-center text-sm text-zinc-500">
+            <div className="px-6 py-8 text-center text-sm text-muted-foreground">
               No hay reservas para hoy
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-zinc-900">Acciones rápidas</h3>
-          <p className="mt-1 text-sm text-zinc-500">Administra salas y reservas</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-foreground">Acciones rápidas</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Administra salas y reservas</p>
           <div className="mt-4 flex gap-3">
             <Link
               href="/admin/room-booking/rooms"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Gestionar salas
             </Link>
             <Link
               href="/admin/room-booking/bookings"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Ver reservas
             </Link>

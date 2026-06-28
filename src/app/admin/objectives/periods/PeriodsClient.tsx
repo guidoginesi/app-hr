@@ -198,14 +198,14 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Períodos de Objetivos</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-xl font-semibold text-foreground">Períodos de Objetivos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona los períodos de definición y evaluación de objetivos
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[var(--red-600)] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -216,27 +216,27 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
 
       {/* Messages */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
           {error}
         </div>
       )}
       {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-lg border border-success/20 bg-success-subtle px-4 py-3 text-sm text-[var(--green-700)]">
           {success}
         </div>
       )}
 
       {/* Periods List */}
       {sortedYears.length === 0 ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center shadow-sm">
-          <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center shadow-sm">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h3 className="mt-4 text-base font-medium text-zinc-900">No hay períodos configurados</h3>
-          <p className="mt-1 text-sm text-zinc-500">Crea tu primer período de objetivos</p>
+          <h3 className="mt-4 text-base font-medium text-foreground">No hay períodos configurados</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Crea tu primer período de objetivos</p>
           <button
             onClick={openCreateModal}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)]"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -247,57 +247,57 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
       ) : (
         <div className="space-y-6">
           {sortedYears.map(year => (
-            <div key={year} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 bg-zinc-50 px-6 py-3">
-                <h2 className="text-lg font-semibold text-zinc-900">{year}</h2>
+            <div key={year} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--border)] bg-muted px-6 py-3">
+                <h2 className="text-lg font-semibold text-foreground">{year}</h2>
               </div>
-              <div className="divide-y divide-zinc-100">
+              <div className="divide-y divide-[var(--border)]">
                 {periodsByYear[year]
                   .sort((a, b) => a.period_type === 'definition' ? -1 : 1)
                   .map(period => {
                     const isOpen = isPeriodOpen(period);
                     
                     return (
-                      <div key={period.id} className="flex items-center justify-between px-6 py-4 hover:bg-zinc-50">
+                      <div key={period.id} className="flex items-center justify-between px-6 py-4 hover:bg-muted">
                         <div className="flex items-center gap-4">
                           <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                            period.period_type === 'definition' ? 'bg-blue-100' : 'bg-emerald-100'
+                            period.period_type === 'definition' ? 'bg-accent' : 'bg-success-subtle'
                           }`}>
                             {period.period_type === 'definition' ? (
-                              <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="h-5 w-5 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             ) : (
-                              <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             )}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className="font-medium text-zinc-900">{period.name}</h3>
+                              <h3 className="font-medium text-foreground">{period.name}</h3>
                               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                 period.period_type === 'definition' 
-                                  ? 'bg-blue-100 text-blue-700' 
-                                  : 'bg-emerald-100 text-emerald-700'
+                                  ? 'bg-accent text-accent-foreground' 
+                                  : 'bg-success-subtle text-[var(--green-700)]'
                               }`}>
                                 {OBJECTIVES_PERIOD_TYPE_LABELS[period.period_type]}
                               </span>
                               {isOpen ? (
-                                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                                <span className="inline-flex items-center rounded-full bg-success-subtle px-2 py-0.5 text-xs font-medium text-[var(--green-700)]">
                                   Abierto
                                 </span>
                               ) : !period.is_active ? (
-                                <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                                <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                   Inactivo
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                                <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                   Cerrado
                                 </span>
                               )}
                             </div>
-                            <p className="mt-1 text-sm text-zinc-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               {formatDate(period.start_date)} — {formatDate(period.end_date)}
                             </p>
                           </div>
@@ -305,14 +305,14 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openEditModal(period)}
-                            className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                            className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => handleDelete(period)}
                             disabled={deleting === period.id}
-                            className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            className="rounded-lg border border-danger/20 bg-white px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                           >
                             {deleting === period.id ? 'Eliminando...' : 'Eliminar'}
                           </button>
@@ -327,9 +327,9 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
       )}
 
       {/* Info */}
-      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-        <h4 className="font-medium text-blue-900">¿Cómo funcionan los períodos?</h4>
-        <ul className="mt-2 space-y-1 text-sm text-blue-700">
+      <div className="rounded-xl border border-[var(--orange-100)] bg-accent p-4">
+        <h4 className="font-medium text-accent-foreground">¿Cómo funcionan los períodos?</h4>
+        <ul className="mt-2 space-y-1 text-sm text-accent-foreground">
           <li>• <strong>Definición:</strong> Los líderes pueden crear y editar objetivos de su equipo</li>
           <li>• <strong>Evaluación:</strong> Los líderes registran el cumplimiento real de cada objetivo</li>
           <li>• Fuera de estos períodos, los objetivos quedan en modo solo lectura</li>
@@ -343,13 +343,13 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
             <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={closeModal} />
             
             <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
+              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">
                   {editingPeriod ? 'Editar período' : 'Nuevo período de objetivos'}
                 </h2>
                 <button
                   onClick={closeModal}
-                  className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                  className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -359,34 +359,34 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
 
               <div className="p-6 space-y-4">
                 {error && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
                     {error}
                   </div>
                 )}
 
                 {/* Type selector */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Tipo de período</label>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-2">Tipo de período</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => handleTypeChange('definition')}
                       className={`flex items-center gap-3 rounded-lg border-2 p-4 transition-all ${
                         formData.period_type === 'definition'
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-zinc-200 hover:border-zinc-300'
+                          ? 'border-brand bg-accent'
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}
                     >
                       <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        formData.period_type === 'definition' ? 'bg-blue-100' : 'bg-zinc-100'
+                        formData.period_type === 'definition' ? 'bg-accent' : 'bg-secondary'
                       }`}>
-                        <svg className={`h-5 w-5 ${formData.period_type === 'definition' ? 'text-blue-600' : 'text-zinc-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className={`h-5 w-5 ${formData.period_type === 'definition' ? 'text-accent-foreground' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </div>
                       <div className="text-left">
-                        <p className={`font-medium ${formData.period_type === 'definition' ? 'text-blue-700' : 'text-zinc-700'}`}>Definición</p>
-                        <p className="text-xs text-zinc-500">Crear objetivos</p>
+                        <p className={`font-medium ${formData.period_type === 'definition' ? 'text-accent-foreground' : 'text-secondary-foreground'}`}>Definición</p>
+                        <p className="text-xs text-muted-foreground">Crear objetivos</p>
                       </div>
                     </button>
                     <button
@@ -394,20 +394,20 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
                       onClick={() => handleTypeChange('evaluation')}
                       className={`flex items-center gap-3 rounded-lg border-2 p-4 transition-all ${
                         formData.period_type === 'evaluation'
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-zinc-200 hover:border-zinc-300'
+                          ? 'border-success/20 bg-success-subtle'
+                          : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}
                     >
                       <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        formData.period_type === 'evaluation' ? 'bg-emerald-100' : 'bg-zinc-100'
+                        formData.period_type === 'evaluation' ? 'bg-success-subtle' : 'bg-secondary'
                       }`}>
-                        <svg className={`h-5 w-5 ${formData.period_type === 'evaluation' ? 'text-emerald-600' : 'text-zinc-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className={`h-5 w-5 ${formData.period_type === 'evaluation' ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div className="text-left">
-                        <p className={`font-medium ${formData.period_type === 'evaluation' ? 'text-emerald-700' : 'text-zinc-700'}`}>Evaluación</p>
-                        <p className="text-xs text-zinc-500">Evaluar logros</p>
+                        <p className={`font-medium ${formData.period_type === 'evaluation' ? 'text-[var(--green-700)]' : 'text-secondary-foreground'}`}>Evaluación</p>
+                        <p className="text-xs text-muted-foreground">Evaluar logros</p>
                       </div>
                     </button>
                   </div>
@@ -415,11 +415,11 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
 
                 {/* Year */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">Año</label>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">Año</label>
                   <select
                     value={formData.year}
                     onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
-                    className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     {years.map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -429,8 +429,8 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Nombre <span className="text-zinc-400 font-normal">(opcional)</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Nombre <span className="text-muted-foreground font-normal">(opcional)</span>
                   </label>
                   <input
                     type="text"
@@ -440,41 +440,41 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
                       ? `Definición de objetivos ${formData.year}` 
                       : `Evaluación de objetivos ${formData.year}`
                     }
-                    className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Descripción <span className="text-zinc-400 font-normal">(opcional)</span>
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
+                    Descripción <span className="text-muted-foreground font-normal">(opcional)</span>
                   </label>
                   <input
                     type="text"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Dates */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Fecha inicio</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Fecha inicio</label>
                     <input
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                      className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Fecha fin</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Fecha fin</label>
                     <input
                       type="date"
                       value={formData.end_date}
                       onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                      className="block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -485,17 +485,17 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                    className="h-4 w-4 rounded border-zinc-300 text-rose-600 focus:ring-rose-500"
+                    className="h-4 w-4 rounded border-[var(--border)] text-[var(--red-600)] focus:ring-ring"
                   />
-                  <span className="text-sm text-zinc-700">Período activo</span>
+                  <span className="text-sm text-secondary-foreground">Período activo</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                 >
                   Cancelar
                 </button>
@@ -503,7 +503,7 @@ export function PeriodsClient({ initialPeriods, currentYear }: PeriodsClientProp
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                  className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : editingPeriod ? 'Guardar cambios' : 'Crear período'}
                 </button>

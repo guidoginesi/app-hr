@@ -29,14 +29,14 @@ export const LEAVE_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
 
 // Status colors for UI badges
 export const LEAVE_STATUS_COLORS: Record<LeaveRequestStatus, { bg: string; text: string }> = {
-  pending: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  pending_leader: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  pending_hr: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  approved: { bg: 'bg-green-100', text: 'text-green-800' },
-  rejected: { bg: 'bg-red-100', text: 'text-red-800' },
-  rejected_leader: { bg: 'bg-red-100', text: 'text-red-800' },
-  rejected_hr: { bg: 'bg-red-100', text: 'text-red-800' },
-  cancelled: { bg: 'bg-zinc-100', text: 'text-zinc-600' },
+  pending: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
+  pending_leader: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
+  pending_hr: { bg: 'bg-primary', text: 'text-primary' },
+  approved: { bg: 'bg-success-subtle', text: 'text-[var(--green-700)]' },
+  rejected: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },
+  rejected_leader: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },
+  rejected_hr: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },
+  cancelled: { bg: 'bg-secondary', text: 'text-muted-foreground' },
 };
 
 // Final statuses - no further actions allowed

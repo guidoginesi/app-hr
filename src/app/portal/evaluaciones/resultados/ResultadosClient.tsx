@@ -29,23 +29,23 @@ export function ResultadosClient({
   const leaderDimensionScores = leaderEvaluation?.dimension_scores || {};
 
   const getScoreColor = (score: number): string => {
-    if (score <= 2) return 'text-red-600';
-    if (score <= 4) return 'text-orange-600';
-    if (score <= 6) return 'text-yellow-600';
-    if (score <= 8) return 'text-green-600';
-    return 'text-emerald-600';
+    if (score <= 2) return 'text-[var(--red-600)]';
+    if (score <= 4) return 'text-accent-foreground';
+    if (score <= 6) return 'text-[var(--amber-600)]';
+    if (score <= 8) return 'text-[var(--green-700)]';
+    return 'text-[var(--green-700)]';
   };
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Resultados de Evaluación</h1>
-          <p className="mt-1 text-sm text-zinc-500">{period.name}</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Resultados de Evaluación</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{period.name}</p>
         </div>
         <Link
           href="/portal/evaluaciones"
-          className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
         >
           Volver
         </Link>
@@ -53,14 +53,14 @@ export function ResultadosClient({
 
       {/* Status Check */}
       {!selfEvaluation || selfEvaluation.status !== 'submitted' ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
-          <p className="text-amber-900 font-medium">Tu autoevaluación aún no está completa</p>
-          <p className="text-sm text-amber-700 mt-1">
+        <div className="rounded-xl border border-warning/30 bg-warning-subtle p-6">
+          <p className="text-[var(--amber-600)] font-medium">Tu autoevaluación aún no está completa</p>
+          <p className="text-sm text-[var(--amber-600)] mt-1">
             Completá tu autoevaluación para ver los resultados.
           </p>
           <Link
             href="/portal/evaluaciones"
-            className="mt-4 inline-block rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+            className="mt-4 inline-block rounded-lg bg-warning px-4 py-2 text-sm font-medium text-white hover:bg-warning"
           >
             Ir a evaluaciones
           </Link>
@@ -69,44 +69,44 @@ export function ResultadosClient({
         <>
           {/* Overall Scores */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 text-center">
-              <p className="text-sm font-medium text-blue-600">Mi Autoevaluación</p>
-              <p className={`text-4xl font-bold mt-2 ${selfScore ? getScoreColor(selfScore) : 'text-zinc-400'}`}>
+            <div className="rounded-xl border border-[var(--border)] bg-muted p-6 text-center">
+              <p className="text-sm font-medium text-accent-foreground">Mi Autoevaluación</p>
+              <p className={`text-4xl font-bold mt-2 ${selfScore ? getScoreColor(selfScore) : 'text-muted-foreground'}`}>
                 {selfScore?.toFixed(1) || '-'}
               </p>
-              <p className="text-xs text-blue-600 mt-1">/10</p>
+              <p className="text-xs text-accent-foreground mt-1">/10</p>
               {selfScore && (
-                <p className="text-xs text-blue-700 mt-2">{getScaleLabel(Math.round(selfScore))}</p>
+                <p className="text-xs text-accent-foreground mt-2">{getScaleLabel(Math.round(selfScore))}</p>
               )}
             </div>
 
             {canShowResults && leaderEvaluation && leaderEvaluation.status === 'submitted' ? (
               <>
-                <div className="rounded-xl border border-purple-200 bg-purple-50 p-6 text-center">
-                  <p className="text-sm font-medium text-purple-600">Evaluación de Líder</p>
-                  <p className={`text-4xl font-bold mt-2 ${leaderScore ? getScoreColor(leaderScore) : 'text-zinc-400'}`}>
+                <div className="rounded-xl border border-[var(--border)] bg-secondary p-6 text-center">
+                  <p className="text-sm font-medium text-foreground">Evaluación de Líder</p>
+                  <p className={`text-4xl font-bold mt-2 ${leaderScore ? getScoreColor(leaderScore) : 'text-muted-foreground'}`}>
                     {leaderScore?.toFixed(1) || '-'}
                   </p>
-                  <p className="text-xs text-purple-600 mt-1">/10</p>
+                  <p className="text-xs text-foreground mt-1">/10</p>
                   {leaderScore && (
-                    <p className="text-xs text-purple-700 mt-2">{getScaleLabel(Math.round(leaderScore))}</p>
+                    <p className="text-xs text-foreground mt-2">{getScaleLabel(Math.round(leaderScore))}</p>
                   )}
                   {leaderEvaluation.evaluator && (
-                    <p className="text-xs text-purple-600 mt-2">
+                    <p className="text-xs text-foreground mt-2">
                       Por: {leaderEvaluation.evaluator.first_name} {leaderEvaluation.evaluator.last_name}
                     </p>
                   )}
                 </div>
 
-                <div className="rounded-xl border border-zinc-200 bg-white p-6 text-center">
-                  <p className="text-sm font-medium text-zinc-600">GAP</p>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-center">
+                  <p className="text-sm font-medium text-muted-foreground">GAP</p>
                   <p className={`text-4xl font-bold mt-2 ${
-                    gap === null ? 'text-zinc-400' :
-                    gap >= 0 ? 'text-green-600' : 'text-red-600'
+                    gap === null ? 'text-muted-foreground' :
+                    gap >= 0 ? 'text-[var(--green-700)]' : 'text-[var(--red-600)]'
                   }`}>
                     {gap !== null ? (gap >= 0 ? '+' : '') + gap.toFixed(1) : '-'}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     {gap !== null && (
                       gap > 0 ? 'Tu líder te evaluó mejor que vos mismo' :
                       gap < 0 ? 'Tu líder te evaluó más bajo que vos mismo' :
@@ -116,8 +116,8 @@ export function ResultadosClient({
                 </div>
               </>
             ) : (
-              <div className="lg:col-span-2 rounded-xl border border-zinc-200 bg-zinc-50 p-6 flex items-center justify-center">
-                <p className="text-sm text-zinc-500">
+              <div className="lg:col-span-2 rounded-xl border border-[var(--border)] bg-muted p-6 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">
                   {!canShowResults
                     ? 'Los resultados de la evaluación de líder aún no están disponibles.'
                     : 'Tu líder aún no ha completado tu evaluación.'
@@ -128,12 +128,12 @@ export function ResultadosClient({
           </div>
 
           {/* Dimension Comparison */}
-          <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-            <div className="border-b border-zinc-200 px-6 py-4">
-              <h2 className="text-lg font-semibold text-zinc-900">Resultados por Dimensión</h2>
+          <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+            <div className="border-b border-[var(--border)] px-6 py-4">
+              <h2 className="text-lg font-semibold text-foreground">Resultados por Dimensión</h2>
             </div>
             <div className="p-6">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4 px-4">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 px-4">
                 <span className="flex-1">Dimensión</span>
                 <span className="w-24 text-center">Autoevaluación</span>
                 {canShowResults && leaderEvaluation?.status === 'submitted' && (
@@ -146,21 +146,21 @@ export function ResultadosClient({
                   const leaderDimScore = leaderDimensionScores[dim.id];
                   
                   return (
-                    <div key={dim.id} className="flex items-center justify-between p-4 rounded-lg bg-zinc-50">
+                    <div key={dim.id} className="flex items-center justify-between p-4 rounded-lg bg-muted">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-zinc-800">{dim.name}</p>
+                        <p className="text-sm font-medium text-secondary-foreground">{dim.name}</p>
                         {dim.description && (
-                          <p className="text-xs text-zinc-500">{dim.description}</p>
+                          <p className="text-xs text-muted-foreground">{dim.description}</p>
                         )}
                       </div>
                       <div className="w-24 text-center">
-                        <span className={`text-sm font-semibold ${selfDimScore ? getScoreColor(selfDimScore) : 'text-zinc-400'}`}>
+                        <span className={`text-sm font-semibold ${selfDimScore ? getScoreColor(selfDimScore) : 'text-muted-foreground'}`}>
                           {selfDimScore?.toFixed(1) || '-'}
                         </span>
                       </div>
                       {canShowResults && leaderEvaluation?.status === 'submitted' && (
                         <div className="w-24 text-center">
-                          <span className={`text-sm font-semibold ${leaderDimScore ? getScoreColor(leaderDimScore) : 'text-zinc-400'}`}>
+                          <span className={`text-sm font-semibold ${leaderDimScore ? getScoreColor(leaderDimScore) : 'text-muted-foreground'}`}>
                             {leaderDimScore?.toFixed(1) || '-'}
                           </span>
                         </div>
@@ -173,13 +173,13 @@ export function ResultadosClient({
           </div>
 
           {/* Scale Reference */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6">
-            <h3 className="text-sm font-semibold text-zinc-900 mb-3">Referencia de escala</h3>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Referencia de escala</h3>
             <div className="flex flex-wrap gap-2">
               {SCALE_DEFINITIONS.map((def) => (
-                <div key={def.min} className="inline-flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-1.5">
-                  <span className="text-sm font-semibold text-zinc-700">{def.min}-{def.max}</span>
-                  <span className="text-xs text-zinc-500">{def.label}</span>
+                <div key={def.min} className="inline-flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5">
+                  <span className="text-sm font-semibold text-secondary-foreground">{def.min}-{def.max}</span>
+                  <span className="text-xs text-muted-foreground">{def.label}</span>
                 </div>
               ))}
             </div>

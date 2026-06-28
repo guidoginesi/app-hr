@@ -157,14 +157,14 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Períodos de Evaluación</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Períodos de Evaluación</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona los ciclos de evaluación de desempeño
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+          className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet"
         >
           Nuevo período
         </button>
@@ -172,7 +172,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
 
       {message && (
         <div className={`rounded-lg p-4 text-sm ${
-          message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+          message.type === 'success' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
         }`}>
           {message.text}
         </div>
@@ -184,26 +184,26 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/50" onClick={resetForm} />
             <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">
                   {editingPeriod ? 'Editar período' : 'Nuevo período'}
                 </h2>
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Nombre *</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Nombre *</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Ej: Evaluación de Desempeño 2025"
                       required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Año *</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Año *</label>
                     <input
                       type="number"
                       value={formData.year}
@@ -211,65 +211,65 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                       min={2020}
                       max={2100}
                       required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
                   
-                  <div className="rounded-lg bg-zinc-50 p-4 space-y-3">
-                    <p className="text-xs font-semibold text-zinc-600 uppercase tracking-wider">Período evaluado</p>
+                  <div className="rounded-lg bg-muted p-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Período evaluado</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Inicio *</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Inicio *</label>
                         <input
                           type="date"
                           value={formData.start_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                           required
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Fin *</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Fin *</label>
                         <input
                           type="date"
                           value={formData.end_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                           required
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-purple-50 p-4 space-y-3">
-                    <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider">Ventana para completar evaluación</p>
+                  <div className="rounded-lg bg-cat-violet-subtle p-4 space-y-3">
+                    <p className="text-xs font-semibold text-cat-violet uppercase tracking-wider">Ventana para completar evaluación</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Inicio</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Inicio</label>
                         <input
                           type="date"
                           value={formData.evaluation_start_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, evaluation_start_date: e.target.value }))}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Fin</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Fin</label>
                         <input
                           type="date"
                           value={formData.evaluation_end_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, evaluation_end_date: e.target.value }))}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                         />
                       </div>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Estado</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Estado</label>
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as PeriodStatus }))}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     >
                       <option value="draft">Borrador</option>
                       <option value="open">Abierto</option>
@@ -277,83 +277,83 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                     </select>
                   </div>
                   <div className="space-y-3 pt-2">
-                    <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Tipos de evaluación</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tipos de evaluación</p>
                     <label className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={formData.self_evaluation_enabled}
                         onChange={(e) => setFormData(prev => ({ ...prev, self_evaluation_enabled: e.target.checked }))}
-                        className="rounded border-zinc-300 text-purple-600 focus:ring-purple-600"
+                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                       />
-                      <span className="text-sm text-zinc-700">Autoevaluación habilitada</span>
+                      <span className="text-sm text-secondary-foreground">Autoevaluación habilitada</span>
                     </label>
                     <label className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={formData.leader_evaluation_enabled}
                         onChange={(e) => setFormData(prev => ({ ...prev, leader_evaluation_enabled: e.target.checked }))}
-                        className="rounded border-zinc-300 text-purple-600 focus:ring-purple-600"
+                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                       />
-                      <span className="text-sm text-zinc-700">Evaluación de líder habilitada</span>
+                      <span className="text-sm text-secondary-foreground">Evaluación de líder habilitada</span>
                     </label>
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Módulos de evaluación del líder</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Módulos de evaluación del líder</p>
                     <label className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={formData.objectives_enabled}
                         onChange={(e) => setFormData(prev => ({ ...prev, objectives_enabled: e.target.checked }))}
-                        className="rounded border-zinc-300 text-purple-600 focus:ring-purple-600"
+                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                       />
-                      <span className="text-sm text-zinc-700">Cumplimiento de objetivos</span>
+                      <span className="text-sm text-secondary-foreground">Cumplimiento de objetivos</span>
                     </label>
                     <label className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={formData.recategorization_enabled}
                         onChange={(e) => setFormData(prev => ({ ...prev, recategorization_enabled: e.target.checked }))}
-                        className="rounded border-zinc-300 text-purple-600 focus:ring-purple-600"
+                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                       />
-                      <span className="text-sm text-zinc-700">Recategorización / Ascenso</span>
+                      <span className="text-sm text-secondary-foreground">Recategorización / Ascenso</span>
                     </label>
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Configuración general</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Configuración general</p>
                     <label className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={formData.show_results_to_employee}
                         onChange={(e) => setFormData(prev => ({ ...prev, show_results_to_employee: e.target.checked }))}
-                        className="rounded border-zinc-300 text-purple-600 focus:ring-purple-600"
+                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                       />
-                      <span className="text-sm text-zinc-700">Mostrar resultados al empleado</span>
+                      <span className="text-sm text-secondary-foreground">Mostrar resultados al empleado</span>
                     </label>
                     <label className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         checked={formData.is_active}
                         onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                        className="rounded border-zinc-300 text-purple-600 focus:ring-purple-600"
+                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                       />
-                      <span className="text-sm text-zinc-700">Período activo (solo uno puede estar activo)</span>
+                      <span className="text-sm text-secondary-foreground">Período activo (solo uno puede estar activo)</span>
                     </label>
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+                    className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet disabled:opacity-50"
                   >
                     {saving ? 'Guardando...' : editingPeriod ? 'Guardar cambios' : 'Crear período'}
                   </button>
@@ -365,39 +365,39 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
       )}
 
       {/* Periods List */}
-      <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {periods.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm text-zinc-500">No hay períodos de evaluación. Crea uno para comenzar.</p>
+            <p className="text-sm text-muted-foreground">No hay períodos de evaluación. Crea uno para comenzar.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-200">
+          <ul className="divide-y divide-[var(--border)]">
             {periods.map((period) => (
               <li key={period.id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-medium text-zinc-900">{period.name}</h3>
+                      <h3 className="font-medium text-foreground">{period.name}</h3>
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         period.status === 'open'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-success-subtle text-[var(--green-700)]'
                           : period.status === 'closed'
-                          ? 'bg-zinc-100 text-zinc-600'
-                          : 'bg-yellow-100 text-yellow-700'
+                          ? 'bg-secondary text-muted-foreground'
+                          : 'bg-warning-subtle text-[var(--amber-600)]'
                       }`}>
                         {period.status === 'open' ? 'Abierto' : period.status === 'closed' ? 'Cerrado' : 'Borrador'}
                       </span>
                       {period.is_active && (
-                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                        <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
                           Activo
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Período: {formatDate(period.start_date)} - {formatDate(period.end_date)}
                     </p>
                     {period.evaluation_start_date && period.evaluation_end_date && (
-                      <p className="text-xs text-purple-600">
+                      <p className="text-xs text-cat-violet">
                         Ventana: {formatDate(period.evaluation_start_date)} - {formatDate(period.evaluation_end_date)}
                       </p>
                     )}
@@ -406,7 +406,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                     {period.status === 'draft' && (
                       <button
                         onClick={() => toggleStatus(period, 'open')}
-                        className="rounded-lg border border-green-200 px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-50"
+                        className="rounded-lg border border-success/20 px-3 py-1.5 text-xs font-medium text-[var(--green-700)] hover:bg-success-subtle"
                       >
                         Abrir
                       </button>
@@ -414,20 +414,20 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                     {period.status === 'open' && (
                       <button
                         onClick={() => toggleStatus(period, 'closed')}
-                        className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                        className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                       >
                         Cerrar
                       </button>
                     )}
                     <button
                       onClick={() => openEditForm(period)}
-                      className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                      className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(period.id)}
-                      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                      className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
                     >
                       Eliminar
                     </button>

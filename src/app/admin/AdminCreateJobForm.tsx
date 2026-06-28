@@ -49,41 +49,41 @@ export function AdminCreateJobForm() {
 	}
 
 	return (
-		<form ref={formRef} onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-			<h2 className="text-lg font-semibold text-zinc-900">Crear nueva búsqueda</h2>
-			<p className="mt-1 text-xs text-zinc-500">Completa los campos para publicar una nueva posición</p>
+		<form ref={formRef} onSubmit={handleSubmit} className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+			<h2 className="text-lg font-semibold text-foreground">Crear nueva búsqueda</h2>
+			<p className="mt-1 text-xs text-muted-foreground">Completa los campos para publicar una nueva posición</p>
 			
 			<div className="mt-6 space-y-4">
 				<div className="grid grid-cols-1 gap-4">
 					<div>
-						<label className="mb-1.5 block text-xs font-medium text-zinc-700">Título *</label>
+						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Título *</label>
 						<input
-							className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 							name="title"
 							placeholder="Ej: Desarrollador Backend Senior"
 							required
 						/>
 					</div>
 					<div>
-						<label className="mb-1.5 block text-xs font-medium text-zinc-700">Área</label>
+						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Área</label>
 						<input
-							className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 							name="department"
 							placeholder="Ej: Tecnología"
 						/>
 					</div>
 					<div>
-						<label className="mb-1.5 block text-xs font-medium text-zinc-700">Ubicación</label>
+						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Ubicación</label>
 						<input
-							className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 							name="location"
 							placeholder="Ej: Buenos Aires, Remoto"
 						/>
 					</div>
 					<div>
-						<label className="mb-1.5 block text-xs font-medium text-zinc-700">Estado</label>
+						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Estado</label>
 						<select
-							className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 							name="is_published"
 							defaultValue="true"
 						>
@@ -93,18 +93,18 @@ export function AdminCreateJobForm() {
 					</div>
 				</div>
 				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Descripción</label>
+					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Descripción</label>
 					<textarea
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="description"
 						rows={4}
 						placeholder="Describe la posición y responsabilidades..."
 					/>
 				</div>
 				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Requerimientos</label>
+					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Requerimientos</label>
 					<textarea
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="requirements"
 						rows={4}
 						placeholder="Lista los requisitos y habilidades necesarias..."
@@ -113,18 +113,18 @@ export function AdminCreateJobForm() {
 				<button
 					type="submit"
 					disabled={loading}
-					className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+					className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{loading ? 'Creando…' : 'Crear búsqueda'}
 				</button>
 				{success && (
-					<div className="rounded-lg border border-green-200 bg-green-50 p-3">
-						<p className="text-xs font-medium text-green-700">✅ Búsqueda creada exitosamente</p>
+					<div className="rounded-lg border border-success/20 bg-success-subtle p-3">
+						<p className="text-xs font-medium text-[var(--green-700)]">✅ Búsqueda creada exitosamente</p>
 					</div>
 				)}
 				{error && (
-					<div className="rounded-lg border border-red-200 bg-red-50 p-3">
-						<p className="text-xs font-medium text-red-700">{error}</p>
+					<div className="rounded-lg border border-danger/20 bg-danger-subtle p-3">
+						<p className="text-xs font-medium text-[var(--red-600)]">{error}</p>
 					</div>
 				)}
 			</div>

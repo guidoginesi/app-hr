@@ -51,13 +51,13 @@ function FunnelVisualization({ stats }: { stats: PipelineStats }) {
 				<div className="flex justify-between gap-2 w-full items-end">
 					{stageData.map((data, index) => (
 						<div key={data.stage} className="text-center flex-1 min-w-0 flex flex-col">
-							<div className="text-xs font-medium text-zinc-500 uppercase tracking-tight mb-2 h-8 flex items-start justify-center">
+							<div className="text-xs font-medium text-muted-foreground uppercase tracking-tight mb-2 h-8 flex items-start justify-center">
 								{data.label}
 							</div>
-							<div className="text-3xl font-bold text-zinc-900 leading-none">{data.count}</div>
+							<div className="text-3xl font-bold text-foreground leading-none">{data.count}</div>
 							<div className="h-6 mt-2 flex items-center justify-center">
 								{!data.isFirst && data.previousCount > 0 && (
-									<div className="text-sm font-medium text-red-600 flex items-center gap-1">
+									<div className="text-sm font-medium text-[var(--red-600)] flex items-center gap-1">
 										<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
 										</svg>
@@ -123,7 +123,7 @@ function FunnelVisualization({ stats }: { stats: PipelineStats }) {
 					<div className="relative flex justify-between gap-2 w-full h-full" style={{ zIndex: 10 }}>
 						{stageData.map((data, index) => (
 							<div key={`col-${data.stage}`} className="flex-1 min-w-0 flex items-center justify-center">
-								<span className="text-base font-bold text-zinc-900">
+								<span className="text-base font-bold text-foreground">
 									{data.percentageOfTotal.toFixed(0)}%
 								</span>
 							</div>
@@ -134,7 +134,7 @@ function FunnelVisualization({ stats }: { stats: PipelineStats }) {
 
 			{/* Nota explicativa */}
 			<div className="text-center">
-				<p className="text-sm text-zinc-500">
+				<p className="text-sm text-muted-foreground">
 					Los porcentajes dentro del embudo muestran la tasa de conversión respecto al total inicial
 				</p>
 			</div>
@@ -149,8 +149,8 @@ export function PipelineDashboard({ stats }: PipelineDashboardProps) {
 
 	if (stats.length === 0) {
 		return (
-			<div className="rounded-xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
-				<p className="text-sm text-zinc-500">No hay búsquedas con candidatos todavía</p>
+			<div className="rounded-xl border border-[var(--border)] bg-white p-8 text-center shadow-sm">
+				<p className="text-sm text-muted-foreground">No hay búsquedas con candidatos todavía</p>
 			</div>
 		);
 	}
@@ -161,13 +161,13 @@ export function PipelineDashboard({ stats }: PipelineDashboardProps) {
 		<div className="space-y-6">
 			{/* Select de búsquedas */}
 			<div>
-				<label className="mb-2 block text-sm font-medium text-zinc-700">
+				<label className="mb-2 block text-sm font-medium text-secondary-foreground">
 					Seleccionar búsqueda
 				</label>
 				<select
 					value={selectedJobId}
 					onChange={(e) => setSelectedJobId(e.target.value)}
-					className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+					className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 				>
 					{stats.map((stat) => (
 						<option key={stat.job_id} value={stat.job_id}>
@@ -180,7 +180,7 @@ export function PipelineDashboard({ stats }: PipelineDashboardProps) {
 			</div>
 
 			{/* Pipeline visual de la búsqueda seleccionada */}
-			<div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
+			<div className="rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
 				<FunnelVisualization stats={selectedStat} />
 			</div>
 		</div>

@@ -139,9 +139,9 @@ export const STATUS_LABELS: Record<ObjectiveStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<ObjectiveStatus, { bg: string; text: string }> = {
-  not_started: { bg: 'bg-zinc-100', text: 'text-zinc-600' },
-  in_progress: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-  completed: { bg: 'bg-green-100', text: 'text-green-700' },
+  not_started: { bg: 'bg-secondary', text: 'text-muted-foreground' },
+  in_progress: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
+  completed: { bg: 'bg-success-subtle', text: 'text-[var(--green-700)]' },
 };
 
 export const OBJECTIVES_PERIOD_TYPE_LABELS: Record<ObjectivesPeriodType, string> = {

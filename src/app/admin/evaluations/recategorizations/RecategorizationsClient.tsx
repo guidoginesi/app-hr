@@ -157,15 +157,15 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
 
   const getStatusBadge = (recat: Recategorization) => {
     if (isNotApplicable(recat)) {
-      return <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">No aplica</span>;
+      return <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">No aplica</span>;
     }
     switch (recat.hr_status) {
       case 'approved':
-        return <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Aprobado por HR</span>;
+        return <span className="inline-flex items-center rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-[var(--green-700)]">Aprobado por HR</span>;
       case 'rejected':
-        return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">Rechazado por HR</span>;
+        return <span className="inline-flex items-center rounded-full bg-danger-subtle px-2.5 py-0.5 text-xs font-medium text-[var(--red-600)]">Rechazado por HR</span>;
       default:
-        return <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Pendiente de HR</span>;
+        return <span className="inline-flex items-center rounded-full bg-warning-subtle px-2.5 py-0.5 text-xs font-medium text-[var(--amber-600)]">Pendiente de HR</span>;
     }
   };
 
@@ -190,8 +190,8 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Recategorizaciones</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Recategorizaciones</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Revisión y aprobación de propuestas de recategorización de líderes
         </p>
       </div>
@@ -199,8 +199,8 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-zinc-500">Estado:</span>
-          <div className="flex rounded-lg border border-zinc-200 bg-white p-1">
+          <span className="text-sm text-muted-foreground">Estado:</span>
+          <div className="flex rounded-lg border border-[var(--border)] bg-white p-1">
             {[
               { value: 'pending', label: 'Pendientes', count: pendingCount },
               { value: 'approved', label: 'Aprobadas' },
@@ -212,13 +212,13 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                 onClick={() => setFilter(option.value as typeof filter)}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   filter === option.value
-                    ? 'bg-purple-600 text-white'
-                    : 'text-zinc-600 hover:bg-zinc-100'
+                    ? 'bg-cat-violet text-white'
+                    : 'text-muted-foreground hover:bg-secondary'
                 }`}
               >
                 {option.label}
                 {option.count !== undefined && option.count > 0 && (
-                  <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-xs text-white">
+                  <span className="ml-1.5 rounded-full bg-warning px-1.5 py-0.5 text-xs text-white">
                     {option.count}
                   </span>
                 )}
@@ -228,11 +228,11 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-zinc-500">Período:</span>
+          <span className="text-sm text-muted-foreground">Período:</span>
           <select
             value={periodFilter}
             onChange={(e) => setPeriodFilter(e.target.value)}
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
           >
             <option value="all">Todos los períodos</option>
             {periods.map((p) => (
@@ -246,11 +246,11 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
 
       {/* List */}
       {filteredRecategorizations.length === 0 ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="mt-4 text-sm text-zinc-500">
+          <p className="mt-4 text-sm text-muted-foreground">
             {filter === 'pending' 
               ? 'No hay recategorizaciones pendientes de aprobación'
               : 'No se encontraron recategorizaciones con los filtros seleccionados'
@@ -258,76 +258,76 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-          <table className="min-w-full divide-y divide-zinc-200">
-            <thead className="bg-zinc-50">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
+          <table className="min-w-full divide-y divide-[var(--border)]">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Empleado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Propuesto por
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Nivel actual
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Propuesta
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Nivel recomendado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Estado HR
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-zinc-200">
+            <tbody className="bg-white divide-y divide-[var(--border)]">
               {filteredRecategorizations.map((recat) => {
                 const emp = getEmployee(recat);
                 const period = getPeriod(recat);
                 return (
-                <tr key={recat.id} className="hover:bg-zinc-50">
+                <tr key={recat.id} className="hover:bg-muted">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <p className="text-sm font-medium text-zinc-900">
+                      <p className="text-sm font-medium text-foreground">
                         {emp?.first_name} {emp?.last_name}
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         {emp?.job_title || 'Sin puesto'}
                       </p>
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-muted-foreground">
                         {emp?.department?.name || 'Sin departamento'}
                       </p>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm text-zinc-700">
+                    <p className="text-sm text-secondary-foreground">
                       {recat.evaluation?.evaluator
                         ? `${recat.evaluation.evaluator.first_name} ${recat.evaluation.evaluator.last_name}`
-                        : <span className="text-zinc-400 italic">Sin evaluación</span>}
+                        : <span className="text-muted-foreground italic">Sin evaluación</span>}
                     </p>
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-muted-foreground">
                       {period?.name}
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-zinc-700">
+                    <span className="text-sm text-secondary-foreground">
                       {emp?.seniority_level 
                         ? getSeniorityLabel(emp.seniority_level)
                         : 'Sin nivel'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-purple-600">
+                    <span className="text-sm font-medium text-cat-violet">
                       {getLeaderDecision(recat)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-zinc-700">
+                    <span className="text-sm text-secondary-foreground">
                       {recat.recommended_level 
                         ? getSeniorityLabel(recat.recommended_level)
                         : '-'}
@@ -343,7 +343,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                           setSelectedRecat(recat);
                           setHrNotes('');
                         }}
-                        className="text-sm font-medium text-purple-600 hover:text-purple-700"
+                        className="text-sm font-medium text-cat-violet hover:text-cat-violet"
                       >
                         Revisar
                       </button>
@@ -354,7 +354,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                           setSelectedRecat(recat);
                           setHrNotes(recat.hr_notes || '');
                         }}
-                        className="text-sm font-medium text-zinc-500 hover:text-zinc-700"
+                        className="text-sm font-medium text-muted-foreground hover:text-foreground"
                       >
                         Ver detalle
                       </button>
@@ -375,15 +375,15 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
             <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={() => setSelectedRecat(null)} />
 
             <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
+              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">
                   {selectedRecat && isNotApplicable(selectedRecat)
                     ? 'No aplica recategorización'
                     : 'Revisar Recategorización'}
                 </h2>
                 <button
                   onClick={() => setSelectedRecat(null)}
-                  className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                  className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -393,32 +393,32 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
 
               <div className="p-6 space-y-4">
                 {/* Employee Info */}
-                <div className="rounded-lg bg-zinc-50 p-4">
-                  <h3 className="text-sm font-medium text-zinc-700 mb-2">Empleado</h3>
-                  <p className="text-base font-semibold text-zinc-900">
+                <div className="rounded-lg bg-muted p-4">
+                  <h3 className="text-sm font-medium text-secondary-foreground mb-2">Empleado</h3>
+                  <p className="text-base font-semibold text-foreground">
                     {getEmployee(selectedRecat)?.first_name} {getEmployee(selectedRecat)?.last_name}
                   </p>
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-muted-foreground">
                     {getEmployee(selectedRecat)?.job_title || 'Sin puesto'} • {getEmployee(selectedRecat)?.department?.name || 'Sin departamento'}
                   </p>
                   {!selectedRecat.evaluation_id && (
-                    <p className="mt-1 text-xs text-amber-600 font-medium">Nota sin evaluación vinculada</p>
+                    <p className="mt-1 text-xs text-[var(--amber-600)] font-medium">Nota sin evaluación vinculada</p>
                   )}
                 </div>
 
                 {/* Current Level */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-zinc-500 mb-1">Nivel actual</p>
-                    <p className="text-sm font-medium text-zinc-900">
+                    <p className="text-xs text-muted-foreground mb-1">Nivel actual</p>
+                    <p className="text-sm font-medium text-foreground">
                       {getEmployee(selectedRecat)?.seniority_level 
                         ? getSeniorityLabel(getEmployee(selectedRecat)!.seniority_level!)
                         : 'Sin nivel'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-zinc-500 mb-1">Nivel recomendado</p>
-                    <p className="text-sm font-medium text-purple-600">
+                    <p className="text-xs text-muted-foreground mb-1">Nivel recomendado</p>
+                    <p className="text-sm font-medium text-cat-violet">
                       {selectedRecat.recommended_level 
                         ? getSeniorityLabel(selectedRecat.recommended_level)
                         : '-'}
@@ -428,21 +428,21 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
 
                 {/* Leader Decision */}
                 <div>
-                  <p className="text-xs text-zinc-500 mb-1">Decisión del líder</p>
+                  <p className="text-xs text-muted-foreground mb-1">Decisión del líder</p>
                   <div className="flex gap-2">
                     {isNotApplicable(selectedRecat) ? (
-                      <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                      <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                         No aplica
                       </span>
                     ) : (
                       <>
                         {selectedRecat.level_recategorization === 'approved' && (
-                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                          <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
                             Dentro del nivel
                           </span>
                         )}
                         {selectedRecat.position_recategorization === 'approved' && (
-                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                          <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
                             Ascenso de nivel
                           </span>
                         )}
@@ -454,8 +454,8 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                 {/* Leader Notes */}
                 {selectedRecat.notes && (
                   <div>
-                    <p className="text-xs text-zinc-500 mb-1">Notas del líder</p>
-                    <p className="text-sm text-zinc-700 bg-zinc-50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Notas del líder</p>
+                    <p className="text-sm text-secondary-foreground bg-muted rounded-lg p-3">
                       {selectedRecat.notes}
                     </p>
                   </div>
@@ -464,7 +464,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                 {/* HR Notes — only shown when HR action is needed */}
                 {!isNotApplicable(selectedRecat) && (
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">
+                    <label className="block text-xs text-muted-foreground mb-1">
                       Notas de HR {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') && '(opcional)'}
                     </label>
                     {(!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') ? (
@@ -473,10 +473,10 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                         onChange={(e) => setHrNotes(e.target.value)}
                         placeholder="Agregar comentarios..."
                         rows={3}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                       />
                     ) : (
-                      <p className="text-sm text-zinc-700 bg-zinc-50 rounded-lg p-3">
+                      <p className="text-sm text-secondary-foreground bg-muted rounded-lg p-3">
                         {selectedRecat.hr_notes || 'Sin notas'}
                       </p>
                     )}
@@ -485,10 +485,10 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                 <button
                   onClick={() => setSelectedRecat(null)}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                 >
                   {(!isNotApplicable(selectedRecat) && (!selectedRecat.hr_status || selectedRecat.hr_status === 'pending'))
                     ? 'Cancelar'
@@ -499,14 +499,14 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                     <button
                       onClick={() => handleReject(selectedRecat)}
                       disabled={isProcessing}
-                      className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      className="rounded-lg border border-danger/20 bg-white px-4 py-2 text-sm font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                     >
                       {isProcessing ? 'Procesando...' : 'Rechazar'}
                     </button>
                     <button
                       onClick={() => handleApprove(selectedRecat)}
                       disabled={isProcessing}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                      className="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
                     >
                       {isProcessing ? 'Procesando...' : 'Aprobar'}
                     </button>

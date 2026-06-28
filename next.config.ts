@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // @guidoginesi/pow-ui se publica como código fuente (.tsx) → Next debe transpilarlo.
+  transpilePackages: ["@guidoginesi/pow-ui"],
   serverExternalPackages: ['resend', 'pdf-lib'],
   images: {
     remotePatterns: [
