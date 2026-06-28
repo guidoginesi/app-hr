@@ -62,7 +62,7 @@ export default async function TimeOffPortalPage() {
 
   return (
     <PortalShell employee={employee} isLeader={isLeader} active="time-off">
-      <div className="space-y-8">
+      <div className="space-y-6">
         <PageHeader
           title="Time Off"
           description="Gestiona tus vacaciones y licencias"
