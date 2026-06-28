@@ -418,7 +418,7 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                 </div>
 
                 {startDate && endDate && (
-                  <div className="rounded-lg border border-brand bg-success-subtle p-4">
+                  <div className="rounded-lg border border-success/30 bg-success-subtle p-4">
                     <p className="text-sm text-[var(--green-700)]">
                       <strong>Período:</strong>{' '}
                       {parseLocalDate(startDate).toLocaleDateString('es-AR', {
@@ -549,7 +549,7 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
 
             {/* Días calculados - solo para tipos que no son vacaciones */}
             {daysCalculated > 0 && selectedLeaveType && !isVacationType() && (
-              <div className="rounded-lg border border-brand bg-success-subtle p-4">
+              <div className="rounded-lg border border-success/30 bg-success-subtle p-4">
                 <p className="text-sm text-[var(--green-700)]">
                   <strong>{daysCalculated}</strong>{' '}
                   {selectedLeaveType.count_type === 'weeks'

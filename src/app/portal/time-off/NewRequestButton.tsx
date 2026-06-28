@@ -20,13 +20,16 @@ export function NewRequestButton() {
         description="Solicita vacaciones, días Pow, trabajo remoto u otras licencias"
         className="sm:max-w-xl"
       >
-        <NewTimeOffRequestForm
-          onSuccess={() => {
-            setOpen(false);
-            router.refresh();
-          }}
-          onCancel={() => setOpen(false)}
-        />
+        {/* px-1: aire para que el ring de foco de los inputs no se corte contra el overflow del Sheet */}
+        <div className="px-1">
+          <NewTimeOffRequestForm
+            onSuccess={() => {
+              setOpen(false);
+              router.refresh();
+            }}
+            onCancel={() => setOpen(false)}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );
