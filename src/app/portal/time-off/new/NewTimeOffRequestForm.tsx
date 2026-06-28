@@ -498,13 +498,13 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                     value={remoteDestino}
                     onChange={(e) => setRemoteDestino(e.target.value)}
                     placeholder="Ej: Córdoba, Argentina"
-                    className="mt-1 block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent-foreground">
+                  <label className="block text-sm font-medium text-foreground">
                     Domicilio <span className="text-[var(--red-600)]">*</span>
                   </label>
                   <input
@@ -512,13 +512,13 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                     value={remoteDomicilio}
                     onChange={(e) => setRemoteDomicilio(e.target.value)}
                     placeholder="Ej: Av. Colón 1234, Piso 5, Depto B"
-                    className="mt-1 block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent-foreground">
+                  <label className="block text-sm font-medium text-foreground">
                     Contacto de emergencia
                   </label>
                   <div className="mt-1 grid grid-cols-2 gap-3">
@@ -528,10 +528,10 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                         value={remoteContactoNombre}
                         onChange={(e) => setRemoteContactoNombre(e.target.value)}
                         placeholder="Nombre y vínculo"
-                        className="block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         required
                       />
-                      <p className="mt-1 text-xs text-accent-foreground">Ej: Juan Pérez (hermano)</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Ej: Juan Pérez (hermano)</p>
                     </div>
                     <div>
                       <input
@@ -539,10 +539,10 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                         value={remoteContactoTelefono}
                         onChange={(e) => setRemoteContactoTelefono(e.target.value)}
                         placeholder="Teléfono"
-                        className="block w-full rounded-lg border border-[var(--orange-100)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         required
                       />
-                      <p className="mt-1 text-xs text-accent-foreground">Ej: +54 11 1234-5678</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Ej: +54 11 1234-5678</p>
                     </div>
                   </div>
                 </div>
