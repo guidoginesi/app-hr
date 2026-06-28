@@ -8,6 +8,7 @@ import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
 import { formatDateLocal } from '@/lib/dateUtils';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { buttonVariants } from '@pow/ui/components/ui/button';
+import { NewRequestButton } from './NewRequestButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,9 +72,7 @@ export default async function TimeOffPortalPage() {
               <Link href="/portal/certificates" className={buttonVariants({ variant: 'outline' })}>
                 Cargar certificado
               </Link>
-              <Link href="/portal/time-off/new" className={buttonVariants({ variant: 'primary' })}>
-                Nueva solicitud
-              </Link>
+              <NewRequestButton />
             </>
           }
         />

@@ -6,7 +6,7 @@ import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-o
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
 import { formatDateLocal } from '@/lib/dateUtils';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
-import { buttonVariants } from '@pow/ui/components/ui/button';
+import { NewRequestButton } from '../NewRequestButton';
 
 export function TeamTimeOffClient() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
@@ -99,11 +99,7 @@ export function TeamTimeOffClient() {
       <PageHeader
         title="Time Off"
         description="Gestiona las solicitudes de tu equipo"
-        actions={
-          <Link href="/portal/time-off/new" className={buttonVariants({ variant: 'primary' })}>
-            Nueva solicitud
-          </Link>
-        }
+        actions={<NewRequestButton />}
       />
 
       {/* Tabs */}
