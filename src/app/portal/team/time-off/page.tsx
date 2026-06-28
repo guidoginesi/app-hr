@@ -1,5 +1,7 @@
 'use client';
 
+
+import { Spinner } from '@/components/Spinner';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
@@ -166,7 +168,7 @@ export default function TeamTimeOffPage() {
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+              <Spinner className="h-8 w-8 text-muted-foreground" />
             </div>
           ) : requests.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">

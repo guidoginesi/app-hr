@@ -1,5 +1,7 @@
 'use client';
 
+
+import { Spinner } from '@/components/Spinner';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Employee } from '@/types/employee';
@@ -755,7 +757,7 @@ export function TeamMemberProfileClient({
           {loadingRecat ? (
             <div className="rounded-xl border border-[var(--border)] bg-white p-12">
               <div className="flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                <Spinner className="h-8 w-8 text-muted-foreground" />
               </div>
             </div>
           ) : !recatData?.canRecategorize ? (
@@ -866,7 +868,7 @@ export function TeamMemberProfileClient({
                         >
                           {savingNotAvailableNote ? (
                             <>
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              <Spinner className="h-4 w-4 text-white" />
                               Enviando...
                             </>
                           ) : (
@@ -1299,7 +1301,7 @@ export function TeamMemberProfileClient({
                       >
                         {savingRecat ? (
                           <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            <Spinner className="h-4 w-4 text-white" />
                             Guardando...
                           </>
                         ) : (
@@ -1344,7 +1346,7 @@ export function TeamMemberProfileClient({
           {loadingBonus ? (
             <div className="rounded-xl border border-[var(--border)] bg-white p-12">
               <div className="flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                <Spinner className="h-8 w-8 text-muted-foreground" />
               </div>
             </div>
           ) : bonusData ? (
@@ -1742,7 +1744,7 @@ export function TeamMemberProfileClient({
               <div className="overflow-y-auto flex-1 p-6">
                 {loadingDetail ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                    <Spinner className="h-8 w-8 text-muted-foreground" />
                   </div>
                 ) : evaluationDetail ? (
                   <div className="space-y-8">

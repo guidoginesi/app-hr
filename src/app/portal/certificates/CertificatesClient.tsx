@@ -1,5 +1,7 @@
 'use client';
 
+
+import { Spinner } from '@/components/Spinner';
 import { useState, useRef } from 'react';
 
 const CERTIFICATE_TYPE_LABELS: Record<string, string> = {
@@ -322,7 +324,7 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
                 >
                   {uploading ? (
                     <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <Spinner className="h-4 w-4 text-white" />
                       Subiendo...
                     </>
                   ) : (

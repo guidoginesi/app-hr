@@ -1,5 +1,7 @@
 'use client';
 
+
+import { Spinner } from '@/components/Spinner';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
@@ -321,7 +323,7 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+        <Spinner className="h-8 w-8 text-muted-foreground" />
       </div>
     );
   }

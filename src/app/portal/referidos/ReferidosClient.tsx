@@ -1,5 +1,7 @@
 'use client';
 
+
+import { Spinner } from '@/components/Spinner';
 import { useState, useRef } from 'react';
 
 const PROVINCIAS = ['CABA', 'GBA', 'Otra'];
@@ -546,7 +548,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                 >
                   {submitting ? (
                     <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <Spinner className="h-4 w-4 text-white" />
                       Enviando...
                     </>
                   ) : 'Enviar referido'}
