@@ -5,6 +5,8 @@ import Link from 'next/link';
 import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
 import { formatDateLocal } from '@/lib/dateUtils';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { buttonVariants } from '@pow/ui/components/ui/button';
 
 export function TeamTimeOffClient() {
   const [requests, setRequests] = useState<LeaveRequestWithDetails[]>([]);
@@ -94,20 +96,15 @@ export function TeamTimeOffClient() {
   return (
     <div className="space-y-6">
       {/* Header with tabs */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Time Off</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona las solicitudes de tu equipo
-          </p>
-        </div>
-        <Link
-          href="/portal/time-off/new"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
-        >
-          Nueva solicitud
-        </Link>
-      </div>
+      <PageHeader
+        title="Time Off"
+        description="Gestiona las solicitudes de tu equipo"
+        actions={
+          <Link href="/portal/time-off/new" className={buttonVariants({ variant: 'primary' })}>
+            Nueva solicitud
+          </Link>
+        }
+      />
 
       {/* Tabs */}
       <div className="border-b border-[var(--border)]">
@@ -135,14 +132,14 @@ export function TeamTimeOffClient() {
       {/* Info about two-level approval */}
       <div className="rounded-xl border border-[var(--border)] bg-muted p-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-foreground">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-accent-foreground">Flujo de aprobación de 2 niveles</p>
-            <p className="mt-1 text-xs text-accent-foreground">
+            <p className="text-sm font-medium text-foreground">Flujo de aprobación de 2 niveles</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Tu aprobación es el <strong>primer paso</strong>. Luego HR dará la aprobación final.
             </p>
           </div>
@@ -261,7 +258,7 @@ export function TeamTimeOffClient() {
                             Aprobado por ti {request.leader_approved_at && `(${new Date(request.leader_approved_at).toLocaleDateString('es-AR')})`}
                           </span>
                           {request.status === 'pending_hr' && (
-                            <span className="text-accent-foreground">→ Esperando HR</span>
+                            <span className="text-muted-foreground">→ Esperando HR</span>
                           )}
                           {request.status === 'approved' && request.hr_approver_name && (
                             <span className="flex items-center gap-1">
