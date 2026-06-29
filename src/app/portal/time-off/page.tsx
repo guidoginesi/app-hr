@@ -3,12 +3,11 @@ import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import Link from 'next/link';
-import type { LeaveBalanceWithDetails, LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-off';
-import { LEAVE_STATUS_LABELS, LEAVE_STATUS_COLORS } from '@/types/time-off';
-import { formatDateLocal } from '@/lib/dateUtils';
+import type { LeaveBalanceWithDetails, LeaveRequestWithDetails } from '@/types/time-off';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { buttonVariants } from '@pow/ui/components/ui/button';
 import { NewRequestButton } from './NewRequestButton';
+import { LeaveRequestRow } from '@/components/time-off/LeaveRequestRow';
 
 export const dynamic = 'force-dynamic';
 
@@ -283,75 +282,9 @@ export default async function TimeOffPortalPage() {
           </div>
           {requests && requests.length > 0 ? (
             <ul className="divide-y divide-[var(--border)]">
-              {(requests as LeaveRequestWithDetails[]).map((request) => {
-                const statusColors = LEAVE_STATUS_COLORS[request.status as LeaveRequestStatus] || LEAVE_STATUS_COLORS.pending;
-                const statusLabel = LEAVE_STATUS_LABELS[request.status as LeaveRequestStatus] || request.status;
-                
-                return (
-                  <li key={request.id} className="px-6 py-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-foreground">{request.leave_type_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDateLocal(request.start_date)} -{' '}
-                          {formatDateLocal(request.end_date)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground">
-                          {request.days_requested}{' '}
-                          {request.count_type === 'weeks' 
-                            ? `semana${request.days_requested > 1 ? 's' : ''}`
-                            : `día${request.days_requested > 1 ? 's' : ''}`}
-                        </span>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors.bg} ${statusColors.text}`}
-                        >
-                          {statusLabel}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Approval timeline for two-level flow */}
-                    {(request.leader_approved_at || request.hr_approved_at) && (
-                      <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                        {request.leader_approved_at && (
-                          <span className="flex items-center gap-1">
-                            <svg className="h-3 w-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Líder: {request.leader_name || 'Aprobado'}
-                          </span>
-                        )}
-                        {request.hr_approved_at && (
-                          <span className="flex items-center gap-1">
-                            <svg className="h-3 w-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            HR: {request.hr_approver_name || 'Aprobado'}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Show rejection reasons */}
-                    {request.leader_rejection_reason && (
-                      <p className="mt-2 text-sm text-[var(--red-600)]">
-                        <span className="font-medium">Motivo (Líder):</span> {request.leader_rejection_reason}
-                      </p>
-                    )}
-                    {request.hr_rejection_reason && (
-                      <p className="mt-2 text-sm text-[var(--red-600)]">
-                        <span className="font-medium">Motivo (HR):</span> {request.hr_rejection_reason}
-                      </p>
-                    )}
-                    {/* Legacy rejection reason fallback */}
-                    {request.rejection_reason && !request.leader_rejection_reason && !request.hr_rejection_reason && (
-                      <p className="mt-2 text-sm text-[var(--red-600)]">Motivo: {request.rejection_reason}</p>
-                    )}
-                  </li>
-                );
-              })}
+              {(requests as LeaveRequestWithDetails[]).map((request) => (
+                <LeaveRequestRow key={request.id} request={request} />
+              ))}
             </ul>
           ) : (
             <div className="px-6 py-8 text-center text-sm text-muted-foreground">
