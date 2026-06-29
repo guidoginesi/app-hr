@@ -2,6 +2,7 @@
 
 
 import { Spinner } from '@/components/Spinner';
+import { Button } from '@pow/ui/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
@@ -341,8 +342,8 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
             <div>
               <label className="block text-sm font-medium text-secondary-foreground">Tipo de licencia</label>
               {leaveTypes.filter(isTypeSelectable).length === 0 ? (
-                <div className="mt-2 rounded-lg border border-warning/30 bg-warning-subtle p-4">
-                  <p className="text-sm text-[var(--amber-600)]">
+                <div className="mt-2 rounded-lg border border-[var(--border)] bg-muted p-4">
+                  <p className="text-sm text-foreground">
                     No tienes días disponibles para solicitar licencias en este momento.
                   </p>
                 </div>
@@ -375,8 +376,8 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
             {/* Fechas - Vacaciones y Trabajo Remoto (semanas completas) */}
             {isWeekBasedType() && (
               <div className="space-y-4">
-                <div className="rounded-lg border border-warning/30 bg-warning-subtle p-4">
-                  <ul className="text-sm text-[var(--amber-600)] space-y-1">
+                <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                  <ul className="text-sm text-foreground space-y-1">
                     <li>
                       • {isVacationType() 
                         ? 'Las vacaciones deben ser en '
@@ -565,8 +566,8 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
 
             {/* Advertencia de anticipación - solo para tipos que no son week-based (ya está incluido arriba) */}
             {selectedLeaveType && selectedLeaveType.advance_notice_days > 0 && !isWeekBasedType() && (
-              <div className="rounded-lg border border-warning/30 bg-warning-subtle p-4">
-                <p className="text-sm text-[var(--amber-600)]">
+              <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                <p className="text-sm text-foreground">
                   Este tipo de licencia requiere{' '}
                   <strong>{selectedLeaveType.advance_notice_days} días de anticipación</strong>.
                 </p>
@@ -588,25 +589,27 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
 
             {/* Botones */}
             <div className="flex gap-3 pt-4">
-              <button
+              <Button
                 type="submit"
+                size="lg"
+                loading={submitting}
                 disabled={
-                  submitting || 
-                  !selectedType || 
+                  !selectedType ||
                   daysCalculated <= 0 ||
                   (requiresRemoteLocationFields() && (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()))
                 }
-                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1"
               >
-                {submitting ? 'Enviando...' : 'Enviar solicitud'}
-              </button>
-              <button
+                Enviar solicitud
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="lg"
                 onClick={onCancel ?? (() => router.push('/portal/time-off'))}
-                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-muted"
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
           </form>
     </>
