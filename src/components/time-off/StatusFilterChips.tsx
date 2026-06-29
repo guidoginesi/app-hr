@@ -40,7 +40,7 @@ export function StatusFilterChips({
           >
             {chip.label}
             <span
-              className={`rounded-full px-1.5 text-xs ${
+              className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs tabular-nums ${
                 active ? 'bg-white/20 text-primary-foreground' : 'bg-secondary text-secondary-foreground'
               }`}
             >
