@@ -31,7 +31,7 @@ export const LEAVE_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
 export const LEAVE_STATUS_COLORS: Record<LeaveRequestStatus, { bg: string; text: string }> = {
   pending: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
   pending_leader: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
-  pending_hr: { bg: 'bg-primary', text: 'text-primary' },
+  pending_hr: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
   approved: { bg: 'bg-success-subtle', text: 'text-[var(--green-700)]' },
   rejected: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },
   rejected_leader: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },

@@ -68,7 +68,7 @@ export const SENIORITY_CATEGORY_COLORS: Record<SeniorityCategory, { bg: string; 
   1: { bg: 'bg-success-subtle', text: 'text-[var(--green-700)]' },
   2: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
   3: { bg: 'bg-cat-violet-subtle', text: 'text-cat-violet' },
-  4: { bg: 'bg-primary', text: 'text-primary' },
+  4: { bg: 'bg-cat-cyan-subtle', text: 'text-cat-cyan' },
   5: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },
 };
 
