@@ -12,7 +12,7 @@ import {
 const CreatePeriodSchema = z.object({
   year: z.number().int().min(2020).max(2100),
   month: z.number().int().min(1).max(12).optional(),
-  period_type: z.enum(['MONTHLY', 'SAC_1', 'SAC_2']).default('MONTHLY'),
+  period_type: z.enum(['MONTHLY', 'SAC_2']).default('MONTHLY'),
 });
 
 // GET /api/admin/payroll/periods - List all periods with settlement counts
