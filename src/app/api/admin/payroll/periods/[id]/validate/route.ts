@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { payslipHasBothPdfs } from '@/lib/payrollPayslips';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -85,14 +86,14 @@ export async function POST(req: NextRequest, context: RouteContext) {
       } else if (settlement.contract_type_snapshot === 'RELACION_DEPENDENCIA') {
         const { data: payslip } = await supabase
           .from('payroll_payslips')
-          .select('pdf_storage_path')
+          .select('pdf_storage_path, pdf2_storage_path')
           .eq('settlement_id', settlement.id)
           .single();
 
-        if (payslip && payslip.pdf_storage_path) {
+        if (payslipHasBothPdfs(payslip)) {
           isValid = true;
         } else {
-          reason = 'Falta cargar el recibo de sueldo (PDF)';
+          reason = 'Faltan recibos de sueldo (se requieren 2 PDF)';
         }
       }
 
