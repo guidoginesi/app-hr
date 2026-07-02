@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { buttonVariants } from '@pow/ui/components/ui/button';
 import type { EvaluationPeriod, Evaluation, EvaluationDimension } from '@/types/evaluation';
 import { SCALE_DEFINITIONS, getScaleLabel } from '@/types/evaluation';
 
@@ -58,10 +59,7 @@ export function ResultadosClient({
           <p className="text-sm text-[var(--amber-600)] mt-1">
             Completá tu autoevaluación para ver los resultados.
           </p>
-          <Link
-            href="/portal/evaluaciones"
-            className="mt-4 inline-block rounded-lg bg-warning px-4 py-2 text-sm font-medium text-white hover:bg-warning"
-          >
+          <Link href="/portal/evaluaciones" className={`mt-4 ${buttonVariants({ variant: 'primary' })}`}>
             Ir a evaluaciones
           </Link>
         </div>

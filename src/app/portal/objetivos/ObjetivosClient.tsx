@@ -1164,7 +1164,7 @@ export function ObjetivosClient({
                 })}
                 
                 {/* Calculated total */}
-                <div className="rounded-lg bg-success-subtle border border-brand p-4">
+                <div className="rounded-lg border border-success/30 bg-success-subtle p-4">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-[var(--green-700)]">Cumplimiento promedio calculado:</span>
                     <span className="text-xl font-bold text-[var(--green-700)]">
