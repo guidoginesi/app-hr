@@ -1,8 +1,9 @@
 'use client';
 
-
-import { Spinner } from '@/components/Spinner';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { Sheet, SheetContent } from '@pow/ui/components/ui/sheet';
+import { buttonVariants } from '@pow/ui/components/ui/button';
+import { CertificateUploadForm, formatFileSize, type Certificate } from './CertificateUploadForm';
 
 const CERTIFICATE_TYPE_LABELS: Record<string, string> = {
   exam: 'Certificado de exámen',
@@ -16,85 +17,15 @@ const CERTIFICATE_TYPE_COLORS: Record<string, string> = {
   travel_assistance: 'bg-secondary text-foreground',
 };
 
-type Certificate = {
-  id: string;
-  type: string;
-  file_name: string;
-  file_size: number | null;
-  notes: string | null;
-  uploaded_at: string;
-};
-
 type CertificatesClientProps = {
   initialCertificates: Certificate[];
 };
 
-function formatFileSize(bytes: number | null): string {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 export function CertificatesClient({ initialCertificates }: CertificatesClientProps) {
   const [certificates, setCertificates] = useState<Certificate[]>(initialCertificates);
-  const [showModal, setShowModal] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  const [form, setForm] = useState({
-    type: '' as string,
-    notes: '',
-    file: null as File | null,
-  });
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const resetForm = () => {
-    setForm({ type: '', notes: '', file: null });
-    setUploadError(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const openModal = () => {
-    resetForm();
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    resetForm();
-  };
-
-  const handleUpload = async () => {
-    setUploadError(null);
-    if (!form.type) { setUploadError('Seleccioná el tipo de certificado'); return; }
-    if (!form.file) { setUploadError('Seleccioná un archivo'); return; }
-
-    setUploading(true);
-    try {
-      const data = new FormData();
-      data.append('type', form.type);
-      data.append('file', form.file);
-      if (form.notes.trim()) data.append('notes', form.notes.trim());
-
-      const res = await fetch('/api/portal/certificates', { method: 'POST', body: data });
-      if (res.ok) {
-        const saved: Certificate = await res.json();
-        setCertificates(prev => [saved, ...prev]);
-        closeModal();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setUploadError(err.error || `Error ${res.status} al subir el archivo`);
-      }
-    } catch {
-      setUploadError('Error de red. Intentá de nuevo.');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleDownload = async (cert: Certificate) => {
     setDownloadingId(cert.id);
@@ -119,7 +50,7 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
     try {
       const res = await fetch(`/api/portal/certificates/${cert.id}`, { method: 'DELETE' });
       if (res.ok) {
-        setCertificates(prev => prev.filter(c => c.id !== cert.id));
+        setCertificates((prev) => prev.filter((c) => c.id !== cert.id));
       }
     } finally {
       setDeletingId(null);
@@ -135,11 +66,8 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
             Cargá tus certificados médicos, de exámen o comprobantes de viaje
           </p>
         </div>
-        <button
-          onClick={openModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button onClick={() => setOpen(true)} className={buttonVariants({ variant: 'primary' })}>
+          <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
           Cargar certificado
@@ -149,67 +77,61 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
       {/* List */}
       {certificates.length === 0 ? (
         <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <p className="mt-4 text-sm text-muted-foreground">No tenés certificados cargados aún</p>
           <button
-            onClick={openModal}
+            onClick={() => setOpen(true)}
             className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-[var(--primary-hover)]"
           >
             Cargar tu primer certificado →
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
           <ul className="divide-y divide-[var(--border)]">
             {certificates.map((cert) => (
               <li key={cert.id} className="flex items-center gap-4 px-6 py-4">
                 {/* Icon */}
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                  <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-foreground truncate">{cert.file_name}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-medium text-foreground">{cert.file_name}</p>
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CERTIFICATE_TYPE_COLORS[cert.type] || 'bg-secondary text-muted-foreground'}`}>
                       {CERTIFICATE_TYPE_LABELS[cert.type] || cert.type}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5">
+                  <div className="mt-0.5 flex items-center gap-3">
                     <p className="text-xs text-muted-foreground">
-                      {new Date(cert.uploaded_at).toLocaleDateString('es-AR', {
-                        day: 'numeric', month: 'long', year: 'numeric',
-                      })}
+                      {new Date(cert.uploaded_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
-                    {cert.file_size && (
-                      <p className="text-xs text-muted-foreground">{formatFileSize(cert.file_size)}</p>
-                    )}
+                    {cert.file_size && <p className="text-xs text-muted-foreground">{formatFileSize(cert.file_size)}</p>}
                   </div>
-                  {cert.notes && (
-                    <p className="mt-1 text-xs text-muted-foreground italic">{cert.notes}</p>
-                  )}
+                  {cert.notes && <p className="mt-1 text-xs italic text-muted-foreground">{cert.notes}</p>}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex shrink-0 items-center gap-2">
                   <button
                     onClick={() => handleDownload(cert)}
                     disabled={downloadingId === cert.id}
                     className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                   >
-                    {downloadingId === cert.id ? 'Descargando...' : 'Descargar'}
+                    {downloadingId === cert.id ? 'Descargando…' : 'Descargar'}
                   </button>
                   <button
                     onClick={() => handleDelete(cert)}
                     disabled={deletingId === cert.id}
                     className="rounded-lg border border-danger/20 bg-white px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                   >
-                    {deletingId === cert.id ? '...' : 'Eliminar'}
+                    {deletingId === cert.id ? '…' : 'Eliminar'}
                   </button>
                 </div>
               </li>
@@ -218,124 +140,24 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
         </div>
       )}
 
-      {/* Upload Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={closeModal} />
-            <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">Cargar certificado</h2>
-                <button onClick={closeModal} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                {/* Type */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
-                    Tipo de certificado <span className="text-[var(--red-600)]">*</span>
-                  </label>
-                  <select
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">Seleccioná un tipo</option>
-                    <option value="exam">Certificado de exámen</option>
-                    <option value="medical">Certificado médico</option>
-                    <option value="travel_assistance">Comprobante asistencia al viajero</option>
-                  </select>
-                </div>
-
-                {/* File */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
-                    Archivo <span className="text-[var(--red-600)]">*</span>
-                  </label>
-                  <div
-                    className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--border)] p-6 hover:border-brand hover:bg-success-subtle transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {form.file ? (
-                      <div className="text-center">
-                        <svg className="mx-auto h-8 w-8 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="mt-2 text-sm font-medium text-foreground">{form.file.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(form.file.size)}</p>
-                        <p className="mt-1 text-xs text-[var(--green-700)]">Click para cambiar</p>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <svg className="mx-auto h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        <p className="mt-2 text-sm font-medium text-secondary-foreground">Click para seleccionar archivo</p>
-                        <p className="text-xs text-muted-foreground">PDF, JPG, PNG hasta 10 MB</p>
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      className="hidden"
-                      onChange={(e) => setForm({ ...form, file: e.target.files?.[0] || null })}
-                    />
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
-                    Observaciones <span className="text-muted-foreground font-normal">(opcional)</span>
-                  </label>
-                  <textarea
-                    value={form.notes}
-                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    rows={3}
-                    placeholder="Ej: Certificado del exámen del 15/03, materia Cálculo II..."
-                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                </div>
-
-                {uploadError && (
-                  <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3">
-                    <p className="text-sm text-[var(--red-600)]">{uploadError}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  onClick={closeModal}
-                  disabled={uploading}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleUpload}
-                  disabled={uploading || !form.type || !form.file}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? (
-                    <>
-                      <Spinner className="h-4 w-4 text-white" />
-                      Subiendo...
-                    </>
-                  ) : (
-                    'Subir certificado'
-                  )}
-                </button>
-              </div>
-            </div>
+      {/* Upload Sheet */}
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent
+          title="Cargar certificado"
+          description="Subí certificados médicos, de exámen o comprobantes de viaje"
+          className="sm:max-w-xl"
+        >
+          <div className="px-1">
+            <CertificateUploadForm
+              onSuccess={(saved) => {
+                setCertificates((prev) => [saved, ...prev]);
+                setOpen(false);
+              }}
+              onCancel={() => setOpen(false)}
+            />
           </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -5,8 +5,8 @@ import { PortalShell } from '../PortalShell';
 import Link from 'next/link';
 import type { LeaveBalanceWithDetails, LeaveRequestWithDetails } from '@/types/time-off';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
-import { buttonVariants } from '@pow/ui/components/ui/button';
 import { NewRequestButton } from './NewRequestButton';
+import { UploadCertificateButton } from '../certificates/UploadCertificateButton';
 import { LeaveRequestRow } from '@/components/time-off/LeaveRequestRow';
 
 export const dynamic = 'force-dynamic';
@@ -68,9 +68,7 @@ export default async function TimeOffPortalPage() {
           description="Gestiona tus vacaciones y licencias"
           actions={
             <>
-              <Link href="/portal/certificates" className={buttonVariants({ variant: 'outline' })}>
-                Cargar certificado
-              </Link>
+              <UploadCertificateButton />
               <NewRequestButton />
             </>
           }
