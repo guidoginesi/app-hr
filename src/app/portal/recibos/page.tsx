@@ -26,7 +26,7 @@ export default async function PortalRecibosPage() {
   // Fetch SENT settlements where contract_type_snapshot = RELACION_DEPENDENCIA
   const { data: settlements } = await supabase
     .from('payroll_settlements_with_details')
-    .select('*, pdf_storage_path, pdf_filename, pdf_uploaded_at')
+    .select('*, pdf_storage_path, pdf_filename, pdf_uploaded_at, pdf2_storage_path, pdf2_filename, pdf2_uploaded_at')
     .eq('employee_id', employeeId)
     .eq('status', 'SENT')
     .eq('contract_type_snapshot', 'RELACION_DEPENDENCIA')

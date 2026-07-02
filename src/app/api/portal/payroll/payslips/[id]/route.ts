@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { parsePayslipSlot } from '@/lib/payrollPayslips';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-// GET /api/portal/payroll/payslips/[id] - Get signed URL for payslip PDF
+// GET /api/portal/payroll/payslips/[id]?slot=1|2 - Download payslip PDF
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const auth = await getAuthResult();
@@ -13,9 +14,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     const { id } = await context.params;
+    const slot = parsePayslipSlot(req.nextUrl.searchParams.get('slot'));
     const supabase = getSupabaseServer();
 
-    // Verify the settlement belongs to the logged-in employee
     const { data: settlement, error: settlementError } = await supabase
       .from('payroll_settlements_with_details')
       .select('id, employee_id, contract_type_snapshot')
@@ -27,7 +28,6 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Liquidación no encontrada' }, { status: 404 });
     }
 
-    // Verify contract type is RELACION_DEPENDENCIA
     if (settlement.contract_type_snapshot !== 'RELACION_DEPENDENCIA') {
       return NextResponse.json(
         { error: 'Los recibos solo están disponibles para empleados en relación de dependencia' },
@@ -35,35 +35,35 @@ export async function GET(req: NextRequest, context: RouteContext) {
       );
     }
 
-    // Get payslip record
     const { data: payslip, error: payslipError } = await supabase
       .from('payroll_payslips')
-      .select('pdf_storage_path, pdf_filename')
+      .select('pdf_storage_path, pdf_filename, pdf2_storage_path, pdf2_filename')
       .eq('settlement_id', id)
       .single();
 
-    if (payslipError || !payslip || !payslip.pdf_storage_path) {
+    const storagePath = slot === 2 ? payslip?.pdf2_storage_path : payslip?.pdf_storage_path;
+    const filename =
+      (slot === 2 ? payslip?.pdf2_filename : payslip?.pdf_filename) || `recibo-${slot}.pdf`;
+
+    if (payslipError || !payslip || !storagePath) {
       return NextResponse.json({ error: 'Recibo no encontrado' }, { status: 404 });
     }
 
-    // Download the file server-side and proxy it (avoids S3 ACL issues with signed URLs)
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('payslips')
-      .download(payslip.pdf_storage_path);
+      .download(storagePath);
 
     if (downloadError || !fileData) {
       console.error('Error downloading payslip:', downloadError);
-      // Fallback: try signed URL
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('payslips')
-        .createSignedUrl(payslip.pdf_storage_path, 3600);
+        .createSignedUrl(storagePath, 3600);
       if (signedUrlError || !signedUrlData?.signedUrl) {
         return NextResponse.json({ error: 'Error al obtener el recibo' }, { status: 500 });
       }
-      return NextResponse.json({ url: signedUrlData.signedUrl, filename: payslip.pdf_filename });
+      return NextResponse.json({ url: signedUrlData.signedUrl, filename });
     }
 
-    const filename = payslip.pdf_filename || 'recibo.pdf';
     return new NextResponse(fileData, {
       headers: {
         'Content-Type': 'application/pdf',
