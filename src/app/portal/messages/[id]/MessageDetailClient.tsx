@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
 import { MessageBody } from '@/components/MessageBody';
 
 type Message = {
@@ -159,29 +160,12 @@ export function MessageDetailClient({
               )}
 
               {message.require_confirmation && !confirmedAt && (
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={confirming}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--primary-hover)] disabled:opacity-60"
-                >
-                  {confirming ? (
-                    <>
-                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                      </svg>
-                      Confirmando...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Confirmar lectura
-                    </>
-                  )}
-                </button>
+                <Button type="button" onClick={handleConfirm} loading={confirming}>
+                  <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Confirmar lectura
+                </Button>
               )}
 
               {message.require_confirmation && confirmedAt && (
