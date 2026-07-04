@@ -12,6 +12,15 @@ import {
 
 type PeriodStatus = 'DRAFT' | 'IN_REVIEW' | 'SENT' | 'CLOSED';
 
+async function readApiError(res: Response, fallback: string): Promise<string> {
+  const contentType = res.headers.get('Content-Type') || '';
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    return data.error || fallback;
+  }
+  return fallback;
+}
+
 type PayrollPeriod = {
   id: string;
   year: number;
@@ -80,8 +89,8 @@ export function PayrollPeriodsClient() {
         setShowModal(false);
         setMessage({ type: 'success', text: 'Periodo creado exitosamente' });
       } else {
-        const data = await res.json();
-        setMessage({ type: 'error', text: data.error || 'Error al crear el periodo' });
+        const text = await readApiError(res, 'Error al crear el periodo');
+        setMessage({ type: 'error', text });
       }
     } catch {
       setMessage({ type: 'error', text: 'Error al crear el periodo' });
@@ -182,9 +191,7 @@ export function PayrollPeriodsClient() {
                     </div>
                   ) : (
                     <div className="rounded-lg border border-[var(--orange-100)] bg-accent px-3 py-2 text-sm text-accent-foreground">
-                      {formData.period_type === 'SAC_1'
-                        ? 'Se liquidará en Junio (1er semestre: Enero–Junio).'
-                        : 'Se liquidará en Diciembre (2do semestre: Julio–Diciembre).'}
+                      Se liquidará en Diciembre (2do semestre: Julio–Diciembre).
                     </div>
                   )}
                 </div>

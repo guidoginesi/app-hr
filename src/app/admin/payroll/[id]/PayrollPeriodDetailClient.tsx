@@ -7,8 +7,10 @@ import {
   type PayrollPeriodType,
 } from '@/lib/payrollPeriods';
 
-async function openPayslipPdf(settlementId: string): Promise<void> {
-  const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip`);
+import { payslipHasBothPdfs, type PayslipSlot } from '@/lib/payrollPayslips';
+
+async function openPayslipPdf(settlementId: string, slot: PayslipSlot = 1): Promise<void> {
+  const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip?slot=${slot}`);
   if (!res.ok) {
     alert('No se pudo obtener el PDF');
     return;
@@ -56,6 +58,7 @@ type Settlement = {
   salary_advance: number;
   total: number;
   payslip_url: string | null;
+  payslip2_url: string | null;
   invoice_storage_path: string | null;
   invoice_filename: string | null;
   invoice_uploaded_at: string | null;
@@ -138,7 +141,8 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     });
   }, [settlements, activeFilter, sortConfig]);
 
-  const isEditable = period?.status !== 'CLOSED';
+  const isPeriodOpen = period?.status !== 'CLOSED';
+  const isEditable = isPeriodOpen;
 
   const handleFieldChange = (settlementId: string, field: string, value: number) => {
     setEditedRows((prev) => ({
@@ -232,20 +236,35 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     }
   };
 
-  const handleDeletePdf = async (settlementId: string) => {
+  const handleDeletePdf = (settlementId: string, slot: PayslipSlot) => {
     setSettlements((prev) =>
-      prev.map((s) => (s.id === settlementId ? { ...s, payslip_url: null } : s))
+      prev.map((s) => {
+        if (s.id !== settlementId) return s;
+        const updated =
+          slot === 2
+            ? { ...s, payslip2_url: null }
+            : { ...s, payslip_url: null };
+        const stillReady = payslipHasBothPdfs({
+          pdf_storage_path: updated.payslip_url,
+          pdf2_storage_path: updated.payslip2_url,
+        });
+        return {
+          ...updated,
+          status: stillReady ? updated.status : updated.status === 'READY_TO_SEND' ? 'DRAFT' : updated.status,
+        };
+      })
     );
-    setMessage({ type: 'success', text: 'PDF eliminado correctamente' });
+    setMessage({ type: 'success', text: `PDF ${slot} eliminado correctamente` });
   };
 
-  const handleUploadPdf = async (settlementId: string, file: File) => {
-    setUploadingRows((prev) => ({ ...prev, [settlementId]: true }));
+  const handleUploadPdf = async (settlementId: string, file: File, slot: PayslipSlot) => {
+    const uploadKey = `${settlementId}-${slot}`;
+    setUploadingRows((prev) => ({ ...prev, [uploadKey]: true }));
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip`, {
+      const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip?slot=${slot}`, {
         method: 'POST',
         body: formData,
       });
@@ -253,17 +272,23 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       if (res.ok) {
         const payslip = await res.json();
         setSettlements((prev) =>
-          prev.map((s) =>
-            s.id === settlementId
-              ? {
-                  ...s,
-                  payslip_url: payslip.pdf_storage_path || s.payslip_url,
-                  status: payslip.pdf_storage_path ? 'READY_TO_SEND' : s.status,
-                }
-              : s
-          )
+          prev.map((s) => {
+            if (s.id !== settlementId) return s;
+            const payslip_url = slot === 1 ? payslip.pdf_storage_path : s.payslip_url;
+            const payslip2_url = slot === 2 ? payslip.pdf2_storage_path : s.payslip2_url;
+            const ready = payslipHasBothPdfs({
+              pdf_storage_path: payslip_url,
+              pdf2_storage_path: payslip2_url,
+            });
+            return {
+              ...s,
+              payslip_url,
+              payslip2_url,
+              status: s.status === 'SENT' ? s.status : ready ? 'READY_TO_SEND' : s.status,
+            };
+          })
         );
-        setMessage({ type: 'success', text: 'Recibo cargado exitosamente' });
+        setMessage({ type: 'success', text: `Recibo PDF ${slot} cargado exitosamente` });
       } else {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error || 'Error al subir el recibo' });
@@ -271,7 +296,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     } catch {
       setMessage({ type: 'error', text: 'Error al subir el recibo' });
     } finally {
-      setUploadingRows((prev) => ({ ...prev, [settlementId]: false }));
+      setUploadingRows((prev) => ({ ...prev, [uploadKey]: false }));
     }
   };
 
@@ -598,7 +623,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                     </>
                   )}
                   {activeFilter === 'RELACION_DEPENDENCIA' && (
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">PDF</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">PDFs</th>
                   )}
                   {(activeFilter === 'MONOTRIBUTO' || activeFilter === 'all') && (
                     <SortableHeader label="Factura" sortKey="invoice_uploaded_at" />
@@ -614,9 +639,11 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                     settlement={settlement}
                     activeFilter={activeFilter}
                     isEditable={isEditable && settlement.status !== 'SENT'}
+                    isPeriodOpen={isPeriodOpen}
                     editedValues={editedRows[settlement.id]}
                     isSaving={!!savingRows[settlement.id]}
-                    isUploading={!!uploadingRows[settlement.id]}
+                    isUploading={!!uploadingRows[`${settlement.id}-1`] || !!uploadingRows[`${settlement.id}-2`]}
+                    uploadingRows={uploadingRows}
                     hasChanges={hasRowChanges(settlement.id)}
                     isSelected={selectedIds.has(settlement.id)}
                     onToggleSelect={toggleSelect}
@@ -654,9 +681,11 @@ type SettlementRowProps = {
   settlement: Settlement;
   activeFilter: FilterTab;
   isEditable: boolean;
+  isPeriodOpen: boolean;
   editedValues: Partial<Settlement> | undefined;
   isSaving: boolean;
   isUploading: boolean;
+  uploadingRows: Record<string, boolean>;
   hasChanges: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
@@ -664,8 +693,8 @@ type SettlementRowProps = {
   getFieldValue: (settlement: Settlement, field: keyof Settlement) => number;
   getRowTotal: (settlement: Settlement) => number;
   onSave: (id: string) => void;
-  onUploadPdf: (id: string, file: File) => void;
-  onDeletePdf: (id: string) => void;
+  onUploadPdf: (id: string, file: File, slot: PayslipSlot) => void;
+  onDeletePdf: (id: string, slot: PayslipSlot) => void;
   onDownloadInvoice: () => void;
 };
 
@@ -673,6 +702,7 @@ function SettlementRow({
   settlement,
   activeFilter,
   isEditable,
+  isPeriodOpen,
   isSaving,
   isUploading,
   hasChanges,
@@ -685,36 +715,92 @@ function SettlementRow({
   onUploadPdf,
   onDeletePdf,
   onDownloadInvoice,
+  uploadingRows,
 }: SettlementRowProps) {
-  const [loadingPdf, setLoadingPdf] = useState(false);
-  const [deletingPdf, setDeletingPdf] = useState(false);
+  const [loadingPdfSlot, setLoadingPdfSlot] = useState<PayslipSlot | null>(null);
+  const [deletingPdfSlot, setDeletingPdfSlot] = useState<PayslipSlot | null>(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
-  const handleViewPdf = async () => {
-    setLoadingPdf(true);
+  const handleViewPdf = async (slot: PayslipSlot) => {
+    setLoadingPdfSlot(slot);
     try {
-      await openPayslipPdf(settlement.id);
+      await openPayslipPdf(settlement.id, slot);
     } finally {
-      setLoadingPdf(false);
+      setLoadingPdfSlot(null);
     }
   };
 
-  const handleDeletePdf = async () => {
-    if (!confirm('¿Eliminás el PDF cargado? Esta acción no se puede deshacer.')) return;
-    setDeletingPdf(true);
+  const handleDeletePdf = async (slot: PayslipSlot) => {
+    if (!confirm(`¿Eliminás el PDF ${slot}? Esta acción no se puede deshacer.`)) return;
+    setDeletingPdfSlot(slot);
     try {
-      const res = await fetch(`/api/admin/payroll/settlements/${settlement.id}/payslip`, {
+      const res = await fetch(`/api/admin/payroll/settlements/${settlement.id}/payslip?slot=${slot}`, {
         method: 'DELETE',
       });
       if (res.ok) {
-        onDeletePdf(settlement.id);
+        onDeletePdf(settlement.id, slot);
       } else {
         const data = await res.json();
         alert(data.error || 'Error al eliminar el PDF');
       }
     } finally {
-      setDeletingPdf(false);
+      setDeletingPdfSlot(null);
     }
+  };
+
+  const handleFileChange = (slot: PayslipSlot) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onUploadPdf(settlement.id, file, slot);
+    }
+    e.target.value = '';
+  };
+
+  const renderPayslipSlot = (slot: PayslipSlot) => {
+    const url = slot === 1 ? settlement.payslip_url : settlement.payslip2_url;
+    const uploadKey = `${settlement.id}-${slot}`;
+    const isSlotUploading = !!uploadingRows[uploadKey];
+    const canUpload = isPeriodOpen && !url;
+    const canDelete = isPeriodOpen && settlement.status !== 'SENT' && !!url;
+
+    return (
+      <div key={slot} className="flex items-center gap-2">
+        <span className="w-10 text-[10px] font-semibold uppercase text-muted-foreground">PDF {slot}</span>
+        {url ? (
+          <>
+            <button
+              onClick={() => handleViewPdf(slot)}
+              disabled={loadingPdfSlot === slot}
+              className="text-xs font-medium text-foreground hover:text-[var(--primary-hover)] disabled:opacity-50"
+            >
+              {loadingPdfSlot === slot ? 'Abriendo...' : 'Ver'}
+            </button>
+            {canDelete && (
+              <button
+                onClick={() => handleDeletePdf(slot)}
+                disabled={deletingPdfSlot === slot}
+                className="text-xs font-medium text-[var(--red-600)] hover:underline disabled:opacity-50"
+              >
+                {deletingPdfSlot === slot ? '...' : 'Eliminar'}
+              </button>
+            )}
+          </>
+        ) : canUpload ? (
+          <label className="cursor-pointer text-xs font-medium text-foreground hover:text-[var(--primary-hover)]">
+            {isSlotUploading ? 'Subiendo...' : 'Subir'}
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handleFileChange(slot)}
+              className="hidden"
+              disabled={isSlotUploading}
+            />
+          </label>
+        ) : (
+          <span className="text-xs text-muted-foreground">No cargado</span>
+        )}
+      </div>
+    );
   };
 
   const statusConfig = settlementStatusConfig[settlement.status];
@@ -731,13 +817,6 @@ function SettlementRow({
     { key: 'aguinaldo', label: 'Aguinaldo' },
     { key: 'salary_advance', label: 'Adelanto' },
   ];
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onUploadPdf(settlement.id, file);
-    }
-  };
 
   return (
     <tr className={`transition-colors hover:bg-muted ${isSelected ? 'bg-accent' : ''}`}>
@@ -797,16 +876,13 @@ function SettlementRow({
       {/* PDF column for Rel. Dependencia filter */}
       {activeFilter === 'RELACION_DEPENDENCIA' && (
         <td className="px-4 py-3">
-          {settlement.payslip_url ? (
-            <button
-              onClick={handleViewPdf}
-              disabled={loadingPdf}
-              className="text-xs font-medium text-foreground hover:text-[var(--primary-hover)] disabled:opacity-50"
-            >
-              {loadingPdf ? 'Abriendo...' : '✓ Ver PDF'}
-            </button>
+          {isRelDep ? (
+            <div className="flex flex-col gap-1.5">
+              {renderPayslipSlot(1)}
+              {renderPayslipSlot(2)}
+            </div>
           ) : (
-            <span className="text-xs text-muted-foreground">No cargado</span>
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </td>
       )}
@@ -847,28 +923,6 @@ function SettlementRow({
             >
               {isSaving ? 'Guardando...' : 'Guardar'}
             </button>
-          )}
-          {isRelDep && isEditable && settlement.status !== 'SENT' && (
-            settlement.payslip_url ? (
-              <button
-                onClick={handleDeletePdf}
-                disabled={deletingPdf}
-                className="rounded-lg border border-danger/20 bg-danger-subtle px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
-              >
-                {deletingPdf ? 'Eliminando...' : 'Eliminar PDF'}
-              </button>
-            ) : (
-              <label className="cursor-pointer rounded-lg border border-[var(--orange-100)] bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent">
-                {isUploading ? 'Subiendo...' : 'Subir PDF'}
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={isUploading}
-                />
-              </label>
-            )
           )}
         </div>
       </td>

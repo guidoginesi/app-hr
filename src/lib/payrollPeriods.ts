@@ -5,8 +5,9 @@ export const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ] as const;
 
+/** Opciones para crear nuevos períodos (SAC 1 ya no se usa). */
 export const PAYROLL_PERIOD_TYPE_OPTIONS: {
-  value: PayrollPeriodType;
+  value: Exclude<PayrollPeriodType, 'SAC_1'>;
   label: string;
   description: string;
 }[] = [
@@ -14,11 +15,6 @@ export const PAYROLL_PERIOD_TYPE_OPTIONS: {
     value: 'MONTHLY',
     label: 'Liquidación mensual',
     description: 'Sueldo habitual del mes',
-  },
-  {
-    value: 'SAC_1',
-    label: 'SAC 1',
-    description: 'Sueldo Anual Complementario — 1er semestre (Ene–Jun)',
   },
   {
     value: 'SAC_2',

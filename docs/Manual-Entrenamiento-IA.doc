@@ -1,0 +1,312 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<title>Manual — Entrenamiento IA</title>
+<!--[if gte mso 9]><xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+</w:WordDocument>
+</xml><![endif]-->
+<style>
+@page { size: 21cm 29.7cm; margin: 2.5cm 2.5cm 2.5cm 2.5cm; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; }
+h1 { font-size: 20pt; color: #1a1a1a; border-bottom: 2px solid #0284c7; padding-bottom: 6pt; margin-top: 0; }
+h2 { font-size: 14pt; color: #292524; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { font-size: 12pt; color: #44403c; margin-top: 14pt; margin-bottom: 4pt; }
+p { margin: 0 0 8pt 0; }
+ul, ol { margin: 0 0 10pt 0; }
+li { margin-bottom: 4pt; }
+table { border-collapse: collapse; width: 100%; margin: 10pt 0 14pt 0; }
+th, td { border: 1px solid #d4d4d8; padding: 6pt 8pt; text-align: left; vertical-align: top; }
+th { background: #f0f9ff; font-weight: bold; }
+.note { background: #f0f9ff; border: 1px solid #7dd3fc; padding: 10pt; margin: 12pt 0; }
+.warning { background: #fffbeb; border: 1px solid #fcd34d; padding: 10pt; margin: 12pt 0; }
+.footer { font-size: 9pt; color: #71717a; margin-top: 24pt; border-top: 1px solid #e4e4e7; padding-top: 8pt; }
+.checklist { list-style: none; padding-left: 0; }
+.checklist li:before { content: "☐ "; }
+code { font-family: Consolas, monospace; font-size: 10pt; background: #f4f4f5; padding: 1pt 4pt; }
+</style>
+</head>
+<body>
+
+<h1>Entrenamiento IA — Ranking de capacitaciones</h1>
+<p><strong>Manual para el equipo de HR — Pow</strong><br>
+Versión: Mayo 2026 &nbsp;|&nbsp; Sistema: app-hr (Admin + Portal de empleados)</p>
+
+<h2>1. ¿Qué es y para qué sirve?</h2>
+<p>Se incorporó el módulo <strong>Entrenamiento IA</strong>, un sistema de puntuación y ranking para las capacitaciones internas de Pow sobre inteligencia artificial y herramientas relacionadas.</p>
+<p>Su objetivo es <strong>incentivar la participación genuina</strong> en las capacitaciones — asistencia, intervención, exámenes y entregas — mediante un ranking visible para todo el equipo, al estilo de plataformas como Coderhouse.</p>
+
+<p><strong>Principios clave:</strong></p>
+<ul>
+<li>Las capacitaciones siguen siendo <strong>opcionales</strong> para la mayoría del equipo.</li>
+<li>No se impone obligatoriedad: quien no participa simplemente queda más abajo en el ranking.</li>
+<li>El ranking genera un incentivo positivo y transparente.</li>
+<li>HR es quien carga y corrige los puntajes después de cada sesión.</li>
+</ul>
+
+<div class="note">
+<strong>Acceso Admin:</strong> HR Admin → Módulos → <strong>Entrenamiento IA</strong><br>
+<strong>Acceso empleados:</strong> Portal → menú lateral → <strong>Entrenamiento IA</strong>
+</div>
+
+<h2>2. Conceptos del sistema</h2>
+<table>
+<tr>
+<th>Concepto</th>
+<th>Descripción</th>
+</tr>
+<tr>
+<td><strong>Ciclo</strong></td>
+<td>Período de ranking (ej. “Ciclo actual”, un trimestre o cohorte). Agrupa todas las sesiones y acumula puntos.</td>
+</tr>
+<tr>
+<td><strong>Sesión</strong></td>
+<td>Cada capacitación individual (clase, taller, meet). Tiene título y fecha.</td>
+</tr>
+<tr>
+<td><strong>Puntaje</strong></td>
+<td>Puntos que HR asigna a cada colaborador por sesión, según criterios definidos.</td>
+</tr>
+<tr>
+<td><strong>Ranking</strong></td>
+<td>Tabla ordenada por puntos totales del ciclo. Incluye a <strong>todos los empleados activos</strong> de Pow (con 0 pts si no participaron).</td>
+</tr>
+</table>
+
+<h2>3. Reglas de puntuación (por sesión)</h2>
+<p>El sistema calcula los puntos <strong>automáticamente</strong> al guardar. HR solo marca los criterios cumplidos.</p>
+
+<table>
+<tr>
+<th>Acción</th>
+<th>Puntos</th>
+<th>Observaciones</th>
+</tr>
+<tr>
+<td>Asistir a la capacitación</td>
+<td><strong>10 pts</strong></td>
+<td>Marcar “Asistió” en la grilla de carga.</td>
+</tr>
+<tr>
+<td>Participar (micrófono / preguntas)</td>
+<td><strong>5 pts</strong> por intervención</td>
+<td>Máximo <strong>3 intervenciones</strong> por sesión (= 15 pts). Completar el número en la columna “Particip.”.</td>
+</tr>
+<tr>
+<td>Aprobar el examen (≥ 70%)</td>
+<td><strong>15 pts</strong></td>
+<td>Ingresar la nota del examen (0–100). Con 70% o más suma automáticamente.</td>
+</tr>
+<tr>
+<td>Nota perfecta en el examen (100%)</td>
+<td><strong>+5 pts bonus</strong></td>
+<td>Se suma además de los 15 pts de aprobación. Total examen perfecto: 20 pts.</td>
+</tr>
+<tr>
+<td>Entregar actividad práctica en tiempo</td>
+<td><strong>10 pts</strong></td>
+<td>Marcar “Actividad” si entregó a tiempo.</td>
+</tr>
+<tr>
+<td>Ajuste manual HR</td>
+<td>Variable</td>
+<td>Para correcciones excepcionales. Usar con criterio y dejar nota explicativa.</td>
+</tr>
+</table>
+
+<p><strong>Puntaje máximo teórico por sesión (sin ajustes):</strong> 10 + 15 + 20 + 10 = <strong>55 pts</strong></p>
+
+<div class="warning">
+<strong>Nota:</strong> La métrica de “cámara prendida” <strong>no se utiliza</strong>. Fue removida del sistema a pedido del equipo.
+</div>
+
+<h2>4. Secciones del Admin</h2>
+<p>El módulo tiene tres pantallas en el menú lateral:</p>
+
+<h3>4.1 Ranking</h3>
+<p><code>/admin/entrenamiento-ia</code></p>
+<ul>
+<li>Muestra el tablero general del ciclo seleccionado.</li>
+<li>Lista a todos los colaboradores activos ordenados por puntos.</li>
+<li>Incluye resumen: total de participantes, cuántos tienen puntos y quién lidera.</li>
+<li>La misma información (sin edición) la ven los empleados en el Portal.</li>
+</ul>
+
+<h3>4.2 Sesiones</h3>
+<p><code>/admin/entrenamiento-ia/sessions</code></p>
+<ul>
+<li>Crear una nueva sesión: título, fecha y descripción opcional.</li>
+<li>Ver el listado de sesiones del ciclo.</li>
+<li>Desde cada sesión hay un acceso directo a “Cargar puntos”.</li>
+</ul>
+
+<h3>4.3 Cargar puntos</h3>
+<p><code>/admin/entrenamiento-ia/puntuacion</code></p>
+<ul>
+<li>Seleccionar ciclo y sesión.</li>
+<li>Aparece la grilla con <strong>todos los empleados activos</strong>.</li>
+<li>Completar criterios por persona y guardar.</li>
+<li>El total de puntos se calcula en tiempo real antes de guardar.</li>
+</ul>
+
+<h2>5. Flujo de trabajo recomendado (HR)</h2>
+<p>Seguir este proceso después de cada capacitación:</p>
+
+<ol>
+<li><strong>Antes de la sesión</strong> (opcional): crear la sesión en Admin → Sesiones con título y fecha.</li>
+<li><strong>Durante la sesión</strong>: anotar asistentes, intervenciones (mic/preguntas) y quién entregó la actividad.</li>
+<li><strong>Después del examen</strong>: registrar notas de quienes rindieron.</li>
+<li><strong>Cargar puntos</strong>: Admin → Cargar puntos → elegir la sesión → completar la grilla → <strong>Guardar puntajes</strong>.</li>
+<li><strong>Verificar</strong>: revisar el Ranking para confirmar que los totales del ciclo se actualizaron.</li>
+</ol>
+
+<h3>Checklist por sesión</h3>
+<ul class="checklist">
+<li>Sesión creada en el sistema (título + fecha correctos)</li>
+<li>Asistencia marcada para quienes estuvieron</li>
+<li>Participaciones cargadas (0 a 3 por persona)</li>
+<li>Notas de examen ingresadas donde corresponda</li>
+<li>Actividad práctica marcada para entregas en tiempo</li>
+<li>Notas explicativas en ajustes manuales (si aplica)</li>
+<li>Puntajes guardados y ranking verificado</li>
+</ul>
+
+<h2>6. Guía de la grilla “Cargar puntos”</h2>
+<table>
+<tr>
+<th>Columna</th>
+<th>Qué cargar</th>
+</tr>
+<tr>
+<td><strong>Asistió</strong></td>
+<td>Checkbox. Marcar si la persona estuvo en la capacitación (+10 pts).</td>
+</tr>
+<tr>
+<td><strong>Particip.</strong></td>
+<td>Número de intervenciones con micrófono o preguntas. Máximo efectivo: 3 (= 15 pts).</td>
+</tr>
+<tr>
+<td><strong>Examen %</strong></td>
+<td>Nota del 0 al 100. Dejar vacío si no rindió. ≥70% suma 15 pts; 100% suma 15 + 5 bonus.</td>
+</tr>
+<tr>
+<td><strong>Actividad</strong></td>
+<td>Checkbox. Marcar si entregó la práctica en tiempo (+10 pts).</td>
+</tr>
+<tr>
+<td><strong>Ajuste</strong></td>
+<td>Número entero positivo o negativo para correcciones. Ej: +5 por ayudar a un compañero; -5 por error previo.</td>
+</tr>
+<tr>
+<td><strong>Notas</strong></td>
+<td>Texto libre. Recomendado cuando se usa ajuste manual, para dejar registro del motivo.</td>
+</tr>
+<tr>
+<td><strong>Pts</strong></td>
+<td>Total calculado automáticamente. No se edita a mano.</td>
+</tr>
+</table>
+
+<div class="note">
+<strong>Tip:</strong> Usar el buscador de la grilla para encontrar rápido a un colaborador por nombre.<br>
+<strong>Importante:</strong> Solo se guardan filas con al menos un dato cargado o que ya tenían puntaje previo. Si alguien no participó en nada, no hace falta guardarlo (quedará con 0 pts en el ranking).
+</div>
+
+<h2>7. Qué ven los empleados en el Portal</h2>
+<p>En <strong>Portal → Entrenamiento IA</strong> cada colaborador accede a dos pestañas:</p>
+
+<h3>7.1 Ranking general</h3>
+<ul>
+<li>Tabla con <strong>todos</strong> los empleados activos de Pow y sus puntos del ciclo.</li>
+<li>Su propia fila aparece destacada con la etiqueta “Vos”.</li>
+<li>Ven su posición actual (#) y el total de puntos.</li>
+<li>Panel lateral con las reglas de puntuación.</li>
+</ul>
+
+<h3>7.2 Mi historial</h3>
+<ul>
+<li>Detalle sesión por sesión de sus propios puntajes.</li>
+<li>Desglose de cómo sumó en cada capacitación (asistencia, participación, examen, etc.).</li>
+<li>Total acumulado del ciclo.</li>
+<li>Si HR dejó una nota en el ajuste manual, la ven en el detalle.</li>
+</ul>
+
+<p>Los empleados <strong>no pueden</strong> editar sus puntajes. Solo HR carga y corrige desde Admin.</p>
+
+<h2>8. Buenas prácticas para HR</h2>
+<ul>
+<li><strong>Cargar puntos dentro de las 48 hs</strong> posteriores a la sesión, mientras la información está fresca.</li>
+<li><strong>Ser consistentes</strong> en qué cuenta como “participación” (pregunta por chat, por micrófono, respuesta en vivo, etc.).</li>
+<li><strong>Documentar ajustes manuales</strong> siempre con una nota, para transparencia.</li>
+<li><strong>No usar el ranking como sanción</strong>: es un incentivo positivo, no una obligación ni una evaluación de desempeño formal.</li>
+<li><strong>Comunicar al equipo</strong> que pueden ver su posición y historial en el Portal en cualquier momento.</li>
+<li>Si se detecta un error después de guardar, volver a la misma sesión, corregir y guardar de nuevo: el sistema recalcula automáticamente.</li>
+</ul>
+
+<h2>9. Preguntas frecuentes</h2>
+
+<h3>¿Un empleado que nunca participó aparece en el ranking?</h3>
+<p>Sí. Aparece con <strong>0 puntos</strong>. Esto es intencional: el ranking muestra a todo Pow y la diferencia con quienes participan se ve naturalmente.</p>
+
+<h3>¿Puedo corregir puntajes de una sesión ya cargada?</h3>
+<p>Sí. Volvé a Admin → Cargar puntos → misma sesión → modificá los valores → Guardar puntajes. El ranking se actualiza al instante.</p>
+
+<h3>¿Qué pasa si pongo 4 o más participaciones?</h3>
+<p>El sistema acepta el número ingresado, pero solo computa puntos por las <strong>primeras 3</strong> intervenciones (máx. 15 pts).</p>
+
+<h3>¿Cómo funciona el examen con 85%?</h3>
+<p>Suma 15 pts por aprobación (≥70%). El bonus de +5 pts solo aplica con nota exacta de 100%.</p>
+
+<h3>¿Hay más de un ciclo activo?</h3>
+<p>El sistema viene con un ciclo “Ciclo actual”. Si en el futuro se crean ciclos nuevos, se puede elegir cuál ver desde el selector de ciclo en Ranking y Cargar puntos.</p>
+
+<h3>¿Los líderes pueden cargar puntos?</h3>
+<p>No. Solo usuarios con rol <strong>Admin (HR)</strong> tienen acceso al módulo de carga en Admin.</p>
+
+<h2>10. Resumen rápido</h2>
+<table>
+<tr>
+<th>Paso</th>
+<th>Dónde</th>
+<th>Acción</th>
+</tr>
+<tr>
+<td>1</td>
+<td>Admin → Sesiones</td>
+<td>Crear la capacitación (título + fecha)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Admin → Cargar puntos</td>
+<td>Seleccionar sesión y completar grilla por empleado</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Admin → Cargar puntos</td>
+<td>Guardar puntajes</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Admin → Ranking</td>
+<td>Verificar tablero del ciclo</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Portal (empleados)</td>
+<td>El equipo ve ranking e historial automáticamente</td>
+</tr>
+</table>
+
+<div class="footer">
+Pow HR — app-hr &nbsp;|&nbsp; Manual Entrenamiento IA &nbsp;|&nbsp; Mayo 2026<br>
+Consultas técnicas: equipo de desarrollo / Guido Ginesi
+</div>
+
+</body>
+</html>

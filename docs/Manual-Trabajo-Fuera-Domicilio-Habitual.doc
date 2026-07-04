@@ -1,0 +1,227 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<title>Manual — Trabajo fuera de domicilio habitual</title>
+<!--[if gte mso 9]><xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+</w:WordDocument>
+</xml><![endif]-->
+<style>
+@page { size: 21cm 29.7cm; margin: 2.5cm 2.5cm 2.5cm 2.5cm; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; }
+h1 { font-size: 20pt; color: #1a1a1a; border-bottom: 2px solid #f59e0b; padding-bottom: 6pt; margin-top: 0; }
+h2 { font-size: 14pt; color: #292524; margin-top: 18pt; margin-bottom: 6pt; }
+h3 { font-size: 12pt; color: #44403c; margin-top: 14pt; margin-bottom: 4pt; }
+p { margin: 0 0 8pt 0; }
+ul, ol { margin: 0 0 10pt 0; }
+li { margin-bottom: 4pt; }
+table { border-collapse: collapse; width: 100%; margin: 10pt 0 14pt 0; }
+th, td { border: 1px solid #d4d4d8; padding: 6pt 8pt; text-align: left; vertical-align: top; }
+th { background: #fafafa; font-weight: bold; }
+.note { background: #fffbeb; border: 1px solid #fcd34d; padding: 10pt; margin: 12pt 0; }
+.footer { font-size: 9pt; color: #71717a; margin-top: 24pt; border-top: 1px solid #e4e4e7; padding-top: 8pt; }
+.checklist { list-style: none; padding-left: 0; }
+.checklist li:before { content: "☐ "; }
+</style>
+</head>
+<body>
+
+<h1>Trabajo fuera de domicilio habitual</h1>
+<p><strong>Manual para el equipo — Pow HR</strong><br>
+Versión: Mayo 2026 &nbsp;|&nbsp; Sistema: app-hr (Portal + Admin)</p>
+
+<h2>1. ¿Qué es y para qué sirve?</h2>
+<p>Se incorporó una nueva licencia llamada <strong>“Trabajo fuera de domicilio habitual”</strong>. Su objetivo es cumplir con la obligación de <strong>informar a la ART y al seguro</strong> cuando una persona del equipo trabaja desde un lugar distinto a su domicilio habitual, por <strong>días sueltos o viajes cortos</strong> (no semanas completas).</p>
+
+<p><strong>Ejemplos de cuándo usarla:</strong></p>
+<ul>
+<li>Trabajar 2 días desde otra ciudad por un evento o reunión.</li>
+<li>Estar de viaje y trabajar desde un Airbnb, hotel u otro domicilio temporal.</li>
+<li>Cualquier situación puntual fuera del domicilio habitual, aunque sea un solo día.</li>
+</ul>
+
+<div class="note">
+<strong>Importante:</strong> Esta licencia <strong>no reemplaza</strong> al “Trabajo Remoto” de semanas completas. Para semanas enteras de remoto (lunes a domingo) se sigue usando la licencia <strong>Trabajo Remoto</strong>.
+</div>
+
+<h2>2. Diferencia con “Trabajo Remoto” (semanas)</h2>
+<table>
+<tr>
+<th>Característica</th>
+<th>Trabajo Remoto (semanas)</th>
+<th>Trabajo fuera de domicilio habitual</th>
+</tr>
+<tr>
+<td>Duración</td>
+<td>Semanas completas (lunes a domingo)</td>
+<td>Días sueltos o viajes</td>
+</tr>
+<tr>
+<td>Consume saldo</td>
+<td>Sí (8 semanas por año)</td>
+<td><strong>No</strong> — es ilimitada</td>
+</tr>
+<tr>
+<td>Aprobación</td>
+<td>Líder → HR</td>
+<td><strong>Solo HR</strong></td>
+</tr>
+<tr>
+<td>Objetivo principal</td>
+<td>Planificación de trabajo remoto</td>
+<td><strong>Notificación obligatoria a ART / Seguro</strong></td>
+</tr>
+</table>
+
+<h2>3. Guía para colaboradores (Portal)</h2>
+
+<h3>3.1 Cuándo solicitarla</h3>
+<p>Cada vez que una persona vaya a trabajar <strong>fuera de su domicilio habitual</strong>, aunque sea por un solo día hábil.</p>
+
+<h3>3.2 Cómo cargar la solicitud</h3>
+<ol>
+<li>Ingresar al <strong>Portal → Time Off → Nueva solicitud</strong>.</li>
+<li>Seleccionar el tipo: <strong>“Trabajo fuera de domicilio habitual”</strong>.</li>
+<li>Indicar las <strong>fechas</strong> (días hábiles).</li>
+<li>Completar los campos obligatorios de ubicación:
+<ul>
+<li><strong>Destino</strong> (ciudad / lugar)</li>
+<li><strong>Domicilio completo</strong> donde se va a trabajar (calle, número, etc.)</li>
+<li><strong>Contacto de emergencia</strong> (nombre y teléfono)</li>
+</ul>
+</li>
+<li>Opcionalmente agregar observaciones.</li>
+<li>Enviar la solicitud.</li>
+</ol>
+
+<h3>3.3 Qué ocurre después del envío</h3>
+<ul>
+<li>La solicitud va <strong>directamente a HR</strong> (no requiere aprobación del líder).</li>
+<li><strong>No descuenta días</strong> de vacaciones ni de ningún otro saldo.</li>
+<li>HR aprueba o rechaza la solicitud.</li>
+<li>Con la aprobación, el sistema gestiona las notificaciones a ART de forma automática (ver sección 5).</li>
+</ul>
+
+<h3>3.4 Recomendaciones para colaboradores</h3>
+<ul>
+<li>Cargar el <strong>domicilio real</strong> donde se va a trabajar: es el dato que se informa a la ART.</li>
+<li>Solicitar con la mayor anticipación posible, aunque el sistema no exija días mínimos de aviso.</li>
+<li>Para semanas completas de remoto, usar <strong>Trabajo Remoto</strong>, no esta licencia.</li>
+</ul>
+
+<h2>4. Guía para HR (Admin)</h2>
+
+<h3>4.1 Revisar y aprobar solicitudes</h3>
+<p>Ruta: <strong>Admin → Time Off → Solicitudes</strong></p>
+<p>Filtros recomendados:</p>
+<ul>
+<li><strong>Tipo:</strong> Trabajo fuera de domicilio habitual</li>
+<li><strong>Estado:</strong> Pendiente HR / Aprobadas</li>
+<li><strong>Desde / Hasta:</strong> rango de fechas</li>
+<li><strong>Buscar por nombre</strong></li>
+</ul>
+<p>En la columna de comentarios se visualizan Destino, Domicilio y Contacto de emergencia cargados por el colaborador.</p>
+
+<h3>4.2 Exportar información a Excel (ART / Seguro)</h3>
+<p>Desde la misma pantalla de Solicitudes, con los filtros aplicados, usar el botón <strong>“Exportar XLSX”</strong>.</p>
+<p>El archivo incluye:</p>
+<ul>
+<li>Empleado, tipo de licencia, fechas, duración y estado</li>
+<li><strong>Destino, Domicilio y Contacto de emergencia</strong></li>
+<li>Observaciones</li>
+</ul>
+<p>Se exporta exactamente lo que está filtrado en pantalla. Útil como respaldo o para envíos manuales complementarios.</p>
+
+<h3>4.3 Checklist al aprobar</h3>
+<ul class="checklist">
+<li>Destino y domicilio correctos y completos</li>
+<li>Contacto de emergencia cargado</li>
+<li>Empleado registrado en <strong>relación de dependencia</strong> en el legajo</li>
+<li>CUIL y domicilio habitual actualizados en People</li>
+<li>Fechas coherentes con el viaje o estadía real</li>
+</ul>
+
+<h2>5. Notificación automática a ART (PDF Berkley)</h2>
+
+<p>El sistema genera y envía el <strong>formulario Teletrabajo de Berkley ART</strong> con el listado de <strong>todo el equipo en relación de dependencia</strong>, no solo la persona que viaja.</p>
+
+<h3>5.1 Cuándo se envía el mail</h3>
+<table>
+<tr>
+<th>Evento</th>
+<th>Momento del envío</th>
+</tr>
+<tr>
+<td><strong>Inicio</strong> — alguien empieza a trabajar fuera de domicilio</td>
+<td><strong>1 día antes</strong> del inicio, a las <strong>7:00 AM</strong> (hora Argentina)</td>
+</tr>
+<tr>
+<td><strong>Retorno</strong> — la persona vuelve al domicilio habitual</td>
+<td><strong>A la mañana del día siguiente</strong> al último día fuera de domicilio, a las <strong>7:00 AM</strong></td>
+</tr>
+</table>
+
+<h3>5.2 Contenido del PDF</h3>
+<ul>
+<li>Listado completo de empleados en <strong>relación de dependencia</strong>.</li>
+<li>Quienes están fuera de domicilio en la fecha de referencia → figuran con el domicilio de la solicitud aprobada.</li>
+<li>El resto del equipo → figura con su domicilio habitual del legajo.</li>
+<li>Datos del empleador (Razón Social y CUIT de Pow).</li>
+</ul>
+
+<h3>5.3 Destinatarios del mail (fase de prueba)</h3>
+<ul>
+<li>guido@pow.la</li>
+<li>agustina.marques@pow.la</li>
+</ul>
+<p>Cuando se valide el funcionamiento, se actualizará el destinatario oficial de Berkley ART (<strong>contratos@berkley.com.ar</strong>).</p>
+
+<h3>5.4 Requisitos para que el envío automático funcione</h3>
+<ul>
+<li>Solicitud <strong>aprobada</strong> (tipo “fuera de domicilio” o “trabajo remoto” semanal).</li>
+<li>Empleado con condición <strong>relación de dependencia</strong> en el legajo.</li>
+<li>Domicilio correctamente cargado en la solicitud.</li>
+<li>CUIL y domicilio habitual completos en el perfil del empleado.</li>
+</ul>
+
+<h2>6. Flujo completo (resumen)</h2>
+<ol>
+<li>El colaborador registra la solicitud en el Portal.</li>
+<li>HR aprueba (sin paso de líder).</li>
+<li><strong>1 día antes del inicio</strong> → se envía mail con PDF ART (listado completo actualizado).</li>
+<li>El colaborador trabaja fuera de su domicilio habitual.</li>
+<li><strong>Día siguiente al fin del período</strong> → se envía mail con PDF ART (todos vuelven a domicilio habitual).</li>
+</ol>
+
+<h2>7. Preguntas frecuentes</h2>
+
+<p><strong>¿Consume días de vacaciones?</strong><br>
+No. Es ilimitada y solo cumple función de notificación.</p>
+
+<p><strong>¿Necesita aprobación del líder?</strong><br>
+No. Solo HR.</p>
+
+<p><strong>¿Qué pasa si no completo el domicilio?</strong><br>
+No se puede enviar la solicitud: los campos de ubicación y contacto son obligatorios.</p>
+
+<p><strong>¿Trabajo remoto toda una semana desde otra ciudad?</strong><br>
+Usar la licencia <strong>Trabajo Remoto</strong> (semanas), no esta.</p>
+
+<p><strong>¿HR tiene que mandar el PDF a mano?</strong><br>
+No en condiciones normales: el sistema lo envía automáticamente. El Excel exportable sirve como respaldo o para otros trámites.</p>
+
+<p><strong>¿A quién contactar ante dudas?</strong><br>
+Equipo de HR / People.</p>
+
+<div class="footer">
+Documento generado para uso interno — Pow &nbsp;|&nbsp; app-hr &nbsp;|&nbsp; Mayo 2026
+</div>
+
+</body>
+</html>
