@@ -1,7 +1,10 @@
 'use client';
 
 
-import { Spinner } from '@/components/Spinner';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Button } from '@pow/ui/components/ui/button';
+import { Dialog } from '@pow/ui/components/ui/dialog';
 import { useState, useRef } from 'react';
 
 const PROVINCIAS = ['CABA', 'GBA', 'Otra'];
@@ -84,10 +87,10 @@ function getApplicationStatusBadge(ref: Referral): { label: string; color: strin
 
   const stageColors: Record<string, string> = {
     CV_RECEIVED: 'bg-warning-subtle text-[var(--amber-600)]',
-    HR_REVIEW: 'bg-accent text-accent-foreground',
-    FILTER_QUESTIONS: 'bg-accent text-accent-foreground',
-    HR_INTERVIEW: 'bg-accent text-accent-foreground',
-    LEAD_INTERVIEW: 'bg-accent text-accent-foreground',
+    HR_REVIEW: 'bg-secondary text-foreground',
+    FILTER_QUESTIONS: 'bg-secondary text-foreground',
+    HR_INTERVIEW: 'bg-secondary text-foreground',
+    LEAD_INTERVIEW: 'bg-secondary text-foreground',
     EO_INTERVIEW: 'bg-secondary text-foreground',
     REFERENCES_CHECK: 'bg-secondary text-foreground',
     SELECTED_FOR_OFFER: 'bg-success-subtle text-[var(--green-700)]',
@@ -97,7 +100,7 @@ function getApplicationStatusBadge(ref: Referral): { label: string; color: strin
   const stage = app.current_stage || 'CV_RECEIVED';
   return {
     label: stageLabels[stage] ?? 'En proceso',
-    color: stageColors[stage] ?? 'bg-accent text-accent-foreground',
+    color: stageColors[stage] ?? 'bg-secondary text-foreground',
   };
 }
 
@@ -196,12 +199,10 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Referidos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            ¿Conocés a alguien que podría sumarse a nuestro equipo y compartir nuestros valores? Esta es tu oportunidad de recomendarlo/a y, si ingresa, recibir un bono como reconocimiento.
-          </p>
-        </div>
+        <PageHeader
+          title="Referidos"
+          description="¿Conocés a alguien que podría sumarse a nuestro equipo y compartir nuestros valores? Esta es tu oportunidad de recomendarlo/a y, si ingresa, recibir un bono como reconocimiento."
+        />
 
         <div className="rounded-xl border border-[var(--border)] bg-white p-6 space-y-4">
           <div>
@@ -215,7 +216,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                     href="https://docs.google.com/document/d/1HWXHbKaQ161lsgNufTKcrCS7UIfiIBS98-L6ud80c-U/edit?tab=t.0#heading=h.f5v4k0nmuvib"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-[var(--green-700)] underline hover:text-[var(--green-700)]"
+                    className="font-medium text-foreground underline underline-offset-2 hover:text-[var(--primary-hover)]"
                   >Programa de Referidos Pow 🚀</a>
                 </span>
               </li>
@@ -230,7 +231,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
             </ol>
           </div>
 
-          <p className="text-sm font-medium text-[var(--green-700)]">
+          <p className="text-sm font-medium text-foreground">
             ¡Tu recomendación puede ser clave para seguir construyendo el equipo que queremos!
           </p>
         </div>
@@ -238,7 +239,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
 
       {/* Open jobs */}
       <section>
-        <h2 className="text-base font-semibold text-secondary-foreground mb-3">Búsquedas abiertas</h2>
+        <h2 className="text-sm font-semibold text-secondary-foreground mb-3">Búsquedas abiertas</h2>
         {jobs.length === 0 ? (
           <div className="rounded-xl border border-[var(--border)] bg-white p-8 text-center text-sm text-muted-foreground">
             No hay búsquedas abiertas en este momento
@@ -256,7 +257,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                         <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{job.department}</span>
                       )}
                       {job.work_mode && (
-                        <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                           {WORK_MODE_LABELS[job.work_mode] || job.work_mode}
                         </span>
                       )}
@@ -292,7 +293,7 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
       {/* My referrals */}
       {referrals.length > 0 && (
         <section>
-          <h2 className="text-base font-semibold text-secondary-foreground mb-3">Mis referidos</h2>
+          <h2 className="text-sm font-semibold text-secondary-foreground mb-3">Mis referidos</h2>
           <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
             <ul className="divide-y divide-[var(--border)]">
               {referrals.map((ref) => (
@@ -345,24 +346,16 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
       )}
 
       {/* Modal */}
-      {showModal && selectedJob && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={closeModal} />
-            <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Referir persona</h2>
-                  <p className="text-sm text-muted-foreground">{selectedJob.title}</p>
-                </div>
-                <button onClick={closeModal} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="max-h-[70vh] overflow-y-auto p-6 space-y-4">
+      <Dialog
+        open={showModal && !!selectedJob}
+        onClose={closeModal}
+        title="Referir persona"
+        description={selectedJob?.title}
+        size="lg"
+      >
+        {selectedJob && (
+          <>
+            <div className="space-y-4">
                 {/* Nombre */}
                 <div>
                   <label className="block text-sm font-medium text-secondary-foreground mb-1">
@@ -415,14 +408,14 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                   <label className="block text-sm font-medium text-secondary-foreground mb-1">
                     Provincia <span className="text-[var(--red-600)]">*</span>
                   </label>
-                  <select
+                  <SelectMenu
                     value={form.candidate_province}
-                    onChange={e => setForm(f => ({ ...f, candidate_province: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">Seleccionar provincia</option>
-                    {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                    onChange={(v) => setForm(f => ({ ...f, candidate_province: v }))}
+                    placeholder="Seleccionar provincia"
+                    ariaLabel="Provincia"
+                    className="w-full"
+                    options={PROVINCIAS.map(p => ({ value: p, label: p }))}
+                  />
                 </div>
 
                 {/* LinkedIn */}
@@ -533,31 +526,17 @@ export function ReferidosClient({ initialJobs, initialReferrals }: Props) {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  onClick={closeModal}
-                  disabled={submitting}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? (
-                    <>
-                      <Spinner className="h-4 w-4 text-white" />
-                      Enviando...
-                    </>
-                  ) : 'Enviar referido'}
-                </button>
-              </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={closeModal} disabled={submitting}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSubmit} loading={submitting}>
+                Enviar referido
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

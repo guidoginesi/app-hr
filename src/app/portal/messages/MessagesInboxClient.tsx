@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Sheet, SheetContent } from '@pow/ui/components/ui/sheet';
+import { MessageView } from '@/components/messages/MessageView';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 
 type MessageItem = {
@@ -26,7 +29,7 @@ type MessageItem = {
 };
 
 const priorityBadge = {
-  info: 'bg-accent text-accent-foreground',
+  info: 'bg-secondary text-secondary-foreground',
   warning: 'bg-warning-subtle text-[var(--amber-600)]',
   critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
@@ -49,6 +52,7 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
   const router = useRouter();
   const [items, setItems] = useState<MessageItem[]>(initialItems);
   const [filter, setFilter] = useState<Filter>('all');
+  const [openItem, setOpenItem] = useState<MessageItem | null>(null);
 
   const unreadCount = items.filter((i) => !i.read_at).length;
   const needsConfirmCount = items.filter(
@@ -77,18 +81,22 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
     }
 
     const deepLink = item.messages.metadata?.deep_link as string | undefined;
-    router.push(deepLink ? deepLink : `/portal/messages/${item.message_id}`);
+    if (deepLink) {
+      router.push(deepLink);
+      return;
+    }
+    // Abre el mensaje en un Sheet lateral, sin salir del inbox.
+    setOpenItem(item);
+  };
+
+  const handleConfirmed = (itemId: string, confirmedAt: string) => {
+    setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, confirmed_at: confirmedAt } : i)));
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mensajes</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tu centro de notificaciones y anuncios
-        </p>
-      </div>
+      <PageHeader title="Mensajes" description="Tu centro de notificaciones y anuncios" />
 
       {/* Filters */}
       <div className="flex gap-2">
@@ -147,19 +155,10 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
                 type="button"
                 onClick={() => handleClick(item)}
                 className={`w-full border-b border-[var(--border)] px-6 py-4 text-left transition-colors last:border-0 hover:bg-muted ${
-                  isUnread ? 'bg-accent/40' : ''
+                  isUnread ? 'bg-muted' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  {/* Unread indicator */}
-                  <div className="mt-2 flex-shrink-0">
-                    {isUnread ? (
-                      <span className="block h-2.5 w-2.5 rounded-full bg-primary" />
-                    ) : (
-                      <span className="block h-2.5 w-2.5 rounded-full bg-secondary" />
-                    )}
-                  </div>
-
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
@@ -168,7 +167,7 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
                         {msg.type === 'broadcast' ? 'Anuncio' : 'Sistema'}
                       </span>
                       {needsConfirm && (
-                        <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+                        <span className="rounded-full bg-warning-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--amber-600)]">
                           Requiere confirmación
                         </span>
                       )}
@@ -206,6 +205,34 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
           })}
         </div>
       )}
+
+      {/* Detalle en Sheet lateral */}
+      <Sheet open={!!openItem} onOpenChange={(o) => !o && setOpenItem(null)}>
+        <SheetContent
+          title={openItem?.messages?.title}
+          description={
+            openItem?.messages
+              ? new Date(openItem.messages.published_at).toLocaleDateString('es-AR', {
+                  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                })
+              : undefined
+          }
+          className="sm:max-w-xl"
+        >
+          {openItem?.messages && (
+            <div className="px-1">
+              <MessageView
+                message={openItem.messages}
+                messageId={openItem.message_id}
+                initialConfirmedAt={openItem.confirmed_at}
+                bordered={false}
+                showTitle={false}
+                onConfirmed={(at) => handleConfirmed(openItem.id, at)}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -135,16 +135,12 @@ export function LeaveRequestRow({
             </span>
           )}
         </div>
-        <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+        <p className="mt-0.5 truncate text-[13px] text-muted-foreground" title={rejection || undefined}>
           {showEmployee && <>{request.leave_type_name} · </>}
           {request.days_requested} {unit} · {formatRange(request.start_date, request.end_date)}
           {note && <> · “{note}”</>}
+          {rejection && <span className="text-[var(--red-600)]"> · Motivo: {rejection}</span>}
         </p>
-        {rejection && (
-          <p className="mt-1 truncate text-xs text-[var(--red-600)]" title={rejection}>
-            Motivo: {rejection}
-          </p>
-        )}
       </div>
 
       {showTrail && !actions && <ApprovalTrail request={request} leaderLabel={leaderLabel} />}

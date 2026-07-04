@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 
 export default function PortalLoginPage() {
@@ -104,16 +105,12 @@ export default function PortalLoginPage() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={isResetting}
-                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-50"
-              >
-                {isResetting ? 'Enviando...' : 'Enviar link de recuperación'}
-              </button>
+              <Button type="submit" size="lg" loading={isResetting} className="w-full">
+                Enviar link de recuperación
+              </Button>
             </form>
           ) : (
-            <div className="rounded-lg bg-success-subtle border border-brand p-4 text-center">
+            <div className="rounded-lg border border-success/30 bg-success-subtle p-4 text-center">
               <p className="text-sm text-[var(--green-700)]">
                 Email enviado a <strong>{email}</strong>
               </p>
@@ -205,13 +202,9 @@ export default function PortalLoginPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-50"
-          >
-            {isPending ? 'Ingresando...' : 'Ingresar'}
-          </button>
+          <Button type="submit" size="lg" loading={isPending} className="w-full">
+            Ingresar
+          </Button>
         </form>
 
         <div className="mt-4 text-center">

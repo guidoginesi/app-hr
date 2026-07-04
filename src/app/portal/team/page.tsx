@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { requireLeader, getDirectReports } from '@/lib/checkAuth';
 import { PortalShell } from '../PortalShell';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,12 +21,10 @@ export default async function PortalTeamPage() {
   return (
     <PortalShell employee={employee} isLeader={isLeader} active="team">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mi Equipo</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {directReports.length} {directReports.length === 1 ? 'persona a tu cargo' : 'personas a tu cargo'}
-          </p>
-        </div>
+        <PageHeader
+          title="Mi Equipo"
+          description={`${directReports.length} ${directReports.length === 1 ? 'persona a tu cargo' : 'personas a tu cargo'}`}
+        />
 
         {/* Quick actions - Moved to top */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -43,8 +42,8 @@ export default async function PortalTeamPage() {
               </div>
             </div>
             <Link
-              href="/portal/team/time-off"
-              className="mt-4 inline-flex items-center text-sm font-medium text-[var(--amber-600)] hover:text-[var(--amber-600)]"
+              href="/portal/time-off/team"
+              className="mt-4 inline-flex items-center text-sm font-medium text-foreground hover:text-[var(--primary-hover)]"
             >
               Ver solicitudes
               <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,7 +67,7 @@ export default async function PortalTeamPage() {
             </div>
             <Link
               href="/portal/evaluaciones"
-              className="mt-4 inline-flex items-center text-sm font-medium text-foreground hover:text-foreground"
+              className="mt-4 inline-flex items-center text-sm font-medium text-foreground hover:text-[var(--primary-hover)]"
             >
               Ver evaluaciones
               <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

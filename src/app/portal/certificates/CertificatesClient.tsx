@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@pow/ui/components/ui/sheet';
-import { buttonVariants } from '@pow/ui/components/ui/button';
+import { Button } from '@pow/ui/components/ui/button';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { CertificateUploadForm, formatFileSize, type Certificate } from './CertificateUploadForm';
 
 const CERTIFICATE_TYPE_LABELS: Record<string, string> = {
@@ -59,20 +60,18 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Certificados</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Cargá tus certificados médicos, de exámen o comprobantes de viaje
-          </p>
-        </div>
-        <button onClick={() => setOpen(true)} className={buttonVariants({ variant: 'primary' })}>
-          <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          Cargar certificado
-        </button>
-      </div>
+      <PageHeader
+        title="Certificados"
+        description="Cargá tus certificados médicos, de exámen o comprobantes de viaje"
+        actions={
+          <Button onClick={() => setOpen(true)}>
+            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Cargar certificado
+          </Button>
+        }
+      />
 
       {/* List */}
       {certificates.length === 0 ? (

@@ -34,10 +34,10 @@ export function ScaleInput({ value, onChange, disabled }: ScaleInputProps) {
               className={`
                 relative w-9 h-9 rounded-full text-sm font-medium transition-all
                 ${isSelected
-                  ? 'bg-cat-violet text-white shadow-md ring-2 ring-cat-violet ring-offset-2'
+                  ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary ring-offset-2'
                   : isHovered
-                  ? 'bg-cat-violet-subtle text-cat-violet'
-                  : 'bg-secondary text-muted-foreground hover:bg-secondary'
+                  ? 'bg-secondary text-foreground'
+                  : 'bg-secondary text-muted-foreground hover:bg-[var(--gray-200)]'
                 }
                 disabled:opacity-50 disabled:cursor-not-allowed
               `}
@@ -54,9 +54,7 @@ export function ScaleInput({ value, onChange, disabled }: ScaleInputProps) {
         {scaleLabel && (
           <span className={`text-xs font-medium ${
             displayValue && displayValue <= 2 ? 'text-[var(--red-600)]' :
-            displayValue && displayValue <= 4 ? 'text-accent-foreground' :
             displayValue && displayValue <= 6 ? 'text-[var(--amber-600)]' :
-            displayValue && displayValue <= 8 ? 'text-[var(--green-700)]' :
             'text-[var(--green-700)]'
           }`}>
             {scaleLabel}

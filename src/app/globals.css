@@ -22,6 +22,9 @@
 
   html {
     font-size: 90%;
+    /* Reserva el gutter del scrollbar siempre, así el contenido no salta
+       (ni se recentra) cuando aparece/desaparece el scroll vertical. */
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -31,6 +34,19 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
+
+}
+
+/* Radix (dropdowns/dialogs) bloquea el scroll con react-remove-scroll, que
+   compensa el ancho del scrollbar con margin-right en el body → todo se corre
+   al abrir. Como ya reservamos el gutter con scrollbar-gutter:stable, esa
+   compensación sobra. La anulamos. Va SIN @layer a propósito: la regla de la
+   librería es unlayered !important; con cascade layers, un !important en capa
+   pierde, así que este override debe quedar fuera de capa y ganar por
+   especificidad (html body[...] > body[...]). */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Force light mode styles for form inputs to ensure readability */

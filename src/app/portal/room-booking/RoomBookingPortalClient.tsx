@@ -3,6 +3,11 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Spinner } from '@/components/Spinner';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
+import { Dialog } from '@pow/ui/components/ui/dialog';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '@pow/ui/components/ui/dropdown';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type Room = {
   id: string;
@@ -71,6 +76,18 @@ const RECURRENCE_OPTIONS = [
   { value: 'biweekly', label: 'Quincenal' },
   { value: 'monthly', label: 'Mensual' },
 ];
+
+// Color estable por persona para las reuniones de otros (categóricas del DS).
+const EVENT_STYLES = [
+  'border-l-cat-violet bg-cat-violet-subtle',
+  'border-l-cat-cyan bg-cat-cyan-subtle',
+  'border-l-cat-pink bg-cat-pink-subtle',
+];
+function eventStyle(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return EVENT_STYLES[h % EVENT_STYLES.length];
+}
 
 function getWeekStart(date: Date): Date {
   const d = new Date(date);
@@ -340,36 +357,48 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reserva de Salas</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Consultá la disponibilidad y reservá una sala</p>
-        </div>
-        <Link
-          href="/portal/room-booking/my-bookings"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm hover:bg-muted"
-        >
-          Mis reservas
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-        </Link>
-      </div>
+      <PageHeader
+        title="Reserva de Salas"
+        description="Consultá la disponibilidad y reservá una sala"
+        actions={
+          <Link href="/portal/room-booking/my-bookings" className={buttonVariants({ variant: 'outline' })}>
+            Mis reservas
+            <svg className="ml-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        }
+      />
 
       {/* Room selector + week nav */}
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-secondary-foreground">Sala</label>
-            <select
-              value={selectedRoomId}
-              onChange={(e) => setSelectedRoomId(e.target.value)}
-              className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-            >
-              {rooms.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}{r.location ? ` – ${r.location}` : ''} ({r.capacity} pers.)
-                </option>
-              ))}
-            </select>
+            <Dropdown>
+              <DropdownTrigger className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring">
+                {selectedRoom
+                  ? `${selectedRoom.name}${selectedRoom.location ? ` – ${selectedRoom.location}` : ''} (${selectedRoom.capacity} pers.)`
+                  : 'Elegí una sala'}
+                <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </DropdownTrigger>
+              <DropdownContent align="start" className="min-w-64">
+                {rooms.map((r) => (
+                  <DropdownItem key={r.id} onSelect={() => setSelectedRoomId(r.id)}>
+                    <span className="flex-1">
+                      {r.name}{r.location ? ` – ${r.location}` : ''} ({r.capacity} pers.)
+                    </span>
+                    {selectedRoomId === r.id && (
+                      <svg className="h-4 w-4 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </DropdownItem>
+                ))}
+              </DropdownContent>
+            </Dropdown>
           </div>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => setCurrentWeek(addDays(currentWeek, -7))} className="rounded-lg border border-[var(--border)] p-2 hover:bg-muted">
@@ -402,24 +431,29 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
         <div className="overflow-x-auto px-6 py-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Cargando disponibilidad...</p>
+              <Spinner className="h-8 w-8 text-muted-foreground" />
             </div>
           ) : (
-            <div className="grid grid-cols-6 gap-px rounded-lg border border-[var(--border)] bg-secondary overflow-hidden" style={{ minWidth: 700 }}>
+            <div className="grid grid-cols-6 gap-px overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--border)]" style={{ minWidth: 700 }}>
               {/* Header row */}
-              <div className="bg-secondary p-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground" />
-              {weekDays.map((day, i) => (
-                <div key={i} className="bg-secondary p-3 text-center">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{DAY_LABELS[i]}</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{formatDateShort(day)}</div>
-                </div>
-              ))}
+              <div className="bg-secondary p-3" />
+              {weekDays.map((day, i) => {
+                const isToday = toArgDateStr(day) === toArgDateStr(new Date());
+                return (
+                  <div key={i} className="bg-secondary p-3 text-center">
+                    <div className={`text-xs font-semibold uppercase tracking-wide ${isToday ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {DAY_LABELS[i]}{isToday ? ' · hoy' : ''}
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{formatDateShort(day)}</div>
+                  </div>
+                );
+              })}
 
               {/* Time slots */}
               {TIME_SLOTS.map((time) => {
                 const hour = parseInt(time.split(':')[0]);
                 return [
-                  <div key={`t-${time}`} className="bg-muted p-3 text-center text-xs font-semibold text-muted-foreground">{time}</div>,
+                  <div key={`t-${time}`} className="bg-secondary p-3 text-center text-xs font-medium text-muted-foreground">{time}</div>,
                   ...weekDays.map((day, di) => {
                     const booking = getBookingForSlot(day, hour);
                     const argDateStr = toArgDateStr(day);
@@ -428,41 +462,41 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
                     const isMine = booking?.employee_id === employeeId;
                     const isClickable = !booking && !isPast;
 
-                    let bgClass = 'bg-white';
-                    if (isPast && !booking) bgClass = 'bg-danger-subtle';
-                    else if (booking && isMine) bgClass = 'bg-success-subtle';
-                    else if (booking) bgClass = 'bg-secondary';
-
                     return (
                       <div
                         key={`s-${time}-${di}`}
                         onClick={() => isClickable && handleSlotClick(day, hour)}
-                        className={`relative min-h-[56px] p-2 text-center text-xs transition-colors ${bgClass} ${isClickable ? 'cursor-pointer hover:bg-secondary' : ''} ${isPast && !booking ? 'cursor-not-allowed' : ''}`}
+                        className={`group relative min-h-[56px] p-1 transition-colors ${
+                          isPast && !booking ? 'cursor-not-allowed bg-muted/50' : 'bg-white'
+                        } ${isClickable ? 'cursor-pointer hover:bg-muted' : ''}`}
                       >
                         {booking ? (
-                          <div className="space-y-0.5">
-                            <div className={`font-medium truncate ${isMine ? 'text-[var(--green-700)]' : 'text-foreground'}`}>
-                              {booking.employee_first_name} {booking.employee_last_name?.charAt(0)}.
+                          <div className={`relative flex h-full flex-col justify-center rounded-md border-l-2 px-2 py-1 text-left ${isMine ? 'border-l-brand bg-accent' : `${eventStyle(booking.employee_id)}`}`}>
+                            <div className={`truncate text-[11px] font-medium leading-tight ${isMine ? 'text-accent-foreground' : 'text-foreground'}`}>
+                              {isMine ? 'Vos' : `${booking.employee_first_name ?? ''} ${booking.employee_last_name?.charAt(0) ?? ''}.`}
                             </div>
-                            <div className={`truncate ${isMine ? 'text-[var(--green-700)]' : 'text-foreground'} text-[10px]`}>
-                              {booking.title}
-                            </div>
+                            {booking.title && (
+                              <div className={`truncate text-[10px] leading-tight ${isMine ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+                                {booking.title}
+                              </div>
+                            )}
                             {isMine && !isPast && (
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); handleCancelBooking(booking.id); }}
-                                className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] text-white hover:bg-[var(--red-600)]"
+                                className="absolute right-1 top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-accent-foreground/10 text-[9px] text-accent-foreground hover:bg-accent-foreground/20 group-hover:flex"
                                 title="Cancelar"
+                                aria-label="Cancelar reserva"
                               >
                                 ✕
                               </button>
                             )}
                           </div>
-                        ) : (
-                          <span className={isPast ? 'text-[var(--red-600)] text-[10px]' : 'text-muted-foreground text-[10px]'}>
-                            {isPast ? 'No disp.' : 'Disponible'}
+                        ) : isClickable ? (
+                          <span className="hidden h-full items-center justify-center rounded-md border border-dashed border-[var(--border)] text-[11px] font-medium text-muted-foreground group-hover:flex">
+                            + Reservar
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     );
                   }),
@@ -473,38 +507,35 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
 
           {/* Legend */}
           <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded border border-[var(--border)] bg-white" /> Disponible</span>
-            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-success-subtle" /> Tu reserva</span>
-            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-secondary" /> Ocupada</span>
-            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded bg-danger-subtle" /> Pasado</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm border border-[var(--border)] bg-white" /> Disponible</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm border border-brand bg-accent" /> Tu reserva</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm border border-cat-violet bg-cat-violet-subtle" /> Ocupada (color por persona)</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm border border-[var(--border)] bg-muted" /> Pasado</span>
           </div>
         </div>
       </div>
 
       {/* Reservation modal */}
-      {showModal && selectedSlot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-              <div>
-                <h2 className="text-base font-semibold text-foreground">Reservar {selectedRoom?.name}</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {new Date(selectedSlot.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </p>
-              </div>
-              <button type="button" onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-
+      <Dialog
+        open={showModal && !!selectedSlot}
+        onClose={() => setShowModal(false)}
+        title={`Reservar ${selectedRoom?.name ?? ''}`}
+        description={
+          selectedSlot
+            ? new Date(selectedSlot.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+            : undefined
+        }
+        size="lg"
+      >
+        {selectedSlot && (
+          <>
             {error && (
-              <div className="mx-6 mt-4 rounded-lg bg-danger-subtle px-4 py-3 text-xs font-medium text-[var(--red-600)]">
+              <div className="mb-4 rounded-lg bg-danger-subtle px-4 py-3 text-xs font-medium text-[var(--red-600)]">
                 {error}
               </div>
             )}
 
-            <div className="space-y-4 px-6 py-5">
+            <div className="space-y-4">
               {/* Times */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -544,18 +575,16 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
               {/* Recurrence */}
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recurrencia</label>
-                <select
+                <SelectMenu
                   value={formRecurrence}
-                  onChange={(e) => {
-                    setFormRecurrence(e.target.value);
-                    if (!e.target.value) setFormRecurrenceEndDate('');
+                  onChange={(v) => {
+                    setFormRecurrence(v);
+                    if (!v) setFormRecurrenceEndDate('');
                   }}
-                  className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-                >
-                  {RECURRENCE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+                  ariaLabel="Recurrencia"
+                  className="w-full"
+                  options={RECURRENCE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+                />
               </div>
 
               {/* Recurrence end date */}
@@ -657,26 +686,17 @@ export function RoomBookingPortalClient({ rooms, employeeId, employeeName }: Pro
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-              >
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
                 Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--primary-hover)] disabled:opacity-60"
-              >
-                {submitting ? 'Reservando...' : 'Confirmar Reserva'}
-              </button>
+              </Button>
+              <Button type="button" onClick={handleSubmit} loading={submitting}>
+                Confirmar Reserva
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

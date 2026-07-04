@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 export type Certificate = {
   id: string;
@@ -64,16 +65,18 @@ export function CertificateUploadForm({
         <label className="mb-1 block text-sm font-medium text-secondary-foreground">
           Tipo de certificado <span className="text-[var(--red-600)]">*</span>
         </label>
-        <select
+        <SelectMenu
           value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value })}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="">Seleccioná un tipo</option>
-          <option value="exam">Certificado de exámen</option>
-          <option value="medical">Certificado médico</option>
-          <option value="travel_assistance">Comprobante asistencia al viajero</option>
-        </select>
+          onChange={(v) => setForm({ ...form, type: v })}
+          placeholder="Seleccioná un tipo"
+          ariaLabel="Tipo de certificado"
+          className="w-full"
+          options={[
+            { value: 'exam', label: 'Certificado de exámen' },
+            { value: 'medical', label: 'Certificado médico' },
+            { value: 'travel_assistance', label: 'Comprobante asistencia al viajero' },
+          ]}
+        />
       </div>
 
       {/* Archivo */}

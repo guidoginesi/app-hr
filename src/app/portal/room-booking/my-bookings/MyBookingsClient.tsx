@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
 
 type Booking = {
   id: string;
@@ -99,22 +101,15 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Mis Reservas
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Historial de tus reservas de salas
-          </p>
-        </div>
-        <Link
-          href="/portal/room-booking"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
-        >
-          Nueva reserva
-        </Link>
-      </div>
+      <PageHeader
+        title="Mis Reservas"
+        description="Historial de tus reservas de salas"
+        actions={
+          <Link href="/portal/room-booking" className={buttonVariants({ variant: 'primary' })}>
+            Nueva reserva
+          </Link>
+        }
+      />
 
       {/* Tabs */}
       <div className="border-b border-[var(--border)]">
@@ -123,7 +118,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
             onClick={() => setFilter('upcoming')}
             className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
               filter === 'upcoming'
-                ? 'border-[var(--border)] text-foreground'
+                ? 'border-brand text-foreground'
                 : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
             }`}
           >
@@ -138,7 +133,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
             onClick={() => setFilter('past')}
             className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
               filter === 'past'
-                ? 'border-[var(--border)] text-foreground'
+                ? 'border-brand text-foreground'
                 : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
             }`}
           >
@@ -168,7 +163,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-foreground">
+                        <h3 className="text-sm font-semibold text-foreground">
                           {booking.title}
                         </h3>
                         <span
@@ -235,15 +230,14 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
                       )}
                     </div>
                     {isFutureConfirmed(booking) && (
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleCancel(booking.id)}
-                        disabled={cancellingId === booking.id}
-                        className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-50"
+                        loading={cancellingId === booking.id}
                       >
-                        {cancellingId === booking.id
-                          ? 'Cancelando...'
-                          : 'Cancelar'}
-                      </button>
+                        Cancelar
+                      </Button>
                     )}
                   </div>
                 </li>

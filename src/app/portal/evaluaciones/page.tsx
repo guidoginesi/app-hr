@@ -6,9 +6,13 @@ import { EvaluacionesClient } from './EvaluacionesClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PortalEvaluacionesPage() {
+export default async function PortalEvaluacionesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period_id?: string }>;
+}) {
   const auth = await getAuthResult();
-  
+
   if (!auth.user) {
     redirect('/portal/login');
   }
@@ -19,17 +23,20 @@ export default async function PortalEvaluacionesPage() {
 
   const supabase = getSupabaseServer();
   const employeeId = auth.employee.id;
+  const { period_id } = await searchParams;
 
   // Check if user is a leader
   const isLeader = auth.isLeader || await checkIsLeader(employeeId);
 
-  // Get active period
-  const { data: activePeriod } = await supabase
+  // Todos los períodos (para el selector) + el seleccionado (query param → activo → más reciente)
+  const { data: allPeriods } = await supabase
     .from('evaluation_periods')
     .select('*')
-    .eq('status', 'open')
-    .eq('is_active', true)
-    .single();
+    .order('year', { ascending: false });
+  const periods = allPeriods || [];
+  const activePeriodDefault = periods.find((p) => p.status === 'open' && p.is_active);
+  const activePeriod =
+    periods.find((p) => p.id === period_id) ?? activePeriodDefault ?? periods[0] ?? null;
 
   // Get self-evaluation for current period
   let selfEvaluation = null;
@@ -55,7 +62,7 @@ export default async function PortalEvaluacionesPage() {
       .from('evaluations')
       .select(`
         *,
-        employee:employees!employee_id(id, first_name, last_name, job_title)
+        employee:employees!employee_id(id, first_name, last_name, job_title, photo_url)
       `)
       .eq('period_id', activePeriod.id)
       .eq('evaluator_id', employeeId)
@@ -65,7 +72,7 @@ export default async function PortalEvaluacionesPage() {
     // Get direct reports
     const { data: directReports } = await supabase
       .from('employees')
-      .select('id, first_name, last_name, job_title')
+      .select('id, first_name, last_name, job_title, photo_url')
       .eq('manager_id', employeeId)
       .eq('status', 'active');
 
@@ -100,6 +107,8 @@ export default async function PortalEvaluacionesPage() {
         employee={auth.employee}
         isLeader={isLeader}
         activePeriod={activePeriod}
+        periods={periods}
+        selectedPeriodId={activePeriod?.id ?? null}
         selfEvaluation={selfEvaluation}
         leaderEvaluations={leaderEvaluations}
         pendingTeamEvaluations={pendingTeamEvaluations}

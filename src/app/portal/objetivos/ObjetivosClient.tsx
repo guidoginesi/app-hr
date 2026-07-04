@@ -6,11 +6,28 @@ import type { Employee } from '@/types/employee';
 import type { Objective, ObjectiveFormData, ObjectivePeriodType, ObjectiveStatus, ObjectivesPeriod, ObjectivePeriodicity } from '@/types/objective';
 import { PERIOD_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS, PERIODICITY_LABELS, SUB_OBJECTIVES_COUNT, SUB_OBJECTIVE_LABELS } from '@/types/objective';
 import { ObjectiveCard } from '@/components/ObjectiveCard';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Button } from '@pow/ui/components/ui/button';
+import { Dialog } from '@pow/ui/components/ui/dialog';
+
+// Avatar de miembro del equipo: foto o iniciales (como en Time Off / Evaluaciones).
+function MemberAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
+  if (photoUrl) {
+    return <img src={photoUrl} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />;
+  }
+  const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+      {initials}
+    </div>
+  );
+}
 
 type ObjetivosClientProps = {
   employee: Employee;
   isLeader: boolean;
-  directReports: { id: string; first_name: string; last_name: string; job_title: string | null }[];
+  directReports: { id: string; first_name: string; last_name: string; job_title: string | null; photo_url?: string | null }[];
   ownObjectives: Objective[];
   teamObjectives: Objective[];
   periods: ObjectivesPeriod[];
@@ -573,28 +590,19 @@ export function ObjetivosClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Objetivos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {isLeader ? 'Gestiona los objetivos de tu equipo' : 'Tus objetivos asignados'}
-          </p>
-        </div>
-        
-        {/* Year Filter */}
-        <div className="flex items-center gap-4">
-          <select
-            value={selectedYear ?? ''}
-            onChange={(e) => setSelectedYear(e.target.value === '' ? null : parseInt(e.target.value))}
-            className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-          >
-            <option value="">Todos los años</option>
-            {years.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <PageHeader
+        title="Objetivos"
+        description={isLeader ? 'Gestiona los objetivos de tu equipo' : 'Tus objetivos asignados'}
+        actions={
+          <SelectMenu
+            value={selectedYear != null ? String(selectedYear) : ''}
+            onChange={(v) => setSelectedYear(v === '' ? null : parseInt(v))}
+            ariaLabel="Filtrar por año"
+            align="end"
+            options={[{ value: '', label: 'Todos los años' }, ...years.map((year) => ({ value: String(year), label: String(year) }))]}
+          />
+        }
+      />
 
       {error && (
         <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
@@ -604,8 +612,8 @@ export function ObjetivosClient({
       {isLeader && (
         <div className="flex flex-wrap gap-3">
           {canCreateObjectives(currentYear) && (
-            <div className="flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-muted px-3 py-2 text-sm text-foreground">
+              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               <span>Período de definición abierto para {currentYear}</span>
@@ -633,23 +641,23 @@ export function ObjetivosClient({
       {/* Tabs for Leaders */}
       {isLeader && (
         <div className="border-b border-[var(--border)]">
-          <nav className="flex gap-6">
+          <nav className="-mb-px flex gap-6">
             <button
               onClick={() => setActiveTab('team')}
-              className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
+              className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 activeTab === 'team'
-                  ? 'border-[var(--border)] text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'border-brand text-foreground'
+                  : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
               }`}
             >
               Objetivos del equipo
             </button>
             <button
               onClick={() => setActiveTab('own')}
-              className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
+              className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 activeTab === 'own'
-                  ? 'border-[var(--border)] text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'border-brand text-foreground'
+                  : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
               }`}
             >
               Mis objetivos
@@ -669,11 +677,14 @@ export function ObjetivosClient({
             objectivesByEmployee.map(member => (
               <div key={member.id} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                  <div>
-                    <h3 className="font-semibold text-foreground">
-                      {member.first_name} {member.last_name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{member.job_title || 'Sin puesto'}</p>
+                  <div className="flex items-center gap-3">
+                    <MemberAvatar name={`${member.first_name} ${member.last_name}`} photoUrl={member.photo_url} />
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {member.first_name} {member.last_name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{member.job_title || 'Sin puesto'}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -729,7 +740,7 @@ export function ObjetivosClient({
       {(activeTab === 'own' || !isLeader) && (
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           <div className="border-b border-[var(--border)] px-6 py-4">
-            <h2 className="font-semibold text-foreground">Mis Objetivos {selectedYear ?? ''}</h2>
+            <h2 className="text-sm font-semibold text-secondary-foreground">Mis Objetivos {selectedYear ?? ''}</h2>
           </div>
           <div className="p-4">
             {filteredOwnObjectives.length === 0 ? (
@@ -752,61 +763,51 @@ export function ObjetivosClient({
       )}
 
       {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={resetForm} />
-            <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">
-                  {editingObjective ? 'Editar objetivo' : 'Nuevo objetivo'}
-                </h2>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+      <Dialog
+        open={showForm}
+        onClose={resetForm}
+        title={editingObjective ? 'Editar objetivo' : 'Nuevo objetivo'}
+        size="xl"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
                   {!editingObjective && (
                     <div>
                       <label className="block text-sm font-medium text-secondary-foreground mb-1">Colaborador *</label>
-                      <select
+                      <SelectMenu
                         value={formData.employee_id}
-                        onChange={(e) => setFormData(prev => ({ ...prev, employee_id: e.target.value }))}
-                        required
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-                      >
-                        <option value="">Seleccionar...</option>
-                        {directReports.map(member => (
-                          <option key={member.id} value={member.id}>
-                            {member.first_name} {member.last_name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => setFormData(prev => ({ ...prev, employee_id: v }))}
+                        placeholder="Seleccionar…"
+                        ariaLabel="Colaborador"
+                        className="w-full"
+                        options={directReports.map((member) => ({
+                          value: member.id,
+                          label: `${member.first_name} ${member.last_name}`,
+                        }))}
+                      />
                     </div>
                   )}
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-secondary-foreground mb-1">Año *</label>
-                      <select
-                        value={formData.year}
-                        onChange={(e) => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-                      >
-                        {years.map(year => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
+                      <SelectMenu
+                        value={String(formData.year)}
+                        onChange={(v) => setFormData(prev => ({ ...prev, year: parseInt(v) }))}
+                        ariaLabel="Año"
+                        className="w-full"
+                        options={years.map((year) => ({ value: String(year), label: String(year) }))}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-foreground mb-1">Periodicidad *</label>
-                      <select
-                        value={formData.periodicity}
-                        onChange={(e) => handlePeriodicityChange(e.target.value as ObjectivePeriodicity)}
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-                      >
-                        {Object.entries(PERIODICITY_LABELS).map(([key, label]) => (
-                          <option key={key} value={key}>{label}</option>
-                        ))}
-                      </select>
+                      <SelectMenu
+                        value={formData.periodicity ?? ''}
+                        onChange={(v) => handlePeriodicityChange(v as ObjectivePeriodicity)}
+                        ariaLabel="Periodicidad"
+                        className="w-full"
+                        options={Object.entries(PERIODICITY_LABELS).map(([key, label]) => ({ value: key, label: label as string }))}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-foreground mb-1">Peso (%) *</label>
@@ -934,19 +935,17 @@ export function ObjetivosClient({
                                 </div>
                                 <div>
                                   <label className="block text-xs font-medium text-muted-foreground mb-1">Estado</label>
-                                  <select
+                                  <SelectMenu
                                     value={sub.status}
-                                    onChange={(e) => {
+                                    onChange={(v) => {
                                       const updated = [...subObjectives];
-                                      updated[idx] = { ...updated[idx], status: e.target.value as ObjectiveStatus };
+                                      updated[idx] = { ...updated[idx], status: v as ObjectiveStatus };
                                       setSubObjectives(updated);
                                     }}
-                                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] bg-white"
-                                  >
-                                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                      <option key={key} value={key}>{label}</option>
-                                    ))}
-                                  </select>
+                                    ariaLabel="Estado"
+                                    className="w-full"
+                                    options={Object.entries(STATUS_LABELS).map(([key, label]) => ({ value: key, label: label as string }))}
+                                  />
                                 </div>
                               </div>
                             )}
@@ -972,54 +971,39 @@ export function ObjetivosClient({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-secondary-foreground mb-1">Estado</label>
-                        <select
-                          value={formData.status}
-                          onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ObjectiveStatus }))}
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-                        >
-                          {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                            <option key={key} value={key}>{label}</option>
-                          ))}
-                        </select>
+                        <SelectMenu
+                          value={formData.status ?? ''}
+                          onChange={(v) => setFormData(prev => ({ ...prev, status: v as ObjectiveStatus }))}
+                          ariaLabel="Estado"
+                          className="w-full"
+                          options={Object.entries(STATUS_LABELS).map(([key, label]) => ({ value: key, label: label as string }))}
+                        />
                       </div>
                     </div>
                   )}
                 </div>
-                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                  >
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button type="button" variant="outline" onClick={resetForm}>
                     Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-                  >
-                    {saving ? 'Guardando...' : editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
-                  </button>
+                  </Button>
+                  <Button type="submit" loading={saving}>
+                    {editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
+                  </Button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
+      </Dialog>
 
       {/* Achievement Modal */}
-      {showAchievementModal && evaluatingObjective && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowAchievementModal(false)} />
-            <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Evaluar cumplimiento {evaluatingObjective.parent_objective_id ? '(Sub-objetivo)' : ''}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">{evaluatingObjective.title}</p>
-              </div>
-              <div className="p-6 space-y-4">
+      <Dialog
+        open={showAchievementModal && !!evaluatingObjective}
+        onClose={() => setShowAchievementModal(false)}
+        title={`Evaluar cumplimiento ${evaluatingObjective?.parent_objective_id ? '(Sub-objetivo)' : ''}`}
+        description={evaluatingObjective?.title}
+        size="md"
+      >
+        {evaluatingObjective && (
+          <>
+            <div className="space-y-4">
                 {error && (
                   <div className="rounded-lg bg-danger-subtle p-3 text-sm text-[var(--red-600)]">{error}</div>
                 )}
@@ -1057,42 +1041,29 @@ export function ObjetivosClient({
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAchievementModal(false)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAchievement}
-                  disabled={saving}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : 'Guardar evaluación'}
-                </button>
-              </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowAchievementModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveAchievement} loading={saving}>
+                Guardar evaluación
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
 
       {/* Sub-objectives Evaluation Modal */}
-      {showSubObjectivesEvalModal && evaluatingParentObjective && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowSubObjectivesEvalModal(false)} />
-            <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Evaluar Sub-objetivos
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {evaluatingParentObjective.title} - {PERIODICITY_LABELS[evaluatingParentObjective.periodicity]}
-                </p>
-              </div>
-              <div className="p-6 space-y-4 overflow-y-auto flex-1">
+      <Dialog
+        open={showSubObjectivesEvalModal && !!evaluatingParentObjective}
+        onClose={() => setShowSubObjectivesEvalModal(false)}
+        title="Evaluar Sub-objetivos"
+        description={evaluatingParentObjective ? `${evaluatingParentObjective.title} - ${PERIODICITY_LABELS[evaluatingParentObjective.periodicity]}` : undefined}
+        size="xl"
+      >
+        {evaluatingParentObjective && (
+          <>
+            <div className="space-y-4">
                 {error && (
                   <div className="rounded-lg bg-danger-subtle p-3 text-sm text-[var(--red-600)]">{error}</div>
                 )}
@@ -1176,26 +1147,17 @@ export function ObjetivosClient({
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  type="button"
-                  onClick={() => setShowSubObjectivesEvalModal(false)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAllSubObjectivesAchievements}
-                  disabled={saving}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : 'Guardar todas las evaluaciones'}
-                </button>
-              </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowSubObjectivesEvalModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveAllSubObjectivesAchievements} loading={saving}>
+                Guardar todas las evaluaciones
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

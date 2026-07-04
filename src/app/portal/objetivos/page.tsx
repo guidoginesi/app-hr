@@ -50,7 +50,7 @@ export default async function PortalObjetivosPage() {
   if (isLeader) {
     const { data } = await supabase
       .from('employees')
-      .select('id, first_name, last_name, job_title')
+      .select('id, first_name, last_name, job_title, photo_url')
       .eq('manager_id', employeeId)
       .eq('status', 'active')
       .order('last_name');

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@pow/ui/components/ui/button';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
 type Settlement = {
@@ -66,10 +67,7 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Recibos de sueldo</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Descargá tus recibos de sueldo mensuales</p>
-      </div>
+      <PageHeader title="Recibos de sueldo" description="Descargá tus recibos de sueldo mensuales" />
 
       {error && (
         <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3">
@@ -99,7 +97,7 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">
+                    <p className="text-sm font-medium text-foreground">
                       {formatPayrollPeriodLabelFromKey({
                         year: settlement.period_year,
                         month: settlement.period_month,

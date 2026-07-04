@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
 import { MondayDatePicker } from '@/components/MondayDatePicker';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 
 // Parse date string as local date to avoid timezone issues
@@ -348,25 +349,19 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                   </p>
                 </div>
               ) : (
-                <select
+                <SelectMenu
                   value={selectedType}
-                  onChange={(e) => handleTypeChange(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                  required
-                >
-                  <option value="">Selecciona un tipo</option>
-                  {leaveTypes
-                    .filter(isTypeSelectable)
-                    .map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {isUnlimitedLeaveType(type.code)
-                          ? `${type.name} - Ilimitada`
-                          : `${type.name} - Disponible: ${getAvailableDays(type.id)} ${
-                              type.count_type === 'weeks' ? 'semanas' : 'días'
-                            }`}
-                      </option>
-                    ))}
-                </select>
+                  onChange={handleTypeChange}
+                  placeholder="Selecciona un tipo"
+                  ariaLabel="Tipo de licencia"
+                  className="mt-1 w-full"
+                  options={leaveTypes.filter(isTypeSelectable).map((type) => ({
+                    value: type.id,
+                    label: isUnlimitedLeaveType(type.code)
+                      ? `${type.name} - Ilimitada`
+                      : `${type.name} - Disponible: ${getAvailableDays(type.id)} ${type.count_type === 'weeks' ? 'semanas' : 'días'}`,
+                  }))}
+                />
               )}
               {selectedLeaveType && (
                 <p className="mt-1 text-xs text-muted-foreground">{selectedLeaveType.description}</p>
@@ -406,17 +401,16 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-secondary-foreground">Duración</label>
-                    <select
-                      value={vacationWeeks}
-                      onChange={(e) => handleVacationWeeksChange(Number(e.target.value))}
-                      className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].slice(0, getMaxVacationWeeks() || 8).map((weeks) => (
-                        <option key={weeks} value={weeks}>
-                          {weeks} semana{weeks > 1 ? 's' : ''} ({weeks * 7} días)
-                        </option>
-                      ))}
-                    </select>
+                    <SelectMenu
+                      value={String(vacationWeeks)}
+                      onChange={(v) => handleVacationWeeksChange(Number(v))}
+                      ariaLabel="Duración"
+                      className="mt-1 w-full"
+                      options={[1, 2, 3, 4, 5, 6, 7, 8].slice(0, getMaxVacationWeeks() || 8).map((weeks) => ({
+                        value: String(weeks),
+                        label: `${weeks} semana${weeks > 1 ? 's' : ''} (${weeks * 7} días)`,
+                      }))}
+                    />
                   </div>
                 </div>
 

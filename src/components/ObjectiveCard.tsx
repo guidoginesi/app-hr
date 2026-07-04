@@ -50,19 +50,19 @@ export function ObjectiveCard({
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {/* Objective Number */}
             {objective.objective_number && (
-              <span className="text-xs font-bold text-white bg-cat-violet px-2 py-0.5 rounded">
+              <span className="text-xs font-bold text-secondary-foreground bg-secondary px-2 py-0.5 rounded">
                 #{objective.objective_number}
               </span>
             )}
-            <span className="text-xs font-medium text-cat-violet bg-cat-violet-subtle px-2 py-0.5 rounded">
+            <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded">
               {objective.year}
             </span>
             {/* Periodicity badge */}
-            <span className="text-xs font-medium text-accent-foreground bg-accent px-2 py-0.5 rounded">
+            <span className="text-xs font-medium text-secondary-foreground bg-secondary px-2 py-0.5 rounded">
               {PERIODICITY_LABELS[periodicity]?.split(' ')[0] || 'Anual'}
             </span>
             {/* Weight badge */}
-            <span className="text-xs font-medium text-[var(--amber-600)] bg-warning-subtle px-2 py-0.5 rounded">
+            <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded">
               Peso: {objective.weight_pct ?? 50}%
             </span>
             <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor.bg} ${statusColor.text}`}>
@@ -92,11 +92,7 @@ export function ObjectiveCard({
             </div>
             <div className="h-2 w-full rounded-full bg-secondary">
               <div
-                className={`h-2 rounded-full transition-all ${
-                  displayProgress === 100 ? 'bg-success' :
-                  displayProgress >= 50 ? 'bg-cat-violet' :
-                  'bg-warning'
-                }`}
+                className="h-2 rounded-full bg-primary transition-all"
                 style={{ width: `${Math.min(displayProgress, 100)}%` }}
               />
             </div>
@@ -123,7 +119,7 @@ export function ObjectiveCard({
                     return (
                     <div key={sub.id} className="rounded-lg bg-muted p-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-cat-violet bg-cat-violet-subtle px-2 py-0.5 rounded">
+                        <span className="text-xs font-semibold text-secondary-foreground bg-secondary px-2 py-0.5 rounded">
                           {SUB_OBJECTIVE_LABELS[periodicity]?.[idx] || `#${idx + 1}`}
                         </span>
                         <div className="flex-1">
@@ -141,8 +137,8 @@ export function ObjectiveCard({
                             <>
                               <div className="flex items-center gap-2">
                                 <div className="w-16 h-1.5 rounded-full bg-secondary">
-                                  <div 
-                                    className="h-1.5 rounded-full bg-cat-violet"
+                                  <div
+                                    className="h-1.5 rounded-full bg-primary"
                                     style={{ width: `${sub.progress_percentage}%` }}
                                   />
                                 </div>
@@ -190,7 +186,7 @@ export function ObjectiveCard({
             {canEvaluate && onEvaluate && (
               <button
                 onClick={onEvaluate}
-                className="flex items-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-medium text-white hover:bg-success"
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)]"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

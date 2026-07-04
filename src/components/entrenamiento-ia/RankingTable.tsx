@@ -36,14 +36,14 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white p-12 text-center">
+      <div className="rounded-xl border border-dashed border-[var(--border)] bg-white p-12 text-center">
         <p className="text-sm text-muted-foreground">Todavía no hay participantes en este ciclo.</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
@@ -78,7 +78,7 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
                           className="h-9 w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
                           {employeeInitials(row.first_name, row.last_name)}
                         </div>
                       )}
@@ -86,7 +86,7 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
                         <p className="font-medium text-foreground">
                           {name}
                           {isMe && (
-                            <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase text-accent-foreground">
+                            <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">
                               Vos
                             </span>
                           )}
@@ -106,7 +106,7 @@ export function RankingTable({ rows, highlightEmployeeId, showSessions = true }:
                     </td>
                   )}
                   <td className="px-4 py-3 text-right">
-                    <span className="text-lg font-bold text-accent-foreground">{row.total_points}</span>
+                    <span className="text-lg font-bold text-foreground">{row.total_points}</span>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
                     <div className="h-2 w-full rounded-full bg-secondary">
@@ -136,14 +136,14 @@ export function ScoringRulesCard() {
   ];
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
       <h3 className="text-sm font-semibold text-foreground">Cómo sumar puntos</h3>
       <p className="mt-1 text-xs text-muted-foreground">Por cada sesión de capacitación</p>
       <ul className="mt-4 space-y-2">
         {rules.map((rule) => (
           <li key={rule.action} className="flex items-start justify-between gap-4 text-sm">
             <span className="text-secondary-foreground">{rule.action}</span>
-            <span className="shrink-0 font-semibold text-accent-foreground">{rule.points}</span>
+            <span className="shrink-0 font-semibold text-foreground">{rule.points}</span>
           </li>
         ))}
       </ul>

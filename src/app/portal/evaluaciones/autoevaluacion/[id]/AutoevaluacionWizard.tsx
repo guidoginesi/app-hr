@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScaleInput } from '@/components/evaluations/ScaleInput';
 import { ProgressBar } from '@/components/evaluations/ProgressBar';
+import { Button } from '@pow/ui/components/ui/button';
 import { SELF_OPEN_QUESTIONS, SCALE_DEFINITIONS, calculateDimensionScore, calculateTotalScore } from '@/types/evaluation';
 import type { Employee } from '@/types/employee';
 import type { Evaluation, EvaluationDimension, EvaluationItem, EvaluationResponse, EvaluationOpenQuestion } from '@/types/evaluation';
@@ -439,30 +440,23 @@ export function AutoevaluacionWizard({
 
         {/* Navigation */}
         <div className="mt-8 flex items-center justify-between">
-          <button
+          <Button
+            variant="outline"
+            size="lg"
             onClick={goPrev}
             disabled={currentStep === 'instructions' || saving}
-            className="rounded-lg border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
           >
             Anterior
-          </button>
-          
+          </Button>
+
           {currentStep === 'review' ? (
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-            >
-              {submitting ? 'Enviando...' : 'Enviar evaluación'}
-            </button>
+            <Button size="lg" onClick={handleSubmit} loading={submitting}>
+              Enviar evaluación
+            </Button>
           ) : (
-            <button
-              onClick={goNext}
-              disabled={saving}
-              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-            >
-              {saving ? 'Guardando...' : 'Siguiente'}
-            </button>
+            <Button size="lg" onClick={goNext} loading={saving}>
+              Siguiente
+            </Button>
           )}
         </div>
       </main>

@@ -59,16 +59,16 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
         { key: 'objetivos', label: 'Objetivos', href: '/portal/objetivos' },
         { key: 'entrenamiento-ia', label: 'Entrenamiento IA', href: '/portal/entrenamiento-ia' },
         ...(!isRelDep ? [{ key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' }] : []),
-        ...(isRelDep ? [{ key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' }] : []),
+        { key: 'certificates', label: 'Certificados', href: '/portal/certificates' },
+        { key: 'messages', label: 'Mensajes', href: '/portal/messages' },
       ],
     },
     {
       label: 'Recursos',
       items: [
         { key: 'room-booking', label: 'Reserva de Salas', href: '/portal/room-booking' },
-        { key: 'certificates', label: 'Certificados', href: '/portal/certificates' },
+        ...(isRelDep ? [{ key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' }] : []),
         { key: 'referidos', label: 'Referidos', href: '/portal/referidos' },
-        { key: 'messages', label: 'Mensajes', href: '/portal/messages' },
       ],
     },
     ...(isLeader ? [{ label: 'Equipo', items: [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] }] : []),
@@ -124,9 +124,9 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
         </nav>
 
         {/* Pie del sidebar: usuario + notificaciones (patrón app-adm) */}
-        <div className="mt-auto border-t border-[var(--border)] p-2">
-          <div className="flex items-center gap-1">
-            <div className="relative min-w-0 flex-1" ref={dropdownRef}>
+        <div className="mt-auto space-y-1 border-t border-[var(--border)] p-2">
+          <NotificationBell direction="up" label="Notificaciones" />
+          <div className="relative min-w-0" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -179,52 +179,6 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
                       </svg>
                       Mi Perfil
                     </Link>
-
-                    <Link
-                      href="/portal/evaluaciones"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-foreground transition-colors hover:bg-muted"
-                    >
-                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Evaluaciones
-                    </Link>
-
-                    <Link
-                      href="/portal/objetivos"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-foreground transition-colors hover:bg-muted"
-                    >
-                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                      </svg>
-                      Objetivos
-                    </Link>
-
-                    <Link
-                      href="/portal/room-booking"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-foreground transition-colors hover:bg-muted"
-                    >
-                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Reserva de Salas
-                    </Link>
-
-                    {isLeader && (
-                      <Link
-                        href="/portal/team"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-foreground transition-colors hover:bg-muted"
-                      >
-                        <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        Mi Equipo
-                      </Link>
-                    )}
                   </div>
 
                   {/* Logout */}
@@ -247,11 +201,8 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
                 </div>
               )}
             </div>
-
-            <NotificationBell direction="up" />
           </div>
-        </div>
-      </aside>
+        </aside>
 
       {/* Main content (sin barra superior, patrón app-adm) */}
       <main className="min-w-0 flex-1 bg-muted">

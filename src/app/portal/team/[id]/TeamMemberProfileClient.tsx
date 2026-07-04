@@ -2,6 +2,9 @@
 
 
 import { Spinner } from '@/components/Spinner';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Button } from '@pow/ui/components/ui/button';
+import { Dialog } from '@pow/ui/components/ui/dialog';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Employee } from '@/types/employee';
@@ -484,11 +487,11 @@ export function TeamMemberProfileClient({
             <img
               src={member.photo_url}
               alt={`${member.first_name} ${member.last_name}`}
-              className="h-20 w-20 rounded-full object-cover ring-4 ring-ring"
+              className="h-20 w-20 rounded-full object-cover ring-2 ring-[var(--border)]"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success-subtle ring-4 ring-ring">
-              <span className="text-2xl font-bold text-[var(--green-700)]">{initials}</span>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary ring-2 ring-[var(--border)]">
+              <span className="text-2xl font-bold text-secondary-foreground">{initials}</span>
             </div>
           )}
           <div className="flex-1">
@@ -682,7 +685,7 @@ export function TeamMemberProfileClient({
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                    isLeaderEval ? 'bg-secondary text-foreground' : 'bg-accent text-accent-foreground'
+                                    isLeaderEval ? 'bg-secondary text-foreground' : 'bg-secondary text-foreground'
                                   }`}>
                                     {isLeaderEval ? 'Evaluación del líder' : 'Autoevaluación'}
                                   </span>
@@ -716,7 +719,7 @@ export function TeamMemberProfileClient({
                                   <div className="text-right">
                                     <span className={`text-2xl font-bold ${
                                       evaluation.total_score >= 8 ? 'text-[var(--green-700)]' :
-                                      evaluation.total_score >= 6 ? 'text-accent-foreground' :
+                                      evaluation.total_score >= 6 ? 'text-[var(--amber-600)]' :
                                       evaluation.total_score >= 4 ? 'text-[var(--amber-600)]' :
                                       'text-[var(--red-600)]'
                                     }`}>
@@ -861,20 +864,9 @@ export function TeamMemberProfileClient({
                         placeholder="Ej: El colaborador tiene un desempeño sólido, se recomienda seguimiento para el próximo período..."
                       />
                       <div className="flex justify-end mt-3">
-                        <button
-                          onClick={handleSaveNotAvailableNote}
-                          disabled={savingNotAvailableNote}
-                          className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {savingNotAvailableNote ? (
-                            <>
-                              <Spinner className="h-4 w-4 text-white" />
-                              Enviando...
-                            </>
-                          ) : (
-                            'Enviar a HR'
-                          )}
-                        </button>
+                        <Button onClick={handleSaveNotAvailableNote} loading={savingNotAvailableNote}>
+                          Enviar a HR
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -890,7 +882,7 @@ export function TeamMemberProfileClient({
                   <p className="text-sm font-medium text-muted-foreground">Evaluación del líder</p>
                   <p className={`text-3xl font-bold mt-2 ${
                     (recatData.eligibility?.leaderScore || 0) > 9 ? 'text-[var(--green-700)]' :
-                    (recatData.eligibility?.leaderScore || 0) > 8 ? 'text-accent-foreground' :
+                    (recatData.eligibility?.leaderScore || 0) > 8 ? 'text-[var(--amber-600)]' :
                     'text-[var(--amber-600)]'
                   }`}>
                     {recatData.eligibility?.leaderScore?.toFixed(1) || '-'}
@@ -903,7 +895,7 @@ export function TeamMemberProfileClient({
                   <p className="text-sm font-medium text-muted-foreground">Cumplimiento de objetivos</p>
                   <p className={`text-3xl font-bold mt-2 ${
                     (recatData.eligibility?.objectivesCompletion || 0) >= 90 ? 'text-[var(--green-700)]' :
-                    (recatData.eligibility?.objectivesCompletion || 0) >= 75 ? 'text-accent-foreground' :
+                    (recatData.eligibility?.objectivesCompletion || 0) >= 75 ? 'text-[var(--amber-600)]' :
                     'text-[var(--amber-600)]'
                   }`}>
                     {recatData.eligibility?.objectivesCompletion || 0}%
@@ -1289,25 +1281,17 @@ export function TeamMemberProfileClient({
                           Cancelar
                         </button>
                       )}
-                      <button
+                      <Button
                         onClick={handleSaveRecategorization}
+                        loading={savingRecat}
                         disabled={
-                          (recatData?.eligibility?.withinLevel && !recatForm.level_recategorization) || 
-                          (recatData?.eligibility?.levelChange && !recatForm.position_recategorization) || 
-                          ((recatForm.level_recategorization === 'approved' || recatForm.position_recategorization === 'approved') && !recatForm.recommended_level) ||
-                          savingRecat
+                          (recatData?.eligibility?.withinLevel && !recatForm.level_recategorization) ||
+                          (recatData?.eligibility?.levelChange && !recatForm.position_recategorization) ||
+                          ((recatForm.level_recategorization === 'approved' || recatForm.position_recategorization === 'approved') && !recatForm.recommended_level)
                         }
-                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {savingRecat ? (
-                          <>
-                            <Spinner className="h-4 w-4 text-white" />
-                            Guardando...
-                          </>
-                        ) : (
-                          'Guardar decisión'
-                        )}
-                      </button>
+                        Guardar decisión
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1327,17 +1311,16 @@ export function TeamMemberProfileClient({
               <p className="text-sm text-muted-foreground">Seleccioná el año para ver el bono correspondiente</p>
             </div>
             {availableBonusYears.length > 0 ? (
-              <select
-                value={bonusYear}
-                onChange={(e) => setBonusYear(Number(e.target.value))}
-                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {availableBonusYears.map(year => (
-                  <option key={year} value={year}>
-                    {year} {year === currentYear ? '(en curso)' : ''}
-                  </option>
-                ))}
-              </select>
+              <SelectMenu
+                value={String(bonusYear)}
+                onChange={(v) => setBonusYear(Number(v))}
+                ariaLabel="Año del bono"
+                align="end"
+                options={availableBonusYears.map((year) => ({
+                  value: String(year),
+                  label: `${year}${year === currentYear ? ' (en curso)' : ''}`,
+                }))}
+              />
             ) : (
               <span className="text-sm text-muted-foreground">Sin objetivos corporativos configurados</span>
             )}
@@ -1545,7 +1528,7 @@ export function TeamMemberProfileClient({
                           <span className={`font-semibold ${
                             obj.achievement === null ? 'text-muted-foreground' :
                             obj.achievement >= 100 ? 'text-[var(--green-700)]' :
-                            obj.achievement >= 75 ? 'text-accent-foreground' :
+                            obj.achievement >= 75 ? 'text-[var(--amber-600)]' :
                             'text-[var(--amber-600)]'
                           }`}>
                             {obj.achievement !== null ? `${obj.achievement}%` : 'Sin evaluar'}
@@ -1591,7 +1574,7 @@ export function TeamMemberProfileClient({
                     <span className="text-sm text-muted-foreground">
                       Componente personal ({bonusData.personal.averageCompletion.toFixed(1)}% × {bonusData.weights.area}%)
                     </span>
-                    <span className="font-semibold text-accent-foreground">
+                    <span className="font-semibold text-[var(--amber-600)]">
                       {bonusData.bonus.personalComponent.toFixed(2)}%
                     </span>
                   </div>
@@ -1700,48 +1683,28 @@ export function TeamMemberProfileClient({
       )}
 
       {/* Evaluation Detail Modal */}
-      {showEvaluationModal && selectedEvaluation && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={closeEvaluationModal} />
-            <div className="relative w-full max-w-4xl rounded-xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4 flex-shrink-0">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    {selectedEvaluation.type === 'leader' ? 'Evaluación del líder' : 'Autoevaluación'}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedEvaluation.period?.name} - {member.first_name} {member.last_name}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  {selectedEvaluation.total_score !== null && (
-                    <div className="text-right">
-                      <span className="text-sm text-muted-foreground">Puntaje total</span>
-                      <p className={`text-2xl font-bold ${
-                        selectedEvaluation.total_score >= 8 ? 'text-[var(--green-700)]' :
-                        selectedEvaluation.total_score >= 6 ? 'text-accent-foreground' :
-                        selectedEvaluation.total_score >= 4 ? 'text-[var(--amber-600)]' :
-                        'text-[var(--red-600)]'
-                      }`}>
-                        {selectedEvaluation.total_score.toFixed(1)}<span className="text-sm text-muted-foreground">/10</span>
-                      </p>
-                    </div>
-                  )}
-                  <button
-                    onClick={closeEvaluationModal}
-                    className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+      <Dialog
+        open={showEvaluationModal && !!selectedEvaluation}
+        onClose={closeEvaluationModal}
+        title={selectedEvaluation ? (selectedEvaluation.type === 'leader' ? 'Evaluación del líder' : 'Autoevaluación') : ''}
+        description={selectedEvaluation ? `${selectedEvaluation.period?.name ?? ''} - ${member.first_name} ${member.last_name}` : undefined}
+        size="2xl"
+      >
+        {selectedEvaluation && (
+          <>
+            {selectedEvaluation.total_score !== null && (
+              <div className="mb-4 flex items-center justify-between rounded-lg bg-muted px-4 py-3">
+                <span className="text-sm text-muted-foreground">Puntaje total</span>
+                <p className={`text-2xl font-bold ${
+                  selectedEvaluation.total_score >= 8 ? 'text-[var(--green-700)]' :
+                  selectedEvaluation.total_score >= 4 ? 'text-[var(--amber-600)]' :
+                  'text-[var(--red-600)]'
+                }`}>
+                  {selectedEvaluation.total_score.toFixed(1)}<span className="text-sm text-muted-foreground">/10</span>
+                </p>
               </div>
-
-              {/* Modal Body */}
-              <div className="overflow-y-auto flex-1 p-6">
+            )}
+            <div>
                 {loadingDetail ? (
                   <div className="flex items-center justify-center py-12">
                     <Spinner className="h-8 w-8 text-muted-foreground" />
@@ -1766,7 +1729,7 @@ export function TeamMemberProfileClient({
                                 {dimensionAvg !== null && (
                                   <span className={`text-lg font-bold ${
                                     dimensionAvg >= 8 ? 'text-[var(--green-700)]' :
-                                    dimensionAvg >= 6 ? 'text-accent-foreground' :
+                                    dimensionAvg >= 6 ? 'text-[var(--amber-600)]' :
                                     dimensionAvg >= 4 ? 'text-[var(--amber-600)]' :
                                     'text-[var(--red-600)]'
                                   }`}>
@@ -1783,7 +1746,7 @@ export function TeamMemberProfileClient({
                                         <p className="text-sm text-secondary-foreground flex-1">{item.statement}</p>
                                         <span className={`font-semibold min-w-[2rem] text-right ${
                                           (response?.score || 0) >= 8 ? 'text-[var(--green-700)]' :
-                                          (response?.score || 0) >= 6 ? 'text-accent-foreground' :
+                                          (response?.score || 0) >= 6 ? 'text-[var(--amber-600)]' :
                                           (response?.score || 0) >= 4 ? 'text-[var(--amber-600)]' :
                                           'text-[var(--red-600)]'
                                         }`}>
@@ -1865,7 +1828,7 @@ export function TeamMemberProfileClient({
                           <div className="flex items-center justify-around">
                             <div className="text-center">
                               <p className="text-sm text-muted-foreground mb-1">Autoevaluación</p>
-                              <p className="text-2xl font-bold text-accent-foreground">
+                              <p className="text-2xl font-bold text-[var(--amber-600)]">
                                 {evaluationDetail.selfEvaluationSummary.total_score?.toFixed(1) || '-'}
                               </p>
                             </div>
@@ -1895,11 +1858,10 @@ export function TeamMemberProfileClient({
                 ) : (
                   <p className="text-center text-muted-foreground">No se pudo cargar el detalle de la evaluación</p>
                 )}
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

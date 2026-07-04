@@ -32,15 +32,15 @@ export function StatusFilterChips({
             key={chip.value}
             type="button"
             onClick={() => onChange(chip.value)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               active
-                ? 'border-transparent bg-primary text-primary-foreground'
-                : 'border-[var(--border)] bg-white text-muted-foreground hover:bg-muted'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'border border-[var(--border)] bg-white text-muted-foreground hover:bg-secondary'
             }`}
           >
             {chip.label}
             <span
-              className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs tabular-nums ${
+              className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums ${
                 active ? 'bg-white/20 text-primary-foreground' : 'bg-secondary text-secondary-foreground'
               }`}
             >
