@@ -6,11 +6,28 @@ import type { Employee } from '@/types/employee';
 import type { Objective, ObjectiveFormData, ObjectivePeriodType, ObjectiveStatus, ObjectivesPeriod, ObjectivePeriodicity } from '@/types/objective';
 import { PERIOD_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS, PERIODICITY_LABELS, SUB_OBJECTIVES_COUNT, SUB_OBJECTIVE_LABELS } from '@/types/objective';
 import { ObjectiveCard } from '@/components/ObjectiveCard';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Button } from '@pow/ui/components/ui/button';
+import { Dialog } from '@pow/ui/components/ui/dialog';
+
+// Avatar de miembro del equipo: foto o iniciales (como en Time Off / Evaluaciones).
+function MemberAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
+  if (photoUrl) {
+    return <img src={photoUrl} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />;
+  }
+  const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+      {initials}
+    </div>
+  );
+}
 
 type ObjetivosClientProps = {
   employee: Employee;
   isLeader: boolean;
-  directReports: { id: string; first_name: string; last_name: string; job_title: string | null }[];
+  directReports: { id: string; first_name: string; last_name: string; job_title: string | null; photo_url?: string | null }[];
   ownObjectives: Objective[];
   teamObjectives: Objective[];
   periods: ObjectivesPeriod[];
@@ -573,46 +590,37 @@ export function ObjetivosClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Objetivos</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            {isLeader ? 'Gestiona los objetivos de tu equipo' : 'Tus objetivos asignados'}
-          </p>
-        </div>
-        
-        {/* Year Filter */}
-        <div className="flex items-center gap-4">
-          <select
-            value={selectedYear ?? ''}
-            onChange={(e) => setSelectedYear(e.target.value === '' ? null : parseInt(e.target.value))}
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-          >
-            <option value="">Todos los años</option>
-            {years.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <PageHeader
+        title="Objetivos"
+        description={isLeader ? 'Gestiona los objetivos de tu equipo' : 'Tus objetivos asignados'}
+        actions={
+          <SelectMenu
+            value={selectedYear != null ? String(selectedYear) : ''}
+            onChange={(v) => setSelectedYear(v === '' ? null : parseInt(v))}
+            ariaLabel="Filtrar por año"
+            align="end"
+            options={[{ value: '', label: 'Todos los años' }, ...years.map((year) => ({ value: String(year), label: String(year) }))]}
+          />
+        }
+      />
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+        <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
       )}
 
       {/* Period Status Banners */}
       {isLeader && (
         <div className="flex flex-wrap gap-3">
           {canCreateObjectives(currentYear) && (
-            <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-muted px-3 py-2 text-sm text-foreground">
+              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               <span>Período de definición abierto para {currentYear}</span>
             </div>
           )}
           {canEvaluateObjectives(currentYear) && (
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <div className="flex items-center gap-2 rounded-lg bg-success-subtle px-3 py-2 text-sm text-[var(--green-700)]">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -620,7 +628,7 @@ export function ObjetivosClient({
             </div>
           )}
           {!canEvaluateObjectives(currentYear) && periods && periods.length > 0 && (
-            <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <div className="flex items-center gap-2 rounded-lg bg-warning-subtle px-3 py-2 text-sm text-[var(--amber-600)]">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -632,24 +640,24 @@ export function ObjetivosClient({
 
       {/* Tabs for Leaders */}
       {isLeader && (
-        <div className="border-b border-zinc-200">
-          <nav className="flex gap-6">
+        <div className="border-b border-[var(--border)]">
+          <nav className="-mb-px flex gap-6">
             <button
               onClick={() => setActiveTab('team')}
-              className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
+              className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 activeTab === 'team'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                  ? 'border-brand text-foreground'
+                  : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
               }`}
             >
               Objetivos del equipo
             </button>
             <button
               onClick={() => setActiveTab('own')}
-              className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
+              className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 activeTab === 'own'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                  ? 'border-brand text-foreground'
+                  : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
               }`}
             >
               Mis objetivos
@@ -662,26 +670,29 @@ export function ObjetivosClient({
       {isLeader && activeTab === 'team' && (
         <div className="space-y-6">
           {directReports.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <p className="text-zinc-500">No tienes colaboradores asignados.</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-muted-foreground">No tienes colaboradores asignados.</p>
             </div>
           ) : (
             objectivesByEmployee.map(member => (
-              <div key={member.id} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-                  <div>
-                    <h3 className="font-semibold text-zinc-900">
-                      {member.first_name} {member.last_name}
-                    </h3>
-                    <p className="text-sm text-zinc-500">{member.job_title || 'Sin puesto'}</p>
+              <div key={member.id} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <MemberAvatar name={`${member.first_name} ${member.last_name}`} photoUrl={member.photo_url} />
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {member.first_name} {member.last_name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{member.job_title || 'Sin puesto'}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                       member.objectives.length >= MAX_OBJECTIVES_PER_EMPLOYEE
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-success-subtle text-[var(--green-700)]'
                         : member.objectives.length > 0
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-zinc-100 text-zinc-500'
+                        ? 'bg-warning-subtle text-[var(--amber-600)]'
+                        : 'bg-secondary text-muted-foreground'
                     }`}>
                       {member.objectives.length}/{MAX_OBJECTIVES_PER_EMPLOYEE} objetivos
                     </span>
@@ -689,7 +700,7 @@ export function ObjetivosClient({
                       onClick={() => openCreateForm(member.id)}
                       disabled={member.objectives.length >= MAX_OBJECTIVES_PER_EMPLOYEE || !canCreateObjectives(currentYear)}
                       title={!canCreateObjectives(currentYear) ? 'El período de definición está cerrado' : undefined}
-                      className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       + Agregar objetivo
                     </button>
@@ -698,7 +709,7 @@ export function ObjetivosClient({
                 
                 <div className="p-4">
                   {member.objectives.length === 0 ? (
-                    <p className="text-center text-sm text-zinc-400 py-4">
+                    <p className="text-center text-sm text-muted-foreground py-4">
                       Sin objetivos {selectedYear ? `para ${selectedYear}` : ''}
                     </p>
                   ) : (
@@ -727,13 +738,13 @@ export function ObjetivosClient({
 
       {/* Own Objectives (Employee view) */}
       {(activeTab === 'own' || !isLeader) && (
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
-            <h2 className="font-semibold text-zinc-900">Mis Objetivos {selectedYear ?? ''}</h2>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h2 className="text-sm font-semibold text-secondary-foreground">Mis Objetivos {selectedYear ?? ''}</h2>
           </div>
           <div className="p-4">
             {filteredOwnObjectives.length === 0 ? (
-              <p className="text-center text-sm text-zinc-400 py-8">
+              <p className="text-center text-sm text-muted-foreground py-8">
                 No tienes objetivos asignados {selectedYear ? `para ${selectedYear}` : ''}
               </p>
             ) : (
@@ -752,64 +763,54 @@ export function ObjetivosClient({
       )}
 
       {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={resetForm} />
-            <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  {editingObjective ? 'Editar objetivo' : 'Nuevo objetivo'}
-                </h2>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+      <Dialog
+        open={showForm}
+        onClose={resetForm}
+        title={editingObjective ? 'Editar objetivo' : 'Nuevo objetivo'}
+        size="xl"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
                   {!editingObjective && (
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Colaborador *</label>
-                      <select
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Colaborador *</label>
+                      <SelectMenu
                         value={formData.employee_id}
-                        onChange={(e) => setFormData(prev => ({ ...prev, employee_id: e.target.value }))}
-                        required
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      >
-                        <option value="">Seleccionar...</option>
-                        {directReports.map(member => (
-                          <option key={member.id} value={member.id}>
-                            {member.first_name} {member.last_name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => setFormData(prev => ({ ...prev, employee_id: v }))}
+                        placeholder="Seleccionar…"
+                        ariaLabel="Colaborador"
+                        className="w-full"
+                        options={directReports.map((member) => ({
+                          value: member.id,
+                          label: `${member.first_name} ${member.last_name}`,
+                        }))}
+                      />
                     </div>
                   )}
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Año *</label>
-                      <select
-                        value={formData.year}
-                        onChange={(e) => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      >
-                        {years.map(year => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Año *</label>
+                      <SelectMenu
+                        value={String(formData.year)}
+                        onChange={(v) => setFormData(prev => ({ ...prev, year: parseInt(v) }))}
+                        ariaLabel="Año"
+                        className="w-full"
+                        options={years.map((year) => ({ value: String(year), label: String(year) }))}
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Periodicidad *</label>
-                      <select
-                        value={formData.periodicity}
-                        onChange={(e) => handlePeriodicityChange(e.target.value as ObjectivePeriodicity)}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                      >
-                        {Object.entries(PERIODICITY_LABELS).map(([key, label]) => (
-                          <option key={key} value={key}>{label}</option>
-                        ))}
-                      </select>
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Periodicidad *</label>
+                      <SelectMenu
+                        value={formData.periodicity ?? ''}
+                        onChange={(v) => handlePeriodicityChange(v as ObjectivePeriodicity)}
+                        ariaLabel="Periodicidad"
+                        className="w-full"
+                        options={Object.entries(PERIODICITY_LABELS).map(([key, label]) => ({ value: key, label: label as string }))}
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-1">Peso (%) *</label>
+                      <label className="block text-sm font-medium text-secondary-foreground mb-1">Peso (%) *</label>
                       {(() => {
                         const maxWeight = formData.employee_id 
                           ? getRemainingWeight(formData.employee_id, formData.year, editingObjective?.id)
@@ -830,9 +831,9 @@ export function ObjetivosClient({
                                   setWeightPctStr(e.target.value);
                                 }
                               }}
-                              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                             />
-                            <p className="mt-1 text-xs text-zinc-500">
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {assignedWeight > 0 
                                 ? `Ya asignado: ${assignedWeight}% | Disponible: ${maxWeight}%`
                                 : 'Los pesos deben sumar 100%'}
@@ -847,25 +848,25 @@ export function ObjetivosClient({
                   {formData.periodicity === 'annual' && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Título *</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Título *</label>
                         <input
                           type="text"
                           value={formData.title}
                           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                           required
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                           placeholder="Ej: Completar certificación de liderazgo"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Descripción *</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Descripción *</label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                           rows={2}
                           required
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                           placeholder="Detalles del objetivo..."
                         />
                       </div>
@@ -879,15 +880,15 @@ export function ObjetivosClient({
                         const periodicityKey = formData.periodicity || 'annual';
                         const subLabel = SUB_OBJECTIVE_LABELS[periodicityKey]?.[idx] || `Objetivo ${idx + 1}`;
                         return (
-                        <div key={idx} className="rounded-lg border border-purple-200 bg-purple-50/50 p-4">
+                        <div key={idx} className="rounded-lg border border-[var(--border)] bg-secondary p-4">
                           <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm font-semibold text-purple-700 bg-purple-100 px-2.5 py-1 rounded">
+                            <span className="text-sm font-semibold text-foreground bg-secondary px-2.5 py-1 rounded">
                               {subLabel}
                             </span>
                           </div>
                           <div className="space-y-3">
                             <div>
-                              <label className="block text-xs font-medium text-zinc-600 mb-1">Título *</label>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Título *</label>
                               <input
                                 type="text"
                                 value={sub.title}
@@ -897,11 +898,11 @@ export function ObjetivosClient({
                                   setSubObjectives(updated);
                                 }}
                                 placeholder={`Título del objetivo ${subLabel}`}
-                                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] bg-white"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-zinc-600 mb-1">Descripción *</label>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Descripción *</label>
                               <textarea
                                 value={sub.description}
                                 onChange={(e) => {
@@ -911,14 +912,14 @@ export function ObjetivosClient({
                                 }}
                                 rows={2}
                                 placeholder="Detalles del objetivo..."
-                                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] bg-white"
                               />
                             </div>
                             {/* Progress and Status for each sub-objective when editing */}
                             {editingObjective && (
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block text-xs font-medium text-zinc-600 mb-1">Progreso %</label>
+                                  <label className="block text-xs font-medium text-muted-foreground mb-1">Progreso %</label>
                                   <input
                                     type="number"
                                     min={0}
@@ -929,24 +930,22 @@ export function ObjetivosClient({
                                       updated[idx] = { ...updated[idx], progress_percentage: parseInt(e.target.value) || 0 };
                                       setSubObjectives(updated);
                                     }}
-                                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] bg-white"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-zinc-600 mb-1">Estado</label>
-                                  <select
+                                  <label className="block text-xs font-medium text-muted-foreground mb-1">Estado</label>
+                                  <SelectMenu
                                     value={sub.status}
-                                    onChange={(e) => {
+                                    onChange={(v) => {
                                       const updated = [...subObjectives];
-                                      updated[idx] = { ...updated[idx], status: e.target.value as ObjectiveStatus };
+                                      updated[idx] = { ...updated[idx], status: v as ObjectiveStatus };
                                       setSubObjectives(updated);
                                     }}
-                                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
-                                  >
-                                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                      <option key={key} value={key}>{label}</option>
-                                    ))}
-                                  </select>
+                                    ariaLabel="Estado"
+                                    className="w-full"
+                                    options={Object.entries(STATUS_LABELS).map(([key, label]) => ({ value: key, label: label as string }))}
+                                  />
                                 </div>
                               </div>
                             )}
@@ -960,71 +959,56 @@ export function ObjetivosClient({
                   {editingObjective && subObjectives.length === 0 && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Progreso %</label>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Progreso %</label>
                         <input
                           type="number"
                           min={0}
                           max={100}
                           value={progressStr}
                           onChange={(e) => setProgressStr(e.target.value)}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-1">Estado</label>
-                        <select
-                          value={formData.status}
-                          onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as ObjectiveStatus }))}
-                          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
-                        >
-                          {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                            <option key={key} value={key}>{label}</option>
-                          ))}
-                        </select>
+                        <label className="block text-sm font-medium text-secondary-foreground mb-1">Estado</label>
+                        <SelectMenu
+                          value={formData.status ?? ''}
+                          onChange={(v) => setFormData(prev => ({ ...prev, status: v as ObjectiveStatus }))}
+                          ariaLabel="Estado"
+                          className="w-full"
+                          options={Object.entries(STATUS_LABELS).map(([key, label]) => ({ value: key, label: label as string }))}
+                        />
                       </div>
                     </div>
                   )}
                 </div>
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-                  >
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button type="button" variant="outline" onClick={resetForm}>
                     Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
-                  >
-                    {saving ? 'Guardando...' : editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
-                  </button>
+                  </Button>
+                  <Button type="submit" loading={saving}>
+                    {editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
+                  </Button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
+      </Dialog>
 
       {/* Achievement Modal */}
-      {showAchievementModal && evaluatingObjective && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowAchievementModal(false)} />
-            <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  Evaluar cumplimiento {evaluatingObjective.parent_objective_id ? '(Sub-objetivo)' : ''}
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">{evaluatingObjective.title}</p>
-              </div>
-              <div className="p-6 space-y-4">
+      <Dialog
+        open={showAchievementModal && !!evaluatingObjective}
+        onClose={() => setShowAchievementModal(false)}
+        title={`Evaluar cumplimiento ${evaluatingObjective?.parent_objective_id ? '(Sub-objetivo)' : ''}`}
+        description={evaluatingObjective?.title}
+        size="md"
+      >
+        {evaluatingObjective && (
+          <>
+            <div className="space-y-4">
                 {error && (
-                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+                  <div className="rounded-lg bg-danger-subtle p-3 text-sm text-[var(--red-600)]">{error}</div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
                     Cumplimiento (%)
                   </label>
                   <input
@@ -1038,63 +1022,50 @@ export function ObjetivosClient({
                         setAchievementData(prev => ({ ...prev, percentage: e.target.value }));
                       }
                     }}
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                   />
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Ingresá un valor entre 0 y 100
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  <label className="block text-sm font-medium text-secondary-foreground mb-1">
                     Notas de evaluación
                   </label>
                   <textarea
                     value={achievementData.notes}
                     onChange={(e) => setAchievementData(prev => ({ ...prev, notes: e.target.value }))}
                     rows={3}
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
                     placeholder="Comentarios sobre el cumplimiento del objetivo..."
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAchievementModal(false)}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAchievement}
-                  disabled={saving}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : 'Guardar evaluación'}
-                </button>
-              </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowAchievementModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveAchievement} loading={saving}>
+                Guardar evaluación
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
 
       {/* Sub-objectives Evaluation Modal */}
-      {showSubObjectivesEvalModal && evaluatingParentObjective && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowSubObjectivesEvalModal(false)} />
-            <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  Evaluar Sub-objetivos
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  {evaluatingParentObjective.title} - {PERIODICITY_LABELS[evaluatingParentObjective.periodicity]}
-                </p>
-              </div>
-              <div className="p-6 space-y-4 overflow-y-auto flex-1">
+      <Dialog
+        open={showSubObjectivesEvalModal && !!evaluatingParentObjective}
+        onClose={() => setShowSubObjectivesEvalModal(false)}
+        title="Evaluar Sub-objetivos"
+        description={evaluatingParentObjective ? `${evaluatingParentObjective.title} - ${PERIODICITY_LABELS[evaluatingParentObjective.periodicity]}` : undefined}
+        size="xl"
+      >
+        {evaluatingParentObjective && (
+          <>
+            <div className="space-y-4">
                 {error && (
-                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+                  <div className="rounded-lg bg-danger-subtle p-3 text-sm text-[var(--red-600)]">{error}</div>
                 )}
                 
                 {evaluatingParentObjective.sub_objectives?.map((sub, idx) => {
@@ -1102,20 +1073,20 @@ export function ObjetivosClient({
                   if (!evalData) return null;
                   
                   return (
-                    <div key={sub.id} className="rounded-lg border border-purple-200 bg-purple-50/50 p-4">
+                    <div key={sub.id} className="rounded-lg border border-[var(--border)] bg-secondary p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-sm font-semibold text-purple-700 bg-purple-100 px-2.5 py-1 rounded">
+                        <span className="text-sm font-semibold text-foreground bg-secondary px-2.5 py-1 rounded">
                           {SUB_OBJECTIVE_LABELS[evaluatingParentObjective.periodicity]?.[idx] || `#${idx + 1}`}
                         </span>
                       </div>
-                      <p className="font-medium text-zinc-800 mb-1">{sub.title}</p>
+                      <p className="font-medium text-secondary-foreground mb-1">{sub.title}</p>
                       {sub.description && (
-                        <p className="text-sm text-zinc-500 mb-3">{sub.description}</p>
+                        <p className="text-sm text-muted-foreground mb-3">{sub.description}</p>
                       )}
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-zinc-600 mb-1">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
                             Cumplimiento (%) *
                           </label>
                           <input
@@ -1135,11 +1106,11 @@ export function ObjetivosClient({
                                 );
                               }
                             }}
-                            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-zinc-600 mb-1">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
                             Notas
                           </label>
                           <input
@@ -1155,7 +1126,7 @@ export function ObjetivosClient({
                               );
                             }}
                             placeholder="Comentarios..."
-                            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 bg-white"
+                            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--border)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] bg-white"
                           />
                         </div>
                       </div>
@@ -1164,10 +1135,10 @@ export function ObjetivosClient({
                 })}
                 
                 {/* Calculated total */}
-                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+                <div className="rounded-lg border border-success/30 bg-success-subtle p-4">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-emerald-800">Cumplimiento promedio calculado:</span>
-                    <span className="text-xl font-bold text-emerald-700">
+                    <span className="font-medium text-[var(--green-700)]">Cumplimiento promedio calculado:</span>
+                    <span className="text-xl font-bold text-[var(--green-700)]">
                       {Math.round(
                         subObjectivesEvalData.reduce((sum, e) => sum + (parseFloat(e.percentage) || 0), 0) / 
                         (subObjectivesEvalData.length || 1)
@@ -1176,26 +1147,17 @@ export function ObjetivosClient({
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
-                <button
-                  type="button"
-                  onClick={() => setShowSubObjectivesEvalModal(false)}
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAllSubObjectivesAchievements}
-                  disabled={saving}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : 'Guardar todas las evaluaciones'}
-                </button>
-              </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setShowSubObjectivesEvalModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveAllSubObjectivesAchievements} loading={saving}>
+                Guardar todas las evaluaciones
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
 
 type Booking = {
   id: string;
@@ -30,8 +32,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  confirmed: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
-  cancelled: { bg: 'bg-zinc-100', text: 'text-zinc-500' },
+  confirmed: { bg: 'bg-success-subtle', text: 'text-[var(--green-700)]' },
+  cancelled: { bg: 'bg-secondary', text: 'text-muted-foreground' },
 };
 
 export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClientProps) {
@@ -99,37 +101,30 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            Mis Reservas
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Historial de tus reservas de salas
-          </p>
-        </div>
-        <Link
-          href="/portal/room-booking"
-          className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-700"
-        >
-          Nueva reserva
-        </Link>
-      </div>
+      <PageHeader
+        title="Mis Reservas"
+        description="Historial de tus reservas de salas"
+        actions={
+          <Link href="/portal/room-booking" className={buttonVariants({ variant: 'primary' })}>
+            Nueva reserva
+          </Link>
+        }
+      />
 
       {/* Tabs */}
-      <div className="border-b border-zinc-200">
+      <div className="border-b border-[var(--border)]">
         <nav className="-mb-px flex gap-6">
           <button
             onClick={() => setFilter('upcoming')}
             className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
               filter === 'upcoming'
-                ? 'border-cyan-600 text-cyan-600'
-                : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
             }`}
           >
             Próximas
             {upcomingBookings.length > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-medium text-cyan-700">
+              <span className="ml-2 inline-flex items-center justify-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-foreground">
                 {upcomingBookings.length}
               </span>
             )}
@@ -138,8 +133,8 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
             onClick={() => setFilter('past')}
             className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
               filter === 'past'
-                ? 'border-cyan-600 text-cyan-600'
-                : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
             }`}
           >
             Pasadas / Canceladas
@@ -148,15 +143,15 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
       </div>
 
       {/* Bookings list */}
-      <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {displayedBookings.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-zinc-500">
+          <div className="px-6 py-12 text-center text-sm text-muted-foreground">
             {filter === 'upcoming'
               ? 'No tenés reservas próximas'
               : 'No tenés reservas pasadas'}
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-200">
+          <ul className="divide-y divide-[var(--border)]">
             {displayedBookings.map((booking) => {
               const statusColors =
                 STATUS_COLORS[booking.status] || STATUS_COLORS.confirmed;
@@ -168,7 +163,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-zinc-900">
+                        <h3 className="text-sm font-semibold text-foreground">
                           {booking.title}
                         </h3>
                         <span
@@ -177,7 +172,7 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
                           {statusLabel}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center gap-4 text-sm text-zinc-500">
+                      <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <svg
                             className="h-4 w-4"
@@ -229,21 +224,20 @@ export function MyBookingsClient({ bookings: initialBookings }: MyBookingsClient
                         </span>
                       </div>
                       {booking.notes && (
-                        <p className="mt-1 text-sm text-zinc-400">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {booking.notes}
                         </p>
                       )}
                     </div>
                     {isFutureConfirmed(booking) && (
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleCancel(booking.id)}
-                        disabled={cancellingId === booking.id}
-                        className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50"
+                        loading={cancellingId === booking.id}
                       >
-                        {cancellingId === booking.id
-                          ? 'Cancelando...'
-                          : 'Cancelar'}
-                      </button>
+                        Cancelar
+                      </Button>
                     )}
                   </div>
                 </li>

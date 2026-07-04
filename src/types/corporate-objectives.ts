@@ -65,11 +65,11 @@ export const SENIORITY_CATEGORY_LABELS: Record<SeniorityCategory, string> = {
 };
 
 export const SENIORITY_CATEGORY_COLORS: Record<SeniorityCategory, { bg: string; text: string }> = {
-  1: { bg: 'bg-green-100', text: 'text-green-700' },
-  2: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-  3: { bg: 'bg-purple-100', text: 'text-purple-700' },
-  4: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  5: { bg: 'bg-rose-100', text: 'text-rose-700' },
+  1: { bg: 'bg-success-subtle', text: 'text-[var(--green-700)]' },
+  2: { bg: 'bg-warning-subtle', text: 'text-[var(--amber-600)]' },
+  3: { bg: 'bg-cat-violet-subtle', text: 'text-cat-violet' },
+  4: { bg: 'bg-cat-cyan-subtle', text: 'text-cat-cyan' },
+  5: { bg: 'bg-danger-subtle', text: 'text-[var(--red-600)]' },
 };
 
 // Get the main category (1-5) from a detailed level like "3.2"

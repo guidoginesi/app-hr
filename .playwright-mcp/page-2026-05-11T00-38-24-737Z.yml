@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - img "Pow" [ref=e6]
+        - link "Trabaja con nosotros" [ref=e7] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=e8]:
+      - generic [ref=e9]:
+        - heading "Oportunidades actuales" [level=1] [ref=e10]
+        - paragraph [ref=e11]: Postúlate a las posiciones abiertas que tenemos disponibles
+      - list [ref=e12]:
+        - listitem [ref=e13]:
+          - generic [ref=e14]:
+            - heading "Asistente comercial" [level=2] [ref=e15]
+            - generic [ref=e16]:
+              - generic [ref=e17]:
+                - img [ref=e18]
+                - generic [ref=e20]: Híbrida
+              - generic [ref=e21]:
+                - img [ref=e22]
+                - generic [ref=e25]: Villa Luro, Capital Federal, Buenos Aires. Híbrido
+              - generic [ref=e26]:
+                - img [ref=e27]
+                - generic [ref=e29]: Comercial
+          - link "Ver oferta" [ref=e30] [cursor=pointer]:
+            - /url: /jobs/575f9130-57c9-40ef-a6aa-68d8e8af7070
+  - button "Open Next.js Dev Tools" [ref=e36] [cursor=pointer]:
+    - img [ref=e37]
+  - alert [ref=e40]

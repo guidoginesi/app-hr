@@ -187,8 +187,8 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Dimensiones de Evaluación</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dimensiones de Evaluación</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Configura las dimensiones e ítems para cada período
           </p>
         </div>
@@ -196,7 +196,7 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
 
       {message && (
         <div className={`rounded-lg p-4 text-sm ${
-          message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+          message.type === 'success' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
         }`}>
           {message.text}
         </div>
@@ -204,11 +204,11 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
 
       {/* Period Selection */}
       <div className="flex items-center gap-4">
-        <label className="text-sm font-medium text-zinc-700">Período:</label>
+        <label className="text-sm font-medium text-secondary-foreground">Período:</label>
         <select
           value={selectedPeriodId || ''}
           onChange={(e) => handlePeriodChange(e.target.value)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
         >
           <option value="">Seleccionar período</option>
           {periods.map((period) => (
@@ -220,7 +220,7 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
         {selectedPeriodId && (
           <button
             onClick={() => openDimensionForm()}
-            className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+            className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet"
           >
             Nueva dimensión
           </button>
@@ -233,46 +233,46 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/50" onClick={() => setShowDimensionForm(false)} />
             <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">
                   {editingDimension ? 'Editar dimensión' : 'Nueva dimensión'}
                 </h2>
               </div>
               <form onSubmit={handleSaveDimension}>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Nombre *</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Nombre *</label>
                     <input
                       type="text"
                       value={dimensionForm.name}
                       onChange={(e) => setDimensionForm(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Ej: Compromiso y responsabilidad"
                       required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Descripción</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Descripción</label>
                     <textarea
                       value={dimensionForm.description}
                       onChange={(e) => setDimensionForm(prev => ({ ...prev, description: e.target.value }))}
                       rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                   <button
                     type="button"
                     onClick={() => setShowDimensionForm(false)}
-                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+                    className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet disabled:opacity-50"
                   >
                     {saving ? 'Guardando...' : 'Guardar'}
                   </button>
@@ -289,37 +289,37 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/50" onClick={() => setShowItemForm(null)} />
             <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-zinc-900">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h2 className="text-lg font-semibold text-foreground">
                   {editingItem ? 'Editar ítem' : 'Nuevo ítem'}
                 </h2>
               </div>
               <form onSubmit={(e) => handleSaveItem(e, showItemForm)}>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Afirmación *</label>
+                    <label className="block text-sm font-medium text-secondary-foreground mb-1">Afirmación *</label>
                     <textarea
                       value={itemForm.statement}
                       onChange={(e) => setItemForm(prev => ({ ...prev, statement: e.target.value }))}
                       placeholder="Ej: Cumple con los plazos establecidos para sus tareas"
                       required
                       rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                   <button
                     type="button"
                     onClick={() => setShowItemForm(null)}
-                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+                    className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet disabled:opacity-50"
                   >
                     {saving ? 'Guardando...' : 'Guardar'}
                   </button>
@@ -332,19 +332,19 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
 
       {/* Dimensions List */}
       {!selectedPeriodId ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-          <p className="text-sm text-zinc-500">Selecciona un período para ver sus dimensiones</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+          <p className="text-sm text-muted-foreground">Selecciona un período para ver sus dimensiones</p>
         </div>
       ) : loading ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-          <p className="text-sm text-zinc-500">Cargando dimensiones...</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+          <p className="text-sm text-muted-foreground">Cargando dimensiones...</p>
         </div>
       ) : dimensions.length === 0 ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-          <p className="text-sm text-zinc-500 mb-4">No hay dimensiones configuradas para este período</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+          <p className="text-sm text-muted-foreground mb-4">No hay dimensiones configuradas para este período</p>
           <button
             onClick={() => openDimensionForm()}
-            className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+            className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet"
           >
             Crear primera dimensión
           </button>
@@ -352,57 +352,57 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
       ) : (
         <div className="space-y-4">
           {dimensions.map((dimension, index) => (
-            <div key={dimension.id} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+            <div key={dimension.id} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-sm font-semibold text-purple-600">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cat-violet-subtle text-sm font-semibold text-cat-violet">
                     {index + 1}
                   </span>
                   <div>
-                    <h3 className="font-medium text-zinc-900">{dimension.name}</h3>
+                    <h3 className="font-medium text-foreground">{dimension.name}</h3>
                     {dimension.description && (
-                      <p className="text-sm text-zinc-500">{dimension.description}</p>
+                      <p className="text-sm text-muted-foreground">{dimension.description}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openItemForm(dimension.id)}
-                    className="rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50"
+                    className="rounded-lg border border-cat-violet/20 px-3 py-1.5 text-xs font-medium text-cat-violet hover:bg-cat-violet-subtle"
                   >
                     + Ítem
                   </button>
                   <button
                     onClick={() => openDimensionForm(dimension)}
-                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => handleDeleteDimension(dimension.id)}
-                    className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                    className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
                   >
                     Eliminar
                   </button>
                 </div>
               </div>
-              <ul className="divide-y divide-zinc-100">
+              <ul className="divide-y divide-[var(--border)]">
                 {dimension.items?.map((item, itemIndex) => (
                   <li key={item.id} className="flex items-center justify-between px-6 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-zinc-400">{itemIndex + 1}.</span>
-                      <p className="text-sm text-zinc-700">{item.statement}</p>
+                      <span className="text-xs text-muted-foreground">{itemIndex + 1}.</span>
+                      <p className="text-sm text-secondary-foreground">{item.statement}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openItemForm(dimension.id, item)}
-                        className="rounded px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100"
+                        className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-secondary"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDeleteItem(item.id)}
-                        className="rounded px-2 py-1 text-xs text-red-500 hover:bg-red-50"
+                        className="rounded px-2 py-1 text-xs text-[var(--red-600)] hover:bg-danger-subtle"
                       >
                         Eliminar
                       </button>
@@ -411,7 +411,7 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
                 ))}
                 {(!dimension.items || dimension.items.length === 0) && (
                   <li className="px-6 py-4 text-center">
-                    <p className="text-sm text-zinc-400">No hay ítems. Agrega al menos 3 afirmaciones.</p>
+                    <p className="text-sm text-muted-foreground">No hay ítems. Agrega al menos 3 afirmaciones.</p>
                   </li>
                 )}
               </ul>
@@ -422,8 +422,8 @@ export function DimensionsClient({ periods, initialPeriodId, initialDimensions }
 
       {/* Help text */}
       {selectedPeriodId && dimensions.length > 0 && (
-        <div className="rounded-lg bg-purple-50 border border-purple-200 p-4">
-          <p className="text-sm text-purple-800">
+        <div className="rounded-lg bg-cat-violet-subtle border border-cat-violet/20 p-4">
+          <p className="text-sm text-cat-violet">
             <strong>Recomendación:</strong> Cada dimensión debe tener exactamente 3 ítems/afirmaciones para una evaluación balanceada.
           </p>
         </div>

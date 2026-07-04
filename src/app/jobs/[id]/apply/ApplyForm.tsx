@@ -75,18 +75,18 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
+    <div className="rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-8">
         <input type="hidden" name="jobId" value={jobId} />
 
       {/* My information */}
       <section>
-        <h2 className="mb-2 text-xl font-bold text-zinc-900">Mi información</h2>
-        <p className="mb-6 text-sm text-zinc-600">Completá la información a continuación</p>
+        <h2 className="mb-2 text-xl font-bold text-foreground">Mi información</h2>
+        <p className="mb-6 text-sm text-muted-foreground">Completá la información a continuación</p>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-zinc-900">
+            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
               Nombre completo *
             </label>
             <input
@@ -95,12 +95,12 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
               type="text"
               required
               placeholder="Nombre completo"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-zinc-900">
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
               Dirección de email *
             </label>
             <input
@@ -109,18 +109,18 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
               type="email"
               required
               placeholder="Tu dirección de email"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
 
           <div>
-            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-zinc-900">
+            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
               Número de teléfono *
             </label>
             <div className="flex gap-2">
-              <div className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2.5">
-                <span className="text-sm text-zinc-600">🇦🇷</span>
-                <span className="text-sm font-medium text-zinc-900">Argentina</span>
+              <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-white px-3 py-2.5">
+                <span className="text-sm text-muted-foreground">🇦🇷</span>
+                <span className="text-sm font-medium text-foreground">Argentina</span>
               </div>
               <input
                 id="phone"
@@ -128,20 +128,20 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
                 type="tel"
                 required
                 placeholder="+54"
-                className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                className="flex-1 rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="provincia" className="mb-1.5 block text-sm font-medium text-zinc-900">
+            <label htmlFor="provincia" className="mb-1.5 block text-sm font-medium text-foreground">
               Provincia *
             </label>
             <select
               id="provincia"
               name="provincia"
               required
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
             >
               <option value="">Seleccionar provincia</option>
               <option value="CABA">CABA</option>
@@ -154,12 +154,12 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
 
       {/* Questions */}
       <section>
-        <h2 className="mb-2 text-xl font-bold text-zinc-900">Información adicional</h2>
-        <p className="mb-6 text-sm text-zinc-600">Completá la información adicional</p>
+        <h2 className="mb-2 text-xl font-bold text-foreground">Información adicional</h2>
+        <p className="mb-6 text-sm text-muted-foreground">Completá la información adicional</p>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="linkedinUrl" className="mb-1.5 block text-sm font-medium text-zinc-900">
+            <label htmlFor="linkedinUrl" className="mb-1.5 block text-sm font-medium text-foreground">
               Perfil de LinkedIn (URL)
             </label>
             <input
@@ -167,7 +167,7 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
               name="linkedinUrl"
               type="url"
               placeholder="https://linkedin.com/in/tuperfil"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
         </div>
@@ -175,7 +175,7 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
 
       {/* Salary Expectation */}
       <section>
-        <label htmlFor="salaryExpectation" className="mb-1.5 block text-sm font-medium text-zinc-900">
+        <label htmlFor="salaryExpectation" className="mb-1.5 block text-sm font-medium text-foreground">
           ¿Cuál es tu expectativa salarial mensual neta (mano)?
         </label>
         <input
@@ -185,13 +185,13 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
           value={salaryDisplay}
           onChange={handleSalaryChange}
           placeholder="Ej: 1.500.000"
-          className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+          className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
         />
       </section>
 
       {/* CV Upload */}
       <section>
-        <label htmlFor="resume" className="mb-1.5 block text-sm font-medium text-zinc-900">
+        <label htmlFor="resume" className="mb-1.5 block text-sm font-medium text-foreground">
           CV / Currículum *
         </label>
         <input
@@ -200,24 +200,24 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
           type="file"
           required
           accept=".pdf,.doc,.docx,.txt"
-          className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+          className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground file:mr-4 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground hover:file:bg-secondary focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
         />
       </section>
 
       {error && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-800">{error}</p>
+        <div className="rounded-lg border border-danger/20 bg-danger-subtle p-4">
+          <p className="text-sm font-medium text-[var(--red-600)]">{error}</p>
         </div>
       )}
 
-      <div className="text-xs text-zinc-500">
+      <div className="text-xs text-muted-foreground">
         Todos los campos marcados con * son obligatorios.
       </div>
 
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-black px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full rounded-lg bg-black px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isPending && (
             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

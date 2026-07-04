@@ -126,34 +126,34 @@ export function MondayDatePicker({ value, onChange, minDate, advanceNoticeDays =
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full text-left rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white ${className}`}
+        className={`w-full text-left rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring bg-white ${className}`}
       >
-        {displayValue || <span className="text-zinc-400">Selecciona un lunes</span>}
+        {displayValue || <span className="text-muted-foreground">Selecciona un lunes</span>}
       </button>
 
       {/* Dropdown calendar */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-lg">
+        <div className="absolute z-50 mt-1 w-72 rounded-lg border border-[var(--border)] bg-white p-4 shadow-lg">
           {/* Month navigation */}
           <div className="mb-3 flex items-center justify-between">
             <button
               type="button"
               onClick={prevMonth}
-              className="rounded p-1 hover:bg-zinc-100"
+              className="rounded p-1 hover:bg-secondary"
             >
-              <svg className="h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <span className="font-medium text-zinc-900">
+            <span className="font-medium text-foreground">
               {monthNames[month]} {year}
             </span>
             <button
               type="button"
               onClick={nextMonth}
-              className="rounded p-1 hover:bg-zinc-100"
+              className="rounded p-1 hover:bg-secondary"
             >
-              <svg className="h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -161,9 +161,9 @@ export function MondayDatePicker({ value, onChange, minDate, advanceNoticeDays =
 
           {/* Monday list */}
           <div className="space-y-1">
-            <p className="mb-2 text-xs font-medium text-zinc-500 uppercase">Lunes disponibles</p>
+            <p className="mb-2 text-xs font-medium text-muted-foreground uppercase">Lunes disponibles</p>
             {mondays.length === 0 ? (
-              <p className="text-sm text-zinc-400 py-2">No hay lunes en este mes</p>
+              <p className="text-sm text-muted-foreground py-2">No hay lunes en este mes</p>
             ) : (
               mondays.map((monday) => {
                 const disabled = isDisabled(monday);
@@ -177,10 +177,10 @@ export function MondayDatePicker({ value, onChange, minDate, advanceNoticeDays =
                     disabled={disabled}
                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       selected
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-success text-white'
                         : disabled
-                        ? 'text-zinc-300 cursor-not-allowed'
-                        : 'hover:bg-emerald-50 text-zinc-700'
+                        ? 'text-muted-foreground cursor-not-allowed'
+                        : 'hover:bg-success-subtle text-secondary-foreground'
                     }`}
                   >
                     <span className="font-medium">

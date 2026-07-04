@@ -45,14 +45,14 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  approved: 'bg-emerald-100 text-emerald-800',
-  pending_leader: 'bg-amber-100 text-amber-800',
-  pending_hr: 'bg-blue-100 text-blue-800',
-  rejected_leader: 'bg-red-100 text-red-800',
-  rejected_hr: 'bg-red-100 text-red-800',
-  rejected: 'bg-red-100 text-red-800',
-  cancelled: 'bg-zinc-100 text-zinc-500',
-  pending: 'bg-amber-100 text-amber-800',
+  approved: 'bg-success-subtle text-[var(--green-700)]',
+  pending_leader: 'bg-warning-subtle text-[var(--amber-600)]',
+  pending_hr: 'bg-accent text-accent-foreground',
+  rejected_leader: 'bg-danger-subtle text-[var(--red-600)]',
+  rejected_hr: 'bg-danger-subtle text-[var(--red-600)]',
+  rejected: 'bg-danger-subtle text-[var(--red-600)]',
+  cancelled: 'bg-secondary text-muted-foreground',
+  pending: 'bg-warning-subtle text-[var(--amber-600)]',
 };
 
 function exportToExcel(novedades: Novedad[], year: number, month: number) {
@@ -132,20 +132,20 @@ export function NovedadesClient() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Novedades</h1>
-          <p className="text-sm text-zinc-500">Licencias y ausencias del período seleccionado</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Novedades</h1>
+          <p className="text-sm text-muted-foreground">Licencias y ausencias del período seleccionado</p>
         </div>
 
         {/* Filters */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           <div className="flex flex-wrap items-end gap-4 px-6 py-4">
             {/* Period */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-500">Mes</label>
+              <label className="text-xs font-medium text-muted-foreground">Mes</label>
               <select
                 value={month}
                 onChange={(e) => setMonth(Number(e.target.value))}
-                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 {MONTH_NAMES.map((name, i) => (
                   <option key={i + 1} value={i + 1}>{name}</option>
@@ -153,11 +153,11 @@ export function NovedadesClient() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-500">Año</label>
+              <label className="text-xs font-medium text-muted-foreground">Año</label>
               <select
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 {yearOptions.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -167,11 +167,11 @@ export function NovedadesClient() {
 
             {/* Employee filter */}
             <div className="flex flex-col gap-1 min-w-[200px]">
-              <label className="text-xs font-medium text-zinc-500">Persona</label>
+              <label className="text-xs font-medium text-muted-foreground">Persona</label>
               <select
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
-                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">Todos</option>
                 {employees.map((emp) => (
@@ -184,11 +184,11 @@ export function NovedadesClient() {
 
             {/* Status filter */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-500">Estado</label>
+              <label className="text-xs font-medium text-muted-foreground">Estado</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">Todos</option>
                 <option value="approved">Aprobadas</option>
@@ -204,7 +204,7 @@ export function NovedadesClient() {
               <button
                 onClick={() => exportToExcel(novedades, year, month)}
                 disabled={novedades.length === 0}
-                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -216,11 +216,11 @@ export function NovedadesClient() {
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
             <div>
-              <h2 className="text-base font-semibold text-zinc-900">{periodLabel}</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <h2 className="text-base font-semibold text-foreground">{periodLabel}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {loading ? 'Cargando...' : `${novedades.length} novedad${novedades.length !== 1 ? 'es' : ''}`}
               </p>
             </div>
@@ -228,10 +228,10 @@ export function NovedadesClient() {
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
             </div>
           ) : novedades.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-zinc-400">
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <svg className="mb-3 h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -241,7 +241,7 @@ export function NovedadesClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-100 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  <tr className="border-b border-[var(--border)] bg-muted text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     <th className="px-6 py-3">Empleado</th>
                     <th className="px-6 py-3">Tipo de licencia</th>
                     <th className="px-6 py-3">Fecha inicio</th>
@@ -251,26 +251,26 @@ export function NovedadesClient() {
                     <th className="px-6 py-3">Observaciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-[var(--border)]">
                   {novedades.map((n) => {
                     const obs = observations(n);
                     const isExpanded = expandedRow === n.id;
                     return (
                       <tr
                         key={n.id}
-                        className="hover:bg-zinc-50 transition-colors"
+                        className="hover:bg-muted transition-colors"
                       >
-                        <td className="px-6 py-3 font-medium text-zinc-900">{n.employee_name}</td>
-                        <td className="px-6 py-3 text-zinc-600">{n.leave_type_name}</td>
-                        <td className="px-6 py-3 text-zinc-600">{formatDateLocal(n.start_date)}</td>
-                        <td className="px-6 py-3 text-zinc-600">{formatDateLocal(n.end_date)}</td>
+                        <td className="px-6 py-3 font-medium text-foreground">{n.employee_name}</td>
+                        <td className="px-6 py-3 text-muted-foreground">{n.leave_type_name}</td>
+                        <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.start_date)}</td>
+                        <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.end_date)}</td>
                         <td className="px-6 py-3 text-center">
-                          <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
+                          <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
                             {durationLabel(n)}
                           </span>
                         </td>
                         <td className="px-6 py-3">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[n.status] ?? 'bg-zinc-100 text-zinc-600'}`}>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[n.status] ?? 'bg-secondary text-muted-foreground'}`}>
                             {STATUS_LABELS[n.status] ?? n.status}
                           </span>
                         </td>
@@ -278,19 +278,19 @@ export function NovedadesClient() {
                           {obs ? (
                             <button
                               onClick={() => setExpandedRow(isExpanded ? null : n.id)}
-                              className="flex items-start gap-1 text-left text-zinc-600 hover:text-zinc-900 transition-colors"
+                              className="flex items-start gap-1 text-left text-muted-foreground hover:text-foreground transition-colors"
                             >
                               <span className={`text-xs leading-relaxed ${isExpanded ? '' : 'line-clamp-1'}`}>
                                 {obs}
                               </span>
                               {obs.length > 60 && (
-                                <svg className={`mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-zinc-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className={`mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                               )}
                             </button>
                           ) : (
-                            <span className="text-xs text-zinc-300">—</span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                       </tr>

@@ -125,9 +125,9 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 		<form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
 			<div className="grid grid-cols-1 gap-4">
 				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Título *</label>
+					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Título *</label>
 					<input
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="title"
 						placeholder="Ej: Desarrollador Backend Senior"
 						defaultValue={job?.title || ''}
@@ -135,18 +135,18 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 					/>
 				</div>
 				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Área</label>
+					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Área</label>
 					<input
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="department"
 						placeholder="Ej: Tecnología"
 						defaultValue={job?.department || ''}
 					/>
 				</div>
 				<div>
-					<label className="mb-1.5 block text-xs font-medium text-zinc-700">Modalidad *</label>
+					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Modalidad *</label>
 					<select
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="work_mode"
 						defaultValue={job?.work_mode || 'Remota'}
 						required
@@ -157,25 +157,25 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 					</select>
 				</div>
 			<div>
-				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Ubicación</label>
+				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Ubicación</label>
 				<input
-					className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+					className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 					name="location"
 					placeholder="Ej: Buenos Aires"
 					defaultValue={job?.location || ''}
 				/>
 			</div>
 			<div>
-				<label className="mb-1.5 block text-xs font-medium text-zinc-700">
+				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">
 					Salario Máximo (opcional)
-					<span className="ml-1.5 text-xs font-normal text-zinc-500">
+					<span className="ml-1.5 text-xs font-normal text-muted-foreground">
 						· Si se completa, candidatos que excedan este monto serán descartados automáticamente
 					</span>
 				</label>
 				<div className="relative">
-					<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500">$</span>
+					<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
 					<input
-						className="w-full rounded-lg border border-zinc-300 bg-white pl-7 pr-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white pl-7 pr-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="max_salary"
 						type="text"
 						inputMode="numeric"
@@ -186,9 +186,9 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				</div>
 			</div>
 			<div>
-				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Estado</label>
+				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Estado</label>
 					<select
-						className="w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 						name="is_published"
 						defaultValue={job?.is_published ? 'true' : 'false'}
 					>
@@ -198,7 +198,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				</div>
 			</div>
 			<div>
-				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Descripción</label>
+				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Descripción</label>
 				<RichTextEditor
 					content={description}
 					onChange={setDescription}
@@ -206,7 +206,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				/>
 			</div>
 			<div>
-				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Responsabilidades</label>
+				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Responsabilidades</label>
 				<RichTextEditor
 					content={responsibilities}
 					onChange={setResponsibilities}
@@ -214,7 +214,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				/>
 			</div>
 			<div>
-				<label className="mb-1.5 block text-xs font-medium text-zinc-700">Requerimientos</label>
+				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Requerimientos</label>
 				<RichTextEditor
 					content={requirements}
 					onChange={setRequirements}
@@ -222,15 +222,15 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				/>
 			</div>
 			{error && (
-				<div className="rounded-lg border border-red-200 bg-red-50 p-3">
-					<p className="text-xs font-medium text-red-700">{error}</p>
+				<div className="rounded-lg border border-danger/20 bg-danger-subtle p-3">
+					<p className="text-xs font-medium text-[var(--red-600)]">{error}</p>
 				</div>
 			)}
 			<div className="flex gap-3 pt-2">
 				<button
 					type="submit"
 					disabled={loading}
-					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{loading ? (isEditing ? 'Guardando…' : 'Creando…') : isEditing ? 'Guardar cambios' : 'Crear búsqueda'}
 				</button>
@@ -239,7 +239,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 						type="button"
 						onClick={onCancel}
 						disabled={loading}
-						className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-all hover:bg-zinc-50 disabled:opacity-50"
+						className="rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-all hover:bg-muted disabled:opacity-50"
 					>
 						Cancelar
 					</button>

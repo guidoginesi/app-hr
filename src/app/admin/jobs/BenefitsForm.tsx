@@ -79,7 +79,7 @@ export function BenefitsForm() {
 	}
 
 	if (isLoading) {
-		return <div className="p-6 text-center text-sm text-zinc-500">Cargando beneficios...</div>;
+		return <div className="p-6 text-center text-sm text-muted-foreground">Cargando beneficios...</div>;
 	}
 
 	return (
@@ -92,13 +92,13 @@ export function BenefitsForm() {
 							value={benefit.text}
 							onChange={(e) => updateBenefit(index, e.target.value)}
 							placeholder="Ej: 3 semanas de vacaciones"
-							className="flex-1 rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="flex-1 rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
 							required
 						/>
 						<button
 							type="button"
 							onClick={() => removeBenefit(index)}
-							className="rounded-lg border border-red-300 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100"
+							className="rounded-lg border border-danger/20 bg-danger-subtle px-3 py-2.5 text-sm font-medium text-[var(--red-600)] transition-colors hover:bg-danger-subtle"
 						>
 							Eliminar
 						</button>
@@ -109,20 +109,20 @@ export function BenefitsForm() {
 			<button
 				type="button"
 				onClick={addBenefit}
-				className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+				className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted"
 			>
 				+ Agregar beneficio
 			</button>
 
 			{error && (
-				<div className="rounded-lg border border-red-200 bg-red-50 p-3">
-					<p className="text-xs font-medium text-red-700">{error}</p>
+				<div className="rounded-lg border border-danger/20 bg-danger-subtle p-3">
+					<p className="text-xs font-medium text-[var(--red-600)]">{error}</p>
 				</div>
 			)}
 
 			{success && (
-				<div className="rounded-lg border border-green-200 bg-green-50 p-3">
-					<p className="text-xs font-medium text-green-700">Beneficios guardados exitosamente</p>
+				<div className="rounded-lg border border-success/20 bg-success-subtle p-3">
+					<p className="text-xs font-medium text-[var(--green-700)]">Beneficios guardados exitosamente</p>
 				</div>
 			)}
 
@@ -130,7 +130,7 @@ export function BenefitsForm() {
 				<button
 					type="submit"
 					disabled={loading}
-					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{loading ? 'Guardando…' : 'Guardar beneficios'}
 				</button>

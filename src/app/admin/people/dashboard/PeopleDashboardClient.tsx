@@ -157,20 +157,20 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
 
   // Colors for charts
   const departmentColors = [
-    'bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 
-    'bg-rose-500', 'bg-cyan-500', 'bg-orange-500', 'bg-indigo-500'
+    'bg-success', 'bg-primary', 'bg-cat-violet', 'bg-warning', 
+    'bg-danger', 'bg-cat-cyan', 'bg-brand', 'bg-primary'
   ];
 
   const seniorityColors: Record<number, string> = {
-    1: 'bg-zinc-400',
-    2: 'bg-blue-500',
-    3: 'bg-emerald-500',
-    4: 'bg-purple-500',
-    5: 'bg-amber-500',
+    1: 'bg-secondary',
+    2: 'bg-primary',
+    3: 'bg-success',
+    4: 'bg-cat-violet',
+    5: 'bg-warning',
   };
 
   const tenureColors = [
-    'bg-rose-400', 'bg-amber-400', 'bg-emerald-400', 'bg-blue-400', 'bg-purple-400'
+    'bg-danger', 'bg-warning', 'bg-success', 'bg-primary', 'bg-cat-violet'
   ];
 
   // Calculate max for bar charts
@@ -181,68 +181,68 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard de People</h1>
-        <p className="mt-1 text-sm text-zinc-500">Indicadores de gestión del equipo</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de People</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Indicadores de gestión del equipo</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Active */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-              <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success-subtle">
+              <svg className="h-6 w-6 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Empleados activos</p>
-              <p className="text-2xl font-bold text-zinc-900">{metrics.totalActive}</p>
+              <p className="text-xs text-muted-foreground">Empleados activos</p>
+              <p className="text-2xl font-bold text-foreground">{metrics.totalActive}</p>
             </div>
           </div>
         </div>
 
         {/* New Hires */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <svg className="h-6 w-6 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Nuevos (últimos 6 meses)</p>
-              <p className="text-2xl font-bold text-zinc-900">{metrics.newHires}</p>
+              <p className="text-xs text-muted-foreground">Nuevos (últimos 6 meses)</p>
+              <p className="text-2xl font-bold text-foreground">{metrics.newHires}</p>
             </div>
           </div>
         </div>
 
         {/* Retention Rate */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-              <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cat-violet-subtle">
+              <svg className="h-6 w-6 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Tasa de retención (12m)</p>
-              <p className="text-2xl font-bold text-zinc-900">{metrics.retentionRate.toFixed(1)}%</p>
+              <p className="text-xs text-muted-foreground">Tasa de retención (12m)</p>
+              <p className="text-2xl font-bold text-foreground">{metrics.retentionRate.toFixed(1)}%</p>
             </div>
           </div>
         </div>
 
         {/* Average Tenure */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-              <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warning-subtle">
+              <svg className="h-6 w-6 text-[var(--amber-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Antigüedad promedio</p>
-              <p className="text-2xl font-bold text-zinc-900">{metrics.avgTenure.toFixed(1)} años</p>
+              <p className="text-xs text-muted-foreground">Antigüedad promedio</p>
+              <p className="text-2xl font-bold text-foreground">{metrics.avgTenure.toFixed(1)} años</p>
             </div>
           </div>
         </div>
@@ -251,52 +251,52 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* By Department */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Distribución por Departamento</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Distribución por Departamento</h3>
           <div className="space-y-3">
             {Object.entries(metrics.byDepartment)
               .sort(([, a], [, b]) => b - a)
               .map(([dept, count], index) => (
                 <div key={dept} className="flex items-center gap-3">
-                  <div className="w-32 text-sm text-zinc-600 truncate" title={dept}>{dept}</div>
-                  <div className="flex-1 h-6 bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="w-32 text-sm text-muted-foreground truncate" title={dept}>{dept}</div>
+                  <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
                     <div 
                       className={`h-full ${departmentColors[index % departmentColors.length]} rounded-full transition-all duration-500`}
                       style={{ width: `${(count / maxDept) * 100}%` }}
                     />
                   </div>
-                  <div className="w-8 text-sm font-semibold text-zinc-900 text-right">{count}</div>
+                  <div className="w-8 text-sm font-semibold text-foreground text-right">{count}</div>
                 </div>
               ))}
           </div>
         </div>
 
         {/* By Seniority */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Distribución por Seniority</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Distribución por Seniority</h3>
           <div className="space-y-3">
             {([1, 2, 3, 4, 5] as SeniorityCategory[]).map((category) => (
               <div key={category} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-zinc-600">{SENIORITY_CATEGORY_LABELS[category]}</div>
-                <div className="flex-1 h-6 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="w-32 text-sm text-muted-foreground">{SENIORITY_CATEGORY_LABELS[category]}</div>
+                <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
                   <div 
                     className={`h-full ${seniorityColors[category]} rounded-full transition-all duration-500`}
                     style={{ width: `${(metrics.bySeniority[category] / maxSeniority) * 100}%` }}
                   />
                 </div>
-                <div className="w-8 text-sm font-semibold text-zinc-900 text-right">{metrics.bySeniority[category]}</div>
+                <div className="w-8 text-sm font-semibold text-foreground text-right">{metrics.bySeniority[category]}</div>
               </div>
             ))}
             {metrics.withoutSeniority > 0 && (
               <div className="flex items-center gap-3">
-                <div className="w-32 text-sm text-zinc-400">Sin asignar</div>
-                <div className="flex-1 h-6 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="w-32 text-sm text-muted-foreground">Sin asignar</div>
+                <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-zinc-300 rounded-full transition-all duration-500"
+                    className="h-full bg-secondary rounded-full transition-all duration-500"
                     style={{ width: `${(metrics.withoutSeniority / maxSeniority) * 100}%` }}
                   />
                 </div>
-                <div className="w-8 text-sm font-semibold text-zinc-400 text-right">{metrics.withoutSeniority}</div>
+                <div className="w-8 text-sm font-semibold text-muted-foreground text-right">{metrics.withoutSeniority}</div>
               </div>
             )}
           </div>
@@ -306,27 +306,27 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       {/* Second Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* By Tenure */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Distribución por Antigüedad</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Distribución por Antigüedad</h3>
           <div className="space-y-3">
             {Object.entries(metrics.tenureRanges).map(([range, count], index) => (
               <div key={range} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-zinc-600">{range}</div>
-                <div className="flex-1 h-6 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="w-32 text-sm text-muted-foreground">{range}</div>
+                <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
                   <div 
                     className={`h-full ${tenureColors[index]} rounded-full transition-all duration-500`}
                     style={{ width: `${(count / maxTenure) * 100}%` }}
                   />
                 </div>
-                <div className="w-8 text-sm font-semibold text-zinc-900 text-right">{count}</div>
+                <div className="w-8 text-sm font-semibold text-foreground text-right">{count}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* By Legal Entity */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Headcount por Sociedad</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Headcount por Sociedad</h3>
           <div className="space-y-3">
             {Object.entries(metrics.byLegalEntity)
               .sort(([, a], [, b]) => b - a)
@@ -334,14 +334,14 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
                 const maxEntity = Math.max(...Object.values(metrics.byLegalEntity), 1);
                 return (
                   <div key={entity} className="flex items-center gap-3">
-                    <div className="w-32 text-sm text-zinc-600 truncate" title={entity}>{entity}</div>
-                    <div className="flex-1 h-6 bg-zinc-100 rounded-full overflow-hidden">
+                    <div className="w-32 text-sm text-muted-foreground truncate" title={entity}>{entity}</div>
+                    <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
                       <div 
                         className={`h-full ${departmentColors[(index + 3) % departmentColors.length]} rounded-full transition-all duration-500`}
                         style={{ width: `${(count / maxEntity) * 100}%` }}
                       />
                     </div>
-                    <div className="w-8 text-sm font-semibold text-zinc-900 text-right">{count}</div>
+                    <div className="w-8 text-sm font-semibold text-foreground text-right">{count}</div>
                   </div>
                 );
               })}
@@ -352,8 +352,8 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       {/* Third Row - Employment Type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* By Employment Type - Donut Chart */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Condición Laboral</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Condición Laboral</h3>
           <div className="flex items-center gap-8">
             {/* Donut Chart */}
             <div className="relative w-40 h-40 flex-shrink-0">
@@ -433,8 +433,8 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-zinc-900">{metrics.totalActive}</div>
-                  <div className="text-xs text-zinc-500">Total</div>
+                  <div className="text-2xl font-bold text-foreground">{metrics.totalActive}</div>
+                  <div className="text-xs text-muted-foreground">Total</div>
                 </div>
               </div>
             </div>
@@ -443,29 +443,29 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
             <div className="space-y-3 flex-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                  <span className="text-sm text-zinc-600">Relación de dependencia</span>
+                  <div className="w-3 h-3 rounded-full bg-success" />
+                  <span className="text-sm text-muted-foreground">Relación de dependencia</span>
                 </div>
-                <span className="text-sm font-semibold text-zinc-900">
+                <span className="text-sm font-semibold text-foreground">
                   {metrics.byEmploymentType['Relación de dependencia']}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-amber-500" />
-                  <span className="text-sm text-zinc-600">Monotributo</span>
+                  <div className="w-3 h-3 rounded-full bg-warning" />
+                  <span className="text-sm text-muted-foreground">Monotributo</span>
                 </div>
-                <span className="text-sm font-semibold text-zinc-900">
+                <span className="text-sm font-semibold text-foreground">
                   {metrics.byEmploymentType['Monotributo']}
                 </span>
               </div>
               {metrics.byEmploymentType['Sin asignar'] > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-zinc-300" />
-                    <span className="text-sm text-zinc-400">Sin asignar</span>
+                    <div className="w-3 h-3 rounded-full bg-secondary" />
+                    <span className="text-sm text-muted-foreground">Sin asignar</span>
                   </div>
-                  <span className="text-sm font-semibold text-zinc-400">
+                  <span className="text-sm font-semibold text-muted-foreground">
                     {metrics.byEmploymentType['Sin asignar']}
                   </span>
                 </div>
@@ -475,8 +475,8 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
         </div>
 
         {/* Placeholder or additional chart */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Resumen de Condiciones</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Resumen de Condiciones</h3>
           <div className="space-y-4">
             {(() => {
               const total = metrics.byEmploymentType['Relación de dependencia'] + 
@@ -490,24 +490,24 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
               
               return (
                 <>
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-emerald-50">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-success-subtle">
                     <div>
-                      <p className="text-sm font-medium text-emerald-900">Relación de dependencia</p>
-                      <p className="text-xs text-emerald-600">Empleados en nómina</p>
+                      <p className="text-sm font-medium text-[var(--green-700)]">Relación de dependencia</p>
+                      <p className="text-xs text-[var(--green-700)]">Empleados en nómina</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-emerald-600">{dependencyPct}%</p>
-                      <p className="text-xs text-emerald-600">{metrics.byEmploymentType['Relación de dependencia']} personas</p>
+                      <p className="text-2xl font-bold text-[var(--green-700)]">{dependencyPct}%</p>
+                      <p className="text-xs text-[var(--green-700)]">{metrics.byEmploymentType['Relación de dependencia']} personas</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-warning-subtle">
                     <div>
-                      <p className="text-sm font-medium text-amber-900">Monotributo</p>
-                      <p className="text-xs text-amber-600">Contratistas independientes</p>
+                      <p className="text-sm font-medium text-[var(--amber-600)]">Monotributo</p>
+                      <p className="text-xs text-[var(--amber-600)]">Contratistas independientes</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-amber-600">{monotributoPct}%</p>
-                      <p className="text-xs text-amber-600">{metrics.byEmploymentType['Monotributo']} personas</p>
+                      <p className="text-2xl font-bold text-[var(--amber-600)]">{monotributoPct}%</p>
+                      <p className="text-xs text-[var(--amber-600)]">{metrics.byEmploymentType['Monotributo']} personas</p>
                     </div>
                   </div>
                 </>
@@ -519,21 +519,21 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
 
       {/* Additional Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs text-zinc-500">Bajas (últimos 12m)</p>
-          <p className="text-xl font-bold text-zinc-900">{metrics.recentTerminations}</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+          <p className="text-xs text-muted-foreground">Bajas (últimos 12m)</p>
+          <p className="text-xl font-bold text-foreground">{metrics.recentTerminations}</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs text-zinc-500">Total histórico</p>
-          <p className="text-xl font-bold text-zinc-900">{employees.length}</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+          <p className="text-xs text-muted-foreground">Total histórico</p>
+          <p className="text-xl font-bold text-foreground">{employees.length}</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs text-zinc-500">Departamentos</p>
-          <p className="text-xl font-bold text-zinc-900">{Object.keys(metrics.byDepartment).length}</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+          <p className="text-xs text-muted-foreground">Departamentos</p>
+          <p className="text-xl font-bold text-foreground">{Object.keys(metrics.byDepartment).length}</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs text-zinc-500">Sociedades</p>
-          <p className="text-xl font-bold text-zinc-900">{Object.keys(metrics.byLegalEntity).length}</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+          <p className="text-xs text-muted-foreground">Sociedades</p>
+          <p className="text-xl font-bold text-foreground">{Object.keys(metrics.byLegalEntity).length}</p>
         </div>
       </div>
     </div>

@@ -12,10 +12,10 @@ type AdminShellProps = {
 export function AdminShell({ children, active }: AdminShellProps) {
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="flex min-h-screen bg-muted text-foreground">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-zinc-200 bg-white shadow-sm">
-        <div className="flex h-16 items-center border-b border-zinc-200 px-6">
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-[var(--border)] bg-white shadow-sm">
+        <div className="flex h-16 items-center border-b border-[var(--border)] px-6">
           <span className="rounded-md bg-black px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
             HR Admin
           </span>
@@ -26,7 +26,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'dashboard'
                 ? 'bg-black text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Dashboard</span>
@@ -39,7 +39,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'people'
                 ? 'bg-black text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>People</span>
@@ -52,7 +52,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'busquedas'
                 ? 'bg-black text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Búsquedas</span>
@@ -65,7 +65,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'candidatos'
                 ? 'bg-black text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Candidatos</span>
@@ -78,7 +78,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'referidos'
                 ? 'bg-black text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Referidos</span>
@@ -91,7 +91,7 @@ export function AdminShell({ children, active }: AdminShellProps) {
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'configuracion'
                 ? 'bg-black text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Configuración</span>
@@ -104,17 +104,17 @@ export function AdminShell({ children, active }: AdminShellProps) {
 
       {/* Main content */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-8 shadow-sm">
+        <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-white px-8 shadow-sm">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-900">Sistema de Recursos Humanos</h1>
-            <p className="mt-0.5 text-xs font-normal text-zinc-500">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Sistema de Recursos Humanos</h1>
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
               Panel de administración
             </p>
           </div>
           <AdminProfileDropdown />
         </header>
 
-        <main className="min-w-0 flex-1 bg-zinc-50 px-8 py-8">{children}</main>
+        <main className="min-w-0 flex-1 bg-muted px-8 py-8">{children}</main>
       </div>
     </div>
   );

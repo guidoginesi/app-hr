@@ -25,15 +25,15 @@ type Message = {
 };
 
 const statusBadge: Record<string, string> = {
-  draft: 'bg-zinc-100 text-zinc-600',
-  published: 'bg-emerald-100 text-emerald-700',
-  archived: 'bg-zinc-100 text-zinc-400',
+  draft: 'bg-secondary text-muted-foreground',
+  published: 'bg-success-subtle text-[var(--green-700)]',
+  archived: 'bg-secondary text-muted-foreground',
 };
 
 const priorityBadge: Record<string, string> = {
-  info: 'bg-blue-100 text-blue-700',
-  warning: 'bg-amber-100 text-amber-700',
-  critical: 'bg-red-100 text-red-700',
+  info: 'bg-accent text-accent-foreground',
+  warning: 'bg-warning-subtle text-[var(--amber-600)]',
+  critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
 type CreateForm = {
@@ -188,39 +188,39 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="flex min-h-screen bg-muted text-foreground">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-zinc-200 bg-white shadow-sm">
-        <div className="flex h-16 items-center border-b border-zinc-200 px-6">
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-[var(--border)] bg-white shadow-sm">
+        <div className="flex h-16 items-center border-b border-[var(--border)] px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100">
-              <svg className="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cat-violet-subtle">
+              <svg className="h-5 w-5 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-900">Mensajes</p>
-              <p className="text-xs text-zinc-500">Centro de comunicación</p>
+              <p className="text-sm font-semibold text-foreground">Mensajes</p>
+              <p className="text-xs text-muted-foreground">Centro de comunicación</p>
             </div>
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 px-3 py-4">
-          <span className="flex w-full items-center justify-between rounded-lg bg-violet-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm">
+          <span className="flex w-full items-center justify-between rounded-lg bg-cat-violet px-3 py-2.5 text-sm font-medium text-white shadow-sm">
             <span>Todos los mensajes</span>
             <span className="h-1.5 w-1.5 rounded-full bg-white" />
           </span>
-          <div className="my-3 border-t border-zinc-200" />
+          <div className="my-3 border-t border-[var(--border)]" />
           <Link
             href="/admin/messages/config"
-            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 hover:text-black transition-all duration-150"
+            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-secondary hover:text-black transition-all duration-150"
           >
             <span>Configuración</span>
           </Link>
         </nav>
-        <div className="border-t border-zinc-200 px-3 py-3">
+        <div className="border-t border-[var(--border)] px-3 py-3">
           <Link
             href="/admin"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -232,10 +232,10 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
 
       {/* Main */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-8 shadow-sm">
+        <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-white px-8 shadow-sm">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-900">Centro de Mensajes</h1>
-            <p className="mt-0.5 text-xs font-normal text-zinc-500">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Centro de Mensajes</h1>
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
               Gestión de comunicaciones y anuncios
             </p>
           </div>
@@ -243,7 +243,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
             <button
               type="button"
               onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-cat-violet px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cat-violet"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -255,24 +255,24 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
           </div>
         </header>
 
-        <main className="flex-1 bg-zinc-50 px-8 py-8">
+        <main className="flex-1 bg-muted px-8 py-8">
           {/* Feedback banners */}
           {success && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-success/20 bg-success-subtle px-4 py-3 text-sm text-[var(--green-700)]">
               <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {success}
-              <button type="button" onClick={() => setSuccess(null)} className="ml-auto text-emerald-500 hover:text-emerald-700">✕</button>
+              <button type="button" onClick={() => setSuccess(null)} className="ml-auto text-success hover:text-[var(--green-700)]">✕</button>
             </div>
           )}
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
               <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {error}
-              <button type="button" onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">✕</button>
+              <button type="button" onClick={() => setError(null)} className="ml-auto text-[var(--red-600)] hover:text-[var(--red-600)]">✕</button>
             </div>
           )}
 
@@ -280,9 +280,9 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
           {showCreate && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
               <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
-                  <h2 className="text-base font-semibold text-zinc-900">Nuevo mensaje</h2>
-                  <button type="button" onClick={() => setShowCreate(false)} className="text-zinc-400 hover:text-zinc-600">
+                <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                  <h2 className="text-base font-semibold text-foreground">Nuevo mensaje</h2>
+                  <button type="button" onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -292,19 +292,19 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                 <div className="max-h-[70vh] space-y-4 overflow-y-auto px-6 py-5">
                   {/* Title */}
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Título</label>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Título</label>
                     <input
                       type="text"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
                       placeholder="Título del mensaje..."
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
 
                   {/* Body */}
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Cuerpo</label>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Cuerpo</label>
                     <RichTextEditor
                       content={form.body}
                       onChange={(html) => setForm({ ...form, body: html })}
@@ -315,11 +315,11 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                   {/* Row: priority + audience */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Prioridad</label>
+                      <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Prioridad</label>
                       <select
                         value={form.priority}
                         onChange={(e) => setForm({ ...form, priority: e.target.value as CreateForm['priority'] })}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                       >
                         <option value="info">Informativo</option>
                         <option value="warning">Advertencia</option>
@@ -328,11 +328,11 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                     </div>
 
                     <div>
-                      <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Audiencia</label>
+                      <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audiencia</label>
                       <select
                         value={form.audience}
                         onChange={(e) => setForm({ ...form, audience: e.target.value as CreateForm['audience'] })}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                       >
                         <option value="all">Todos los empleados</option>
                         <option value="leaders">Solo líderes</option>
@@ -346,40 +346,40 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
 
                   {/* Expires at */}
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-zinc-600 uppercase tracking-wide">Expira el (opcional)</label>
+                    <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Expira el (opcional)</label>
                     <input
                       type="datetime-local"
                       value={form.expires_at}
                       onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                     />
                   </div>
 
                   {/* Require confirmation */}
-                  <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                  <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
                     <input
                       type="checkbox"
                       id="require_confirmation"
                       checked={form.require_confirmation}
                       onChange={(e) => setForm({ ...form, require_confirmation: e.target.checked })}
-                      className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+                      className="h-4 w-4 rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                     />
-                    <label htmlFor="require_confirmation" className="text-sm font-medium text-zinc-700">
+                    <label htmlFor="require_confirmation" className="text-sm font-medium text-secondary-foreground">
                       Requiere confirmación de lectura
                     </label>
                   </div>
 
                   {/* Google Chat */}
-                  <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                  <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
                     <input
                       type="checkbox"
                       id="send_to_google_chat"
                       checked={form.send_to_google_chat}
                       onChange={(e) => setForm({ ...form, send_to_google_chat: e.target.checked })}
-                      className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+                      className="h-4 w-4 rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
                     />
-                    <label htmlFor="send_to_google_chat" className="flex items-center gap-2 text-sm font-medium text-zinc-700 cursor-pointer">
-                      <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="currentColor">
+                    <label htmlFor="send_to_google_chat" className="flex items-center gap-2 text-sm font-medium text-secondary-foreground cursor-pointer">
+                      <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
                       </svg>
                       Enviar también al chat grupal de Pow (Google Chat)
@@ -387,12 +387,12 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-100 px-6 py-4">
+                <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
                   <button
                     type="button"
                     onClick={() => setShowCreate(false)}
                     disabled={saving}
-                    className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                   >
                     Cancelar
                   </button>
@@ -400,7 +400,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                     type="button"
                     onClick={() => handleCreate(false)}
                     disabled={saving}
-                    className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                   >
                     Guardar borrador
                   </button>
@@ -408,7 +408,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                     type="button"
                     onClick={() => handleCreate(true)}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-cat-violet px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cat-violet disabled:opacity-60"
                   >
                     {saving ? (
                       <>
@@ -429,48 +429,48 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
 
           {/* Messages table */}
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-100">
-                <svg className="h-7 w-7 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-white py-16 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-cat-violet-subtle">
+                <svg className="h-7 w-7 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </div>
-              <p className="mt-3 font-semibold text-zinc-700">No hay mensajes todavía</p>
-              <p className="mt-1 text-sm text-zinc-400">Crea el primer anuncio para tu organización</p>
+              <p className="mt-3 font-semibold text-secondary-foreground">No hay mensajes todavía</p>
+              <p className="mt-1 text-sm text-muted-foreground">Crea el primer anuncio para tu organización</p>
               <button
                 type="button"
                 onClick={() => setShowCreate(true)}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-cat-violet px-4 py-2 text-sm font-semibold text-white hover:bg-cat-violet"
               >
                 Nuevo mensaje
               </button>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <table className="min-w-full divide-y divide-zinc-200">
-                <thead className="bg-zinc-50">
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <table className="min-w-full divide-y divide-[var(--border)]">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">Mensaje</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">Estado</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">Audiencia</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500">Enviados</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500">Leídos</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500">Confirmados</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">Fecha</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mensaje</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estado</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Audiencia</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Enviados</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Leídos</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confirmados</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fecha</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 bg-white">
+                <tbody className="divide-y divide-[var(--border)] bg-white">
                   {messages.map((msg) => (
-                    <tr key={msg.id} className="hover:bg-zinc-50">
+                    <tr key={msg.id} className="hover:bg-muted">
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-2">
                           <span className={`mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge[msg.priority]}`}>
                             {msg.priority}
                           </span>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-zinc-900 truncate max-w-[240px]">{msg.title}</p>
-                            <p className="text-xs text-zinc-400">{msg.type === 'broadcast' ? 'Anuncio' : 'Sistema'}</p>
+                            <p className="text-sm font-medium text-foreground truncate max-w-[240px]">{msg.title}</p>
+                            <p className="text-xs text-muted-foreground">{msg.type === 'broadcast' ? 'Anuncio' : 'Sistema'}</p>
                           </div>
                         </div>
                       </td>
@@ -479,12 +479,12 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                           {msg.status === 'draft' ? 'Borrador' : msg.status === 'published' ? 'Publicado' : 'Archivado'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-xs text-zinc-500">{audienceLabel(msg.audience)}</td>
-                      <td className="px-4 py-4 text-center text-sm font-semibold text-zinc-700">{msg.recipients_total}</td>
+                      <td className="px-4 py-4 text-xs text-muted-foreground">{audienceLabel(msg.audience)}</td>
+                      <td className="px-4 py-4 text-center text-sm font-semibold text-secondary-foreground">{msg.recipients_total}</td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-sm font-semibold text-zinc-700">{msg.read_count}</span>
+                        <span className="text-sm font-semibold text-secondary-foreground">{msg.read_count}</span>
                         {msg.recipients_total > 0 && (
-                          <span className="ml-1 text-xs text-zinc-400">
+                          <span className="ml-1 text-xs text-muted-foreground">
                             ({Math.round((msg.read_count / msg.recipients_total) * 100)}%)
                           </span>
                         )}
@@ -492,18 +492,18 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                       <td className="px-4 py-4 text-center">
                         {msg.require_confirmation ? (
                           <>
-                            <span className="text-sm font-semibold text-zinc-700">{msg.confirmed_count}</span>
+                            <span className="text-sm font-semibold text-secondary-foreground">{msg.confirmed_count}</span>
                             {msg.recipients_total > 0 && (
-                              <span className="ml-1 text-xs text-zinc-400">
+                              <span className="ml-1 text-xs text-muted-foreground">
                                 ({Math.round((msg.confirmed_count / msg.recipients_total) * 100)}%)
                               </span>
                             )}
                           </>
                         ) : (
-                          <span className="text-xs text-zinc-300">—</span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-xs text-zinc-400 whitespace-nowrap">
+                      <td className="px-4 py-4 text-xs text-muted-foreground whitespace-nowrap">
                         {msg.published_at
                           ? new Date(msg.published_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
                           : new Date(msg.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -512,7 +512,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/admin/messages/${msg.id}`}
-                            className="rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                            className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                           >
                             Ver detalle
                           </Link>
@@ -521,7 +521,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                               type="button"
                               onClick={() => handlePublish(msg.id)}
                               disabled={publishing === msg.id}
-                              className="rounded-lg bg-violet-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-60"
+                              className="rounded-lg bg-cat-violet px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-cat-violet disabled:opacity-60"
                             >
                               {publishing === msg.id ? 'Publicando...' : 'Publicar'}
                             </button>

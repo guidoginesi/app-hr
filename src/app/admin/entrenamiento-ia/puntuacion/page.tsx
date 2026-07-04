@@ -31,7 +31,7 @@ export default async function PuntuacionPage({
 
   return (
     <EntrenamientoIAShell active="puntuacion">
-      <Suspense fallback={<div className="text-sm text-zinc-500">Cargando…</div>}>
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Cargando…</div>}>
         <PuntuacionClient
           cycles={cycles}
           sessions={sessions}

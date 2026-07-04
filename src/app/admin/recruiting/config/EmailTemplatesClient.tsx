@@ -131,7 +131,7 @@ export function EmailTemplatesClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-sm text-zinc-500">Cargando plantillas...</p>
+        <p className="text-sm text-muted-foreground">Cargando plantillas...</p>
       </div>
     );
   }
@@ -139,8 +139,8 @@ export function EmailTemplatesClient() {
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-zinc-900 mb-3">Plantillas de Email</h2>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Plantillas de Email</h2>
           <div className="space-y-2">
             {templates.map((template) => (
               <button
@@ -149,7 +149,7 @@ export function EmailTemplatesClient() {
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                   selectedTemplate?.id === template.id
                     ? 'bg-black text-white'
-                    : 'text-zinc-700 hover:bg-zinc-100'
+                    : 'text-secondary-foreground hover:bg-secondary'
                 }`}
               >
                 <div className="font-medium">
@@ -157,7 +157,7 @@ export function EmailTemplatesClient() {
                 </div>
                 {template.description && (
                   <div className={`text-xs mt-1 ${
-                    selectedTemplate?.id === template.id ? 'text-zinc-300' : 'text-zinc-500'
+                    selectedTemplate?.id === template.id ? 'text-muted-foreground' : 'text-muted-foreground'
                   }`}>
                     {template.description}
                   </div>
@@ -170,24 +170,24 @@ export function EmailTemplatesClient() {
 
       <div className="col-span-8">
         {selectedTemplate ? (
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-6">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-zinc-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   {TEMPLATE_NAMES[selectedTemplate.template_key] || selectedTemplate.template_key}
                 </h2>
-                <p className="text-sm text-zinc-500 mt-1">{selectedTemplate.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.description}</p>
               </div>
               
               <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${editedIsActive ? 'text-green-700' : 'text-zinc-500'}`}>
+                <span className={`text-sm font-medium ${editedIsActive ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
                   {editedIsActive ? 'Activo' : 'Desactivado'}
                 </span>
                 <button
                   type="button"
                   onClick={() => setEditedIsActive(!editedIsActive)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    editedIsActive ? 'bg-green-600' : 'bg-zinc-300'
+                    editedIsActive ? 'bg-success' : 'bg-secondary'
                   }`}
                 >
                   <span
@@ -200,13 +200,13 @@ export function EmailTemplatesClient() {
             </div>
 
             {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                <h3 className="text-sm font-semibold text-blue-900 mb-2">Variables disponibles</h3>
+              <div className="rounded-lg bg-accent border border-[var(--orange-100)] p-4">
+                <h3 className="text-sm font-semibold text-accent-foreground mb-2">Variables disponibles</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedTemplate.variables.map((variable) => (
                     <code
                       key={variable}
-                      className="px-2 py-1 bg-white rounded text-xs font-mono text-blue-700 border border-blue-300"
+                      className="px-2 py-1 bg-white rounded text-xs font-mono text-accent-foreground border border-[var(--orange-100)]"
                     >
                       {`{{${variable}}}`}
                     </code>
@@ -216,7 +216,7 @@ export function EmailTemplatesClient() {
             )}
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-zinc-900 mb-2">
+              <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-2">
                 Asunto
               </label>
               <input
@@ -224,12 +224,12 @@ export function EmailTemplatesClient() {
                 type="text"
                 value={editedSubject}
                 onChange={(e) => setEditedSubject(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
               />
             </div>
 
             <div>
-              <label htmlFor="body" className="block text-sm font-medium text-zinc-900 mb-2">
+              <label htmlFor="body" className="block text-sm font-medium text-foreground mb-2">
                 Cuerpo del Email
               </label>
               <RichTextEditor
@@ -243,8 +243,8 @@ export function EmailTemplatesClient() {
               <div
                 className={`rounded-lg border p-4 ${
                   message.type === 'success'
-                    ? 'bg-green-50 border-green-200 text-green-800'
-                    : 'bg-red-50 border-red-200 text-red-800'
+                    ? 'bg-success-subtle border-success/20 text-[var(--green-700)]'
+                    : 'bg-danger-subtle border-danger/20 text-[var(--red-600)]'
                 }`}
               >
                 <p className="text-sm font-medium">{message.text}</p>
@@ -255,22 +255,22 @@ export function EmailTemplatesClient() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-secondary disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Guardar Cambios'}
               </button>
               <button
                 onClick={handleReset}
                 disabled={saving}
-                className="rounded-lg border border-zinc-300 bg-white px-6 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:opacity-50"
+                className="rounded-lg border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-semibold text-secondary-foreground shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
               >
                 Restablecer
               </button>
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-            <p className="text-sm text-zinc-500">Selecciona una plantilla para editar</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+            <p className="text-sm text-muted-foreground">Selecciona una plantilla para editar</p>
           </div>
         )}
       </div>

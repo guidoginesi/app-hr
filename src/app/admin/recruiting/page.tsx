@@ -107,33 +107,33 @@ export default async function RecruitingDashboardPage() {
       <RecruitingShell active="dashboard">
         <div className="space-y-8">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard de Reclutamiento</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de Reclutamiento</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Resumen general del proceso de selección
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="group rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Candidatos registrados</p>
-              <p className="mt-3 text-4xl font-bold text-zinc-900">{totalCandidates || 0}</p>
-              <p className="mt-2 text-xs text-zinc-500">Total en el sistema</p>
+            <div className="group rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Candidatos registrados</p>
+              <p className="mt-3 text-4xl font-bold text-foreground">{totalCandidates || 0}</p>
+              <p className="mt-2 text-xs text-muted-foreground">Total en el sistema</p>
             </div>
-            <div className="group rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Búsquedas abiertas</p>
+            <div className="group rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Búsquedas abiertas</p>
               <p className="mt-3 text-4xl font-bold text-black">{jobs?.filter((j) => j.is_published).length ?? 0}</p>
-              <p className="mt-2 text-xs text-zinc-500">Publicadas actualmente</p>
+              <p className="mt-2 text-xs text-muted-foreground">Publicadas actualmente</p>
             </div>
-            <div className="group rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Aplicaciones activas</p>
-              <p className="mt-3 text-4xl font-bold text-zinc-900">{totalApplications}</p>
-              <p className="mt-2 text-xs text-zinc-500">En proceso de selección</p>
+            <div className="group rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aplicaciones activas</p>
+              <p className="mt-3 text-4xl font-bold text-foreground">{totalApplications}</p>
+              <p className="mt-2 text-xs text-muted-foreground">En proceso de selección</p>
             </div>
           </div>
 
           {/* Pipeline Dashboard */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-zinc-900 mb-4">Pipeline por Búsqueda</h2>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Pipeline por Búsqueda</h2>
             <PipelineDashboard stats={pipelineStats} />
           </div>
         </div>
@@ -147,9 +147,9 @@ export default async function RecruitingDashboardPage() {
     return (
       <RecruitingShell active="dashboard">
         <div className="space-y-8">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-            <h2 className="text-lg font-semibold text-red-900">Error al cargar el dashboard</h2>
-            <p className="mt-2 text-sm text-red-700">
+          <div className="rounded-xl border border-danger/20 bg-danger-subtle p-6">
+            <h2 className="text-lg font-semibold text-[var(--red-600)]">Error al cargar el dashboard</h2>
+            <p className="mt-2 text-sm text-[var(--red-600)]">
               {error?.message || 'Ocurrió un error inesperado. Por favor intenta recargar la página.'}
             </p>
           </div>

@@ -1,5 +1,10 @@
 'use client';
 
+
+import { Spinner } from '@/components/Spinner';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Button } from '@pow/ui/components/ui/button';
+import { Dialog } from '@pow/ui/components/ui/dialog';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Employee } from '@/types/employee';
@@ -467,7 +472,7 @@ export function TeamMemberProfileClient({
       {/* Back button */}
       <Link
         href="/portal/team"
-        className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -476,26 +481,26 @@ export function TeamMemberProfileClient({
       </Link>
 
       {/* Header with member info */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
         <div className="flex items-start gap-6">
           {member.photo_url ? (
             <img
               src={member.photo_url}
               alt={`${member.first_name} ${member.last_name}`}
-              className="h-20 w-20 rounded-full object-cover ring-4 ring-zinc-100"
+              className="h-20 w-20 rounded-full object-cover ring-2 ring-[var(--border)]"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 ring-4 ring-emerald-50">
-              <span className="text-2xl font-bold text-emerald-700">{initials}</span>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary ring-2 ring-[var(--border)]">
+              <span className="text-2xl font-bold text-secondary-foreground">{initials}</span>
             </div>
           )}
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-zinc-900">
+                <h1 className="text-2xl font-semibold text-foreground">
                   {member.first_name} {member.last_name}
                 </h1>
-                <p className="mt-1 text-zinc-500">{member.job_title || 'Sin puesto definido'}</p>
+                <p className="mt-1 text-muted-foreground">{member.job_title || 'Sin puesto definido'}</p>
               </div>
               {member.seniority_level && seniorityColors && (
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${seniorityColors.bg} ${seniorityColors.text}`}>
@@ -505,16 +510,16 @@ export function TeamMemberProfileClient({
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Email</p>
-                <p className="mt-1 text-sm text-zinc-900">{member.work_email || member.personal_email}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Email</p>
+                <p className="mt-1 text-sm text-foreground">{member.work_email || member.personal_email}</p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Departamento</p>
-                <p className="mt-1 text-sm text-zinc-900">{member.department?.name || '-'}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Departamento</p>
+                <p className="mt-1 text-sm text-foreground">{member.department?.name || '-'}</p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Fecha de ingreso</p>
-                <p className="mt-1 text-sm text-zinc-900">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de ingreso</p>
+                <p className="mt-1 text-sm text-foreground">
                   {member.hire_date 
                     ? new Date(member.hire_date + 'T00:00:00').toLocaleDateString('es-AR', { 
                         day: 'numeric', 
@@ -525,10 +530,10 @@ export function TeamMemberProfileClient({
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Estado</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Estado</p>
                 <p className="mt-1">
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                    member.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-600'
+                    member.status === 'active' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-secondary text-muted-foreground'
                   }`}>
                     {member.status === 'active' ? 'Activo' : member.status}
                   </span>
@@ -540,14 +545,14 @@ export function TeamMemberProfileClient({
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-zinc-200">
+      <div className="border-b border-[var(--border)]">
         <nav className="flex gap-6">
           <button
             onClick={() => setActiveTab('objectives')}
             className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
               activeTab === 'objectives'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Objetivos ({objectives.length})
@@ -556,8 +561,8 @@ export function TeamMemberProfileClient({
             onClick={() => setActiveTab('evaluations')}
             className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
               activeTab === 'evaluations'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Evaluaciones ({evaluations.length})
@@ -566,8 +571,8 @@ export function TeamMemberProfileClient({
             onClick={() => setActiveTab('recategorization')}
             className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
               activeTab === 'recategorization'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Recategorización
@@ -576,8 +581,8 @@ export function TeamMemberProfileClient({
             onClick={() => setActiveTab('bonus')}
             className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
               activeTab === 'bonus'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Bono
@@ -586,8 +591,8 @@ export function TeamMemberProfileClient({
             onClick={() => setActiveTab('history')}
             className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
               activeTab === 'history'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700'
+                ? 'border-brand text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Historial de Seniority
@@ -599,14 +604,14 @@ export function TeamMemberProfileClient({
       {activeTab === 'objectives' && (
         <div className="space-y-6">
           {years.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
-              <p className="mt-4 text-zinc-500">No hay objetivos registrados</p>
+              <p className="mt-4 text-muted-foreground">No hay objetivos registrados</p>
               <Link
                 href="/portal/objetivos"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-[var(--primary-hover)]"
               >
                 Ir a Objetivos
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -616,9 +621,9 @@ export function TeamMemberProfileClient({
             </div>
           ) : (
             years.map(year => (
-              <div key={year} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-                <div className="border-b border-zinc-200 px-6 py-4">
-                  <h3 className="text-lg font-semibold text-zinc-900">Objetivos {year}</h3>
+              <div key={year} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+                <div className="border-b border-[var(--border)] px-6 py-4">
+                  <h3 className="text-lg font-semibold text-foreground">Objetivos {year}</h3>
                 </div>
                 <div className="p-4 space-y-3">
                   {objectivesByYear[year].map(obj => (
@@ -639,11 +644,11 @@ export function TeamMemberProfileClient({
       {activeTab === 'evaluations' && (
         <div className="space-y-4">
           {evaluations.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="mt-4 text-zinc-500">No hay evaluaciones registradas</p>
+              <p className="mt-4 text-muted-foreground">No hay evaluaciones registradas</p>
             </div>
           ) : (
             <>
@@ -662,16 +667,16 @@ export function TeamMemberProfileClient({
                 }, {} as Record<string, { period: Evaluation['period']; evaluations: Evaluation[] }>);
 
                 return Object.values(groupedByPeriod).map(({ period, evaluations: periodEvals }) => (
-                  <div key={period?.id || 'sin-periodo'} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-                    <div className="border-b border-zinc-200 px-6 py-4">
-                      <h3 className="text-lg font-semibold text-zinc-900">
+                  <div key={period?.id || 'sin-periodo'} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+                    <div className="border-b border-[var(--border)] px-6 py-4">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {period?.name || 'Evaluación'}
                       </h3>
                       {period?.year && (
-                        <p className="text-sm text-zinc-500">Año {period.year}</p>
+                        <p className="text-sm text-muted-foreground">Año {period.year}</p>
                       )}
                     </div>
-                    <div className="divide-y divide-zinc-100">
+                    <div className="divide-y divide-[var(--border)]">
                       {periodEvals.map(evaluation => {
                         const isLeaderEval = evaluation.type === 'leader';
                         return (
@@ -680,14 +685,14 @@ export function TeamMemberProfileClient({
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                    isLeaderEval ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                                    isLeaderEval ? 'bg-secondary text-foreground' : 'bg-secondary text-foreground'
                                   }`}>
                                     {isLeaderEval ? 'Evaluación del líder' : 'Autoevaluación'}
                                   </span>
                                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                    evaluation.status === 'submitted' ? 'bg-emerald-100 text-emerald-700' :
-                                    evaluation.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
-                                    'bg-zinc-100 text-zinc-600'
+                                    evaluation.status === 'submitted' ? 'bg-success-subtle text-[var(--green-700)]' :
+                                    evaluation.status === 'in_progress' ? 'bg-warning-subtle text-[var(--amber-600)]' :
+                                    'bg-secondary text-muted-foreground'
                                   }`}>
                                     {evaluation.status === 'submitted' ? 'Enviada' :
                                      evaluation.status === 'in_progress' ? 'En progreso' :
@@ -695,12 +700,12 @@ export function TeamMemberProfileClient({
                                   </span>
                                 </div>
                                 {isLeaderEval && evaluation.evaluator && (
-                                  <p className="text-sm text-zinc-600">
+                                  <p className="text-sm text-muted-foreground">
                                     Evaluado por: <span className="font-medium">{evaluation.evaluator.first_name} {evaluation.evaluator.last_name}</span>
                                   </p>
                                 )}
                                 {evaluation.submitted_at && (
-                                  <p className="text-xs text-zinc-500 mt-1">
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     Enviada el {new Date(evaluation.submitted_at).toLocaleDateString('es-AR', {
                                       day: 'numeric',
                                       month: 'long',
@@ -713,20 +718,20 @@ export function TeamMemberProfileClient({
                                 {evaluation.total_score !== null && (
                                   <div className="text-right">
                                     <span className={`text-2xl font-bold ${
-                                      evaluation.total_score >= 8 ? 'text-emerald-600' :
-                                      evaluation.total_score >= 6 ? 'text-blue-600' :
-                                      evaluation.total_score >= 4 ? 'text-amber-600' :
-                                      'text-red-600'
+                                      evaluation.total_score >= 8 ? 'text-[var(--green-700)]' :
+                                      evaluation.total_score >= 6 ? 'text-[var(--amber-600)]' :
+                                      evaluation.total_score >= 4 ? 'text-[var(--amber-600)]' :
+                                      'text-[var(--red-600)]'
                                     }`}>
                                       {evaluation.total_score.toFixed(1)}
                                     </span>
-                                    <span className="text-sm text-zinc-400">/10</span>
+                                    <span className="text-sm text-muted-foreground">/10</span>
                                   </div>
                                 )}
                                 {evaluation.status === 'submitted' && (
                                   <button
                                     onClick={() => handleViewEvaluation(evaluation)}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-muted"
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -753,62 +758,62 @@ export function TeamMemberProfileClient({
       {activeTab === 'recategorization' && (
         <div className="space-y-6">
           {loadingRecat ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12">
               <div className="flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                <Spinner className="h-8 w-8 text-muted-foreground" />
               </div>
             </div>
           ) : !recatData?.canRecategorize ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-8">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-8">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-                  <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+                  <svg className="h-6 w-6 text-secondary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-zinc-900">Recategorización no disponible</h3>
-                  <p className="text-sm text-zinc-500 mt-1">
+                  <h3 className="font-semibold text-foreground">Recategorización no disponible</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     {recatData?.reason || 'Para habilitar la recategorización, primero debe completarse la evaluación de desempeño y la evaluación de objetivos.'}
                   </p>
                 </div>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-4">
-                <div className={`rounded-lg border p-4 ${recatData?.evaluation ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                <div className={`rounded-lg border p-4 ${recatData?.evaluation ? 'border-brand bg-success-subtle' : 'border-[var(--border)] bg-muted'}`}>
                   <div className="flex items-center gap-2">
                     {recatData?.evaluation ? (
-                      <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     )}
-                    <span className={`text-sm font-medium ${recatData?.evaluation ? 'text-emerald-700' : 'text-zinc-600'}`}>
+                    <span className={`text-sm font-medium ${recatData?.evaluation ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
                       Evaluación de desempeño
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {recatData?.evaluation ? 'Completada' : 'Pendiente'}
                   </p>
                 </div>
-                <div className={`rounded-lg border p-4 ${recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                <div className={`rounded-lg border p-4 ${recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? 'border-brand bg-success-subtle' : 'border-[var(--border)] bg-muted'}`}>
                   <div className="flex items-center gap-2">
                     {recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? (
-                      <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     )}
-                    <span className={`text-sm font-medium ${recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? 'text-emerald-700' : 'text-zinc-600'}`}>
+                    <span className={`text-sm font-medium ${recatData?.objectives?.evaluated === recatData?.objectives?.total && (recatData?.objectives?.total ?? 0) > 0 ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
                       Evaluación de objetivos
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {recatData?.objectives ? `${recatData.objectives.evaluated}/${recatData.objectives.total} evaluados` : 'Sin objetivos'}
                   </p>
                 </div>
@@ -816,22 +821,22 @@ export function TeamMemberProfileClient({
 
               {/* HR note — available whenever there is an active period (with or without evaluation) */}
               {recatData?.period?.id && (
-                <div className="mt-6 border-t border-zinc-200 pt-6">
+                <div className="mt-6 border-t border-[var(--border)] pt-6">
                   {recatData.recategorization ? (
                     <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-subtle">
+                        <svg className="h-4 w-4 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-zinc-700">Comentario enviado a HR</p>
+                        <p className="text-sm font-medium text-secondary-foreground">Comentario enviado a HR</p>
                         {recatData.recategorization.notes ? (
-                          <p className="mt-1 text-sm text-zinc-600 rounded-lg bg-zinc-50 border border-zinc-200 px-3 py-2">
+                          <p className="mt-1 text-sm text-muted-foreground rounded-lg bg-muted border border-[var(--border)] px-3 py-2">
                             {recatData.recategorization.notes}
                           </p>
                         ) : (
-                          <p className="mt-1 text-sm text-zinc-400 italic">Sin comentario adicional</p>
+                          <p className="mt-1 text-sm text-muted-foreground italic">Sin comentario adicional</p>
                         )}
                         <button
                           onClick={() => {
@@ -839,7 +844,7 @@ export function TeamMemberProfileClient({
                             // Clear the saved recategorization from local state to re-show the form
                             setRecatData({ ...recatData, recategorization: null });
                           }}
-                          className="mt-2 text-xs font-medium text-zinc-500 hover:text-zinc-700 underline"
+                          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground underline"
                         >
                           Modificar comentario
                         </button>
@@ -847,32 +852,21 @@ export function TeamMemberProfileClient({
                     </div>
                   ) : (
                     <div>
-                      <p className="text-sm font-medium text-zinc-700 mb-1">Comentario para HR</p>
-                      <p className="text-xs text-zinc-500 mb-3">
+                      <p className="text-sm font-medium text-secondary-foreground mb-1">Comentario para HR</p>
+                      <p className="text-xs text-muted-foreground mb-3">
                         Podés registrar contexto adicional sobre este colaborador. El comentario quedará visible para RRHH aunque no haya recategorización.
                       </p>
                       <textarea
                         value={notAvailableNote}
                         onChange={(e) => setNotAvailableNote(e.target.value)}
                         rows={3}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         placeholder="Ej: El colaborador tiene un desempeño sólido, se recomienda seguimiento para el próximo período..."
                       />
                       <div className="flex justify-end mt-3">
-                        <button
-                          onClick={handleSaveNotAvailableNote}
-                          disabled={savingNotAvailableNote}
-                          className="inline-flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {savingNotAvailableNote ? (
-                            <>
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                              Enviando...
-                            </>
-                          ) : (
-                            'Enviar a HR'
-                          )}
-                        </button>
+                        <Button onClick={handleSaveNotAvailableNote} loading={savingNotAvailableNote}>
+                          Enviar a HR
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -884,73 +878,73 @@ export function TeamMemberProfileClient({
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Leader Evaluation Score */}
-                <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                  <p className="text-sm font-medium text-zinc-500">Evaluación del líder</p>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                  <p className="text-sm font-medium text-muted-foreground">Evaluación del líder</p>
                   <p className={`text-3xl font-bold mt-2 ${
-                    (recatData.eligibility?.leaderScore || 0) > 9 ? 'text-emerald-600' :
-                    (recatData.eligibility?.leaderScore || 0) > 8 ? 'text-blue-600' :
-                    'text-amber-600'
+                    (recatData.eligibility?.leaderScore || 0) > 9 ? 'text-[var(--green-700)]' :
+                    (recatData.eligibility?.leaderScore || 0) > 8 ? 'text-[var(--amber-600)]' :
+                    'text-[var(--amber-600)]'
                   }`}>
                     {recatData.eligibility?.leaderScore?.toFixed(1) || '-'}
-                    <span className="text-sm text-zinc-400 font-normal">/10</span>
+                    <span className="text-sm text-muted-foreground font-normal">/10</span>
                   </p>
                 </div>
 
                 {/* Objectives Completion */}
-                <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                  <p className="text-sm font-medium text-zinc-500">Cumplimiento de objetivos</p>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                  <p className="text-sm font-medium text-muted-foreground">Cumplimiento de objetivos</p>
                   <p className={`text-3xl font-bold mt-2 ${
-                    (recatData.eligibility?.objectivesCompletion || 0) >= 90 ? 'text-emerald-600' :
-                    (recatData.eligibility?.objectivesCompletion || 0) >= 75 ? 'text-blue-600' :
-                    'text-amber-600'
+                    (recatData.eligibility?.objectivesCompletion || 0) >= 90 ? 'text-[var(--green-700)]' :
+                    (recatData.eligibility?.objectivesCompletion || 0) >= 75 ? 'text-[var(--amber-600)]' :
+                    'text-[var(--amber-600)]'
                   }`}>
                     {recatData.eligibility?.objectivesCompletion || 0}%
                   </p>
                 </div>
 
                 {/* Current Seniority */}
-                <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                  <p className="text-sm font-medium text-zinc-500">Nivel actual</p>
-                  <p className="text-xl font-semibold mt-2 text-zinc-900">
+                <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                  <p className="text-sm font-medium text-muted-foreground">Nivel actual</p>
+                  <p className="text-xl font-semibold mt-2 text-foreground">
                     {member.seniority_level ? getSeniorityLabel(member.seniority_level) : 'Sin asignar'}
                   </p>
                 </div>
               </div>
 
               {/* Eligibility Rules */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                <h3 className="text-base font-semibold text-zinc-900 mb-4">Elegibilidad para recategorización</h3>
+              <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                <h3 className="text-base font-semibold text-foreground mb-4">Elegibilidad para recategorización</h3>
                 <div className="space-y-4">
                   {/* Within Level */}
-                  <div className={`rounded-lg border p-4 ${recatData.eligibility?.withinLevel ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                  <div className={`rounded-lg border p-4 ${recatData.eligibility?.withinLevel ? 'border-brand bg-success-subtle' : 'border-[var(--border)] bg-muted'}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${recatData.eligibility?.withinLevel ? 'bg-emerald-100' : 'bg-zinc-200'}`}>
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${recatData.eligibility?.withinLevel ? 'bg-success-subtle' : 'bg-secondary'}`}>
                           {recatData.eligibility?.withinLevel ? (
-                            <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           ) : (
-                            <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           )}
                         </div>
                         <div>
-                          <h4 className={`font-medium ${recatData.eligibility?.withinLevel ? 'text-emerald-900' : 'text-zinc-700'}`}>
+                          <h4 className={`font-medium ${recatData.eligibility?.withinLevel ? 'text-[var(--green-700)]' : 'text-secondary-foreground'}`}>
                             Recategorización dentro del nivel
                           </h4>
-                          <p className="text-sm text-zinc-500 mt-0.5">
+                          <p className="text-sm text-muted-foreground mt-0.5">
                             Ej: De 3.1 a 3.2 (avance dentro del mismo nivel de seniority)
                           </p>
                         </div>
                       </div>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${recatData.eligibility?.withinLevel ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-200 text-zinc-600'}`}>
+                      <span className={`text-xs font-medium px-2 py-1 rounded ${recatData.eligibility?.withinLevel ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-secondary text-muted-foreground'}`}>
                         {recatData.eligibility?.withinLevel ? 'Elegible' : 'No elegible'}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center gap-4 text-sm">
-                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.leaderScore || 0) > 8 ? 'text-emerald-600' : 'text-zinc-500'}`}>
+                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.leaderScore || 0) > 8 ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
                         {(recatData.eligibility?.leaderScore || 0) > 8 ? (
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -962,7 +956,7 @@ export function TeamMemberProfileClient({
                         )}
                         Evaluación {'>'} 8 ({recatData.eligibility?.leaderScore?.toFixed(1)})
                       </span>
-                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.objectivesCompletion || 0) >= 75 ? 'text-emerald-600' : 'text-zinc-500'}`}>
+                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.objectivesCompletion || 0) >= 75 ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
                         {(recatData.eligibility?.objectivesCompletion || 0) >= 75 ? (
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -978,35 +972,35 @@ export function TeamMemberProfileClient({
                   </div>
 
                   {/* Level Change */}
-                  <div className={`rounded-lg border p-4 ${recatData.eligibility?.levelChange ? 'border-purple-200 bg-purple-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                  <div className={`rounded-lg border p-4 ${recatData.eligibility?.levelChange ? 'border-[var(--border)] bg-secondary' : 'border-[var(--border)] bg-muted'}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${recatData.eligibility?.levelChange ? 'bg-purple-100' : 'bg-zinc-200'}`}>
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${recatData.eligibility?.levelChange ? 'bg-secondary' : 'bg-secondary'}`}>
                           {recatData.eligibility?.levelChange ? (
-                            <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           ) : (
-                            <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           )}
                         </div>
                         <div>
-                          <h4 className={`font-medium ${recatData.eligibility?.levelChange ? 'text-purple-900' : 'text-zinc-700'}`}>
+                          <h4 className={`font-medium ${recatData.eligibility?.levelChange ? 'text-foreground' : 'text-secondary-foreground'}`}>
                             Recategorización de nivel (Ascenso)
                           </h4>
-                          <p className="text-sm text-zinc-500 mt-0.5">
+                          <p className="text-sm text-muted-foreground mt-0.5">
                             Ej: De 3.4 a 4.1 (cambio de nivel de seniority)
                           </p>
                         </div>
                       </div>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${recatData.eligibility?.levelChange ? 'bg-purple-100 text-purple-700' : 'bg-zinc-200 text-zinc-600'}`}>
+                      <span className={`text-xs font-medium px-2 py-1 rounded ${recatData.eligibility?.levelChange ? 'bg-secondary text-foreground' : 'bg-secondary text-muted-foreground'}`}>
                         {recatData.eligibility?.levelChange ? 'Elegible' : 'No elegible'}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center gap-4 text-sm">
-                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.leaderScore || 0) > 9 ? 'text-purple-600' : 'text-zinc-500'}`}>
+                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.leaderScore || 0) > 9 ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {(recatData.eligibility?.leaderScore || 0) > 9 ? (
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1018,7 +1012,7 @@ export function TeamMemberProfileClient({
                         )}
                         Evaluación {'>'} 9 ({recatData.eligibility?.leaderScore?.toFixed(1)})
                       </span>
-                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.objectivesCompletion || 0) >= 90 ? 'text-purple-600' : 'text-zinc-500'}`}>
+                      <span className={`flex items-center gap-1.5 ${(recatData.eligibility?.objectivesCompletion || 0) >= 90 ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {(recatData.eligibility?.objectivesCompletion || 0) >= 90 ? (
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1036,38 +1030,38 @@ export function TeamMemberProfileClient({
               </div>
 
               {/* Decision Form */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                <h3 className="text-base font-semibold text-zinc-900 mb-4">Decisión de recategorización</h3>
+              <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                <h3 className="text-base font-semibold text-foreground mb-4">Decisión de recategorización</h3>
                 
                 {recatData.recategorization?.level_recategorization && recatData.recategorization?.position_recategorization && !isEditingRecat ? (
                   // Show saved decision
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
-                        <p className="text-sm text-zinc-500">Recategorización dentro del nivel</p>
-                        <p className={`font-semibold mt-1 ${recatData.recategorization.level_recategorization === 'approved' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <p className="text-sm text-muted-foreground">Recategorización dentro del nivel</p>
+                        <p className={`font-semibold mt-1 ${recatData.recategorization.level_recategorization === 'approved' ? 'text-[var(--green-700)]' : 'text-[var(--red-600)]'}`}>
                           {recatData.recategorization.level_recategorization === 'approved' ? 'Aprobada' : 'No aprobada'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-zinc-500">Recategorización de nivel</p>
-                        <p className={`font-semibold mt-1 ${recatData.recategorization.position_recategorization === 'approved' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <p className="text-sm text-muted-foreground">Recategorización de nivel</p>
+                        <p className={`font-semibold mt-1 ${recatData.recategorization.position_recategorization === 'approved' ? 'text-[var(--green-700)]' : 'text-[var(--red-600)]'}`}>
                           {recatData.recategorization.position_recategorization === 'approved' ? 'Aprobada' : 'No aprobada'}
                         </p>
                       </div>
                       {recatData.recategorization.recommended_level && (
                         <div>
-                          <p className="text-sm text-zinc-500">Nuevo nivel recomendado</p>
-                          <p className="font-semibold mt-1 text-purple-600">
+                          <p className="text-sm text-muted-foreground">Nuevo nivel recomendado</p>
+                          <p className="font-semibold mt-1 text-foreground">
                             {getSeniorityLabel(recatData.recategorization.recommended_level)}
                           </p>
                         </div>
                       )}
                     </div>
                     {recatData.recategorization.notes && (
-                      <div className="pt-4 border-t border-zinc-200">
-                        <p className="text-sm text-zinc-500">Notas</p>
-                        <p className="mt-1 text-sm text-zinc-700">{recatData.recategorization.notes}</p>
+                      <div className="pt-4 border-t border-[var(--border)]">
+                        <p className="text-sm text-muted-foreground">Notas</p>
+                        <p className="mt-1 text-sm text-secondary-foreground">{recatData.recategorization.notes}</p>
                       </div>
                     )}
                     <button
@@ -1080,7 +1074,7 @@ export function TeamMemberProfileClient({
                         });
                         setIsEditingRecat(true);
                       }}
-                      className="mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                      className="mt-4 text-sm font-medium text-foreground hover:text-[var(--primary-hover)]"
                     >
                       Modificar decisión
                     </button>
@@ -1091,18 +1085,18 @@ export function TeamMemberProfileClient({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Within Level Decision */}
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-2">
+                        <label className="block text-sm font-medium text-secondary-foreground mb-2">
                           Recategorización dentro del nivel
                           {!recatData.eligibility?.withinLevel && (
-                            <span className="ml-2 text-xs font-normal text-zinc-400">(No elegible)</span>
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">(No elegible)</span>
                           )}
                         </label>
                         {recatData.eligibility?.withinLevel ? (
                           <div className="space-y-2">
                             <label className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                               recatForm.level_recategorization === 'approved' 
-                                ? 'border-emerald-500 bg-emerald-50' 
-                                : 'border-zinc-200 hover:border-zinc-300'
+                                ? 'border-brand bg-success-subtle' 
+                                : 'border-[var(--border)] hover:border-[var(--border)]'
                             }`}>
                               <input
                                 type="radio"
@@ -1110,14 +1104,14 @@ export function TeamMemberProfileClient({
                                 value="approved"
                                 checked={recatForm.level_recategorization === 'approved'}
                                 onChange={(e) => setRecatForm({ ...recatForm, level_recategorization: e.target.value as 'approved' })}
-                                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
+                                className="h-4 w-4 text-[var(--green-700)] focus:ring-ring"
                               />
-                              <span className="text-sm font-medium text-zinc-900">Aprobar</span>
+                              <span className="text-sm font-medium text-foreground">Aprobar</span>
                             </label>
                             <label className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                               recatForm.level_recategorization === 'not_approved' 
-                                ? 'border-red-500 bg-red-50' 
-                                : 'border-zinc-200 hover:border-zinc-300'
+                                ? 'border-danger/20 bg-danger-subtle' 
+                                : 'border-[var(--border)] hover:border-[var(--border)]'
                             }`}>
                               <input
                                 type="radio"
@@ -1125,14 +1119,14 @@ export function TeamMemberProfileClient({
                                 value="not_approved"
                                 checked={recatForm.level_recategorization === 'not_approved'}
                                 onChange={(e) => setRecatForm({ ...recatForm, level_recategorization: e.target.value as 'not_approved' })}
-                                className="h-4 w-4 text-red-600 focus:ring-red-500"
+                                className="h-4 w-4 text-[var(--red-600)] focus:ring-ring"
                               />
-                              <span className="text-sm font-medium text-zinc-900">No aprobar</span>
+                              <span className="text-sm font-medium text-foreground">No aprobar</span>
                             </label>
                           </div>
                         ) : (
-                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-                            <p className="text-sm text-zinc-500">
+                          <div className="rounded-lg border border-[var(--border)] bg-muted p-3">
+                            <p className="text-sm text-muted-foreground">
                               No cumple los requisitos (Evaluación {'>'} 8 y objetivos ≥ 75%)
                             </p>
                           </div>
@@ -1141,18 +1135,18 @@ export function TeamMemberProfileClient({
 
                       {/* Level Change Decision */}
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-2">
+                        <label className="block text-sm font-medium text-secondary-foreground mb-2">
                           Recategorización de nivel (Ascenso)
                           {!recatData.eligibility?.levelChange && (
-                            <span className="ml-2 text-xs font-normal text-zinc-400">(No elegible)</span>
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">(No elegible)</span>
                           )}
                         </label>
                         {recatData.eligibility?.levelChange ? (
                           <div className="space-y-2">
                             <label className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                               recatForm.position_recategorization === 'approved' 
-                                ? 'border-purple-500 bg-purple-50' 
-                                : 'border-zinc-200 hover:border-zinc-300'
+                                ? 'border-[var(--border)] bg-secondary' 
+                                : 'border-[var(--border)] hover:border-[var(--border)]'
                             }`}>
                               <input
                                 type="radio"
@@ -1160,14 +1154,14 @@ export function TeamMemberProfileClient({
                                 value="approved"
                                 checked={recatForm.position_recategorization === 'approved'}
                                 onChange={(e) => setRecatForm({ ...recatForm, position_recategorization: e.target.value as 'approved' })}
-                                className="h-4 w-4 text-purple-600 focus:ring-purple-500"
+                                className="h-4 w-4 text-foreground focus:ring-[var(--ring)]"
                               />
-                              <span className="text-sm font-medium text-zinc-900">Aprobar</span>
+                              <span className="text-sm font-medium text-foreground">Aprobar</span>
                             </label>
                             <label className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                               recatForm.position_recategorization === 'not_approved' 
-                                ? 'border-red-500 bg-red-50' 
-                                : 'border-zinc-200 hover:border-zinc-300'
+                                ? 'border-danger/20 bg-danger-subtle' 
+                                : 'border-[var(--border)] hover:border-[var(--border)]'
                             }`}>
                               <input
                                 type="radio"
@@ -1175,14 +1169,14 @@ export function TeamMemberProfileClient({
                                 value="not_approved"
                                 checked={recatForm.position_recategorization === 'not_approved'}
                                 onChange={(e) => setRecatForm({ ...recatForm, position_recategorization: e.target.value as 'not_approved' })}
-                                className="h-4 w-4 text-red-600 focus:ring-red-500"
+                                className="h-4 w-4 text-[var(--red-600)] focus:ring-ring"
                               />
-                              <span className="text-sm font-medium text-zinc-900">No aprobar</span>
+                              <span className="text-sm font-medium text-foreground">No aprobar</span>
                             </label>
                           </div>
                         ) : (
-                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-                            <p className="text-sm text-zinc-500">
+                          <div className="rounded-lg border border-[var(--border)] bg-muted p-3">
+                            <p className="text-sm text-muted-foreground">
                               No cumple los requisitos para ascenso (Evaluación {'>'} 9 y objetivos ≥ 90%)
                             </p>
                           </div>
@@ -1193,13 +1187,13 @@ export function TeamMemberProfileClient({
                     {/* Recommended Level Selector - Only show if any recategorization is approved */}
                     {(recatForm.level_recategorization === 'approved' || recatForm.position_recategorization === 'approved') && (
                       <div>
-                        <label className="block text-sm font-medium text-zinc-700 mb-2">
+                        <label className="block text-sm font-medium text-secondary-foreground mb-2">
                           Nuevo nivel recomendado
                         </label>
                         <div className="space-y-3">
                           {recatForm.level_recategorization === 'approved' && (
                             <div>
-                              <p className="text-xs text-zinc-500 mb-2">Opciones dentro del nivel actual:</p>
+                              <p className="text-xs text-muted-foreground mb-2">Opciones dentro del nivel actual:</p>
                               <div className="flex flex-wrap gap-2">
                                 {getAvailableSubLevels(member.seniority_level, false).map(level => (
                                   <button
@@ -1208,22 +1202,22 @@ export function TeamMemberProfileClient({
                                     onClick={() => setRecatForm({ ...recatForm, recommended_level: level })}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                       recatForm.recommended_level === level
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-secondary text-secondary-foreground hover:bg-secondary'
                                     }`}
                                   >
                                     {getSeniorityLabel(level)}
                                   </button>
                                 ))}
                                 {getAvailableSubLevels(member.seniority_level, false).length === 0 && (
-                                  <p className="text-sm text-zinc-500 italic">Ya está en el máximo sub-nivel de su categoría</p>
+                                  <p className="text-sm text-muted-foreground italic">Ya está en el máximo sub-nivel de su categoría</p>
                                 )}
                               </div>
                             </div>
                           )}
                           {recatForm.position_recategorization === 'approved' && (
                             <div>
-                              <p className="text-xs text-zinc-500 mb-2">Opciones de cambio de nivel (ascenso):</p>
+                              <p className="text-xs text-muted-foreground mb-2">Opciones de cambio de nivel (ascenso):</p>
                               <div className="flex flex-wrap gap-2">
                                 {getAvailableSubLevels(member.seniority_level, true).map(level => (
                                   <button
@@ -1232,23 +1226,23 @@ export function TeamMemberProfileClient({
                                     onClick={() => setRecatForm({ ...recatForm, recommended_level: level })}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                       recatForm.recommended_level === level
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-secondary text-secondary-foreground hover:bg-secondary'
                                     }`}
                                   >
                                     {getSeniorityLabel(level)}
                                   </button>
                                 ))}
                                 {getAvailableSubLevels(member.seniority_level, true).length === 0 && (
-                                  <p className="text-sm text-zinc-500 italic">Ya está en el nivel máximo</p>
+                                  <p className="text-sm text-muted-foreground italic">Ya está en el nivel máximo</p>
                                 )}
                               </div>
                             </div>
                           )}
                         </div>
                         {recatForm.recommended_level && (
-                          <p className="mt-3 text-sm text-zinc-600">
-                            Nivel seleccionado: <span className="font-semibold text-zinc-900">{getSeniorityLabel(recatForm.recommended_level)}</span>
+                          <p className="mt-3 text-sm text-muted-foreground">
+                            Nivel seleccionado: <span className="font-semibold text-foreground">{getSeniorityLabel(recatForm.recommended_level)}</span>
                           </p>
                         )}
                       </div>
@@ -1256,22 +1250,22 @@ export function TeamMemberProfileClient({
 
                     {/* Notes */}
                     <div>
-                      <label className="block text-sm font-medium text-zinc-700 mb-2">
+                      <label className="block text-sm font-medium text-secondary-foreground mb-2">
                         Notas (opcional)
                       </label>
                       <textarea
                         value={recatForm.notes}
                         onChange={(e) => setRecatForm({ ...recatForm, notes: e.target.value })}
                         rows={3}
-                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         placeholder="Agregar comentarios o justificación..."
                       />
                     </div>
 
                     {/* Save error */}
                     {recatSaveError && (
-                      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                        <p className="text-sm text-red-700">{recatSaveError}</p>
+                      <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3">
+                        <p className="text-sm text-[var(--red-600)]">{recatSaveError}</p>
                       </div>
                     )}
 
@@ -1282,30 +1276,22 @@ export function TeamMemberProfileClient({
                           type="button"
                           onClick={() => setIsEditingRecat(false)}
                           disabled={savingRecat}
-                          className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                          className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                         >
                           Cancelar
                         </button>
                       )}
-                      <button
+                      <Button
                         onClick={handleSaveRecategorization}
+                        loading={savingRecat}
                         disabled={
-                          (recatData?.eligibility?.withinLevel && !recatForm.level_recategorization) || 
-                          (recatData?.eligibility?.levelChange && !recatForm.position_recategorization) || 
-                          ((recatForm.level_recategorization === 'approved' || recatForm.position_recategorization === 'approved') && !recatForm.recommended_level) ||
-                          savingRecat
+                          (recatData?.eligibility?.withinLevel && !recatForm.level_recategorization) ||
+                          (recatData?.eligibility?.levelChange && !recatForm.position_recategorization) ||
+                          ((recatForm.level_recategorization === 'approved' || recatForm.position_recategorization === 'approved') && !recatForm.recommended_level)
                         }
-                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {savingRecat ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            Guardando...
-                          </>
-                        ) : (
-                          'Guardar decisión'
-                        )}
-                      </button>
+                        Guardar decisión
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1321,44 +1307,43 @@ export function TeamMemberProfileClient({
           {/* Year Selector */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900">Cálculo de Bono</h3>
-              <p className="text-sm text-zinc-500">Seleccioná el año para ver el bono correspondiente</p>
+              <h3 className="text-lg font-semibold text-foreground">Cálculo de Bono</h3>
+              <p className="text-sm text-muted-foreground">Seleccioná el año para ver el bono correspondiente</p>
             </div>
             {availableBonusYears.length > 0 ? (
-              <select
-                value={bonusYear}
-                onChange={(e) => setBonusYear(Number(e.target.value))}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                {availableBonusYears.map(year => (
-                  <option key={year} value={year}>
-                    {year} {year === currentYear ? '(en curso)' : ''}
-                  </option>
-                ))}
-              </select>
+              <SelectMenu
+                value={String(bonusYear)}
+                onChange={(v) => setBonusYear(Number(v))}
+                ariaLabel="Año del bono"
+                align="end"
+                options={availableBonusYears.map((year) => ({
+                  value: String(year),
+                  label: `${year}${year === currentYear ? ' (en curso)' : ''}`,
+                }))}
+              />
             ) : (
-              <span className="text-sm text-zinc-500">Sin objetivos corporativos configurados</span>
+              <span className="text-sm text-muted-foreground">Sin objetivos corporativos configurados</span>
             )}
           </div>
 
           {loadingBonus ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12">
               <div className="flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                <Spinner className="h-8 w-8 text-muted-foreground" />
               </div>
             </div>
           ) : bonusData ? (
             <>
               {/* No Corporate Objectives Banner */}
               {!bonusData.corporate.billing.target && bonusData.corporate.nps.quarters.length === 0 && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <div className="rounded-xl border border-[var(--border)] bg-muted p-4">
                   <div className="flex items-center gap-3">
-                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="font-medium text-blue-800">Sin objetivos corporativos configurados para {bonusData.year}</p>
-                      <p className="text-sm text-blue-700">
+                      <p className="font-medium text-foreground">Sin objetivos corporativos configurados para {bonusData.year}</p>
+                      <p className="text-sm text-foreground">
                         Los objetivos corporativos (Facturación y NPS) deben configurarse desde la sección de Objetivos en el panel de administración.
                       </p>
                     </div>
@@ -1368,14 +1353,14 @@ export function TeamMemberProfileClient({
 
               {/* Pro-rata Info Banner */}
               {bonusData.proRata.applies && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4">
                   <div className="flex items-center gap-3">
-                    <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-[var(--amber-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <div>
-                      <p className="font-medium text-amber-800">Bono proporcional</p>
-                      <p className="text-sm text-amber-700">
+                      <p className="font-medium text-[var(--amber-600)]">Bono proporcional</p>
+                      <p className="text-sm text-[var(--amber-600)]">
                         El empleado ingresó durante {bonusData.year}, por lo que el bono se calcula proporcionalmente ({bonusData.proRata.months} meses trabajados).
                       </p>
                     </div>
@@ -1386,14 +1371,14 @@ export function TeamMemberProfileClient({
               {/* Seniority Level Info - Show when using historical level */}
               {bonusData.member.effective_seniority_level && 
                bonusData.member.effective_seniority_level !== bonusData.member.seniority_level && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <div className="rounded-xl border border-[var(--border)] bg-muted p-4">
                   <div className="flex items-center gap-3">
-                    <svg className="h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 text-foreground flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="font-medium text-blue-800">Nivel de seniority histórico</p>
-                      <p className="text-sm text-blue-700">
+                      <p className="font-medium text-foreground">Nivel de seniority histórico</p>
+                      <p className="text-sm text-foreground">
                         El bono de {bonusData.year} se calcula con el nivel <strong>{bonusData.member.effective_seniority_level}</strong> (vigente al cierre del período).
                         El nivel actual es <strong>{bonusData.member.seniority_level}</strong>.
                       </p>
@@ -1405,13 +1390,13 @@ export function TeamMemberProfileClient({
               {/* Weights Info - Single combined bar with centered labels */}
               <div className="flex h-8 rounded-lg overflow-hidden">
                 <div 
-                  className="bg-purple-500 flex items-center justify-center"
+                  className="bg-primary flex items-center justify-center"
                   style={{ width: `${bonusData.weights.company}%` }}
                 >
                   <span className="text-xs font-semibold text-white">Corporativo {bonusData.weights.company}%</span>
                 </div>
                 <div 
-                  className="bg-blue-500 flex items-center justify-center"
+                  className="bg-primary flex items-center justify-center"
                   style={{ width: `${bonusData.weights.area}%` }}
                 >
                   <span className="text-xs font-semibold text-white">Personal {bonusData.weights.area}%</span>
@@ -1419,45 +1404,45 @@ export function TeamMemberProfileClient({
               </div>
 
               {/* Corporate Objectives */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                <h3 className="text-base font-semibold text-zinc-900 mb-4">
+              <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                <h3 className="text-base font-semibold text-foreground mb-4">
                   Objetivos corporativos
-                  <span className="ml-2 text-sm font-normal text-zinc-500">
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
                     ({bonusData.corporate.totalCompletion.toFixed(1)}% promedio)
                   </span>
                 </h3>
                 <div className="space-y-4">
                   {/* Billing */}
-                  <div className={`rounded-lg border p-4 ${bonusData.bonus.gateMet ? 'border-emerald-200 bg-emerald-50' : 'border-zinc-200 bg-zinc-50'}`}>
+                  <div className={`rounded-lg border p-4 ${bonusData.bonus.gateMet ? 'border-brand bg-success-subtle' : 'border-[var(--border)] bg-muted'}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-zinc-900">Facturación (Anual)</span>
-                        <span className="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                        <span className="text-sm font-medium text-foreground">Facturación (Anual)</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-secondary text-foreground">
                           Peso: {bonusData.weights.billing}%
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         {bonusData.bonus.gateMet ? (
                           <>
-                            <span className="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                            <span className="text-xs px-2 py-0.5 rounded bg-success-subtle text-[var(--green-700)] flex items-center gap-1">
                               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                               Gate alcanzado
                             </span>
-                            <span className={`font-semibold ${bonusData.corporate.billing.completion >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            <span className={`font-semibold ${bonusData.corporate.billing.completion >= 100 ? 'text-[var(--green-700)]' : 'text-[var(--amber-600)]'}`}>
                               {bonusData.corporate.billing.completion.toFixed(1)}%
                             </span>
                           </>
                         ) : (
                           <>
-                            <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
+                            <span className="text-xs px-2 py-0.5 rounded bg-danger-subtle text-[var(--red-600)]">
                               Gate no alcanzado ({bonusData.corporate.billing.gatePercentage}% req.)
                             </span>
-                            <span className="text-xs text-zinc-500">
+                            <span className="text-xs text-muted-foreground">
                               ({bonusData.corporate.billing.rawCompletion.toFixed(1)}% logrado)
                             </span>
-                            <span className="font-semibold text-red-600">
+                            <span className="font-semibold text-[var(--red-600)]">
                               0%
                             </span>
                           </>
@@ -1465,7 +1450,7 @@ export function TeamMemberProfileClient({
                       </div>
                     </div>
                     {bonusData.corporate.billing.target && (
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Objetivo: ${bonusData.corporate.billing.target.toLocaleString()} | 
                         Actual: ${(bonusData.corporate.billing.actual || 0).toLocaleString()}
                       </p>
@@ -1473,7 +1458,7 @@ export function TeamMemberProfileClient({
                   </div>
 
                   {/* NPS */}
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                  <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
                     {(() => {
                       const quartersWithData = bonusData.corporate.nps.quarters.filter(q => q.score !== null);
                       const quartersMet = quartersWithData.filter(q => q.met).length;
@@ -1481,17 +1466,17 @@ export function TeamMemberProfileClient({
                       return (
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-zinc-900">NPS (Trimestral)</span>
-                            <span className="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                            <span className="text-sm font-medium text-foreground">NPS (Trimestral)</span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-secondary text-foreground">
                               Peso: {bonusData.weights.nps}%
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className={`font-semibold ${quartersMet === totalQuarters && totalQuarters > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            <span className={`font-semibold ${quartersMet === totalQuarters && totalQuarters > 0 ? 'text-[var(--green-700)]' : 'text-[var(--amber-600)]'}`}>
                               {bonusData.corporate.nps.averageCompletion.toFixed(0)}%
                             </span>
                             {totalQuarters > 0 && (
-                              <span className="text-xs text-zinc-500 ml-2">
+                              <span className="text-xs text-muted-foreground ml-2">
                                 ({quartersMet}/{totalQuarters} cumplidos)
                               </span>
                             )}
@@ -1504,19 +1489,19 @@ export function TeamMemberProfileClient({
                         const npsQ = bonusData.corporate.nps.quarters.find(q => q.quarter === quarter);
                         const hasData = npsQ && npsQ.score !== null;
                         return (
-                          <div key={quarter} className="text-center p-2 bg-white rounded border border-zinc-200">
-                            <p className="text-xs text-zinc-500 uppercase">{quarter}</p>
+                          <div key={quarter} className="text-center p-2 bg-white rounded border border-[var(--border)]">
+                            <p className="text-xs text-muted-foreground uppercase">{quarter}</p>
                             {hasData ? (
                               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                npsQ.met ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                                npsQ.met ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
                               }`}>
                                 {npsQ.met ? 'Cumplido' : 'No cumplido'}
                               </span>
                             ) : (
-                              <span className="text-zinc-400 text-sm">-</span>
+                              <span className="text-muted-foreground text-sm">-</span>
                             )}
                             {npsQ && npsQ.actual !== null && npsQ.target !== null && (
-                              <p className="text-xs text-zinc-400 mt-1">{npsQ.actual} / {npsQ.target}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{npsQ.actual} / {npsQ.target}</p>
                             )}
                           </div>
                         );
@@ -1527,24 +1512,24 @@ export function TeamMemberProfileClient({
               </div>
 
               {/* Personal Objectives */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                <h3 className="text-base font-semibold text-zinc-900 mb-4">
+              <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                <h3 className="text-base font-semibold text-foreground mb-4">
                   Objetivos personales
-                  <span className="ml-2 text-sm font-normal text-zinc-500">
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
                     ({bonusData.personal.averageCompletion.toFixed(1)}% promedio - {bonusData.personal.evaluatedCount}/{bonusData.personal.totalCount} evaluados)
                   </span>
                 </h3>
                 {bonusData.personal.objectives.length > 0 ? (
                   <div className="space-y-2">
                     {bonusData.personal.objectives.map((obj: any, index: number) => (
-                      <div key={index} className="py-2 border-b border-zinc-100 last:border-0">
+                      <div key={index} className="py-2 border-b border-[var(--border)] last:border-0">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-zinc-700">{obj.title}</span>
+                          <span className="text-sm text-secondary-foreground">{obj.title}</span>
                           <span className={`font-semibold ${
-                            obj.achievement === null ? 'text-zinc-400' :
-                            obj.achievement >= 100 ? 'text-emerald-600' :
-                            obj.achievement >= 75 ? 'text-blue-600' :
-                            'text-amber-600'
+                            obj.achievement === null ? 'text-muted-foreground' :
+                            obj.achievement >= 100 ? 'text-[var(--green-700)]' :
+                            obj.achievement >= 75 ? 'text-[var(--amber-600)]' :
+                            'text-[var(--amber-600)]'
                           }`}>
                             {obj.achievement !== null ? `${obj.achievement}%` : 'Sin evaluar'}
                           </span>
@@ -1553,11 +1538,11 @@ export function TeamMemberProfileClient({
                           <div className="mt-2 ml-4 space-y-1">
                             {obj.subObjectives.map((sub: any, subIdx: number) => (
                               <div key={subIdx} className="flex items-center justify-between text-xs">
-                                <span className="text-zinc-500">{sub.title}</span>
+                                <span className="text-muted-foreground">{sub.title}</span>
                                 <span className={
-                                  sub.achievement === null ? 'text-zinc-400' :
-                                  sub.achievement >= 100 ? 'text-emerald-600' :
-                                  'text-zinc-600'
+                                  sub.achievement === null ? 'text-muted-foreground' :
+                                  sub.achievement >= 100 ? 'text-[var(--green-700)]' :
+                                  'text-muted-foreground'
                                 }>
                                   {sub.achievement !== null ? `${sub.achievement}%` : '-'}
                                 </span>
@@ -1569,53 +1554,53 @@ export function TeamMemberProfileClient({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-500">No hay objetivos personales registrados</p>
+                  <p className="text-sm text-muted-foreground">No hay objetivos personales registrados</p>
                 )}
               </div>
 
               {/* Calculation Breakdown */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-6">
-                <h3 className="text-base font-semibold text-zinc-900 mb-4">Desglose del cálculo</h3>
+              <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+                <h3 className="text-base font-semibold text-foreground mb-4">Desglose del cálculo</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-zinc-100">
-                    <span className="text-sm text-zinc-600">
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--border)]">
+                    <span className="text-sm text-muted-foreground">
                       Componente corporativo ({bonusData.corporate.totalCompletion.toFixed(1)}% × {bonusData.weights.company}%)
                     </span>
-                    <span className="font-semibold text-purple-600">
+                    <span className="font-semibold text-foreground">
                       {bonusData.bonus.companyComponent.toFixed(2)}%
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-zinc-100">
-                    <span className="text-sm text-zinc-600">
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--border)]">
+                    <span className="text-sm text-muted-foreground">
                       Componente personal ({bonusData.personal.averageCompletion.toFixed(1)}% × {bonusData.weights.area}%)
                     </span>
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-[var(--amber-600)]">
                       {bonusData.bonus.personalComponent.toFixed(2)}%
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-zinc-100">
-                    <span className="text-sm font-medium text-zinc-900">
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--border)]">
+                    <span className="text-sm font-medium text-foreground">
                       Subtotal
                     </span>
-                    <span className="font-bold text-zinc-900">
+                    <span className="font-bold text-foreground">
                       {bonusData.bonus.totalPercentage.toFixed(2)}%
                     </span>
                   </div>
                   {bonusData.proRata.applies && (
-                    <div className="flex items-center justify-between py-2 border-b border-zinc-100 bg-amber-50 rounded px-2 -mx-2">
-                      <span className="text-sm text-amber-800">
+                    <div className="flex items-center justify-between py-2 border-b border-[var(--border)] bg-warning-subtle rounded px-2 -mx-2">
+                      <span className="text-sm text-[var(--amber-600)]">
                         Proporcionalidad ({bonusData.proRata.months}/12 meses trabajados = {bonusData.proRata.percentage.toFixed(1)}%)
                       </span>
-                      <span className="font-semibold text-amber-700">
+                      <span className="font-semibold text-[var(--amber-600)]">
                         × {bonusData.proRata.factor.toFixed(2)}
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between py-3 rounded-lg px-3 bg-emerald-50">
-                    <span className="font-semibold text-emerald-900">
+                  <div className="flex items-center justify-between py-3 rounded-lg px-3 bg-success-subtle">
+                    <span className="font-semibold text-[var(--green-700)]">
                       Bono a pagar
                     </span>
-                    <span className="text-xl font-bold text-emerald-600">
+                    <span className="text-xl font-bold text-[var(--green-700)]">
                       {bonusData.bonus.finalPercentage.toFixed(2)}%
                     </span>
                   </div>
@@ -1623,8 +1608,8 @@ export function TeamMemberProfileClient({
               </div>
             </>
           ) : (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <p className="text-zinc-500">No se pudo cargar la información del bono</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-muted-foreground">No se pudo cargar la información del bono</p>
             </div>
           )}
         </div>
@@ -1634,31 +1619,31 @@ export function TeamMemberProfileClient({
       {activeTab === 'history' && (
         <div className="space-y-4">
           {seniorityHistory.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              <p className="mt-4 text-zinc-500">No hay historial de cambios de seniority</p>
+              <p className="mt-4 text-muted-foreground">No hay historial de cambios de seniority</p>
               {member.seniority_level && (
-                <p className="mt-2 text-sm text-zinc-400">
+                <p className="mt-2 text-sm text-muted-foreground">
                   Nivel actual: {getSeniorityLabel(member.seniority_level)}
                 </p>
               )}
             </div>
           ) : (
-            <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div className="border-b border-zinc-200 px-6 py-4">
-                <h3 className="text-lg font-semibold text-zinc-900">Evolución de Seniority</h3>
+            <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div className="border-b border-[var(--border)] px-6 py-4">
+                <h3 className="text-lg font-semibold text-foreground">Evolución de Seniority</h3>
               </div>
-              <div className="divide-y divide-zinc-100">
+              <div className="divide-y divide-[var(--border)]">
                 {seniorityHistory.map((item, index) => {
                   const newCategory = getSeniorityCategory(item.new_level);
                   const newColors = newCategory ? SENIORITY_CATEGORY_COLORS[newCategory] : null;
                   return (
                     <div key={item.id} className="p-4">
                       <div className="flex items-center gap-4">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${newColors?.bg || 'bg-zinc-100'}`}>
-                          <svg className={`h-5 w-5 ${newColors?.text || 'text-zinc-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${newColors?.bg || 'bg-secondary'}`}>
+                          <svg className={`h-5 w-5 ${newColors?.text || 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                           </svg>
                         </div>
@@ -1666,17 +1651,17 @@ export function TeamMemberProfileClient({
                           <div className="flex items-center gap-2">
                             {item.previous_level && (
                               <>
-                                <span className="text-sm text-zinc-500">{getSeniorityLabel(item.previous_level)}</span>
-                                <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <span className="text-sm text-muted-foreground">{getSeniorityLabel(item.previous_level)}</span>
+                                <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                 </svg>
                               </>
                             )}
-                            <span className={`text-sm font-medium ${newColors?.text || 'text-zinc-900'}`}>
+                            <span className={`text-sm font-medium ${newColors?.text || 'text-foreground'}`}>
                               {getSeniorityLabel(item.new_level)}
                             </span>
                           </div>
-                          <p className="text-xs text-zinc-500">
+                          <p className="text-xs text-muted-foreground">
                             {new Date(item.effective_date + 'T00:00:00').toLocaleDateString('es-AR', {
                               day: 'numeric',
                               month: 'long',
@@ -1684,7 +1669,7 @@ export function TeamMemberProfileClient({
                             })}
                           </p>
                           {item.notes && (
-                            <p className="mt-1 text-sm text-zinc-600">{item.notes}</p>
+                            <p className="mt-1 text-sm text-muted-foreground">{item.notes}</p>
                           )}
                         </div>
                       </div>
@@ -1698,100 +1683,80 @@ export function TeamMemberProfileClient({
       )}
 
       {/* Evaluation Detail Modal */}
-      {showEvaluationModal && selectedEvaluation && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={closeEvaluationModal} />
-            <div className="relative w-full max-w-4xl rounded-xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 flex-shrink-0">
-                <div>
-                  <h2 className="text-lg font-semibold text-zinc-900">
-                    {selectedEvaluation.type === 'leader' ? 'Evaluación del líder' : 'Autoevaluación'}
-                  </h2>
-                  <p className="text-sm text-zinc-500">
-                    {selectedEvaluation.period?.name} - {member.first_name} {member.last_name}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  {selectedEvaluation.total_score !== null && (
-                    <div className="text-right">
-                      <span className="text-sm text-zinc-500">Puntaje total</span>
-                      <p className={`text-2xl font-bold ${
-                        selectedEvaluation.total_score >= 8 ? 'text-emerald-600' :
-                        selectedEvaluation.total_score >= 6 ? 'text-blue-600' :
-                        selectedEvaluation.total_score >= 4 ? 'text-amber-600' :
-                        'text-red-600'
-                      }`}>
-                        {selectedEvaluation.total_score.toFixed(1)}<span className="text-sm text-zinc-400">/10</span>
-                      </p>
-                    </div>
-                  )}
-                  <button
-                    onClick={closeEvaluationModal}
-                    className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+      <Dialog
+        open={showEvaluationModal && !!selectedEvaluation}
+        onClose={closeEvaluationModal}
+        title={selectedEvaluation ? (selectedEvaluation.type === 'leader' ? 'Evaluación del líder' : 'Autoevaluación') : ''}
+        description={selectedEvaluation ? `${selectedEvaluation.period?.name ?? ''} - ${member.first_name} ${member.last_name}` : undefined}
+        size="2xl"
+      >
+        {selectedEvaluation && (
+          <>
+            {selectedEvaluation.total_score !== null && (
+              <div className="mb-4 flex items-center justify-between rounded-lg bg-muted px-4 py-3">
+                <span className="text-sm text-muted-foreground">Puntaje total</span>
+                <p className={`text-2xl font-bold ${
+                  selectedEvaluation.total_score >= 8 ? 'text-[var(--green-700)]' :
+                  selectedEvaluation.total_score >= 4 ? 'text-[var(--amber-600)]' :
+                  'text-[var(--red-600)]'
+                }`}>
+                  {selectedEvaluation.total_score.toFixed(1)}<span className="text-sm text-muted-foreground">/10</span>
+                </p>
               </div>
-
-              {/* Modal Body */}
-              <div className="overflow-y-auto flex-1 p-6">
+            )}
+            <div>
                 {loadingDetail ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                    <Spinner className="h-8 w-8 text-muted-foreground" />
                   </div>
                 ) : evaluationDetail ? (
                   <div className="space-y-8">
                     {/* Dimensions and Scores */}
                     <div>
-                      <h3 className="text-base font-semibold text-zinc-900 mb-4">Puntajes por dimensión</h3>
+                      <h3 className="text-base font-semibold text-foreground mb-4">Puntajes por dimensión</h3>
                       <div className="space-y-6">
                         {evaluationDetail.dimensions.map((dimension) => {
                           const dimensionAvg = getDimensionAverage(dimension.id);
                           return (
-                            <div key={dimension.id} className="rounded-lg border border-zinc-200 bg-zinc-50 overflow-hidden">
-                              <div className="flex items-center justify-between bg-white px-4 py-3 border-b border-zinc-200">
+                            <div key={dimension.id} className="rounded-lg border border-[var(--border)] bg-muted overflow-hidden">
+                              <div className="flex items-center justify-between bg-white px-4 py-3 border-b border-[var(--border)]">
                                 <div>
-                                  <h4 className="font-medium text-zinc-900">{dimension.name}</h4>
+                                  <h4 className="font-medium text-foreground">{dimension.name}</h4>
                                   {dimension.description && (
-                                    <p className="text-xs text-zinc-500 mt-0.5">{dimension.description}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{dimension.description}</p>
                                   )}
                                 </div>
                                 {dimensionAvg !== null && (
                                   <span className={`text-lg font-bold ${
-                                    dimensionAvg >= 8 ? 'text-emerald-600' :
-                                    dimensionAvg >= 6 ? 'text-blue-600' :
-                                    dimensionAvg >= 4 ? 'text-amber-600' :
-                                    'text-red-600'
+                                    dimensionAvg >= 8 ? 'text-[var(--green-700)]' :
+                                    dimensionAvg >= 6 ? 'text-[var(--amber-600)]' :
+                                    dimensionAvg >= 4 ? 'text-[var(--amber-600)]' :
+                                    'text-[var(--red-600)]'
                                   }`}>
                                     {dimensionAvg.toFixed(1)}
                                   </span>
                                 )}
                               </div>
-                              <div className="divide-y divide-zinc-200">
+                              <div className="divide-y divide-[var(--border)]">
                                 {dimension.items.map((item) => {
                                   const response = evaluationDetail.responses.find(r => r.item_id === item.id);
                                   return (
                                     <div key={item.id} className="px-4 py-3 bg-white">
                                       <div className="flex items-start justify-between gap-4">
-                                        <p className="text-sm text-zinc-700 flex-1">{item.statement}</p>
+                                        <p className="text-sm text-secondary-foreground flex-1">{item.statement}</p>
                                         <span className={`font-semibold min-w-[2rem] text-right ${
-                                          (response?.score || 0) >= 8 ? 'text-emerald-600' :
-                                          (response?.score || 0) >= 6 ? 'text-blue-600' :
-                                          (response?.score || 0) >= 4 ? 'text-amber-600' :
-                                          'text-red-600'
+                                          (response?.score || 0) >= 8 ? 'text-[var(--green-700)]' :
+                                          (response?.score || 0) >= 6 ? 'text-[var(--amber-600)]' :
+                                          (response?.score || 0) >= 4 ? 'text-[var(--amber-600)]' :
+                                          'text-[var(--red-600)]'
                                         }`}>
                                           {response?.score || '-'}
                                         </span>
                                       </div>
                                       {response?.explanation && (
-                                        <div className="mt-2 rounded-md bg-zinc-50 px-3 py-2">
-                                          <p className="text-xs text-zinc-500 font-medium mb-1">Comentario:</p>
-                                          <p className="text-sm text-zinc-600">{response.explanation}</p>
+                                        <div className="mt-2 rounded-md bg-muted px-3 py-2">
+                                          <p className="text-xs text-muted-foreground font-medium mb-1">Comentario:</p>
+                                          <p className="text-sm text-muted-foreground">{response.explanation}</p>
                                         </div>
                                       )}
                                     </div>
@@ -1807,7 +1772,7 @@ export function TeamMemberProfileClient({
                     {/* Open Questions */}
                     {evaluationDetail.openQuestions.length > 0 && (
                       <div>
-                        <h3 className="text-base font-semibold text-zinc-900 mb-4">Preguntas abiertas</h3>
+                        <h3 className="text-base font-semibold text-foreground mb-4">Preguntas abiertas</h3>
                         <div className="space-y-4">
                           {evaluationDetail.openQuestions.map((oq) => {
                             const labels = OPEN_QUESTION_LABELS[oq.question_key];
@@ -1815,10 +1780,10 @@ export function TeamMemberProfileClient({
                               ? (selectedEvaluation.type === 'leader' ? labels.leader : labels.self)
                               : oq.question_key;
                             return (
-                              <div key={oq.id} className="rounded-lg border border-zinc-200 bg-white p-4">
-                                <p className="text-sm font-medium text-zinc-700 mb-2">{label}</p>
-                                <p className="text-sm text-zinc-600 whitespace-pre-wrap">
-                                  {oq.response || <span className="text-zinc-400 italic">Sin respuesta</span>}
+                              <div key={oq.id} className="rounded-lg border border-[var(--border)] bg-white p-4">
+                                <p className="text-sm font-medium text-secondary-foreground mb-2">{label}</p>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                  {oq.response || <span className="text-muted-foreground italic">Sin respuesta</span>}
                                 </p>
                               </div>
                             );
@@ -1830,24 +1795,24 @@ export function TeamMemberProfileClient({
                     {/* Objectives (for leader evaluations) */}
                     {selectedEvaluation.type === 'leader' && evaluationDetail.objectives && evaluationDetail.objectives.length > 0 && (
                       <div>
-                        <h3 className="text-base font-semibold text-zinc-900 mb-4">Objetivos trimestrales</h3>
+                        <h3 className="text-base font-semibold text-foreground mb-4">Objetivos trimestrales</h3>
                         <div className="grid grid-cols-2 gap-4">
                           {evaluationDetail.objectives.map((obj: any) => (
-                            <div key={obj.id} className="rounded-lg border border-zinc-200 bg-white p-4">
+                            <div key={obj.id} className="rounded-lg border border-[var(--border)] bg-white p-4">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-zinc-700">Q{obj.quarter}</span>
+                                <span className="text-sm font-medium text-secondary-foreground">Q{obj.quarter}</span>
                                 {obj.completion_percentage !== null && (
                                   <span className={`text-sm font-semibold ${
-                                    obj.completion_percentage >= 80 ? 'text-emerald-600' :
-                                    obj.completion_percentage >= 50 ? 'text-amber-600' :
-                                    'text-red-600'
+                                    obj.completion_percentage >= 80 ? 'text-[var(--green-700)]' :
+                                    obj.completion_percentage >= 50 ? 'text-[var(--amber-600)]' :
+                                    'text-[var(--red-600)]'
                                   }`}>
                                     {obj.completion_percentage}%
                                   </span>
                                 )}
                               </div>
                               {obj.objectives_description && (
-                                <p className="text-sm text-zinc-600">{obj.objectives_description}</p>
+                                <p className="text-sm text-muted-foreground">{obj.objectives_description}</p>
                               )}
                             </div>
                           ))}
@@ -1858,28 +1823,28 @@ export function TeamMemberProfileClient({
                     {/* Self-evaluation comparison (for leader evaluations) */}
                     {selectedEvaluation.type === 'leader' && evaluationDetail.selfEvaluationSummary && (
                       <div>
-                        <h3 className="text-base font-semibold text-zinc-900 mb-4">Comparación con autoevaluación</h3>
-                        <div className="rounded-lg border border-zinc-200 bg-white p-4">
+                        <h3 className="text-base font-semibold text-foreground mb-4">Comparación con autoevaluación</h3>
+                        <div className="rounded-lg border border-[var(--border)] bg-white p-4">
                           <div className="flex items-center justify-around">
                             <div className="text-center">
-                              <p className="text-sm text-zinc-500 mb-1">Autoevaluación</p>
-                              <p className="text-2xl font-bold text-blue-600">
+                              <p className="text-sm text-muted-foreground mb-1">Autoevaluación</p>
+                              <p className="text-2xl font-bold text-[var(--amber-600)]">
                                 {evaluationDetail.selfEvaluationSummary.total_score?.toFixed(1) || '-'}
                               </p>
                             </div>
                             <div className="text-center">
-                              <p className="text-sm text-zinc-500 mb-1">Evaluación del líder</p>
-                              <p className="text-2xl font-bold text-purple-600">
+                              <p className="text-sm text-muted-foreground mb-1">Evaluación del líder</p>
+                              <p className="text-2xl font-bold text-foreground">
                                 {selectedEvaluation.total_score?.toFixed(1) || '-'}
                               </p>
                             </div>
                             {evaluationDetail.selfEvaluationSummary.total_score && selectedEvaluation.total_score && (
                               <div className="text-center">
-                                <p className="text-sm text-zinc-500 mb-1">Gap</p>
+                                <p className="text-sm text-muted-foreground mb-1">Gap</p>
                                 <p className={`text-2xl font-bold ${
                                   Math.abs(selectedEvaluation.total_score - evaluationDetail.selfEvaluationSummary.total_score) <= 1 
-                                    ? 'text-emerald-600' 
-                                    : 'text-amber-600'
+                                    ? 'text-[var(--green-700)]' 
+                                    : 'text-[var(--amber-600)]'
                                 }`}>
                                   {(selectedEvaluation.total_score - evaluationDetail.selfEvaluationSummary.total_score).toFixed(1)}
                                 </p>
@@ -1891,13 +1856,12 @@ export function TeamMemberProfileClient({
                     )}
                   </div>
                 ) : (
-                  <p className="text-center text-zinc-500">No se pudo cargar el detalle de la evaluación</p>
+                  <p className="text-center text-muted-foreground">No se pudo cargar el detalle de la evaluación</p>
                 )}
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

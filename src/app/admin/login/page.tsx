@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
 	};
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+		<div className="flex min-h-screen items-center justify-center bg-muted px-4">
 			<form
 				onSubmit={onSubmit}
 				className="w-full max-w-sm rounded-lg border bg-white p-6 shadow-sm"
@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
 						<button
 							type="button"
 							onClick={() => setShowPassword(!showPassword)}
-							className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+							className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 							tabIndex={-1}
 						>
 							{showPassword ? (
@@ -85,13 +85,13 @@ export default function AdminLoginPage() {
 					<button
 						type="submit"
 						disabled={loading}
-						className="w-full rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+						className="w-full rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-secondary disabled:opacity-60"
 					>
 						{loading ? 'Ingresando…' : 'Ingresar'}
 					</button>
-					{error && <p className="text-sm text-red-600">{error}</p>}
+					{error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
 				</div>
-				<p className="mt-4 text-xs text-zinc-600">
+				<p className="mt-4 text-xs text-muted-foreground">
 					Los usuarios deben estar agregados a la tabla de administradores.
 				</p>
 			</form>

@@ -274,14 +274,14 @@ export function EmployeeFormModal({
 
         <div className="relative w-full max-w-3xl rounded-xl bg-white shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-            <h2 className="text-xl font-semibold text-zinc-900">
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+            <h2 className="text-xl font-semibold text-foreground">
               {isEditing ? 'Editar empleado' : 'Nuevo empleado'}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+              className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -293,7 +293,7 @@ export function EmployeeFormModal({
           <form onSubmit={handleSubmit}>
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
               {error && (
-                <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+                <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
               )}
 
               {/* Photo Upload */}
@@ -304,11 +304,11 @@ export function EmployeeFormModal({
                       <img
                         src={formData.photo_url}
                         alt="Foto del empleado"
-                        className="h-24 w-24 rounded-full object-cover border-2 border-zinc-200"
+                        className="h-24 w-24 rounded-full object-cover border-2 border-[var(--border)]"
                       />
                     ) : (
-                      <div className="h-24 w-24 rounded-full bg-zinc-100 flex items-center justify-center border-2 border-dashed border-zinc-300">
-                        <svg className="h-8 w-8 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center border-2 border-dashed border-[var(--border)]">
+                        <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
@@ -324,7 +324,7 @@ export function EmployeeFormModal({
                   </div>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-zinc-900 mb-2">Foto del empleado</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Foto del empleado</label>
                   <div className="flex items-center gap-3">
                     <input
                       ref={fileInputRef}
@@ -337,7 +337,7 @@ export function EmployeeFormModal({
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                      className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
                     >
                       {formData.photo_url ? 'Cambiar foto' : 'Subir foto'}
                     </button>
@@ -345,91 +345,91 @@ export function EmployeeFormModal({
                       <button
                         type="button"
                         onClick={handleRemovePhoto}
-                        className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                        className="rounded-lg border border-danger/20 px-3 py-2 text-sm font-medium text-[var(--red-600)] hover:bg-danger-subtle"
                       >
                         Eliminar
                       </button>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-zinc-500">JPG, PNG o GIF. Máximo 5MB.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">JPG, PNG o GIF. Máximo 5MB.</p>
                 </div>
               </div>
 
               {/* Personal Information */}
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">Información Personal</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Información Personal</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Nombre *</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Nombre *</label>
                     <input
                       type="text"
                       name="first_name"
                       value={formData.first_name}
                       onChange={handleInputChange}
                       required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Apellido *</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Apellido *</label>
                     <input
                       type="text"
                       name="last_name"
                       value={formData.last_name}
                       onChange={handleInputChange}
                       required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">DNI</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">DNI</label>
                     <input
                       type="text"
                       name="dni"
                       value={formData.dni}
                       onChange={handleInputChange}
                       placeholder="12345678"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">CUIL</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">CUIL</label>
                     <input
                       type="text"
                       name="cuil"
                       value={formData.cuil}
                       onChange={handleInputChange}
                       placeholder="20-12345678-9"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Fecha de nacimiento</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Fecha de nacimiento</label>
                     <input
                       type="date"
                       name="birth_date"
                       value={formData.birth_date}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Nacionalidad</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Nacionalidad</label>
                     <input
                       type="text"
                       name="nationality"
                       value={formData.nationality}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Estado civil</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Estado civil</label>
                     <select
                       name="marital_status"
                       value={formData.marital_status}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       <option value="single">Soltero/a</option>
@@ -440,35 +440,35 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Teléfono</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Teléfono</label>
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="+54 11 1234-5678"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Email personal *</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Email personal *</label>
                     <input
                       type="email"
                       name="personal_email"
                       value={formData.personal_email}
                       onChange={handleInputChange}
                       required
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Email de trabajo</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Email de trabajo</label>
                     <input
                       type="email"
                       name="work_email"
                       value={formData.work_email}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -476,46 +476,46 @@ export function EmployeeFormModal({
 
               {/* Address */}
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">Domicilio</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Domicilio</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Dirección</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Dirección</label>
                     <input
                       type="text"
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Ciudad</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Ciudad</label>
                     <input
                       type="text"
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Código Postal</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Código Postal</label>
                     <input
                       type="text"
                       name="postal_code"
                       value={formData.postal_code}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">País</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">País</label>
                     <input
                       type="text"
                       name="country"
                       value={formData.country}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -523,15 +523,15 @@ export function EmployeeFormModal({
 
               {/* Education */}
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">Formación Académica</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Formación Académica</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Nivel académico</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Nivel académico</label>
                     <select
                       name="education_level"
                       value={formData.education_level}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       <option value="primary">Primario</option>
@@ -542,25 +542,25 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Título</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Título</label>
                     <input
                       type="text"
                       name="education_title"
                       value={formData.education_title}
                       onChange={handleInputChange}
                       placeholder="Ej: Licenciatura en Administración"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Idiomas</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Idiomas</label>
                     <input
                       type="text"
                       name="languages"
                       value={formData.languages}
                       onChange={handleInputChange}
                       placeholder="Ej: Español (nativo), Inglés (avanzado), Portugués (intermedio)"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -568,15 +568,15 @@ export function EmployeeFormModal({
 
               {/* Emergency Contact */}
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">Contacto de Emergencia</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Contacto de Emergencia</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Parentesco</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Parentesco</label>
                     <select
                       name="emergency_contact_relationship"
                       value={formData.emergency_contact_relationship}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       <option value="spouse">Cónyuge</option>
@@ -588,44 +588,44 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Teléfono</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Teléfono</label>
                     <input
                       type="tel"
                       name="emergency_contact_phone"
                       value={formData.emergency_contact_phone}
                       onChange={handleInputChange}
                       placeholder="+54 11 1234-5678"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Nombre</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Nombre</label>
                     <input
                       type="text"
                       name="emergency_contact_first_name"
                       value={formData.emergency_contact_first_name}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Apellido</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Apellido</label>
                     <input
                       type="text"
                       name="emergency_contact_last_name"
                       value={formData.emergency_contact_last_name}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Domicilio</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Domicilio</label>
                     <input
                       type="text"
                       name="emergency_contact_address"
                       value={formData.emergency_contact_address}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -633,36 +633,36 @@ export function EmployeeFormModal({
 
               {/* Work Information */}
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-3">Información Laboral</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Información Laboral</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Fecha de ingreso</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Fecha de ingreso</label>
                     <input
                       type="date"
                       name="hire_date"
                       value={formData.hire_date}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Rol / Puesto</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Rol / Puesto</label>
                     <input
                       type="text"
                       name="job_title"
                       value={formData.job_title}
                       onChange={handleInputChange}
                       placeholder="Ej: Desarrollador Senior"
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Nivel de Seniority</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Nivel de Seniority</label>
                     <select
                       name="seniority_level"
                       value={formData.seniority_level}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       {([1, 2, 3, 4, 5] as SeniorityCategory[]).map(cat => (
@@ -680,12 +680,12 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Condición laboral</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Condición laboral</label>
                     <select
                       name="employment_type"
                       value={formData.employment_type}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       <option value="dependency">Relación de dependencia</option>
@@ -693,12 +693,12 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Sociedad</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Sociedad</label>
                     <select
                       name="legal_entity_id"
                       value={formData.legal_entity_id}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       {legalEntities.map((entity) => (
@@ -709,12 +709,12 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Departamento</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Departamento</label>
                     <select
                       name="department_id"
                       value={formData.department_id}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       {filteredDepartments.map((dept) => (
@@ -725,12 +725,12 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Manager</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Manager</label>
                     <select
                       name="manager_id"
                       value={formData.manager_id}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Seleccionar...</option>
                       {managers.map((mgr) => (
@@ -741,12 +741,12 @@ export function EmployeeFormModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">Estado</label>
+                    <label className="block text-xs font-medium text-secondary-foreground mb-1">Estado</label>
                     <select
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="active">Activo</option>
                       <option value="inactive">Inactivo</option>
@@ -758,19 +758,19 @@ export function EmployeeFormModal({
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || isUploading}
-                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-secondary disabled:opacity-50"
               >
                 {isSubmitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear empleado'}
               </button>

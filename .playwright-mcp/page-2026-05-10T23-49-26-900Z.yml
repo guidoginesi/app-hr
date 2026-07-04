@@ -1,0 +1,27 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: Portal de Empleados
+      - heading "Iniciar sesión" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Ingresa con tu cuenta de empleado
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Email
+        - textbox "Email" [ref=e11]:
+          - /placeholder: tu@email.com
+      - generic [ref=e12]:
+        - generic [ref=e13]: Contraseña
+        - generic [ref=e14]:
+          - textbox "Contraseña" [ref=e15]:
+            - /placeholder: ••••••••
+          - button [ref=e16]:
+            - img [ref=e17]
+      - button "Ingresar" [ref=e20]
+    - button "¿Primera vez o no tenés contraseña?" [ref=e22]
+    - paragraph [ref=e23]:
+      - text: ¿Sos administrador?
+      - link "Ir al panel de admin" [ref=e24] [cursor=pointer]:
+        - /url: /admin/login
+  - button "Open Next.js Dev Tools" [ref=e30] [cursor=pointer]:
+    - img [ref=e31]
+  - alert [ref=e34]

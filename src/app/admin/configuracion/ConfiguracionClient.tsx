@@ -209,14 +209,14 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 	return (
 		<div className="space-y-6">
 			<div>
-				<h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Configuración General</h1>
-				<p className="mt-1 text-sm text-zinc-500">
+				<h1 className="text-2xl font-semibold tracking-tight text-foreground">Configuración General</h1>
+				<p className="mt-1 text-sm text-muted-foreground">
 					Administra las sociedades y departamentos de la organización
 				</p>
 			</div>
 
 			{/* Tabs */}
-			<div className="border-b border-zinc-200">
+			<div className="border-b border-[var(--border)]">
 				<nav className="flex gap-8">
 					{tabs.map((tab) => (
 						<button
@@ -225,7 +225,7 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 							className={`py-3 text-sm font-medium border-b-2 transition-colors ${
 								activeTab === tab.key
 									? 'border-black text-black'
-									: 'border-transparent text-zinc-500 hover:text-zinc-900'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
 							}`}
 						>
 							{tab.label}
@@ -238,40 +238,40 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 			{activeTab === 'entities' && (
 				<div className="space-y-6">
 					{/* Create new entity */}
-					<div className="rounded-xl border border-zinc-200 bg-white p-6">
-						<h2 className="text-lg font-semibold text-zinc-900 mb-4">Nueva Sociedad</h2>
+					<div className="rounded-xl border border-[var(--border)] bg-white p-6">
+						<h2 className="text-lg font-semibold text-foreground mb-4">Nueva Sociedad</h2>
 						<div className="flex gap-4 items-end">
 							<div className="flex-1">
-								<label className="block text-sm font-medium text-zinc-700 mb-1">Nombre *</label>
+								<label className="block text-sm font-medium text-secondary-foreground mb-1">Nombre *</label>
 								<input
 									type="text"
 									value={newEntityName}
 									onChange={(e) => setNewEntityName(e.target.value)}
 									placeholder="Nombre de la sociedad"
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								/>
 							</div>
 							<div className="w-48">
-								<label className="block text-sm font-medium text-zinc-700 mb-1">País</label>
+								<label className="block text-sm font-medium text-secondary-foreground mb-1">País</label>
 								<input
 									type="text"
 									value={newEntityCountry}
 									onChange={(e) => setNewEntityCountry(e.target.value)}
 									placeholder="País"
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								/>
 							</div>
 							<button
 								onClick={handleCreateEntity}
 								disabled={entitySaving || !newEntityName.trim()}
-								className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
+								className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-50"
 							>
 								Crear
 							</button>
 						</div>
 						{entityMessage && (
 							<div className={`mt-4 rounded-lg p-3 text-sm ${
-								entityMessage.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+								entityMessage.type === 'success' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
 							}`}>
 								{entityMessage.text}
 							</div>
@@ -279,11 +279,11 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 					</div>
 
 					{/* Entity list */}
-					<div className="rounded-xl border border-zinc-200 bg-white">
-						<div className="border-b border-zinc-200 px-6 py-4">
-							<h2 className="text-base font-semibold text-zinc-900">Sociedades ({legalEntities.length})</h2>
+					<div className="rounded-xl border border-[var(--border)] bg-white">
+						<div className="border-b border-[var(--border)] px-6 py-4">
+							<h2 className="text-base font-semibold text-foreground">Sociedades ({legalEntities.length})</h2>
 						</div>
-						<ul className="divide-y divide-zinc-200">
+						<ul className="divide-y divide-[var(--border)]">
 							{legalEntities.map((entity) => (
 								<li key={entity.id} className="px-6 py-4">
 									{editingEntity?.id === entity.id ? (
@@ -293,7 +293,7 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 													type="text"
 													value={editingEntity.name}
 													onChange={(e) => setEditingEntity({ ...editingEntity, name: e.target.value })}
-													className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+													className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 												/>
 											</div>
 											<div className="w-48">
@@ -302,7 +302,7 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 													value={editingEntity.country || ''}
 													onChange={(e) => setEditingEntity({ ...editingEntity, country: e.target.value })}
 													placeholder="País"
-													className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+													className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 												/>
 											</div>
 											<label className="flex items-center gap-2">
@@ -310,20 +310,20 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 													type="checkbox"
 													checked={editingEntity.is_active}
 													onChange={(e) => setEditingEntity({ ...editingEntity, is_active: e.target.checked })}
-													className="rounded border-zinc-300"
+													className="rounded border-[var(--border)]"
 												/>
-												<span className="text-sm text-zinc-600">Activo</span>
+												<span className="text-sm text-muted-foreground">Activo</span>
 											</label>
 											<button
 												onClick={handleUpdateEntity}
 												disabled={entitySaving}
-												className="rounded-lg bg-black px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+												className="rounded-lg bg-black px-3 py-2 text-sm font-medium text-white hover:bg-secondary disabled:opacity-50"
 											>
 												Guardar
 											</button>
 											<button
 												onClick={() => setEditingEntity(null)}
-												className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+												className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
 											>
 												Cancelar
 											</button>
@@ -331,10 +331,10 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 									) : (
 										<div className="flex items-center justify-between">
 											<div>
-												<span className="font-medium text-zinc-900">{entity.name}</span>
-												{entity.country && <span className="ml-2 text-sm text-zinc-500">({entity.country})</span>}
+												<span className="font-medium text-foreground">{entity.name}</span>
+												{entity.country && <span className="ml-2 text-sm text-muted-foreground">({entity.country})</span>}
 												{!entity.is_active && (
-													<span className="ml-2 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+													<span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
 														Inactivo
 													</span>
 												)}
@@ -342,13 +342,13 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 											<div className="flex items-center gap-2">
 												<button
 													onClick={() => setEditingEntity(entity)}
-													className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+													className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
 												>
 													Editar
 												</button>
 												<button
 													onClick={() => handleDeleteEntity(entity.id)}
-													className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+													className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
 												>
 													Eliminar
 												</button>
@@ -358,7 +358,7 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 								</li>
 							))}
 							{legalEntities.length === 0 && (
-								<li className="px-6 py-12 text-center text-sm text-zinc-500">
+								<li className="px-6 py-12 text-center text-sm text-muted-foreground">
 									No hay sociedades registradas
 								</li>
 							)}
@@ -371,25 +371,25 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 			{activeTab === 'departments' && (
 				<div className="space-y-6">
 					{/* Create new department */}
-					<div className="rounded-xl border border-zinc-200 bg-white p-6">
-						<h2 className="text-lg font-semibold text-zinc-900 mb-4">Nuevo Departamento</h2>
+					<div className="rounded-xl border border-[var(--border)] bg-white p-6">
+						<h2 className="text-lg font-semibold text-foreground mb-4">Nuevo Departamento</h2>
 						<div className="flex gap-4 items-end">
 							<div className="flex-1">
-								<label className="block text-sm font-medium text-zinc-700 mb-1">Nombre *</label>
+								<label className="block text-sm font-medium text-secondary-foreground mb-1">Nombre *</label>
 								<input
 									type="text"
 									value={newDeptName}
 									onChange={(e) => setNewDeptName(e.target.value)}
 									placeholder="Nombre del departamento"
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								/>
 							</div>
 							<div className="w-64">
-								<label className="block text-sm font-medium text-zinc-700 mb-1">Sociedad</label>
+								<label className="block text-sm font-medium text-secondary-foreground mb-1">Sociedad</label>
 								<select
 									value={newDeptEntityId}
 									onChange={(e) => setNewDeptEntityId(e.target.value)}
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								>
 									<option value="">Sin sociedad específica</option>
 									{legalEntities.filter(e => e.is_active).map((entity) => (
@@ -400,14 +400,14 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 							<button
 								onClick={handleCreateDepartment}
 								disabled={deptSaving || !newDeptName.trim()}
-								className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50"
+								className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-50"
 							>
 								Crear
 							</button>
 						</div>
 						{deptMessage && (
 							<div className={`mt-4 rounded-lg p-3 text-sm ${
-								deptMessage.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+								deptMessage.type === 'success' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
 							}`}>
 								{deptMessage.text}
 							</div>
@@ -415,11 +415,11 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 					</div>
 
 					{/* Department list */}
-					<div className="rounded-xl border border-zinc-200 bg-white">
-						<div className="border-b border-zinc-200 px-6 py-4">
-							<h2 className="text-base font-semibold text-zinc-900">Departamentos ({departments.length})</h2>
+					<div className="rounded-xl border border-[var(--border)] bg-white">
+						<div className="border-b border-[var(--border)] px-6 py-4">
+							<h2 className="text-base font-semibold text-foreground">Departamentos ({departments.length})</h2>
 						</div>
-						<ul className="divide-y divide-zinc-200">
+						<ul className="divide-y divide-[var(--border)]">
 							{departments.map((dept) => (
 								<li key={dept.id} className="px-6 py-4">
 									{editingDepartment?.id === dept.id ? (
@@ -429,14 +429,14 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 													type="text"
 													value={editingDepartment.name}
 													onChange={(e) => setEditingDepartment({ ...editingDepartment, name: e.target.value })}
-													className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+													className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 												/>
 											</div>
 											<div className="w-64">
 												<select
 													value={editingDepartment.legal_entity_id || ''}
 													onChange={(e) => setEditingDepartment({ ...editingDepartment, legal_entity_id: e.target.value || null })}
-													className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+													className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 												>
 													<option value="">Sin sociedad</option>
 													{legalEntities.filter(e => e.is_active).map((entity) => (
@@ -449,20 +449,20 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 													type="checkbox"
 													checked={editingDepartment.is_active}
 													onChange={(e) => setEditingDepartment({ ...editingDepartment, is_active: e.target.checked })}
-													className="rounded border-zinc-300"
+													className="rounded border-[var(--border)]"
 												/>
-												<span className="text-sm text-zinc-600">Activo</span>
+												<span className="text-sm text-muted-foreground">Activo</span>
 											</label>
 											<button
 												onClick={handleUpdateDepartment}
 												disabled={deptSaving}
-												className="rounded-lg bg-black px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+												className="rounded-lg bg-black px-3 py-2 text-sm font-medium text-white hover:bg-secondary disabled:opacity-50"
 											>
 												Guardar
 											</button>
 											<button
 												onClick={() => setEditingDepartment(null)}
-												className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+												className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
 											>
 												Cancelar
 											</button>
@@ -470,12 +470,12 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 									) : (
 										<div className="flex items-center justify-between">
 											<div>
-												<span className="font-medium text-zinc-900">{dept.name}</span>
+												<span className="font-medium text-foreground">{dept.name}</span>
 												{dept.legal_entity && (
-													<span className="ml-2 text-sm text-zinc-500">({dept.legal_entity.name})</span>
+													<span className="ml-2 text-sm text-muted-foreground">({dept.legal_entity.name})</span>
 												)}
 												{!dept.is_active && (
-													<span className="ml-2 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+													<span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
 														Inactivo
 													</span>
 												)}
@@ -483,13 +483,13 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 											<div className="flex items-center gap-2">
 												<button
 													onClick={() => setEditingDepartment(dept)}
-													className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+													className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
 												>
 													Editar
 												</button>
 												<button
 													onClick={() => handleDeleteDepartment(dept.id)}
-													className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+													className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
 												>
 													Eliminar
 												</button>
@@ -499,7 +499,7 @@ export function ConfiguracionClient({ initialLegalEntities, initialDepartments }
 								</li>
 							))}
 							{departments.length === 0 && (
-								<li className="px-6 py-12 text-center text-sm text-zinc-500">
+								<li className="px-6 py-12 text-center text-sm text-muted-foreground">
 									No hay departamentos registrados
 								</li>
 							)}

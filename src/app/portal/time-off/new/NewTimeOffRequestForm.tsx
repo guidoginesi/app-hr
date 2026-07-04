@@ -1,0 +1,611 @@
+'use client';
+
+
+import { Spinner } from '@/components/Spinner';
+import { Button } from '@pow/ui/components/ui/button';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
+import { MondayDatePicker } from '@/components/MondayDatePicker';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
+
+// Parse date string as local date to avoid timezone issues
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () => void; onCancel?: () => void }) {
+  const router = useRouter();
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [balances, setBalances] = useState<LeaveBalanceWithDetails[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const [selectedType, setSelectedType] = useState<string>('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [vacationWeeks, setVacationWeeks] = useState<number>(1);
+  const [notes, setNotes] = useState('');
+  
+  // Remote work specific fields
+  const [remoteDestino, setRemoteDestino] = useState('');
+  const [remoteDomicilio, setRemoteDomicilio] = useState('');
+  const [remoteContactoNombre, setRemoteContactoNombre] = useState('');
+  const [remoteContactoTelefono, setRemoteContactoTelefono] = useState('');
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Reset weeks to 1 when type changes to ensure it's always valid
+  useEffect(() => {
+    setVacationWeeks(1);
+  }, [selectedType]);
+
+  async function fetchData() {
+    try {
+      const [typesRes, balancesRes] = await Promise.all([
+        fetch('/api/portal/time-off/leave-types'),
+        fetch('/api/portal/time-off/balances'),
+      ]);
+
+      if (typesRes.ok) {
+        const data = await typesRes.json();
+        setLeaveTypes(data);
+      }
+      if (balancesRes.ok) {
+        const data = await balancesRes.json();
+        setBalances(data);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function calculateDays(): number {
+    if (!startDate || !endDate) return 0;
+
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
+
+    if (end < start) return 0;
+
+    const selectedLeaveType = leaveTypes.find((t) => t.id === selectedType);
+
+    if (selectedLeaveType?.count_type === 'weeks') {
+      // Count weeks
+      const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      return Math.ceil(days / 7);
+    } else if (selectedLeaveType?.count_type === 'business_days') {
+      // Count business days (Mon-Fri)
+      let count = 0;
+      const current = new Date(start);
+      while (current <= end) {
+        const day = current.getDay();
+        if (day !== 0 && day !== 6) count++;
+        current.setDate(current.getDate() + 1);
+      }
+      return count;
+    } else {
+      // Calendar days
+      return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    }
+  }
+
+  function getBalanceForType(typeId: string): LeaveBalanceWithDetails | undefined {
+    return balances.find((b) => b.leave_type_id === typeId);
+  }
+
+  function getAvailableDays(typeId: string): number {
+    const type = leaveTypes.find((t) => t.id === typeId);
+    if (type && isUnlimitedLeaveType(type.code)) return Infinity;
+    const balance = getBalanceForType(typeId);
+    if (!balance) return 0;
+    return balance.available_days;
+  }
+
+  function isTypeSelectable(type: LeaveType): boolean {
+    return isUnlimitedLeaveType(type.code) || getAvailableDays(type.id) > 0;
+  }
+
+  // Check if selected type is vacation
+  function isVacationType(): boolean {
+    const type = leaveTypes.find((t) => t.id === selectedType);
+    return type?.code === 'vacation';
+  }
+
+  // Check if selected type is remote work (full weeks)
+  function isRemoteWorkType(): boolean {
+    const type = leaveTypes.find((t) => t.id === selectedType);
+    return type?.code === 'remote_work';
+  }
+
+  // Check if selected type is remote work trip (single days / travel — ART notification)
+  function isRemoteWorkTripType(): boolean {
+    const type = leaveTypes.find((t) => t.id === selectedType);
+    return type?.code === 'remote_work_trip';
+  }
+
+  function requiresRemoteLocationFields(): boolean {
+    return isRemoteWorkType() || isRemoteWorkTripType();
+  }
+
+  // Check if selected type requires week-based selection (Monday to Sunday)
+  function isWeekBasedType(): boolean {
+    return isVacationType() || isRemoteWorkType();
+  }
+
+  // Check if a date is Monday
+  function isMonday(dateStr: string): boolean {
+    if (!dateStr) return false;
+    const date = parseLocalDate(dateStr);
+    return date.getDay() === 1;
+  }
+
+  // Format a local Date object as YYYY-MM-DD without UTC conversion
+  function formatLocalDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  // Calculate end date for vacations based on weeks
+  function calculateVacationEndDate(start: string, weeks: number): string {
+    if (!start) return '';
+    const startDate = parseLocalDate(start);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + (weeks * 7) - 1); // -1 because we include start day
+    return formatLocalDate(endDate);
+  }
+
+  // Get next Monday from a given date
+  function getNextMonday(dateStr: string): string {
+    const date = parseLocalDate(dateStr);
+    const day = date.getDay();
+    const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+    date.setDate(date.getDate() + daysUntilMonday);
+    return formatLocalDate(date);
+  }
+
+  // Handle start date change for week-based types (vacations, remote work)
+  function handleStartDateChange(value: string) {
+    setStartDate(value);
+    
+    // For week-based types, auto-calculate end date
+    if (isWeekBasedType() && value) {
+      const calculatedEnd = calculateVacationEndDate(value, vacationWeeks);
+      setEndDate(calculatedEnd);
+    }
+  }
+
+  // Handle vacation weeks change
+  function handleVacationWeeksChange(weeks: number) {
+    setVacationWeeks(weeks);
+    if (startDate) {
+      const calculatedEnd = calculateVacationEndDate(startDate, weeks);
+      setEndDate(calculatedEnd);
+    }
+  }
+
+  // Handle leave type change
+  function handleTypeChange(typeId: string) {
+    setSelectedType(typeId);
+    // Reset dates when changing type
+    setStartDate('');
+    setEndDate('');
+    setVacationWeeks(1);
+    // Reset remote work fields
+    setRemoteDestino('');
+    setRemoteDomicilio('');
+    setRemoteContactoNombre('');
+    setRemoteContactoTelefono('');
+  }
+
+  // Get available weeks based on balance and type
+  function getMaxVacationWeeks(): number {
+    const balance = getBalanceForType(selectedType);
+    if (!balance) {
+      // Default max: 5 for vacation, 8 for remote work
+      return isRemoteWorkType() ? 8 : 5;
+    }
+    const maxByType = isRemoteWorkType() ? 8 : 5;
+    // For remote work, available_days is already in weeks
+    const availableWeeks = isRemoteWorkType() 
+      ? balance.available_days 
+      : Math.ceil(balance.available_days / 7);
+    return Math.min(maxByType, availableWeeks);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+
+    if (!selectedType || !startDate || !endDate) {
+      setError('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    const days = calculateDays();
+    if (days <= 0) {
+      setError('Las fechas seleccionadas no son válidas');
+      return;
+    }
+
+    const selectedLeaveType = leaveTypes.find((t) => t.id === selectedType);
+
+    // Validate vacation weeks (must start Monday, end Sunday)
+    if (selectedLeaveType?.code === 'vacation') {
+      const start = parseLocalDate(startDate);
+      const end = parseLocalDate(endDate);
+
+      if (start.getDay() !== 1) {
+        setError('Las vacaciones deben comenzar un lunes');
+        return;
+      }
+      if (end.getDay() !== 0) {
+        setError('Las vacaciones deben terminar un domingo');
+        return;
+      }
+    }
+
+    // Validate remote work weeks and required fields
+    if (selectedLeaveType?.code === 'remote_work') {
+      const start = parseLocalDate(startDate);
+      const end = parseLocalDate(endDate);
+
+      if (start.getDay() !== 1) {
+        setError('Las semanas de trabajo remoto deben comenzar un lunes');
+        return;
+      }
+      if (end.getDay() !== 0) {
+        setError('Las semanas de trabajo remoto deben terminar un domingo');
+        return;
+      }
+    }
+
+    if (requiresRemoteLocationFields()) {
+      if (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()) {
+        setError('Por favor completa todos los campos de ubicación y contacto de emergencia');
+        return;
+      }
+    }
+
+    // Build notes with remote location info if applicable
+    let finalNotes = notes;
+    if (requiresRemoteLocationFields()) {
+      const label = selectedLeaveType?.code === 'remote_work_trip'
+        ? 'NOTIFICACIÓN ART / SEGURO — TRABAJO FUERA DE DOMICILIO'
+        : 'INFORMACIÓN DE TRABAJO REMOTO';
+      const remoteInfo = `📍 ${label}\n` +
+        `Destino: ${remoteDestino}\n` +
+        `Domicilio: ${remoteDomicilio}\n` +
+        `Contacto de emergencia: ${remoteContactoNombre} - Tel: ${remoteContactoTelefono}` +
+        (notes ? `\n\nNotas adicionales: ${notes}` : '');
+      finalNotes = remoteInfo;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await fetch('/api/portal/time-off/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leave_type_id: selectedType,
+          start_date: startDate,
+          end_date: endDate,
+          days_requested: days,
+          notes: finalNotes || null,
+        }),
+      });
+
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        else router.push('/portal/time-off');
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Error al crear la solicitud');
+      }
+    } catch (error) {
+      setError('Error al crear la solicitud');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const selectedLeaveType = leaveTypes.find((t) => t.id === selectedType);
+  const daysCalculated = calculateDays();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="h-8 w-8 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {error && (
+        <div className="mb-4 rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Tipo de licencia */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-foreground">Tipo de licencia</label>
+              {leaveTypes.filter(isTypeSelectable).length === 0 ? (
+                <div className="mt-2 rounded-lg border border-[var(--border)] bg-muted p-4">
+                  <p className="text-sm text-foreground">
+                    No tienes días disponibles para solicitar licencias en este momento.
+                  </p>
+                </div>
+              ) : (
+                <SelectMenu
+                  value={selectedType}
+                  onChange={handleTypeChange}
+                  placeholder="Selecciona un tipo"
+                  ariaLabel="Tipo de licencia"
+                  className="mt-1 w-full"
+                  options={leaveTypes.filter(isTypeSelectable).map((type) => ({
+                    value: type.id,
+                    label: isUnlimitedLeaveType(type.code)
+                      ? `${type.name} - Ilimitada`
+                      : `${type.name} - Disponible: ${getAvailableDays(type.id)} ${type.count_type === 'weeks' ? 'semanas' : 'días'}`,
+                  }))}
+                />
+              )}
+              {selectedLeaveType && (
+                <p className="mt-1 text-xs text-muted-foreground">{selectedLeaveType.description}</p>
+              )}
+            </div>
+
+            {/* Fechas - Vacaciones y Trabajo Remoto (semanas completas) */}
+            {isWeekBasedType() && (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                  <ul className="text-sm text-foreground space-y-1">
+                    <li>
+                      • {isVacationType() 
+                        ? 'Las vacaciones deben ser en '
+                        : 'El trabajo remoto debe ser en '}
+                      <strong>semanas completas</strong> (lunes a domingo).
+                    </li>
+                    {selectedLeaveType && selectedLeaveType.advance_notice_days > 0 && (
+                      <li>
+                        • Requiere <strong>{selectedLeaveType.advance_notice_days} días de anticipación</strong>.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-secondary-foreground">
+                      Fecha de inicio
+                    </label>
+                    <MondayDatePicker
+                      value={startDate}
+                      onChange={handleStartDateChange}
+                      advanceNoticeDays={selectedLeaveType?.advance_notice_days || 0}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-secondary-foreground">Duración</label>
+                    <SelectMenu
+                      value={String(vacationWeeks)}
+                      onChange={(v) => handleVacationWeeksChange(Number(v))}
+                      ariaLabel="Duración"
+                      className="mt-1 w-full"
+                      options={[1, 2, 3, 4, 5, 6, 7, 8].slice(0, getMaxVacationWeeks() || 8).map((weeks) => ({
+                        value: String(weeks),
+                        label: `${weeks} semana${weeks > 1 ? 's' : ''} (${weeks * 7} días)`,
+                      }))}
+                    />
+                  </div>
+                </div>
+
+                {startDate && endDate && (
+                  <div className="rounded-lg border border-success/30 bg-success-subtle p-4">
+                    <p className="text-sm text-[var(--green-700)]">
+                      <strong>Período:</strong>{' '}
+                      {parseLocalDate(startDate).toLocaleDateString('es-AR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                      })}{' '}
+                      al{' '}
+                      {parseLocalDate(endDate).toLocaleDateString('es-AR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* Fechas - Días Pow, Estudio, Trabajo fuera de domicilio */}
+            {selectedType && !isWeekBasedType() && (
+              <div className="space-y-4">
+                {isRemoteWorkTripType() && (
+                  <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                    <p className="text-sm text-foreground">
+                      Usá este tipo cuando trabajes fuera de tu domicilio habitual por{' '}
+                      <strong>días sueltos o viajes</strong> (no semanas completas).
+                      Es una notificación obligatoria para ART y seguro. La solicitud va{' '}
+                      <strong>directamente a HR</strong> para su revisión (sin aprobación del líder).
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-secondary-foreground">Fecha de inicio</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-secondary-foreground">Fecha de fin</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Location fields — remote work (weeks) or trip (days) */}
+            {requiresRemoteLocationFields() && (
+              <div className="space-y-4 rounded-lg border border-[var(--border)] bg-muted p-4">
+                <p className="text-sm text-foreground">
+                  {isRemoteWorkTripType()
+                    ? 'Completá la información del lugar donde vas a trabajar para la notificación a ART y seguro:'
+                    : 'En el caso de que trabajes temporalmente desde otro lugar que no sea el habitual declarado al momento del ingreso, deberás completar la siguiente información:'}
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">
+                    Destino <span className="text-[var(--red-600)]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={remoteDestino}
+                    onChange={(e) => setRemoteDestino(e.target.value)}
+                    placeholder="Ej: Córdoba, Argentina"
+                    className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">
+                    Domicilio <span className="text-[var(--red-600)]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={remoteDomicilio}
+                    onChange={(e) => setRemoteDomicilio(e.target.value)}
+                    placeholder="Ej: Av. Colón 1234, Piso 5, Depto B"
+                    className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">
+                    Contacto de emergencia
+                  </label>
+                  <div className="mt-1 grid grid-cols-2 gap-3">
+                    <div>
+                      <input
+                        type="text"
+                        value={remoteContactoNombre}
+                        onChange={(e) => setRemoteContactoNombre(e.target.value)}
+                        placeholder="Nombre y vínculo"
+                        className="block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                        required
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">Ej: Juan Pérez (hermano)</p>
+                    </div>
+                    <div>
+                      <input
+                        type="tel"
+                        value={remoteContactoTelefono}
+                        onChange={(e) => setRemoteContactoTelefono(e.target.value)}
+                        placeholder="Teléfono"
+                        className="block w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                        required
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">Ej: +54 11 1234-5678</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Días calculados - solo para tipos que no son vacaciones */}
+            {daysCalculated > 0 && selectedLeaveType && !isVacationType() && (
+              <div className="rounded-lg border border-success/30 bg-success-subtle p-4">
+                <p className="text-sm text-[var(--green-700)]">
+                  <strong>{daysCalculated}</strong>{' '}
+                  {selectedLeaveType.count_type === 'weeks'
+                    ? `semana${daysCalculated > 1 ? 's' : ''}`
+                    : selectedLeaveType.count_type === 'business_days'
+                    ? `día${daysCalculated > 1 ? 's' : ''} hábiles`
+                    : `día${daysCalculated > 1 ? 's' : ''} corridos`}
+                </p>
+              </div>
+            )}
+
+            {/* Advertencia de anticipación - solo para tipos que no son week-based (ya está incluido arriba) */}
+            {selectedLeaveType && selectedLeaveType.advance_notice_days > 0 && !isWeekBasedType() && (
+              <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                <p className="text-sm text-foreground">
+                  Este tipo de licencia requiere{' '}
+                  <strong>{selectedLeaveType.advance_notice_days} días de anticipación</strong>.
+                </p>
+              </div>
+            )}
+
+
+            {/* Notas */}
+            <div>
+              <label className="block text-sm font-medium text-secondary-foreground">Notas (opcional)</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="Agrega cualquier comentario adicional..."
+                className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+
+            {/* Botones */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                size="lg"
+                loading={submitting}
+                disabled={
+                  !selectedType ||
+                  daysCalculated <= 0 ||
+                  (requiresRemoteLocationFields() && (!remoteDestino.trim() || !remoteDomicilio.trim() || !remoteContactoNombre.trim() || !remoteContactoTelefono.trim()))
+                }
+                className="flex-1"
+              >
+                Enviar solicitud
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={onCancel ?? (() => router.push('/portal/time-off'))}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+    </>
+  );
+}

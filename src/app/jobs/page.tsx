@@ -36,13 +36,13 @@ export default async function JobsPage() {
     jobs = [];
   }
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
-      <header className="border-b border-zinc-200 bg-white shadow-sm">
+    <div className="min-h-screen bg-muted font-sans text-foreground">
+      <header className="border-b border-[var(--border)] bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-4">
           <div className="flex items-center">
             <Image src="/Logo-Pow.svg" alt="Pow" width={150} height={50} priority className="h-auto" />
           </div>
-          <Link href="#" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+          <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Trabaja con nosotros
           </Link>
         </div>
@@ -50,8 +50,8 @@ export default async function JobsPage() {
 
       <main className="mx-auto max-w-5xl px-8 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Oportunidades actuales</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Oportunidades actuales</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Postúlate a las posiciones abiertas que tenemos disponibles
           </p>
         </div>
@@ -61,17 +61,17 @@ export default async function JobsPage() {
         </Suspense>
         
         {jobs.length === 0 ? (
-          <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center shadow-sm">
-            <p className="text-sm font-medium text-zinc-500">No hay búsquedas publicadas por el momento</p>
-            <p className="mt-1 text-xs text-zinc-400">Vuelve pronto para ver nuevas oportunidades</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">No hay búsquedas publicadas por el momento</p>
+            <p className="mt-1 text-xs text-muted-foreground">Vuelve pronto para ver nuevas oportunidades</p>
           </div>
         ) : (
           <ul className="space-y-4">
             {jobs.map((job) => (
-              <li key={job.id} className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 p-6 transition-shadow hover:shadow-md">
+              <li key={job.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-muted p-6 transition-shadow hover:shadow-md">
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-zinc-900">{job.title}</h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-zinc-600">
+                  <h2 className="text-lg font-semibold text-foreground">{job.title}</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -97,7 +97,7 @@ export default async function JobsPage() {
                 </div>
                 <Link
                   href={`/jobs/${job.id}`}
-                  className="ml-6 rounded-md bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800"
+                  className="ml-6 rounded-md bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-secondary"
                 >
                   Ver oferta
                 </Link>

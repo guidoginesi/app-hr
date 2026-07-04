@@ -43,9 +43,9 @@ const statusLabels: Record<EmployeeStatus, string> = {
 };
 
 const statusColors: Record<EmployeeStatus, string> = {
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-yellow-100 text-yellow-700',
-  terminated: 'bg-red-100 text-red-700',
+  active: 'bg-success-subtle text-[var(--green-700)]',
+  inactive: 'bg-warning-subtle text-[var(--amber-600)]',
+  terminated: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
 export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps) {
@@ -81,12 +81,12 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
 
         <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
             <div>
-              <h2 className="text-xl font-semibold text-zinc-900">
+              <h2 className="text-xl font-semibold text-foreground">
                 {employee.first_name} {employee.last_name}
               </h2>
-              <p className="mt-1 text-sm text-zinc-500">{employee.personal_email}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{employee.personal_email}</p>
             </div>
             <div className="flex items-center gap-3">
               <span
@@ -97,7 +97,7 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -110,93 +110,93 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
           <div className="p-6 space-y-6">
             {/* Personal Information */}
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 mb-3">Información Personal</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Información Personal</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-zinc-500">Nombre completo</p>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-xs text-muted-foreground">Nombre completo</p>
+                  <p className="text-sm font-medium text-foreground">
                     {employee.first_name} {employee.last_name}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Nacionalidad</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.nationality || '-'}</p>
+                  <p className="text-xs text-muted-foreground">Nacionalidad</p>
+                  <p className="text-sm font-medium text-foreground">{employee.nationality || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Email personal</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.personal_email}</p>
+                  <p className="text-xs text-muted-foreground">Email personal</p>
+                  <p className="text-sm font-medium text-foreground">{employee.personal_email}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Email de trabajo</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.work_email || '-'}</p>
+                  <p className="text-xs text-muted-foreground">Email de trabajo</p>
+                  <p className="text-sm font-medium text-foreground">{employee.work_email || '-'}</p>
                 </div>
               </div>
             </div>
 
             {/* Address */}
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 mb-3">Dirección</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Dirección</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <p className="text-xs text-zinc-500">Dirección</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.address || '-'}</p>
+                  <p className="text-xs text-muted-foreground">Dirección</p>
+                  <p className="text-sm font-medium text-foreground">{employee.address || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Ciudad</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.city || '-'}</p>
+                  <p className="text-xs text-muted-foreground">Ciudad</p>
+                  <p className="text-sm font-medium text-foreground">{employee.city || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Código Postal</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.postal_code || '-'}</p>
+                  <p className="text-xs text-muted-foreground">Código Postal</p>
+                  <p className="text-sm font-medium text-foreground">{employee.postal_code || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">País</p>
-                  <p className="text-sm font-medium text-zinc-900">{employee.country || '-'}</p>
+                  <p className="text-xs text-muted-foreground">País</p>
+                  <p className="text-sm font-medium text-foreground">{employee.country || '-'}</p>
                 </div>
               </div>
             </div>
 
             {/* Organization */}
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 mb-3">Información Organizacional</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Información Organizacional</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-zinc-500">Sociedad</p>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-xs text-muted-foreground">Sociedad</p>
+                  <p className="text-sm font-medium text-foreground">
                     {employee.legal_entity?.name || '-'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Departamento</p>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-xs text-muted-foreground">Departamento</p>
+                  <p className="text-sm font-medium text-foreground">
                     {employee.department?.name || '-'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Manager</p>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-xs text-muted-foreground">Manager</p>
+                  <p className="text-sm font-medium text-foreground">
                     {employee.manager?.first_name && employee.manager?.last_name
                       ? `${employee.manager.first_name} ${employee.manager.last_name}`
                       : '-'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">Cuenta de usuario</p>
+                  <p className="text-xs text-muted-foreground">Cuenta de usuario</p>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <p className="text-sm font-medium text-zinc-900">
+                    <p className="text-sm font-medium text-foreground">
                       {employee.user_id ? 'Sí' : 'No'}
                     </p>
                     <button
                       type="button"
                       onClick={handleResendAccess}
                       disabled={resending}
-                      className="text-xs text-blue-600 hover:text-blue-800 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-xs text-accent-foreground hover:text-accent-foreground underline disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {resending ? 'Enviando…' : 'Reenviar acceso'}
                     </button>
                   </div>
                   {resendMsg && (
-                    <p className={`text-xs mt-1 ${resendMsg.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xs mt-1 ${resendMsg.type === 'success' ? 'text-[var(--green-700)]' : 'text-[var(--red-600)]'}`}>
                       {resendMsg.text}
                     </p>
                   )}
@@ -206,11 +206,11 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
 
             {/* Employment */}
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 mb-3">Información de Empleo</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Información de Empleo</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-zinc-500">Fecha de ingreso</p>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-xs text-muted-foreground">Fecha de ingreso</p>
+                  <p className="text-sm font-medium text-foreground">
                     {employee.hire_date
                       ? formatDateLocal(employee.hire_date)
                       : '-'}
@@ -218,8 +218,8 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
                 </div>
                 {employee.status === 'terminated' && employee.termination_date && (
                   <div>
-                    <p className="text-xs text-zinc-500">Fecha de desvinculación</p>
-                    <p className="text-sm font-medium text-zinc-900">
+                    <p className="text-xs text-muted-foreground">Fecha de desvinculación</p>
+                    <p className="text-sm font-medium text-foreground">
                       {formatDateLocal(employee.termination_date)}
                     </p>
                   </div>
@@ -229,18 +229,18 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
+          <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Cerrar
             </button>
             <button
               type="button"
               onClick={onEdit}
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-secondary"
             >
               Editar
             </button>

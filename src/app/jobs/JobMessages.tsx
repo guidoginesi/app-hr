@@ -11,8 +11,8 @@ export function JobMessages() {
     <>
       {/* Mensaje de éxito */}
       {submitted === '1' && (
-        <div className="mb-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 shadow-sm">
-          <p className="text-sm font-medium text-green-800">
+        <div className="mb-6 rounded-xl border border-success/20 bg-success-subtle px-4 py-3 shadow-sm">
+          <p className="text-sm font-medium text-[var(--green-700)]">
             ✅ ¡Gracias por postularte! Recibimos tu CV y lo vamos a analizar.
           </p>
         </div>
@@ -20,11 +20,11 @@ export function JobMessages() {
 
       {/* Mensaje de error */}
       {error === 'already_applied' && (
-        <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 shadow-sm">
-          <p className="text-sm font-semibold text-red-800">
+        <div className="mb-6 rounded-xl border border-danger/20 bg-danger-subtle px-4 py-3 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--red-600)]">
             ⚠️ Ya te postulaste para este puesto
           </p>
-          <p className="mt-1 text-xs text-red-700">
+          <p className="mt-1 text-xs text-[var(--red-600)]">
             No puedes aplicar dos veces a la misma búsqueda. Si necesitas actualizar tu información, contacta con nosotros.
           </p>
         </div>

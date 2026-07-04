@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { AiTrainingCycle, AiTrainingRankingRow, AiTrainingScoreDetail } from '@/types/entrenamiento-ia';
 import { buildScoreBreakdown } from '@/types/entrenamiento-ia';
 import { RankingTable, ScoringRulesCard } from '@/components/entrenamiento-ia/RankingTable';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type Props = {
   cycles: AiTrainingCycle[];
@@ -42,39 +44,32 @@ export function PortalEntrenamientoClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-zinc-900">Entrenamiento IA</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            Ranking de capacitaciones internas · participación voluntaria
-          </p>
-        </div>
-        {cycles.length > 0 && (
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1">Ciclo</label>
-            <select
+      <PageHeader
+        title="Entrenamiento IA"
+        description="Ranking de capacitaciones internas · participación voluntaria"
+        actions={
+          cycles.length > 0 ? (
+            <SelectMenu
               value={selectedCycleId ?? ''}
-              onChange={(e) => handleCycleChange(e.target.value)}
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm"
-            >
-              {cycles.map((cycle) => (
-                <option key={cycle.id} value={cycle.id}>
-                  {cycle.name}
-                  {cycle.is_active ? ' (activo)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
+              onChange={handleCycleChange}
+              ariaLabel="Ciclo"
+              align="end"
+              options={cycles.map((cycle) => ({
+                value: cycle.id,
+                label: `${cycle.name}${cycle.is_active ? ' (activo)' : ''}`,
+              }))}
+            />
+          ) : undefined
+        }
+      />
 
-      <div className="flex gap-2 border-b border-zinc-200">
+      <div className="flex gap-2 border-b border-[var(--border)]">
         <Link
           href={`/portal/entrenamiento-ia${selectedCycleId ? `?cycle_id=${selectedCycleId}` : ''}`}
           className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
             view === 'ranking'
-              ? 'border-sky-600 text-sky-700'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+              ? 'border-brand text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           Ranking general
@@ -83,8 +78,8 @@ export function PortalEntrenamientoClient({
           href={`/portal/entrenamiento-ia/historial${selectedCycleId ? `?cycle_id=${selectedCycleId}` : ''}`}
           className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
             view === 'historial'
-              ? 'border-sky-600 text-sky-700'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+              ? 'border-brand text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           Mi historial
@@ -94,18 +89,18 @@ export function PortalEntrenamientoClient({
       {view === 'ranking' ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">Tu posición</p>
-              <p className="mt-2 text-3xl font-bold text-sky-900">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tu posición</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">
                 {myRank > 0 ? `#${myRank}` : '—'}
               </p>
-              <p className="text-sm text-sky-700">
+              <p className="text-sm text-muted-foreground">
                 {ranking.find((r) => r.employee_id === employeeId)?.total_points ?? 0} puntos totales
               </p>
             </div>
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Colaboradores en el ranking</p>
-              <p className="mt-2 text-3xl font-bold text-zinc-900">{ranking.length}</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Colaboradores en el ranking</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{ranking.length}</p>
             </div>
           </div>
 
@@ -118,15 +113,15 @@ export function PortalEntrenamientoClient({
         </>
       ) : (
         <>
-          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">Total del ciclo</p>
-            <p className="mt-2 text-3xl font-bold text-sky-900">{historyTotal} pts</p>
-            <p className="text-sm text-sky-700">{history.length} sesión{history.length !== 1 ? 'es' : ''} registrada{history.length !== 1 ? 's' : ''}</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total del ciclo</p>
+            <p className="mt-2 text-2xl font-bold text-foreground">{historyTotal} pts</p>
+            <p className="text-sm text-muted-foreground">{history.length} sesión{history.length !== 1 ? 'es' : ''} registrada{history.length !== 1 ? 's' : ''}</p>
           </div>
 
           {history.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-12 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="rounded-xl border border-dashed border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-sm text-muted-foreground">
                 Todavía no tenés puntajes registrados en este ciclo. ¡Sumate a la próxima capacitación!
               </p>
             </div>
@@ -142,24 +137,24 @@ export function PortalEntrenamientoClient({
                 });
 
                 return (
-                  <div key={entry.id} className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+                  <div key={entry.id} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="font-semibold text-zinc-900">{entry.session_title}</p>
-                        <p className="text-xs text-zinc-500">{entry.session_date}</p>
+                        <p className="font-semibold text-foreground">{entry.session_title}</p>
+                        <p className="text-xs text-muted-foreground">{entry.session_date}</p>
                       </div>
-                      <p className="text-2xl font-bold text-sky-700">{entry.total_points} pts</p>
+                      <p className="text-xl font-bold text-foreground">{entry.total_points} pts</p>
                     </div>
                     <ul className="mt-4 space-y-1">
                       {breakdown.map((line) => (
                         <li key={line.label} className="flex justify-between text-sm">
-                          <span className="text-zinc-600">{line.label}</span>
-                          <span className="font-medium text-zinc-900">+{line.points}</span>
+                          <span className="text-muted-foreground">{line.label}</span>
+                          <span className="font-medium text-foreground">+{line.points}</span>
                         </li>
                       ))}
                     </ul>
                     {entry.notes && (
-                      <p className="mt-3 text-xs text-zinc-500 border-t border-zinc-100 pt-3">
+                      <p className="mt-3 text-xs text-muted-foreground border-t border-[var(--border)] pt-3">
                         Nota HR: {entry.notes}
                       </p>
                     )}

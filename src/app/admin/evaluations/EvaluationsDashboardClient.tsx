@@ -174,19 +174,19 @@ export function EvaluationsDashboardClient({
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard de Evaluaciones</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de Evaluaciones</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Resumen general del módulo de evaluaciones de desempeño
           </p>
         </div>
         
         {/* Period Filter */}
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-zinc-700">Período:</label>
+          <label className="text-sm font-medium text-secondary-foreground">Período:</label>
           <select
             value={selectedPeriodId}
             onChange={(e) => setSelectedPeriodId(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
           >
             <option value="all">Todos los períodos</option>
             {periods.map((period) => (
@@ -200,28 +200,28 @@ export function EvaluationsDashboardClient({
 
       {/* Selected Period Info */}
       {selectedPeriod && (
-        <div className="rounded-xl border border-purple-200 bg-purple-50 p-6">
+        <div className="rounded-xl border border-cat-violet/20 bg-cat-violet-subtle p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                   selectedPeriod.status === 'open' 
-                    ? 'bg-green-100 text-green-700'
+                    ? 'bg-success-subtle text-[var(--green-700)]'
                     : selectedPeriod.status === 'closed'
-                    ? 'bg-zinc-100 text-zinc-600'
-                    : 'bg-yellow-100 text-yellow-700'
+                    ? 'bg-secondary text-muted-foreground'
+                    : 'bg-warning-subtle text-[var(--amber-600)]'
                 }`}>
                   {selectedPeriod.status === 'open' ? 'Abierto' : selectedPeriod.status === 'closed' ? 'Cerrado' : 'Borrador'}
                 </span>
-                <h2 className="text-lg font-semibold text-purple-900">{selectedPeriod.name}</h2>
+                <h2 className="text-lg font-semibold text-cat-violet">{selectedPeriod.name}</h2>
               </div>
-              <p className="mt-1 text-sm text-purple-700">
+              <p className="mt-1 text-sm text-cat-violet">
                 {formatDate(selectedPeriod.start_date)} - {formatDate(selectedPeriod.end_date)}
               </p>
             </div>
             <Link
               href="/admin/evaluations/periods"
-              className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+              className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet"
             >
               Gestionar períodos
             </Link>
@@ -231,63 +231,63 @@ export function EvaluationsDashboardClient({
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Score Promedio</p>
-          <p className="mt-3 text-4xl font-bold text-purple-600">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Score Promedio</p>
+          <p className="mt-3 text-4xl font-bold text-cat-violet">
             {stats.avgScore !== null ? stats.avgScore.toFixed(1) : '-'}
           </p>
-          <p className="mt-2 text-xs text-zinc-500">Evaluaciones de líderes</p>
+          <p className="mt-2 text-xs text-muted-foreground">Evaluaciones de líderes</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Evaluaciones</p>
-          <p className="mt-3 text-4xl font-bold text-zinc-900">{stats.total}</p>
-          <p className="mt-2 text-xs text-zinc-500">En el período</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Evaluaciones</p>
+          <p className="mt-3 text-4xl font-bold text-foreground">{stats.total}</p>
+          <p className="mt-2 text-xs text-muted-foreground">En el período</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Completadas</p>
-          <p className="mt-3 text-4xl font-bold text-green-600">{stats.submitted}</p>
-          <p className="mt-2 text-xs text-zinc-500">Enviadas</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Completadas</p>
+          <p className="mt-3 text-4xl font-bold text-[var(--green-700)]">{stats.submitted}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Enviadas</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Autoevaluaciones</p>
-          <p className="mt-3 text-4xl font-bold text-blue-600">{stats.selfCount}</p>
-          <p className="mt-2 text-xs text-zinc-500">De colaboradores</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Autoevaluaciones</p>
+          <p className="mt-3 text-4xl font-bold text-accent-foreground">{stats.selfCount}</p>
+          <p className="mt-2 text-xs text-muted-foreground">De colaboradores</p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Eval. Líderes</p>
-          <p className="mt-3 text-4xl font-bold text-purple-600">{stats.leaderCount}</p>
-          <p className="mt-2 text-xs text-zinc-500">De líderes</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Eval. Líderes</p>
+          <p className="mt-3 text-4xl font-bold text-cat-violet">{stats.leaderCount}</p>
+          <p className="mt-2 text-xs text-muted-foreground">De líderes</p>
         </div>
       </div>
 
       {/* Performance by Department */}
       {filteredDepartmentScores.length > 0 && (
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-zinc-900">Performance por Área</h3>
-            <p className="text-sm text-zinc-500">Score promedio de evaluaciones de líder por departamento</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">Performance por Área</h3>
+            <p className="text-sm text-muted-foreground">Score promedio de evaluaciones de líder por departamento</p>
           </div>
           <div className="p-6">
             <div className="space-y-4">
               {filteredDepartmentScores.map((dept) => (
                 <div key={dept.department_id} className="flex items-center gap-4">
                   <div className="w-40 truncate">
-                    <span className="text-sm font-medium text-zinc-700">{dept.department_name}</span>
+                    <span className="text-sm font-medium text-secondary-foreground">{dept.department_name}</span>
                   </div>
                   <div className="flex-1">
-                    <div className="h-4 w-full rounded-full bg-zinc-100">
+                    <div className="h-4 w-full rounded-full bg-secondary">
                       <div
-                        className="h-4 rounded-full bg-purple-500"
+                        className="h-4 rounded-full bg-cat-violet"
                         style={{ width: `${(dept.avg_score / 10) * 100}%` }}
                       />
                     </div>
                   </div>
                   <div className="w-20 text-right">
-                    <span className="text-sm font-semibold text-zinc-900">{dept.avg_score.toFixed(1)}</span>
-                    <span className="text-xs text-zinc-500"> / 10</span>
+                    <span className="text-sm font-semibold text-foreground">{dept.avg_score.toFixed(1)}</span>
+                    <span className="text-xs text-muted-foreground"> / 10</span>
                   </div>
                   <div className="w-24 text-right">
-                    <span className="text-xs text-zinc-500">{dept.employee_count} empleados</span>
+                    <span className="text-xs text-muted-foreground">{dept.employee_count} empleados</span>
                   </div>
                 </div>
               ))}
@@ -299,30 +299,30 @@ export function EvaluationsDashboardClient({
       {/* Top/Bottom Items */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top 3 */}
-        <div className="rounded-xl border border-green-200 bg-green-50 shadow-sm">
-          <div className="border-b border-green-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-green-900">Top 3 Competencias</h3>
-            <p className="text-sm text-green-700">Mejor puntuadas en evaluaciones</p>
+        <div className="rounded-xl border border-success/20 bg-success-subtle shadow-sm">
+          <div className="border-b border-success/20 px-6 py-4">
+            <h3 className="text-base font-semibold text-[var(--green-700)]">Top 3 Competencias</h3>
+            <p className="text-sm text-[var(--green-700)]">Mejor puntuadas en evaluaciones</p>
           </div>
-          <ul className="divide-y divide-green-200">
+          <ul className="divide-y divide-[var(--border)]">
             {topItems.length > 0 ? topItems.map((item, idx) => (
               <li key={item.item_id} className="px-6 py-4">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-200 text-xs font-bold text-green-800">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-subtle text-xs font-bold text-[var(--green-700)]">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-green-900 truncate">{item.statement}</p>
-                    <p className="text-xs text-green-700">{item.dimension_name}</p>
+                    <p className="text-sm font-medium text-[var(--green-700)] truncate">{item.statement}</p>
+                    <p className="text-xs text-[var(--green-700)]">{item.dimension_name}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-green-800">{item.avg_score.toFixed(1)}</p>
-                    <p className="text-xs text-green-600">{item.response_count} respuestas</p>
+                    <p className="text-lg font-bold text-[var(--green-700)]">{item.avg_score.toFixed(1)}</p>
+                    <p className="text-xs text-[var(--green-700)]">{item.response_count} respuestas</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-green-700">
+              <li className="px-6 py-8 text-center text-sm text-[var(--green-700)]">
                 No hay datos suficientes
               </li>
             )}
@@ -330,30 +330,30 @@ export function EvaluationsDashboardClient({
         </div>
 
         {/* Bottom 3 */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 shadow-sm">
-          <div className="border-b border-amber-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-amber-900">Áreas de Mejora</h3>
-            <p className="text-sm text-amber-700">Competencias con menor puntuación</p>
+        <div className="rounded-xl border border-warning/30 bg-warning-subtle shadow-sm">
+          <div className="border-b border-warning/30 px-6 py-4">
+            <h3 className="text-base font-semibold text-[var(--amber-600)]">Áreas de Mejora</h3>
+            <p className="text-sm text-[var(--amber-600)]">Competencias con menor puntuación</p>
           </div>
-          <ul className="divide-y divide-amber-200">
+          <ul className="divide-y divide-[var(--border)]">
             {bottomItems.length > 0 ? bottomItems.map((item, idx) => (
               <li key={item.item_id} className="px-6 py-4">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200 text-xs font-bold text-amber-800">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning-subtle text-xs font-bold text-[var(--amber-600)]">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-amber-900 truncate">{item.statement}</p>
-                    <p className="text-xs text-amber-700">{item.dimension_name}</p>
+                    <p className="text-sm font-medium text-[var(--amber-600)] truncate">{item.statement}</p>
+                    <p className="text-xs text-[var(--amber-600)]">{item.dimension_name}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-amber-800">{item.avg_score.toFixed(1)}</p>
-                    <p className="text-xs text-amber-600">{item.response_count} respuestas</p>
+                    <p className="text-lg font-bold text-[var(--amber-600)]">{item.avg_score.toFixed(1)}</p>
+                    <p className="text-xs text-[var(--amber-600)]">{item.response_count} respuestas</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-amber-700">
+              <li className="px-6 py-8 text-center text-sm text-[var(--amber-600)]">
                 No hay datos suficientes
               </li>
             )}
@@ -364,29 +364,29 @@ export function EvaluationsDashboardClient({
       {/* Top/Bottom Employees */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top Employees */}
-        <div className="rounded-xl border border-green-200 bg-green-50 shadow-sm">
-          <div className="border-b border-green-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-green-900">Top Performers</h3>
-            <p className="text-sm text-green-700">Empleados con mejor puntuación</p>
+        <div className="rounded-xl border border-success/20 bg-success-subtle shadow-sm">
+          <div className="border-b border-success/20 px-6 py-4">
+            <h3 className="text-base font-semibold text-[var(--green-700)]">Top Performers</h3>
+            <p className="text-sm text-[var(--green-700)]">Empleados con mejor puntuación</p>
           </div>
-          <ul className="divide-y divide-green-200">
+          <ul className="divide-y divide-[var(--border)]">
             {topEmployees.length > 0 ? topEmployees.map((emp, idx) => (
               <li key={emp.id} className="px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-200 text-sm font-bold text-green-800">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-subtle text-sm font-bold text-[var(--green-700)]">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-green-900">{emp.name}</p>
-                    <p className="text-xs text-green-700">{emp.department}</p>
+                    <p className="text-sm font-medium text-[var(--green-700)]">{emp.name}</p>
+                    <p className="text-xs text-[var(--green-700)]">{emp.department}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold text-green-800">{emp.score.toFixed(1)}</p>
+                    <p className="text-2xl font-bold text-[var(--green-700)]">{emp.score.toFixed(1)}</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-green-700">
+              <li className="px-6 py-8 text-center text-sm text-[var(--green-700)]">
                 No hay datos suficientes
               </li>
             )}
@@ -394,29 +394,29 @@ export function EvaluationsDashboardClient({
         </div>
 
         {/* Bottom Employees */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 shadow-sm">
-          <div className="border-b border-amber-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-amber-900">Requieren Atención</h3>
-            <p className="text-sm text-amber-700">Empleados con menor puntuación</p>
+        <div className="rounded-xl border border-warning/30 bg-warning-subtle shadow-sm">
+          <div className="border-b border-warning/30 px-6 py-4">
+            <h3 className="text-base font-semibold text-[var(--amber-600)]">Requieren Atención</h3>
+            <p className="text-sm text-[var(--amber-600)]">Empleados con menor puntuación</p>
           </div>
-          <ul className="divide-y divide-amber-200">
+          <ul className="divide-y divide-[var(--border)]">
             {bottomEmployees.length > 0 ? bottomEmployees.map((emp, idx) => (
               <li key={emp.id} className="px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-800">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning-subtle text-sm font-bold text-[var(--amber-600)]">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-amber-900">{emp.name}</p>
-                    <p className="text-xs text-amber-700">{emp.department}</p>
+                    <p className="text-sm font-medium text-[var(--amber-600)]">{emp.name}</p>
+                    <p className="text-xs text-[var(--amber-600)]">{emp.department}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold text-amber-800">{emp.score.toFixed(1)}</p>
+                    <p className="text-2xl font-bold text-[var(--amber-600)]">{emp.score.toFixed(1)}</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-amber-700">
+              <li className="px-6 py-8 text-center text-sm text-[var(--amber-600)]">
                 No hay datos suficientes
               </li>
             )}
@@ -426,20 +426,20 @@ export function EvaluationsDashboardClient({
 
       {/* All Employees Score Distribution */}
       {employeeScores.length > 0 && (
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-zinc-900">Distribución de Scores por Empleado</h3>
-                <p className="text-sm text-zinc-500">
+                <h3 className="text-base font-semibold text-foreground">Distribución de Scores por Empleado</h3>
+                <p className="text-sm text-muted-foreground">
                   {filteredEmployeeScores.length} de {employeeScores.length} empleados
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 {globalAvgScore !== null && (
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-purple-500" />
-                    <span className="text-sm text-zinc-600">Media: <span className="font-semibold">{globalAvgScore.toFixed(1)}</span></span>
+                    <div className="h-3 w-3 rounded-full bg-cat-violet" />
+                    <span className="text-sm text-muted-foreground">Media: <span className="font-semibold">{globalAvgScore.toFixed(1)}</span></span>
                   </div>
                 )}
               </div>
@@ -453,13 +453,13 @@ export function EvaluationsDashboardClient({
                   placeholder="Buscar por nombre o área..."
                   value={employeeSearch}
                   onChange={(e) => setEmployeeSearch(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm placeholder:text-zinc-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2 text-sm placeholder:text-muted-foreground focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
                 />
               </div>
               <select
                 value={employeeDeptFilter}
                 onChange={(e) => setEmployeeDeptFilter(e.target.value)}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
               >
                 <option value="all">Todas las áreas</option>
                 {availableDepartments.map(dept => (
@@ -473,7 +473,7 @@ export function EvaluationsDashboardClient({
             <div className="mb-4 flex items-center">
               <div className="w-48" />
               <div className="flex-1 relative">
-                <div className="flex justify-between text-xs text-zinc-400 px-1">
+                <div className="flex justify-between text-xs text-muted-foreground px-1">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
                     <span key={n} className="w-6 text-center">{n}</span>
                   ))}
@@ -487,16 +487,16 @@ export function EvaluationsDashboardClient({
               {filteredEmployeeScores.length > 0 ? filteredEmployeeScores.map((emp) => (
                 <div key={emp.id} className="flex items-center gap-4">
                   <div className="w-48 truncate">
-                    <p className="text-sm font-medium text-zinc-800 truncate">{emp.name}</p>
-                    <p className="text-xs text-zinc-500 truncate">{emp.department}</p>
+                    <p className="text-sm font-medium text-secondary-foreground truncate">{emp.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{emp.department}</p>
                   </div>
                   <div className="flex-1 relative">
                     {/* Scale Background */}
-                    <div className="h-8 rounded-lg bg-gradient-to-r from-red-100 via-yellow-100 to-green-100 relative">
+                    <div className="h-8 rounded-lg bg-gradient-to-r from-danger-subtle via-warning-subtle to-success-subtle relative">
                       {/* Scale Divisions */}
                       <div className="absolute inset-0 flex">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
-                          <div key={n} className="flex-1 border-r border-zinc-200/50" />
+                          <div key={n} className="flex-1 border-r border-[var(--border)]/50" />
                         ))}
                         <div className="flex-1" />
                       </div>
@@ -504,14 +504,14 @@ export function EvaluationsDashboardClient({
                       {/* Mean Marker */}
                       {globalAvgScore !== null && (
                         <div 
-                          className="absolute top-0 bottom-0 w-0.5 bg-purple-500 z-10"
+                          className="absolute top-0 bottom-0 w-0.5 bg-cat-violet z-10"
                           style={{ left: `${((globalAvgScore - 1) / 9) * 100}%` }}
                         />
                       )}
                       
                       {/* Employee Score Marker */}
                       <div 
-                        className="absolute top-1 bottom-1 w-6 -ml-3 rounded-md bg-zinc-800 flex items-center justify-center shadow-md z-20"
+                        className="absolute top-1 bottom-1 w-6 -ml-3 rounded-md bg-foreground flex items-center justify-center shadow-md z-20"
                         style={{ left: `${((emp.score - 1) / 9) * 100}%` }}
                       >
                         <span className="text-xs font-bold text-white">{emp.score.toFixed(1)}</span>
@@ -520,36 +520,36 @@ export function EvaluationsDashboardClient({
                   </div>
                   <div className="w-16 text-right">
                     <span className={`text-sm font-semibold ${
-                      emp.score >= 7 ? 'text-green-600' : 
-                      emp.score >= 5 ? 'text-yellow-600' : 'text-red-600'
+                      emp.score >= 7 ? 'text-[var(--green-700)]' : 
+                      emp.score >= 5 ? 'text-[var(--amber-600)]' : 'text-[var(--red-600)]'
                     }`}>
                       {emp.score.toFixed(1)}
                     </span>
                   </div>
                 </div>
               )) : (
-                <div className="py-8 text-center text-sm text-zinc-500">
+                <div className="py-8 text-center text-sm text-muted-foreground">
                   No se encontraron empleados con los filtros seleccionados
                 </div>
               )}
             </div>
 
             {/* Legend */}
-            <div className="mt-6 pt-4 border-t border-zinc-200 flex items-center justify-center gap-6 text-xs text-zinc-500">
+            <div className="mt-6 pt-4 border-t border-[var(--border)] flex items-center justify-center gap-6 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <div className="h-3 w-6 rounded bg-red-100" />
+                <div className="h-3 w-6 rounded bg-danger-subtle" />
                 <span>1-4: Por debajo</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-6 rounded bg-yellow-100" />
+                <div className="h-3 w-6 rounded bg-warning-subtle" />
                 <span>5-6: Esperado</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-6 rounded bg-green-100" />
+                <div className="h-3 w-6 rounded bg-success-subtle" />
                 <span>7-10: Superior</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-0.5 bg-purple-500" />
+                <div className="h-3 w-0.5 bg-cat-violet" />
                 <span>Media del equipo</span>
               </div>
             </div>
@@ -559,31 +559,31 @@ export function EvaluationsDashboardClient({
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-zinc-900">Configuración</h3>
-          <p className="mt-1 text-sm text-zinc-500">Administra períodos y dimensiones de evaluación</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-foreground">Configuración</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Administra períodos y dimensiones de evaluación</p>
           <div className="mt-4 flex gap-3">
             <Link
               href="/admin/evaluations/periods"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Períodos
             </Link>
             <Link
               href="/admin/evaluations/dimensions"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Dimensiones
             </Link>
           </div>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-zinc-900">Seguimiento</h3>
-          <p className="mt-1 text-sm text-zinc-500">Visualiza todas las evaluaciones del sistema</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-foreground">Seguimiento</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Visualiza todas las evaluaciones del sistema</p>
           <div className="mt-4">
             <Link
               href="/admin/evaluations/all"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Ver todas las evaluaciones
             </Link>

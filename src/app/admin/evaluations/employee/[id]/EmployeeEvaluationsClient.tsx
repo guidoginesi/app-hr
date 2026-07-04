@@ -163,26 +163,26 @@ function ResponsesModal({
     : {};
 
   const typeLabel = evaluation.type === 'self' ? 'Autoevaluación' : 'Evaluación de Líder';
-  const typeBg = evaluation.type === 'self' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+  const typeBg = evaluation.type === 'self' ? 'bg-accent text-accent-foreground' : 'bg-cat-violet-subtle text-cat-violet';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--border)] bg-white px-6 py-4">
           <div className="flex items-center gap-3">
             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${typeBg}`}>
               {typeLabel}
             </span>
             {evaluation.total_score !== null && (
-              <span className="text-lg font-semibold text-zinc-900">
+              <span className="text-lg font-semibold text-foreground">
                 {evaluation.total_score.toFixed(1)}/10
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-zinc-100 text-zinc-500"
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary text-muted-foreground"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -193,31 +193,31 @@ function ResponsesModal({
         {/* Body */}
         <div className="p-6 space-y-6">
           {loading && (
-            <div className="py-12 text-center text-sm text-zinc-500">Cargando respuestas...</div>
+            <div className="py-12 text-center text-sm text-muted-foreground">Cargando respuestas...</div>
           )}
           {error && (
-            <div className="py-12 text-center text-sm text-red-600">{error}</div>
+            <div className="py-12 text-center text-sm text-[var(--red-600)]">{error}</div>
           )}
           {!loading && !error && data && (
             <>
               {/* Scored responses grouped by dimension */}
               {Object.values(byDimension).map((dim) => (
                 <div key={dim.name}>
-                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">{dim.name}</h4>
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{dim.name}</h4>
                   <div className="space-y-2">
                     {dim.items.map((item) => (
-                      <div key={item.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                      <div key={item.id} className="rounded-xl border border-[var(--border)] bg-muted p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <p className="text-sm text-zinc-800">{item.statement}</p>
+                          <p className="text-sm text-secondary-foreground">{item.statement}</p>
                           <span className={`shrink-0 text-lg font-bold ${
-                            item.score >= 7 ? 'text-emerald-600' :
-                            item.score >= 5 ? 'text-amber-600' : 'text-red-600'
+                            item.score >= 7 ? 'text-[var(--green-700)]' :
+                            item.score >= 5 ? 'text-[var(--amber-600)]' : 'text-[var(--red-600)]'
                           }`}>
                             {item.score}
                           </span>
                         </div>
                         {item.explanation && (
-                          <p className="mt-2 text-xs text-zinc-500 italic">"{item.explanation}"</p>
+                          <p className="mt-2 text-xs text-muted-foreground italic">"{item.explanation}"</p>
                         )}
                       </div>
                     ))}
@@ -228,14 +228,14 @@ function ResponsesModal({
               {/* Open questions */}
               {data.openQuestions.length > 0 && (
                 <div>
-                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Preguntas abiertas</h4>
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preguntas abiertas</h4>
                   <div className="space-y-2">
                     {data.openQuestions.map((q) => (
-                      <div key={q.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                        <p className="text-xs font-medium text-zinc-500 mb-1">
+                      <div key={q.id} className="rounded-xl border border-[var(--border)] bg-muted p-4">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
                           {OPEN_QUESTION_LABELS[q.question_key] || q.question_key}
                         </p>
-                        <p className="text-sm text-zinc-800 whitespace-pre-wrap">{q.response}</p>
+                        <p className="text-sm text-secondary-foreground whitespace-pre-wrap">{q.response}</p>
                       </div>
                     ))}
                   </div>
@@ -243,7 +243,7 @@ function ResponsesModal({
               )}
 
               {data.responses.length === 0 && data.openQuestions.length === 0 && (
-                <div className="py-12 text-center text-sm text-zinc-500">
+                <div className="py-12 text-center text-sm text-muted-foreground">
                   No hay respuestas registradas para esta evaluación
                 </div>
               )}
@@ -295,11 +295,11 @@ export function EmployeeEvaluationsClient({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'submitted':
-        return <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Completada</span>;
+        return <span className="inline-flex items-center rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-[var(--green-700)]">Completada</span>;
       case 'in_progress':
-        return <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">En progreso</span>;
+        return <span className="inline-flex items-center rounded-full bg-warning-subtle px-2.5 py-0.5 text-xs font-medium text-[var(--amber-600)]">En progreso</span>;
       default:
-        return <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">Borrador</span>;
+        return <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">Borrador</span>;
     }
   };
 
@@ -309,22 +309,22 @@ export function EmployeeEvaluationsClient({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/evaluations/all"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border)] bg-white hover:bg-muted"
         >
-          <svg className="h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {employee.first_name} {employee.last_name}
           </h1>
-          <p className="text-sm text-zinc-500">Historial completo de evaluaciones y objetivos</p>
+          <p className="text-sm text-muted-foreground">Historial completo de evaluaciones y objetivos</p>
         </div>
       </div>
 
       {/* Employee Card */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-6">
         <div className="flex items-start gap-6">
           {/* Avatar */}
           {employee.photo_url ? (
@@ -334,8 +334,8 @@ export function EmployeeEvaluationsClient({
               className="h-20 w-20 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-purple-100">
-              <span className="text-2xl font-semibold text-purple-700">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cat-violet-subtle">
+              <span className="text-2xl font-semibold text-cat-violet">
                 {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
               </span>
             </div>
@@ -344,59 +344,59 @@ export function EmployeeEvaluationsClient({
           {/* Info */}
           <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-xs text-zinc-500">Puesto</p>
-              <p className="text-sm font-medium text-zinc-900">{employee.job_title || '-'}</p>
+              <p className="text-xs text-muted-foreground">Puesto</p>
+              <p className="text-sm font-medium text-foreground">{employee.job_title || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Departamento</p>
-              <p className="text-sm font-medium text-zinc-900">{employee.department?.name || '-'}</p>
+              <p className="text-xs text-muted-foreground">Departamento</p>
+              <p className="text-sm font-medium text-foreground">{employee.department?.name || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Manager</p>
-              <p className="text-sm font-medium text-zinc-900">
+              <p className="text-xs text-muted-foreground">Manager</p>
+              <p className="text-sm font-medium text-foreground">
                 {employee.manager?.first_name && employee.manager?.last_name 
                   ? `${employee.manager.first_name} ${employee.manager.last_name}` 
                   : '-'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Nivel de Seniority</p>
+              <p className="text-xs text-muted-foreground">Nivel de Seniority</p>
               {employee.seniority_level && seniorityCategory ? (
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${SENIORITY_CATEGORY_COLORS[seniorityCategory]}`}>
                   {getSeniorityLabel(employee.seniority_level)}
                 </span>
               ) : (
-                <p className="text-sm font-medium text-zinc-900">-</p>
+                <p className="text-sm font-medium text-foreground">-</p>
               )}
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Fecha de ingreso</p>
-              <p className="text-sm font-medium text-zinc-900">
+              <p className="text-xs text-muted-foreground">Fecha de ingreso</p>
+              <p className="text-sm font-medium text-foreground">
                 {employee.hire_date ? new Date(employee.hire_date).toLocaleDateString('es-AR') : '-'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Email</p>
-              <p className="text-sm font-medium text-zinc-900">{employee.work_email || employee.personal_email}</p>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-medium text-foreground">{employee.work_email || employee.personal_email}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Estado</p>
+              <p className="text-xs text-muted-foreground">Estado</p>
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                employee.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'
+                employee.status === 'active' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-secondary text-muted-foreground'
               }`}>
                 {employee.status === 'active' ? 'Activo' : employee.status}
               </span>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Sociedad</p>
-              <p className="text-sm font-medium text-zinc-900">{employee.legal_entity?.name || '-'}</p>
+              <p className="text-xs text-muted-foreground">Sociedad</p>
+              <p className="text-sm font-medium text-foreground">{employee.legal_entity?.name || '-'}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-zinc-200">
+      <div className="border-b border-[var(--border)]">
         <nav className="flex gap-6">
           {[
             { id: 'evaluations', label: 'Evaluaciones', count: evaluations.length },
@@ -409,18 +409,18 @@ export function EmployeeEvaluationsClient({
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`relative pb-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'text-purple-600'
-                  : 'text-zinc-500 hover:text-zinc-900'
+                  ? 'text-cat-violet'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs">
+                <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs">
                   {tab.count}
                 </span>
               )}
               {activeTab === tab.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cat-violet" />
               )}
             </button>
           ))}
@@ -431,48 +431,48 @@ export function EmployeeEvaluationsClient({
       {activeTab === 'evaluations' && (
         <div className="space-y-6">
           {Object.values(evaluationsByPeriod).length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <p className="text-sm text-zinc-500">No hay evaluaciones registradas</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-sm text-muted-foreground">No hay evaluaciones registradas</p>
             </div>
           ) : (
             Object.values(evaluationsByPeriod).map(({ period, evaluations: periodEvals }) => (
-              <div key={period?.id || 'sin-periodo'} className="rounded-xl border border-zinc-200 bg-white">
-                <div className="border-b border-zinc-200 px-6 py-4">
-                  <h3 className="font-semibold text-zinc-900">
+              <div key={period?.id || 'sin-periodo'} className="rounded-xl border border-[var(--border)] bg-white">
+                <div className="border-b border-[var(--border)] px-6 py-4">
+                  <h3 className="font-semibold text-foreground">
                     {period?.name || 'Sin período'} {period?.year && `(${period.year})`}
                   </h3>
                 </div>
-                <div className="divide-y divide-zinc-100">
+                <div className="divide-y divide-[var(--border)]">
                   {periodEvals.map((evaluation) => (
                     <div key={evaluation.id} className="flex items-center justify-between px-6 py-4">
                       <div className="flex items-center gap-4">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           evaluation.type === 'self'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-purple-100 text-purple-700'
+                            ? 'bg-accent text-accent-foreground'
+                            : 'bg-cat-violet-subtle text-cat-violet'
                         }`}>
                           {evaluation.type === 'self' ? 'Autoevaluación' : 'Evaluación de Líder'}
                         </span>
                         {evaluation.type === 'leader' && evaluation.evaluator && (
-                          <span className="text-sm text-zinc-500">
+                          <span className="text-sm text-muted-foreground">
                             por {evaluation.evaluator.first_name} {evaluation.evaluator.last_name}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-4">
                         {evaluation.total_score !== null && (
-                          <span className="text-lg font-semibold text-zinc-900">
+                          <span className="text-lg font-semibold text-foreground">
                             {evaluation.total_score.toFixed(1)}/10
                           </span>
                         )}
                         {getStatusBadge(evaluation.status)}
-                        <span className="text-xs text-zinc-400">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(evaluation.created_at).toLocaleDateString('es-AR')}
                         </span>
                         {evaluation.status === 'submitted' && (
                           <button
                             onClick={() => setSelectedEvaluation(evaluation)}
-                            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                            className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
                           >
                             Ver respuestas
                           </button>
@@ -490,41 +490,41 @@ export function EmployeeEvaluationsClient({
       {activeTab === 'objectives' && (
         <div className="space-y-6">
           {Object.keys(objectivesByYear).length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <p className="text-sm text-zinc-500">No hay objetivos registrados</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-sm text-muted-foreground">No hay objetivos registrados</p>
             </div>
           ) : (
             Object.entries(objectivesByYear)
               .sort(([a], [b]) => Number(b) - Number(a))
               .map(([year, yearObjectives]) => (
-                <div key={year} className="rounded-xl border border-zinc-200 bg-white">
-                  <div className="border-b border-zinc-200 px-6 py-4">
-                    <h3 className="font-semibold text-zinc-900">Objetivos {year}</h3>
+                <div key={year} className="rounded-xl border border-[var(--border)] bg-white">
+                  <div className="border-b border-[var(--border)] px-6 py-4">
+                    <h3 className="font-semibold text-foreground">Objetivos {year}</h3>
                   </div>
-                  <div className="divide-y divide-zinc-100">
+                  <div className="divide-y divide-[var(--border)]">
                     {yearObjectives.map((objective) => (
                       <div key={objective.id} className="px-6 py-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                              <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                 {PERIOD_TYPE_LABELS[objective.period_type as keyof typeof PERIOD_TYPE_LABELS] || objective.period_type}
                               </span>
-                              <span className="text-xs text-zinc-400">Peso: {objective.weight}%</span>
+                              <span className="text-xs text-muted-foreground">Peso: {objective.weight}%</span>
                             </div>
-                            <p className="font-medium text-zinc-900">{objective.title}</p>
+                            <p className="font-medium text-foreground">{objective.title}</p>
                             {objective.description && (
-                              <p className="mt-1 text-sm text-zinc-500">{objective.description}</p>
+                              <p className="mt-1 text-sm text-muted-foreground">{objective.description}</p>
                             )}
                           </div>
                           <div className="text-right">
                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              STATUS_COLORS[objective.status as keyof typeof STATUS_COLORS] || 'bg-zinc-100 text-zinc-600'
+                              STATUS_COLORS[objective.status as keyof typeof STATUS_COLORS] || 'bg-secondary text-muted-foreground'
                             }`}>
                               {STATUS_LABELS[objective.status as keyof typeof STATUS_LABELS] || objective.status}
                             </span>
                             {objective.achievement !== null && (
-                              <p className="mt-1 text-lg font-semibold text-zinc-900">
+                              <p className="mt-1 text-lg font-semibold text-foreground">
                                 {objective.achievement}%
                               </p>
                             )}
@@ -542,45 +542,45 @@ export function EmployeeEvaluationsClient({
       {activeTab === 'recategorizations' && (
         <div className="space-y-4">
           {recategorizations.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <p className="text-sm text-zinc-500">No hay recategorizaciones registradas</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-sm text-muted-foreground">No hay recategorizaciones registradas</p>
             </div>
           ) : (
             recategorizations.map((recat) => (
-              <div key={recat.id} className="rounded-xl border border-zinc-200 bg-white p-6">
+              <div key={recat.id} className="rounded-xl border border-[var(--border)] bg-white p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm text-zinc-500 mb-2">
+                    <p className="text-sm text-muted-foreground mb-2">
                       {recat.evaluation?.period?.name} ({recat.evaluation?.period?.year})
                     </p>
                     <div className="flex gap-2">
                       {recat.level_recategorization === 'approved' && (
-                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                        <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
                           Dentro del nivel
                         </span>
                       )}
                       {recat.position_recategorization === 'approved' && (
-                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                        <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
                           Ascenso de nivel
                         </span>
                       )}
                     </div>
                     {recat.recommended_level && (
-                      <p className="mt-2 text-sm text-zinc-700">
+                      <p className="mt-2 text-sm text-secondary-foreground">
                         Nivel recomendado: <span className="font-medium">{getSeniorityLabel(recat.recommended_level)}</span>
                       </p>
                     )}
                     {recat.notes && (
-                      <p className="mt-2 text-sm text-zinc-500">{recat.notes}</p>
+                      <p className="mt-2 text-sm text-muted-foreground">{recat.notes}</p>
                     )}
                   </div>
                   <div className="text-right">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       recat.hr_status === 'approved'
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-success-subtle text-[var(--green-700)]'
                         : recat.hr_status === 'rejected'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-amber-100 text-amber-700'
+                        ? 'bg-danger-subtle text-[var(--red-600)]'
+                        : 'bg-warning-subtle text-[var(--amber-600)]'
                     }`}>
                       {recat.hr_status === 'approved' ? 'Aprobado HR' : recat.hr_status === 'rejected' ? 'Rechazado HR' : 'Pendiente HR'}
                     </span>
@@ -595,16 +595,16 @@ export function EmployeeEvaluationsClient({
       {activeTab === 'history' && (
         <div className="space-y-4">
           {seniorityHistory.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center">
-              <p className="text-sm text-zinc-500">No hay historial de cambios de seniority</p>
+            <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center">
+              <p className="text-sm text-muted-foreground">No hay historial de cambios de seniority</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-zinc-200 bg-white">
-              <div className="divide-y divide-zinc-100">
+            <div className="rounded-xl border border-[var(--border)] bg-white">
+              <div className="divide-y divide-[var(--border)]">
                 {seniorityHistory.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-4 px-6 py-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-                      <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cat-violet-subtle">
+                      <svg className="h-5 w-5 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                       </svg>
                     </div>
@@ -612,19 +612,19 @@ export function EmployeeEvaluationsClient({
                       <div className="flex items-center gap-2">
                         {item.previous_level && (
                           <>
-                            <span className="text-sm text-zinc-500">{getSeniorityLabel(item.previous_level)}</span>
-                            <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <span className="text-sm text-muted-foreground">{getSeniorityLabel(item.previous_level)}</span>
+                            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                           </>
                         )}
-                        <span className="font-medium text-zinc-900">{getSeniorityLabel(item.new_level)}</span>
+                        <span className="font-medium text-foreground">{getSeniorityLabel(item.new_level)}</span>
                       </div>
                       {item.notes && (
-                        <p className="mt-1 text-sm text-zinc-500">{item.notes}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.notes}</p>
                       )}
                     </div>
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(item.effective_date).toLocaleDateString('es-AR')}
                     </span>
                   </div>

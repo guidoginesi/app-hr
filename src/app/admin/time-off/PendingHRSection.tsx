@@ -71,16 +71,16 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-xl border border-green-200 bg-green-50 p-6">
+      <div className="rounded-xl border border-success/20 bg-success-subtle p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-            <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success-subtle">
+            <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-green-900">¡Todo al día!</h3>
-            <p className="text-sm text-green-700">No hay solicitudes pendientes de aprobación HR</p>
+            <h3 className="font-semibold text-[var(--green-700)]">¡Todo al día!</h3>
+            <p className="text-sm text-[var(--green-700)]">No hay solicitudes pendientes de aprobación HR</p>
           </div>
         </div>
       </div>
@@ -88,14 +88,14 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
   }
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-white shadow-sm">
-      <div className="border-b border-blue-200 bg-blue-50 px-6 py-4">
+    <div className="rounded-xl border border-[var(--orange-100)] bg-white shadow-sm">
+      <div className="border-b border-[var(--orange-100)] bg-accent px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-blue-900">
+            <h3 className="text-lg font-semibold text-accent-foreground">
               Pendientes de tu aprobación ({requests.length})
             </h3>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-accent-foreground">
               Estas solicitudes ya fueron aprobadas por el líder. Tu aprobación es el paso final.
             </p>
           </div>
@@ -103,12 +103,12 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
       </div>
 
       {error && (
-        <div className="mx-6 mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div className="mx-6 mt-4 rounded-lg bg-danger-subtle p-3 text-sm text-[var(--red-600)]">
           {error}
         </div>
       )}
 
-      <ul className="divide-y divide-zinc-200">
+      <ul className="divide-y divide-[var(--border)]">
         {requests.map((request) => (
           <li key={request.id} className="px-6 py-5">
             <div className="flex items-start justify-between gap-4">
@@ -120,8 +120,8 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                     className="h-12 w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                    <span className="text-sm font-semibold text-blue-700">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+                    <span className="text-sm font-semibold text-accent-foreground">
                       {request.employee_name
                         ?.split(' ')
                         .map((n) => n[0])
@@ -131,14 +131,14 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                   </div>
                 )}
                 <div className="flex-1">
-                  <h4 className="font-semibold text-zinc-900">{request.employee_name}</h4>
-                  <p className="mt-1 text-sm font-medium text-zinc-700">
+                  <h4 className="font-semibold text-foreground">{request.employee_name}</h4>
+                  <p className="mt-1 text-sm font-medium text-secondary-foreground">
                     {request.leave_type_name} • {request.days_requested}{' '}
                     {request.count_type === 'weeks'
                       ? `semana${request.days_requested > 1 ? 's' : ''}`
                       : `día${request.days_requested > 1 ? 's' : ''}`}
                   </p>
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-muted-foreground">
                     {formatDateLocal(request.start_date, 'es-AR', {
                       weekday: 'short',
                       day: 'numeric',
@@ -153,18 +153,18 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                     })}
                   </p>
                   {request.notes && (
-                    <p className="mt-2 text-sm text-zinc-500">"{request.notes}"</p>
+                    <p className="mt-2 text-sm text-muted-foreground">"{request.notes}"</p>
                   )}
                   
                   {/* Leader approval info */}
-                  <div className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
-                    <svg className="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <svg className="h-3 w-3 text-success" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                     <span>
                       Aprobado por líder: {request.leader_name || request.manager_name || 'Líder'}
                       {request.leader_approved_at && (
-                        <span className="text-zinc-400">
+                        <span className="text-muted-foreground">
                           {' '}({new Date(request.leader_approved_at).toLocaleDateString('es-AR')})
                         </span>
                       )}
@@ -181,13 +181,13 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Motivo del rechazo..."
                       rows={2}
-                      className="w-56 rounded border border-zinc-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-56 rounded border border-[var(--border)] px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleReject(request.id)}
                         disabled={!rejectReason.trim() || actionLoading === request.id}
-                        className="flex-1 rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                        className="flex-1 rounded bg-danger px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
                       >
                         {actionLoading === request.id ? '...' : 'Rechazar'}
                       </button>
@@ -196,7 +196,7 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                           setRejectingId(null);
                           setRejectReason('');
                         }}
-                        className="rounded border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+                        className="rounded border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                       >
                         Cancelar
                       </button>
@@ -207,17 +207,17 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                     <button
                       onClick={() => handleApprove(request.id)}
                       disabled={actionLoading === request.id}
-                      className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                      className="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
                     >
                       {actionLoading === request.id ? '...' : 'Aprobar'}
                     </button>
                     <button
                       onClick={() => setRejectingId(request.id)}
-                      className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+                      className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
                     >
                       Rechazar
                     </button>
-                    <p className="text-center text-xs text-blue-600">
+                    <p className="text-center text-xs text-accent-foreground">
                       Aprobación final
                     </p>
                   </>

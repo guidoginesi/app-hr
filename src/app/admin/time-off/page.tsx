@@ -76,38 +76,38 @@ export default async function TimeOffDashboardPage() {
     <TimeOffShell active="dashboard">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard de Time Off</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de Time Off</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Resumen general de vacaciones y licencias
           </p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Pendientes HR</p>
-            <p className="mt-3 text-4xl font-bold text-blue-700">{pendingHRRequests}</p>
-            <p className="mt-2 text-xs text-blue-600">Tu aprobación final</p>
+          <div className="rounded-xl border border-[var(--orange-100)] bg-accent p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent-foreground">Pendientes HR</p>
+            <p className="mt-3 text-4xl font-bold text-accent-foreground">{pendingHRRequests}</p>
+            <p className="mt-2 text-xs text-accent-foreground">Tu aprobación final</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Pendientes Líder</p>
-            <p className="mt-3 text-4xl font-bold text-amber-600">{pendingLeaderRequests}</p>
-            <p className="mt-2 text-xs text-zinc-500">Esperando primera aprobación</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pendientes Líder</p>
+            <p className="mt-3 text-4xl font-bold text-[var(--amber-600)]">{pendingLeaderRequests}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Esperando primera aprobación</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Aprobadas</p>
-            <p className="mt-3 text-4xl font-bold text-green-600">{approvedThisMonth}</p>
-            <p className="mt-2 text-xs text-zinc-500">Este mes</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aprobadas</p>
+            <p className="mt-3 text-4xl font-bold text-[var(--green-700)]">{approvedThisMonth}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Este mes</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">De licencia hoy</p>
-            <p className="mt-3 text-4xl font-bold text-blue-600">{employeesOnLeaveToday}</p>
-            <p className="mt-2 text-xs text-zinc-500">Empleados</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">De licencia hoy</p>
+            <p className="mt-3 text-4xl font-bold text-accent-foreground">{employeesOnLeaveToday}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Empleados</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Próximas</p>
-            <p className="mt-3 text-4xl font-bold text-purple-600">{upcomingLeaves}</p>
-            <p className="mt-2 text-xs text-zinc-500">Licencias programadas</p>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Próximas</p>
+            <p className="mt-3 text-4xl font-bold text-cat-violet">{upcomingLeaves}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Licencias programadas</p>
           </div>
         </div>
 
@@ -115,47 +115,47 @@ export default async function TimeOffDashboardPage() {
         <PendingHRSection initialRequests={(pendingHR || []) as LeaveRequestWithDetails[]} />
 
         {/* Workflow info */}
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-6">
-          <h3 className="text-sm font-semibold text-zinc-900">Flujo de aprobación de 2 niveles</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-muted p-6">
+          <h3 className="text-sm font-semibold text-foreground">Flujo de aprobación de 2 niveles</h3>
           <div className="mt-3 flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">1</span>
-              <span className="text-zinc-600">Líder aprueba</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-warning-subtle text-xs font-bold text-[var(--amber-600)]">1</span>
+              <span className="text-muted-foreground">Líder aprueba</span>
             </div>
-            <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">2</span>
-              <span className="text-zinc-600">HR aprueba (final)</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">2</span>
+              <span className="text-muted-foreground">HR aprueba (final)</span>
             </div>
-            <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">✓</span>
-              <span className="text-zinc-600">Solicitud aprobada</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success-subtle text-xs font-bold text-[var(--green-700)]">✓</span>
+              <span className="text-muted-foreground">Solicitud aprobada</span>
             </div>
           </div>
         </div>
 
         {/* On leave today */}
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
-            <h3 className="text-base font-semibold text-zinc-900">De licencia hoy</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">De licencia hoy</h3>
           </div>
           {onLeaveToday && onLeaveToday.length > 0 ? (
-            <ul className="divide-y divide-zinc-200">
+            <ul className="divide-y divide-[var(--border)]">
               {onLeaveToday.map((request) => (
                 <li key={request.id} className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-zinc-900">{request.employee_name}</p>
-                      <p className="text-sm text-zinc-500">
+                      <p className="font-medium text-foreground">{request.employee_name}</p>
+                      <p className="text-sm text-muted-foreground">
                         {request.leave_type_name}
                       </p>
                     </div>
-                    <span className="text-sm text-zinc-500">
+                    <span className="text-sm text-muted-foreground">
                       hasta {formatDateLocal(request.end_date)}
                     </span>
                   </div>
@@ -163,32 +163,32 @@ export default async function TimeOffDashboardPage() {
               ))}
             </ul>
           ) : (
-            <div className="px-6 py-8 text-center text-sm text-zinc-500">
+            <div className="px-6 py-8 text-center text-sm text-muted-foreground">
               No hay empleados de licencia hoy
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-zinc-900">Acciones rápidas</h3>
-          <p className="mt-1 text-sm text-zinc-500">Administra balances y configuración</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-foreground">Acciones rápidas</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Administra balances y configuración</p>
           <div className="mt-4 flex gap-3">
             <Link
               href="/admin/time-off/requests"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Todas las solicitudes
             </Link>
             <Link
               href="/admin/time-off/balances"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Ver balances
             </Link>
             <Link
               href="/admin/time-off/settings"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
             >
               Configuración
             </Link>

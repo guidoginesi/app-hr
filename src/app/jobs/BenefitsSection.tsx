@@ -39,15 +39,15 @@ export async function BenefitsSection() {
 	}
 
 	return (
-		<section className="mb-12 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-			<h2 className="mb-6 text-2xl font-bold text-zinc-900">Beneficios</h2>
+		<section className="mb-12 rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+			<h2 className="mb-6 text-2xl font-bold text-foreground">Beneficios</h2>
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				{benefits.map((benefit, index) => (
 					<div key={index} className="flex items-start gap-2">
-						<svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 						</svg>
-						<span className="text-sm text-zinc-700">{benefit.text}</span>
+						<span className="text-sm text-secondary-foreground">{benefit.text}</span>
 					</div>
 				))}
 			</div>

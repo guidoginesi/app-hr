@@ -218,26 +218,26 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 			<div className="space-y-8">
 				<div className="flex items-start justify-between">
 					<div>
-						<h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Candidatos</h1>
-						<p className="mt-1 text-sm text-zinc-500">
+						<h1 className="text-2xl font-semibold tracking-tight text-foreground">Candidatos</h1>
+						<p className="mt-1 text-sm text-muted-foreground">
 							{candidates.length} candidatos registrados en el sistema
 						</p>
 					</div>
 					<button
 						type="button"
 						onClick={() => setIsAddModalOpen(true)}
-						className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md"
+						className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md"
 					>
 						Agregar candidato
 					</button>
 				</div>
 
-				<div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+				<div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
 					{/* Filtros */}
-					<div className="border-b border-zinc-200 px-6 py-4 space-y-4">
+					<div className="border-b border-[var(--border)] px-6 py-4 space-y-4">
 						<div>
-							<h2 className="text-base font-semibold text-zinc-900">Lista de candidatos</h2>
-							<p className="mt-1 text-xs text-zinc-500">
+							<h2 className="text-base font-semibold text-foreground">Lista de candidatos</h2>
+							<p className="mt-1 text-xs text-muted-foreground">
 								{filteredApplications.length} de {flattenedApplications.length} aplicaciones
 							</p>
 						</div>
@@ -250,7 +250,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 									placeholder="Buscar por nombre, email..."
 									value={searchQuery}
 									onChange={(e) => handleSearchChange(e.target.value)}
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								/>
 							</div>
 
@@ -259,7 +259,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 								<select
 									value={jobFilter}
 									onChange={(e) => handleJobFilterChange(e.target.value)}
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								>
 									<option value="ALL">Todas las búsquedas</option>
 									{uniqueJobs.map((job) => (
@@ -275,7 +275,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 								<select
 									value={stageFilter}
 									onChange={(e) => handleStageFilterChange(e.target.value as Stage | 'ALL' | 'DISCARDED')}
-									className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 								>
 									<option value="ALL">Todas las etapas</option>
 									{Object.entries(StageLabels)
@@ -292,14 +292,14 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 					</div>
 
 					{/* Lista de candidatos */}
-					<ul className="divide-y divide-zinc-200">
+					<ul className="divide-y divide-[var(--border)]">
 						{paginatedApplications.length > 0 ? (
 							paginatedApplications.map(({ candidate, application }) => (
-								<li key={application.id} className="px-6 py-4 transition-colors hover:bg-zinc-50">
+								<li key={application.id} className="px-6 py-4 transition-colors hover:bg-muted">
 									<div className="flex items-center justify-between gap-4">
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2.5 flex-wrap">
-												<h3 className="text-base font-semibold text-zinc-900">{candidate.name}</h3>
+												<h3 className="text-base font-semibold text-foreground">{candidate.name}</h3>
 												
 												{/* Calificación con estrellas */}
 												{application.recruiter_rating && (
@@ -309,8 +309,8 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 																key={star}
 																className={`w-4 h-4 ${
 																	(application.recruiter_rating || 0) >= star
-																		? 'text-yellow-400 fill-yellow-400'
-																		: 'text-zinc-300'
+																		? 'text-[var(--amber-600)] text-[var(--amber-600)]'
+																		: 'text-muted-foreground'
 																}`}
 																fill={
 																	(application.recruiter_rating || 0) >= star ? 'currentColor' : 'none'
@@ -329,33 +329,33 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 													</div>
 												)}
 												
-												<span className="text-sm text-zinc-400">·</span>
-												<span className="text-sm font-medium text-zinc-600">{application.job_title}</span>
+												<span className="text-sm text-muted-foreground">·</span>
+												<span className="text-sm font-medium text-muted-foreground">{application.job_title}</span>
 												{application.job_department && (
 													<>
-														<span className="text-xs text-zinc-400">·</span>
-														<span className="text-xs text-zinc-500">{application.job_department}</span>
+														<span className="text-xs text-muted-foreground">·</span>
+														<span className="text-xs text-muted-foreground">{application.job_department}</span>
 													</>
 												)}
 												
 												{/* Badge de etapa y estado */}
-												<span className="text-xs text-zinc-400">·</span>
+												<span className="text-xs text-muted-foreground">·</span>
 												{application.current_stage && application.current_stage_status ? (
 													<span
 														className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
 															application.current_stage_status === 'DISCARDED_IN_STAGE'
-																? 'bg-red-100 text-red-700'
+																? 'bg-danger-subtle text-[var(--red-600)]'
 																: application.current_stage_status === 'COMPLETED'
-																? 'bg-green-100 text-green-700'
+																? 'bg-success-subtle text-[var(--green-700)]'
 																: application.current_stage_status === 'PENDING'
-																? 'bg-yellow-100 text-yellow-700'
-																: 'bg-zinc-100 text-zinc-700'
+																? 'bg-warning-subtle text-[var(--amber-600)]'
+																: 'bg-secondary text-secondary-foreground'
 														}`}
 													>
 														{StageLabels[application.current_stage]} - {StageStatusLabels[application.current_stage_status]}
 													</span>
 												) : (
-													<span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+													<span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
 														{application.status || 'Sin estado'}
 													</span>
 												)}
@@ -363,8 +363,8 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 											{/* Referido badge */}
 											{application.referral_id && (
 												<>
-													<span className="text-xs text-zinc-400">·</span>
-													<span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">
+													<span className="text-xs text-muted-foreground">·</span>
+													<span className="inline-flex items-center gap-1 rounded-full bg-cat-violet-subtle px-2 py-0.5 text-xs font-semibold text-cat-violet">
 														⭐ Referido
 													</span>
 												</>
@@ -373,16 +373,16 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 											{/* AI Score */}
 											{application.ai_score !== null && (
 												<>
-													<span className="text-xs text-zinc-400">·</span>
-													<span className="text-xs font-medium text-zinc-600">
+													<span className="text-xs text-muted-foreground">·</span>
+													<span className="text-xs font-medium text-muted-foreground">
 														Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
 													</span>
 												</>
 											)}
 											</div>
-											<div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+											<div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 												<span>{candidate.email}</span>
-												<span className="text-zinc-300">·</span>
+												<span className="text-muted-foreground">·</span>
 												
 												{/* Tiempo desde que aplicó */}
 												<span className="inline-flex items-center gap-1">
@@ -395,7 +395,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 												{/* Tiempo en etapa actual */}
 												{application.current_stage && (
 													<>
-														<span className="text-zinc-300">·</span>
+														<span className="text-muted-foreground">·</span>
 														<span className="inline-flex items-center gap-1">
 															<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -412,7 +412,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 												setSelectedCandidate(candidate);
 												setSelectedApplicationId(application.id);
 											}}
-											className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
+											className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted hover:text-black"
 										>
 											Ver candidato
 										</button>
@@ -421,12 +421,12 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 							))
 						) : (
 							<li className="px-6 py-12 text-center">
-								<p className="text-sm font-medium text-zinc-500">
+								<p className="text-sm font-medium text-muted-foreground">
 									{flattenedApplications.length === 0
 										? 'No hay candidatos registrados todavía'
 										: 'No se encontraron candidatos con los filtros aplicados'}
 								</p>
-								<p className="mt-1 text-xs text-zinc-400">
+								<p className="mt-1 text-xs text-muted-foreground">
 									{flattenedApplications.length === 0
 										? 'Los candidatos aparecerán aquí cuando se postulen desde la landing'
 										: 'Intenta cambiar los filtros de búsqueda'}
@@ -437,9 +437,9 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 
 					{/* Paginación inferior */}
 					{totalPages > 1 && (
-						<div className="border-t border-zinc-200 px-6 py-3 bg-zinc-50">
+						<div className="border-t border-[var(--border)] px-6 py-3 bg-muted">
 							<div className="flex items-center justify-between">
-								<div className="text-sm text-zinc-600">
+								<div className="text-sm text-muted-foreground">
 									Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredApplications.length)} de {filteredApplications.length} resultados
 								</div>
 								<div className="flex gap-2">
@@ -447,7 +447,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 										type="button"
 										onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
 										disabled={currentPage === 1}
-										className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+										className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
 									>
 										Anterior
 									</button>
@@ -455,7 +455,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 										type="button"
 										onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
 										disabled={currentPage === totalPages}
-										className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+										className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
 									>
 										Siguiente
 									</button>

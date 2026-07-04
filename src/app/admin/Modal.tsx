@@ -44,16 +44,16 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-6xl'
 			onClick={onClose}
 		>
 			<div
-				className={`w-full ${maxWidth} rounded-xl border border-zinc-200 bg-white shadow-xl`}
+				className={`w-full ${maxWidth} rounded-xl border border-[var(--border)] bg-white shadow-xl`}
 				onClick={(e) => e.stopPropagation()}
 			>
 				{title && (
-					<div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-						<h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+					<div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+						<h2 className="text-lg font-semibold text-foreground">{title}</h2>
 						<button
 							type="button"
 							onClick={onClose}
-							className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900"
+							className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
 						>
 							<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -62,11 +62,11 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-6xl'
 					</div>
 				)}
 				{!title && (
-					<div className="flex items-center justify-end border-b border-zinc-200 px-6 py-4">
+					<div className="flex items-center justify-end border-b border-[var(--border)] px-6 py-4">
 						<button
 							type="button"
 							onClick={onClose}
-							className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900"
+							className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
 						>
 							<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -12,19 +12,19 @@ type PeopleShellProps = {
 export function PeopleShell({ children, active }: PeopleShellProps) {
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="flex min-h-screen bg-muted text-foreground">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-zinc-200 bg-white shadow-sm">
-        <div className="flex h-16 items-center border-b border-zinc-200 px-6">
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-[var(--border)] bg-white shadow-sm">
+        <div className="flex h-16 items-center border-b border-[var(--border)] px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100">
-              <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-subtle">
+              <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-900">People</p>
-              <p className="text-xs text-zinc-500">Gestión de empleados</p>
+              <p className="text-sm font-semibold text-foreground">People</p>
+              <p className="text-xs text-muted-foreground">Gestión de empleados</p>
             </div>
           </div>
         </div>
@@ -33,8 +33,8 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
             href="/admin/people/dashboard"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'dashboard'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-success text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Dashboard</span>
@@ -46,8 +46,8 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
             href="/admin/people"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'empleados'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-success text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Empleados</span>
@@ -59,8 +59,8 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
             href="/admin/people/organizacion"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'organizacion'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-success text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Organización</span>
@@ -72,8 +72,8 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
             href="/admin/people/organigrama"
             className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
               active === 'organigrama'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-zinc-700 hover:bg-zinc-100 hover:text-black'
+                ? 'bg-success text-white shadow-sm'
+                : 'text-secondary-foreground hover:bg-secondary hover:text-black'
             }`}
           >
             <span>Organigrama</span>
@@ -82,10 +82,10 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
             )}
           </Link>
         </nav>
-        <div className="border-t border-zinc-200 px-3 py-3">
+        <div className="border-t border-[var(--border)] px-3 py-3">
           <Link
             href="/admin"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-500 transition-all duration-150 hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-secondary hover:text-foreground"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -97,17 +97,17 @@ export function PeopleShell({ children, active }: PeopleShellProps) {
 
       {/* Main content */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-8 shadow-sm">
+        <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-white px-8 shadow-sm">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-900">People</h1>
-            <p className="mt-0.5 text-xs font-normal text-zinc-500">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">People</h1>
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
               Gestión de empleados y estructura organizacional
             </p>
           </div>
           <AdminProfileDropdown />
         </header>
 
-        <main className="min-w-0 flex-1 bg-zinc-50 px-8 py-8">{children}</main>
+        <main className="min-w-0 flex-1 bg-muted px-8 py-8">{children}</main>
       </div>
     </div>
   );
