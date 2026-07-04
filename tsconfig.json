@@ -19,7 +19,7 @@
       }
     ],
     "paths": {
-      "@pow/ui/*": ["./node_modules/@guidoginesi/pow-ui/*"],
+      "@pow/ui/*": ["./vendor/pow-ui/*"],
       "@/*": ["./src/*"]
     }
   },

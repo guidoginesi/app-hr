@@ -1,0 +1,264 @@
+/* ============================================================
+   POW DESIGN SYSTEM — theme (portable)
+   ------------------------------------------------------------
+   Capa de tokens + utilidades del DS. Para reusar en otra app:
+
+     @import "tailwindcss";
+     @import "@pow/ui/theme.css";   // o ruta relativa al archivo
+
+   Requiere Tailwind v4. Marca POW fija (tinta + naranja), light mode.
+   La fuente de títulos se inyecta vía --font-helvetica-now (next/font local);
+   si no existe, cae al stack del sistema.
+   ============================================================ */
+
+@theme inline {
+  /* superficies / texto */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* acción principal — tinta */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  /* marca — naranja POW */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* accent = tinta clara naranja (hovers, nav activo, links) */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* promo / Hot Sale — amarillo POW */
+  --color-promo: var(--promo);
+  --color-promo-foreground: var(--promo-foreground);
+
+  /* estados */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  /* alias de compatibilidad (shadcn / código existente) */
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* categóricos (tipo/categoría, NO estado) */
+  --color-cat-violet: var(--cat-violet);
+  --color-cat-violet-subtle: var(--cat-violet-subtle);
+  --color-cat-cyan: var(--cat-cyan);
+  --color-cat-cyan-subtle: var(--cat-cyan-subtle);
+  --color-cat-pink: var(--cat-pink);
+  --color-cat-pink-subtle: var(--cat-pink-subtle);
+
+  --font-display: var(--font-display);
+}
+
+:root {
+  /* ---------- Capa 1 · PRIMITIVES ---------- */
+  /* Neutrales (cool gray, OKLCH = nativo Tailwind v4) */
+  --gray-50:  oklch(0.985 0.002 247.8);
+  --gray-100: oklch(0.967 0.003 264.5);
+  --gray-200: oklch(0.928 0.006 264.5);
+  --gray-300: oklch(0.872 0.010 258.3);
+  --gray-400: oklch(0.707 0.022 261.3);
+  --gray-500: oklch(0.551 0.027 264.4);
+  --gray-600: oklch(0.446 0.030 256.8);
+  --gray-700: oklch(0.373 0.034 259.7);
+  --gray-800: oklch(0.278 0.033 256.8);
+  --gray-900: oklch(0.210 0.034 264.7);
+  --gray-950: oklch(0.130 0.028 261.7);
+
+  /* Tinta POW (institucional) */
+  --ink:       #1A1D23;
+  --ink-hover: #000000;
+
+  /* Naranja POW "fuego" (accent) */
+  --orange-50:  #FFF3EC;
+  --orange-100: #FFE0CC;
+  --orange-600: #FE722B;   /* brand */
+  --orange-700: #E55812;
+  --orange-800: #C2410C;   /* texto naranja accesible / hover */
+
+  /* Amarillo POW "sol" (promo) */
+  --yellow:      #FFEB81;
+  --yellow-dark: #F5D860;
+
+  /* Estados (derivados) */
+  --green-50:  #ECFDF3; --green-600: #16A34A; --green-700: #15803D;
+  --amber-50:  #FFFBEB; --amber-500: #F59E0B; --amber-600: #D97706;
+  --red-50:    #FEF2F2; --red-500:   #EF4444; --red-600:   #DC2626;
+
+  /* ---------- Capa 2 · SEMANTIC TOKENS ---------- */
+  --background:           #f5f6f8;
+  --foreground:           var(--gray-900);
+  --card:                 #ffffff;
+  --card-foreground:      var(--gray-900);
+  --popover:              #ffffff;
+  --popover-foreground:   var(--gray-900);
+
+  --primary:              var(--ink);
+  --primary-foreground:   #ffffff;
+  --primary-hover:        var(--ink-hover);
+
+  --brand:                var(--orange-600);
+  --brand-foreground:     #000000;
+  --brand-strong:         var(--orange-800);
+
+  --secondary:            var(--gray-100);
+  --secondary-foreground: var(--gray-700);
+  --muted:                var(--gray-50);
+  --muted-foreground:     var(--gray-500);
+
+  --accent:               var(--orange-50);
+  --accent-foreground:    var(--orange-800);
+
+  --promo:                var(--yellow);
+  --promo-foreground:     #000000;
+
+  --success:              var(--green-600);
+  --success-foreground:   #ffffff;
+  --success-subtle:       var(--green-50);
+  --warning:              var(--amber-500);
+  --warning-foreground:   var(--gray-900);
+  --warning-subtle:       var(--amber-50);
+  --danger:               var(--red-500);
+  --danger-foreground:    #ffffff;
+  --danger-subtle:        var(--red-50);
+
+  --border:               var(--gray-200);
+  --input:                var(--gray-200);
+  --ring:                 var(--orange-600);
+
+  /* Categórico / data-viz — tipo o categoría (Grupo, NC, tipo de movimiento…),
+     NUNCA estado. Distinto del set semántico y de la marca. Paridad visual con
+     la paleta previa, ahora tokenizada. Extensible con más hues si hace falta. */
+  --cat-violet: #6D28D9; --cat-violet-subtle: #F5F3FF;
+  --cat-cyan:   #0E7490; --cat-cyan-subtle:   #ECFEFF;
+  --cat-pink:   #A21CAF; --cat-pink-subtle:   #FDF4FF;
+
+  --radius:               0.5rem;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+
+  --font-display: var(--font-helvetica-now, -apple-system, BlinkMacSystemFont,
+                  "Inter", "Segoe UI", sans-serif);
+
+  /* Z-index (apilado de overlays) */
+  --z-dropdown: 1000;
+  --z-sticky:   1010;
+  --z-overlay:  1100;
+  --z-popover:  1200;
+  --z-tooltip:  1300;
+  --z-toast:    1400;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration:      180ms;
+  --duration-slow: 280ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out:      cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ---------- Base reset del DS ---------- */
+@layer base {
+  /* Cursor de acción en interactivos: los <button> nativos muestran flecha por
+     defecto. Las utilidades cursor-* y disabled:cursor-not-allowed lo pisan. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label[for] {
+    cursor: pointer;
+  }
+}
+
+/* ---------- Utilidades del DS ---------- */
+
+/* Títulos: fuente de marca; el peso hace la jerarquía. */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Montos / cifras: tabular para alinear columnas. */
+.nums-tabular { font-variant-numeric: tabular-nums; }
+
+/* Escala tipográfica — px fijos. Prefijo type- (no choca con text-{color}). */
+.type-display {
+  font-family: var(--font-display);
+  font-size: 20px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em;
+}
+.type-title {
+  font-family: var(--font-display);
+  font-size: 14px; line-height: 1.3; font-weight: 650; letter-spacing: -0.01em;
+}
+.type-subtitle { font-size: 13px; line-height: 1.35; font-weight: 600; }
+.type-body { font-size: 12px; line-height: 1.5; }
+.type-secondary { font-size: 11px; line-height: 1.45; }
+.type-label {
+  font-size: 10px; line-height: 1.4; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.type-micro { font-size: 9px; line-height: 1.4; font-weight: 500; }
+
+/* Card utility */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid #f0f1f3;
+}
+
+/* ---------- Motion · entradas de overlays ----------
+   Reusable en Dialog/Sheet/Popover. Respeta prefers-reduced-motion. */
+@keyframes pow-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pow-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pow-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes pow-dialog-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+/* Sheets / drawers laterales */
+@keyframes pow-slide-in-right  { from { transform: translateX(100%); }  to { transform: none; } }
+@keyframes pow-slide-out-right { from { transform: none; } to { transform: translateX(100%); } }
+@keyframes pow-slide-in-left   { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes pow-slide-out-left  { from { transform: none; } to { transform: translateX(-100%); } }
+.anim-overlay-in { animation: pow-fade-in var(--duration-fast) var(--ease-out); }
+.anim-dialog-in { animation: pow-dialog-in var(--duration) var(--ease-out); }
+/* Salida: se dispara al cerrar (después del loading del botón). `forwards` sostiene el estado final.
+   Levemente más lenta que la entrada (240ms) — el cierre se siente más suave. */
+.anim-overlay-out { animation: pow-fade-out var(--duration) var(--ease-standard) forwards; }
+.anim-dialog-out { animation: pow-dialog-out 240ms var(--ease-standard) forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-overlay-in,
+  .anim-dialog-in,
+  .anim-overlay-out,
+  .anim-dialog-out { animation: none; }
+}

@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* POW Design System — tokens + utilidades, desde el paquete del registry @guidoginesi/pow-ui.
-   @source: que Tailwind escanee las clases usadas dentro de los componentes del paquete. */
-@import "@guidoginesi/pow-ui/theme.css";
-@source "../../node_modules/@guidoginesi/pow-ui/components";
+/* POW Design System — tokens + utilidades, vendorizado en vendor/pow-ui (fuente: @guidoginesi/pow-ui 0.2.0).
+   @source: que Tailwind escanee las clases usadas dentro de los componentes del DS. */
+@import "../../vendor/pow-ui/theme.css";
+@source "../../vendor/pow-ui/components";
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
