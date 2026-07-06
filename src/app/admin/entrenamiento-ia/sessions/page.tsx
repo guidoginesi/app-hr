@@ -5,7 +5,7 @@ import {
   getAiTrainingSessions,
   resolveCycleId,
 } from '@/lib/entrenamientoIaQueries';
-import { EntrenamientoIAShell } from '../EntrenamientoIAShell';
+import { EntrenamientoIALayout } from '../EntrenamientoIALayout';
 import { SessionsClient } from './SessionsClient';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +24,8 @@ export default async function SessionsPage({
   const sessions = await getAiTrainingSessions();
 
   return (
-    <EntrenamientoIAShell active="sessions">
+    <EntrenamientoIALayout active="sessions">
       <SessionsClient cycles={cycles} sessions={sessions} selectedCycleId={selectedCycleId} />
-    </EntrenamientoIAShell>
+    </EntrenamientoIALayout>
   );
 }

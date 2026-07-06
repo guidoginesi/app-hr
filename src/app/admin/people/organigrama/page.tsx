@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { PeopleShell } from '../PeopleShell';
+import { PeopleLayout } from '../PeopleLayout';
 import { OrgChart } from './OrgChart';
 
 export const dynamic = 'force-dynamic';
@@ -47,8 +47,8 @@ export default async function OrganigramaPage() {
   }));
 
   return (
-    <PeopleShell active="organigrama">
+    <PeopleLayout active="organigrama">
       <OrgChart employees={employees} />
-    </PeopleShell>
+    </PeopleLayout>
   );
 }

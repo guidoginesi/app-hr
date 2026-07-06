@@ -2,6 +2,8 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 export function AdminCreateJobForm() {
 	const router = useRouter();
@@ -9,6 +11,7 @@ export function AdminCreateJobForm() {
 	const [loading, startTransition] = useTransition();
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
+	const [isPublished, setIsPublished] = useState('true');
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -36,7 +39,8 @@ export function AdminCreateJobForm() {
 			if (formRef.current) {
 				formRef.current.reset();
 			}
-			
+			setIsPublished('true');
+
 			setSuccess(true);
 			setTimeout(() => setSuccess(false), 3000);
 			
@@ -50,7 +54,7 @@ export function AdminCreateJobForm() {
 
 	return (
 		<form ref={formRef} onSubmit={handleSubmit} className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-			<h2 className="text-lg font-semibold text-foreground">Crear nueva búsqueda</h2>
+			<h2 className="text-base font-semibold text-foreground">Crear nueva búsqueda</h2>
 			<p className="mt-1 text-xs text-muted-foreground">Completa los campos para publicar una nueva posición</p>
 			
 			<div className="mt-6 space-y-4">
@@ -58,7 +62,7 @@ export function AdminCreateJobForm() {
 					<div>
 						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Título *</label>
 						<input
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 							name="title"
 							placeholder="Ej: Desarrollador Backend Senior"
 							required
@@ -67,7 +71,7 @@ export function AdminCreateJobForm() {
 					<div>
 						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Área</label>
 						<input
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 							name="department"
 							placeholder="Ej: Tecnología"
 						/>
@@ -75,27 +79,30 @@ export function AdminCreateJobForm() {
 					<div>
 						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Ubicación</label>
 						<input
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 							name="location"
 							placeholder="Ej: Buenos Aires, Remoto"
 						/>
 					</div>
 					<div>
 						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Estado</label>
-						<select
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-							name="is_published"
-							defaultValue="true"
-						>
-							<option value="true">Publicada</option>
-							<option value="false">Oculta</option>
-						</select>
+						<input type="hidden" name="is_published" value={isPublished} />
+						<SelectMenu
+							ariaLabel="Estado"
+							className="w-full"
+							value={isPublished}
+							onChange={setIsPublished}
+							options={[
+								{ value: 'true', label: 'Publicada' },
+								{ value: 'false', label: 'Oculta' },
+							]}
+						/>
 					</div>
 				</div>
 				<div>
 					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Descripción</label>
 					<textarea
-						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 						name="description"
 						rows={4}
 						placeholder="Describe la posición y responsabilidades..."
@@ -104,19 +111,15 @@ export function AdminCreateJobForm() {
 				<div>
 					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Requerimientos</label>
 					<textarea
-						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 						name="requirements"
 						rows={4}
 						placeholder="Lista los requisitos y habilidades necesarias..."
 					/>
 				</div>
-				<button
-					type="submit"
-					disabled={loading}
-					className="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{loading ? 'Creando…' : 'Crear búsqueda'}
-				</button>
+				<Button type="submit" loading={loading} className="w-full">
+					Crear búsqueda
+				</Button>
 				{success && (
 					<div className="rounded-lg border border-success/20 bg-success-subtle p-3">
 						<p className="text-xs font-medium text-[var(--green-700)]">✅ Búsqueda creada exitosamente</p>

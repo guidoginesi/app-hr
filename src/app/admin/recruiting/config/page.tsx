@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
-import { RecruitingShell } from '../RecruitingShell';
+import { RecruitingLayout } from '../RecruitingLayout';
 import { EmailTemplatesClient } from './EmailTemplatesClient';
 
 export const dynamic = 'force-dynamic';
@@ -12,17 +12,8 @@ export default async function RecruitingConfigPage() {
   }
 
   return (
-    <RecruitingShell active="configuracion">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Configuración de Reclutamiento</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Administra las plantillas de email para el proceso de selección
-          </p>
-        </div>
-        
-        <EmailTemplatesClient />
-      </div>
-    </RecruitingShell>
+    <RecruitingLayout active="configuracion">
+      <EmailTemplatesClient />
+    </RecruitingLayout>
   );
 }

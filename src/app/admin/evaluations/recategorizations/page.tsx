@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { EvaluationsShell } from '../EvaluationsShell';
+import { EvaluationsLayout } from '../EvaluationsLayout';
 import { RecategorizationsClient } from './RecategorizationsClient';
 
 export const dynamic = 'force-dynamic';
@@ -75,11 +75,11 @@ export default async function RecategorizationsPage() {
     .order('year', { ascending: false });
 
   return (
-    <EvaluationsShell active="recategorizations">
-      <RecategorizationsClient 
-        recategorizations={recategorizations || []} 
+    <EvaluationsLayout active="recategorizations">
+      <RecategorizationsClient
+        recategorizations={recategorizations || []}
         periods={periods || []}
       />
-    </EvaluationsShell>
+    </EvaluationsLayout>
   );
 }

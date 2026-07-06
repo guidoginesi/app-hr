@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { EvaluationsShell } from './EvaluationsShell';
+import { EvaluationsLayout } from './EvaluationsLayout';
 import { EvaluationsDashboardClient } from './EvaluationsDashboardClient';
 
 export const dynamic = 'force-dynamic';
@@ -117,13 +117,13 @@ export default async function EvaluationsDashboardPage() {
   }));
 
   return (
-    <EvaluationsShell active="dashboard">
+    <EvaluationsLayout active="dashboard">
       <EvaluationsDashboardClient
         periods={periods}
         evaluations={evaluations}
         itemScores={itemScores}
         activePeriodId={activePeriodId}
       />
-    </EvaluationsShell>
+    </EvaluationsLayout>
   );
 }

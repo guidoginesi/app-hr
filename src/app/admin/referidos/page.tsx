@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { AdminShell } from '../AdminShell';
+import { ReferidosLayout } from './ReferidosLayout';
 import { ReferidosAdminClient } from './ReferidosAdminClient';
 
 export const dynamic = 'force-dynamic';
@@ -28,8 +28,8 @@ export default async function AdminReferidosPage() {
   ]);
 
   return (
-    <AdminShell active="referidos">
+    <ReferidosLayout>
       <ReferidosAdminClient initialReferrals={referrals || []} jobs={jobs || []} />
-    </AdminShell>
+    </ReferidosLayout>
   );
 }

@@ -2,7 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-import { TimeOffShell } from '../TimeOffShell';
+import { TimeOffLayout } from '../TimeOffLayout';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { TabNav } from '@pow/ui/components/ui/tab-nav';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 
@@ -25,7 +28,7 @@ const NOV_STATUS_LABELS: Record<string, string> = {
 const NOV_STATUS_COLORS: Record<string, string> = {
   approved: 'bg-success-subtle text-[var(--green-700)]',
   pending_leader: 'bg-warning-subtle text-[var(--amber-600)]',
-  pending_hr: 'bg-accent text-accent-foreground',
+  pending_hr: 'bg-warning-subtle text-[var(--amber-600)]',
   rejected_leader: 'bg-danger-subtle text-[var(--red-600)]',
   rejected_hr: 'bg-danger-subtle text-[var(--red-600)]',
   rejected: 'bg-danger-subtle text-[var(--red-600)]',
@@ -236,9 +239,8 @@ export default function TimeOffRequestsPage() {
     switch (status) {
       case 'pending':
       case 'pending_leader':
-        return 'bg-warning-subtle text-[var(--amber-600)]';
       case 'pending_hr':
-        return 'bg-accent text-accent-foreground';
+        return 'bg-warning-subtle text-[var(--amber-600)]';
       case 'approved':
         return 'bg-success-subtle text-[var(--green-700)]';
       case 'rejected':
@@ -448,40 +450,19 @@ export default function TimeOffRequestsPage() {
   }
 
   return (
-    <TimeOffShell active="requests">
+    <TimeOffLayout active="requests">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Solicitudes</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona las solicitudes de vacaciones y licencias
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-[var(--border)]">
-          <nav className="-mb-px flex gap-4">
-            <button
-              onClick={() => setActiveTab('requests')}
-              className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'requests'
-                  ? 'border-warning/30 text-[var(--amber-600)]'
-                  : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
-              }`}
-            >
-              Solicitudes de licencias
-            </button>
-            <button
-              onClick={() => setActiveTab('bonus')}
-              className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'bonus'
-                  ? 'border-warning/30 text-[var(--amber-600)]'
-                  : 'border-transparent text-muted-foreground hover:border-[var(--border)] hover:text-foreground'
-              }`}
-            >
-              Ajustes de días ({activeBonusAdjustments.length} activos)
-            </button>
-          </nav>
-        </div>
+        {/* Sub-secciones de solicitudes */}
+        <TabNav<'requests' | 'bonus'>
+          size="sm"
+          aria-label="Vistas de solicitudes"
+          value={activeTab === 'novedades' ? 'requests' : activeTab}
+          onChange={(v) => setActiveTab(v)}
+          options={[
+            { value: 'requests', label: 'Solicitudes de licencias' },
+            { value: 'bonus', label: `Ajustes de días (${activeBonusAdjustments.length} activos)` },
+          ]}
+        />
 
         {activeTab === 'requests' && (
           <>
@@ -497,7 +478,7 @@ export default function TimeOffRequestsPage() {
                   placeholder="Buscar por nombre..."
                   value={nameFilter}
                   onChange={(e) => setNameFilter(e.target.value)}
-                  className="rounded-lg border border-[var(--border)] bg-white py-2 pl-9 pr-3 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="rounded-lg border border-[var(--border)] bg-white py-2 pl-9 pr-3 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
                 {nameFilter && (
                   <button
@@ -510,38 +491,36 @@ export default function TimeOffRequestsPage() {
                   </button>
                 )}
               </div>
-              <select
+              <SelectMenu
+                ariaLabel="Filtrar por estado"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">Todos los estados</option>
-                <option value="pending_leader">Pendiente Líder</option>
-                <option value="pending_hr">Pendiente HR</option>
-                <option value="approved">Aprobadas</option>
-                <option value="rejected_leader">Rechazadas por Líder</option>
-                <option value="rejected_hr">Rechazadas por HR</option>
-                <option value="cancelled">Canceladas</option>
-              </select>
-              <select
+                onChange={(v) => setStatusFilter(v)}
+                options={[
+                  { value: '', label: 'Todos los estados' },
+                  { value: 'pending_leader', label: 'Pendiente Líder' },
+                  { value: 'pending_hr', label: 'Pendiente HR' },
+                  { value: 'approved', label: 'Aprobadas' },
+                  { value: 'rejected_leader', label: 'Rechazadas por Líder' },
+                  { value: 'rejected_hr', label: 'Rechazadas por HR' },
+                  { value: 'cancelled', label: 'Canceladas' },
+                ]}
+              />
+              <SelectMenu
+                ariaLabel="Filtrar por tipo"
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">Todos los tipos</option>
-                {leaveTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setTypeFilter(v)}
+                options={[
+                  { value: '', label: 'Todos los tipos' },
+                  ...leaveTypes.map((type) => ({ value: type.id, label: type.name })),
+                ]}
+              />
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-muted-foreground">Desde</label>
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -551,7 +530,7 @@ export default function TimeOffRequestsPage() {
                   value={dateTo}
                   min={dateFrom || undefined}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
               {(dateFrom || dateTo) && (
@@ -563,16 +542,17 @@ export default function TimeOffRequestsPage() {
                 </button>
               )}
               <div className="ml-auto flex items-end">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={exportRequestsXLSX}
                   disabled={loading || filteredRequests.length === 0}
-                  className="flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40"
+                  className="gap-2"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   Exportar XLSX
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -580,7 +560,7 @@ export default function TimeOffRequestsPage() {
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
             </div>
           ) : filteredRequests.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
@@ -607,7 +587,7 @@ export default function TimeOffRequestsPage() {
                 {filteredRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-muted">
                     <td className="px-6 py-4">
-                      <p className="font-medium text-foreground">{request.employee_name}</p>
+                      <p className="text-sm font-medium text-foreground">{request.employee_name}</p>
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{request.leave_type_name}</td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">
@@ -643,41 +623,44 @@ export default function TimeOffRequestsPage() {
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 placeholder="Motivo de rechazo"
-                                className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm"
+                                className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                               />
-                              <button
+                              <Button
+                                variant="destructive"
+                                size="sm"
                                 onClick={() => handleReject(request.id)}
                                 disabled={!rejectReason.trim() || actionLoading === request.id}
-                                className="rounded bg-danger px-2 py-1 text-xs font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
                               >
                                 Confirmar
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => {
                                   setRejectingId(null);
                                   setRejectReason('');
                                 }}
-                                className="rounded border border-[var(--border)] bg-white px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
                               >
                                 Cancelar
-                              </button>
+                              </Button>
                             </div>
                           ) : (
                             <>
                               <div className="flex gap-2">
-                                <button
+                                <Button
+                                  size="sm"
                                   onClick={() => handleApprove(request.id)}
-                                  disabled={actionLoading === request.id}
-                                  className="rounded bg-success px-3 py-1 text-xs font-medium text-white hover:bg-success disabled:opacity-50"
+                                  loading={actionLoading === request.id}
                                 >
-                                  {actionLoading === request.id ? '...' : 'Aprobar'}
-                                </button>
-                                <button
+                                  Aprobar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => setRejectingId(request.id)}
-                                  className="rounded border border-[var(--border)] bg-white px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
                                 >
                                   Rechazar
-                                </button>
+                                </Button>
                               </div>
                               {request.status === 'pending_leader' && (
                                 <div className="flex flex-col gap-1">
@@ -720,7 +703,7 @@ export default function TimeOffRequestsPage() {
                             href={buildGCalUrl(request)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded border border-[var(--orange-100)] bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground hover:bg-accent w-fit"
+                            className="inline-flex w-fit items-center gap-1.5 rounded border border-[var(--border)] bg-card px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:bg-muted"
                           >
                             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
@@ -741,25 +724,28 @@ export default function TimeOffRequestsPage() {
                                     value={cancelReason}
                                     onChange={(e) => setCancelReason(e.target.value)}
                                     placeholder="Motivo de cancelación"
-                                    className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm"
+                                    className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                                   />
                                   <div className="flex gap-2">
-                                    <button
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
                                       onClick={() => handleCancel(request.id)}
                                       disabled={!cancelReason.trim() || actionLoading === request.id}
-                                      className="rounded bg-danger px-2 py-1 text-xs font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
+                                      loading={actionLoading === request.id}
                                     >
-                                      {actionLoading === request.id ? '...' : 'Confirmar'}
-                                    </button>
-                                    <button
+                                      Confirmar
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
                                       onClick={() => {
                                         setCancellingId(null);
                                         setCancelReason('');
                                       }}
-                                      className="rounded border border-[var(--border)] bg-white px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
                                     >
                                       No
-                                    </button>
+                                    </Button>
                                   </div>
                                 </div>
                               ) : (
@@ -799,7 +785,7 @@ export default function TimeOffRequestsPage() {
         {activeTab === 'bonus' && (
           <>
             {/* Bonus adjustments info */}
-            <div className="rounded-lg border border-[var(--orange-100)] bg-accent p-4 text-sm text-accent-foreground">
+            <div className="rounded-lg border border-[var(--border)] bg-muted p-4 text-sm text-secondary-foreground">
               <p>
                 <strong>Ajustes de días:</strong> Aquí puedes ver los días extra agregados a los empleados (días Pow, vacaciones, etc.) y cancelarlos si es necesario.
                 Al cancelar, los días se restan automáticamente del balance del empleado.
@@ -810,7 +796,7 @@ export default function TimeOffRequestsPage() {
             <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
                 </div>
               ) : bonusAdjustments.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
@@ -833,24 +819,16 @@ export default function TimeOffRequestsPage() {
                     {bonusAdjustments.map((adjustment) => (
                       <tr key={adjustment.id} className="hover:bg-muted">
                         <td className="px-6 py-4">
-                          <p className="font-medium text-foreground">{adjustment.employee_name}</p>
+                          <p className="text-sm font-medium text-foreground">{adjustment.employee_name}</p>
                           {adjustment.created_by_name && (
                             <p className="text-xs text-muted-foreground">Por: {adjustment.created_by_name}</p>
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            adjustment.leave_type_code === 'pow_days' 
-                              ? 'bg-cat-violet-subtle text-cat-violet' 
-                              : adjustment.leave_type_code === 'vacation'
-                              ? 'bg-accent text-accent-foreground'
-                              : 'bg-secondary text-secondary-foreground'
-                          }`}>
-                            {adjustment.leave_type_name}
-                          </span>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {adjustment.leave_type_name}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`text-lg font-bold ${adjustment.days > 0 ? 'text-[var(--green-700)]' : 'text-[var(--red-600)]'}`}>
+                          <span className="text-sm font-semibold text-foreground nums-tabular">
                             {adjustment.days > 0 ? '+' : ''}{adjustment.days}
                           </span>
                         </td>
@@ -890,25 +868,28 @@ export default function TimeOffRequestsPage() {
                                     value={cancelBonusReason}
                                     onChange={(e) => setCancelBonusReason(e.target.value)}
                                     placeholder="Motivo de cancelación"
-                                    className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm"
+                                    className="w-48 rounded border border-[var(--border)] px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                                   />
                                   <div className="flex gap-2">
-                                    <button
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
                                       onClick={() => handleCancelBonus(adjustment.id)}
                                       disabled={!cancelBonusReason.trim() || actionLoading === adjustment.id}
-                                      className="rounded bg-danger px-2 py-1 text-xs font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
+                                      loading={actionLoading === adjustment.id}
                                     >
-                                      {actionLoading === adjustment.id ? '...' : 'Confirmar'}
-                                    </button>
-                                    <button
+                                      Confirmar
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
                                       onClick={() => {
                                         setCancellingBonusId(null);
                                         setCancelBonusReason('');
                                       }}
-                                      className="rounded border border-[var(--border)] bg-white px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
                                     >
                                       No
-                                    </button>
+                                    </Button>
                                   </div>
                                 </div>
                               ) : (
@@ -946,50 +927,58 @@ export default function TimeOffRequestsPage() {
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-muted-foreground">Mes</label>
-                <select value={novMonth} onChange={(e) => setNovMonth(Number(e.target.value))}
-                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring">
-                  {MONTH_NAMES.map((name, i) => <option key={i + 1} value={i + 1}>{name}</option>)}
-                </select>
+                <SelectMenu
+                  ariaLabel="Mes"
+                  value={String(novMonth)}
+                  onChange={(v) => setNovMonth(Number(v))}
+                  options={MONTH_NAMES.map((name, i) => ({ value: String(i + 1), label: name }))}
+                />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-muted-foreground">Año</label>
-                <select value={novYear} onChange={(e) => setNovYear(Number(e.target.value))}
-                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring">
-                  {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
+                <SelectMenu
+                  ariaLabel="Año"
+                  value={String(novYear)}
+                  onChange={(v) => setNovYear(Number(v))}
+                  options={Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => ({ value: String(y), label: String(y) }))}
+                />
               </div>
               <div className="flex flex-col gap-1 min-w-[180px]">
                 <label className="text-xs font-medium text-muted-foreground">Persona</label>
-                <select value={novEmployeeId} onChange={(e) => setNovEmployeeId(e.target.value)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring">
-                  <option value="">Todos</option>
-                  {novEmployees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
-                  ))}
-                </select>
+                <SelectMenu
+                  ariaLabel="Persona"
+                  className="w-full"
+                  value={novEmployeeId}
+                  onChange={(v) => setNovEmployeeId(v)}
+                  options={[
+                    { value: '', label: 'Todos' },
+                    ...novEmployees.map((emp) => ({ value: emp.id, label: `${emp.first_name} ${emp.last_name}` })),
+                  ]}
+                />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-muted-foreground">Estado</label>
-                <select value={novStatusFilter} onChange={(e) => setNovStatusFilter(e.target.value)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring">
-                  <option value="">Todos</option>
-                  <option value="approved">Aprobadas</option>
-                  <option value="pending_leader">Pend. Líder</option>
-                  <option value="pending_hr">Pend. HR</option>
-                  <option value="rejected_leader">Rechazadas Líder</option>
-                  <option value="rejected_hr">Rechazadas HR</option>
-                </select>
+                <SelectMenu
+                  ariaLabel="Estado"
+                  value={novStatusFilter}
+                  onChange={(v) => setNovStatusFilter(v)}
+                  options={[
+                    { value: '', label: 'Todos' },
+                    { value: 'approved', label: 'Aprobadas' },
+                    { value: 'pending_leader', label: 'Pend. Líder' },
+                    { value: 'pending_hr', label: 'Pend. HR' },
+                    { value: 'rejected_leader', label: 'Rechazadas Líder' },
+                    { value: 'rejected_hr', label: 'Rechazadas HR' },
+                  ]}
+                />
               </div>
               <div className="ml-auto flex items-end">
-                <button onClick={exportNovedadesXLSX} disabled={novedades.length === 0}
-                  className="flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40">
+                <Button variant="secondary" onClick={exportNovedadesXLSX} disabled={novedades.length === 0} className="gap-2">
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   Exportar XLSX
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -1002,7 +991,7 @@ export default function TimeOffRequestsPage() {
               </div>
               {novLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
                 </div>
               ) : novedades.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">Sin novedades para este período</div>
@@ -1029,8 +1018,8 @@ export default function TimeOffRequestsPage() {
                           : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`;
                         return (
                           <tr key={n.id} className="hover:bg-muted transition-colors">
-                            <td className="px-6 py-3 font-medium text-foreground">{n.employee_name}</td>
-                            <td className="px-6 py-3 text-muted-foreground">{n.leave_type_name}</td>
+                            <td className="px-6 py-3 text-sm font-medium text-foreground">{n.employee_name}</td>
+                            <td className="px-6 py-3 text-sm text-muted-foreground">{n.leave_type_name}</td>
                             <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.start_date)}</td>
                             <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.end_date)}</td>
                             <td className="px-6 py-3 text-center">
@@ -1065,6 +1054,6 @@ export default function TimeOffRequestsPage() {
           </>
         )}
       </div>
-    </TimeOffShell>
+    </TimeOffLayout>
   );
 }

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { ObjectivesShell } from '../ObjectivesShell';
+import { ObjectivesLayout } from '../ObjectivesLayout';
 import { CorporateObjectivesClient } from './CorporateObjectivesClient';
 
 export const dynamic = 'force-dynamic';
@@ -25,11 +25,11 @@ export default async function CorporateObjectivesConfigPage() {
     .order('objective_type', { ascending: true });
 
   return (
-    <ObjectivesShell active="config">
-      <CorporateObjectivesClient 
-        initialObjectives={objectives || []} 
+    <ObjectivesLayout active="config">
+      <CorporateObjectivesClient
+        initialObjectives={objectives || []}
         currentYear={currentYear}
       />
-    </ObjectivesShell>
+    </ObjectivesLayout>
   );
 }

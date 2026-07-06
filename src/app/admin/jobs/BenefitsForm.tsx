@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
 
 type BenefitItem = {
 	id?: string;
@@ -92,16 +93,17 @@ export function BenefitsForm() {
 							value={benefit.text}
 							onChange={(e) => updateBenefit(index, e.target.value)}
 							placeholder="Ej: 3 semanas de vacaciones"
-							className="flex-1 rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="flex-1 rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 							required
 						/>
-						<button
+						<Button
 							type="button"
+							variant="outline"
 							onClick={() => removeBenefit(index)}
-							className="rounded-lg border border-danger/20 bg-danger-subtle px-3 py-2.5 text-sm font-medium text-[var(--red-600)] transition-colors hover:bg-danger-subtle"
+							className="border-danger/30 text-[var(--red-600)] hover:bg-danger-subtle"
 						>
 							Eliminar
-						</button>
+						</Button>
 					</div>
 				))}
 			</div>
@@ -127,13 +129,9 @@ export function BenefitsForm() {
 			)}
 
 			<div className="flex gap-3 pt-2">
-				<button
-					type="submit"
-					disabled={loading}
-					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{loading ? 'Guardando…' : 'Guardar beneficios'}
-				</button>
+				<Button type="submit" loading={loading} className="flex-1">
+					Guardar beneficios
+				</Button>
 			</div>
 		</form>
 	);

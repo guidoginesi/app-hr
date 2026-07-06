@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { X } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { CorporateObjective, CorporateObjectiveType, OBJECTIVE_TYPE_LABELS, Quarter, QUARTER_LABELS } from '@/types/corporate-objectives';
 
 type CorporateObjectivesClientProps = {
@@ -180,23 +184,9 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Objetivos Corporativos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona los objetivos de Facturación y NPS de la empresa
-          </p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[var(--red-600)] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Nuevo objetivo
-        </button>
+      {/* Toolbar */}
+      <div className="flex items-center justify-end">
+        <Button onClick={openCreateModal}>Nuevo objetivo</Button>
       </div>
 
       {/* Messages */}
@@ -219,22 +209,16 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
           </svg>
           <h3 className="mt-4 text-base font-medium text-foreground">No hay objetivos corporativos</h3>
           <p className="mt-1 text-sm text-muted-foreground">Crea tu primer objetivo de Facturación o NPS</p>
-          <button
-            onClick={openCreateModal}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)]"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Crear objetivo
-          </button>
+          <div className="mt-4 flex justify-center">
+            <Button onClick={openCreateModal}>Crear objetivo</Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">
           {sortedYears.map(year => (
             <div key={year} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
               <div className="border-b border-[var(--border)] bg-muted px-6 py-3">
-                <h2 className="text-lg font-semibold text-foreground">{year}</h2>
+                <h2 className="text-base font-semibold text-foreground tabular-nums">{year}</h2>
               </div>
               <div className="divide-y divide-[var(--border)]">
                 {objectivesByYear[year].map(obj => {
@@ -245,27 +229,21 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                   return (
                     <div key={obj.id} className="flex items-center justify-between px-6 py-4 hover:bg-muted">
                       <div className="flex items-center gap-4">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          obj.objective_type === 'billing' ? 'bg-success-subtle' : 'bg-accent'
-                        }`}>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                           {obj.objective_type === 'billing' ? (
-                            <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           ) : (
-                            <svg className="h-5 w-5 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-foreground">{obj.title}</h3>
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                              obj.objective_type === 'billing' 
-                                ? 'bg-success-subtle text-[var(--green-700)]' 
-                                : 'bg-accent text-accent-foreground'
-                            }`}>
+                            <h3 className="text-sm font-medium text-foreground">{obj.title}</h3>
+                            <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
                               {OBJECTIVE_TYPE_LABELS[obj.objective_type]}
                             </span>
                             {obj.quarter && (
@@ -290,19 +268,18 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEditModal(obj)}
-                          className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => openEditModal(obj)}>
                           Editar
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-danger/30 text-[var(--red-600)] hover:bg-danger-subtle"
+                          loading={deleting === obj.id}
                           onClick={() => handleDelete(obj)}
-                          disabled={deleting === obj.id}
-                          className="rounded-lg border border-danger/20 bg-white px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                         >
-                          {deleting === obj.id ? 'Eliminando...' : 'Eliminar'}
-                        </button>
+                          Eliminar
+                        </Button>
                       </div>
                     </div>
                   );
@@ -315,31 +292,31 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={closeModal} />
-            
-            <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">
-                  {editingObjective ? 'Editar objetivo' : 'Nuevo objetivo corporativo'}
-                </h2>
-                <button
-                  onClick={closeModal}
-                  className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+        <Sheet open onOpenChange={(o) => { if (!o) closeModal(); }}>
+          <SheetContent
+            side="right"
+            flush
+            title={editingObjective ? 'Editar objetivo' : 'Nuevo objetivo corporativo'}
+            className="max-w-lg"
+          >
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+              <h2 className="text-base font-semibold text-foreground">
+                {editingObjective ? 'Editar objetivo' : 'Nuevo objetivo corporativo'}
+              </h2>
+              <SheetClose
+                aria-label="Cerrar"
+                className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-5 w-5" />
+              </SheetClose>
+            </div>
 
-              <div className="p-6 space-y-4">
-                {error && (
-                  <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
-                    {error}
-                  </div>
-                )}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {error && (
+                <div className="rounded-lg border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
+                  {error}
+                </div>
+              )}
 
                 {/* Type selector */}
                 <div>
@@ -350,19 +327,17 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       onClick={() => setFormData(prev => ({ ...prev, objective_type: 'billing', quarter: null }))}
                       className={`flex items-center gap-3 rounded-lg border-2 p-4 transition-all ${
                         formData.objective_type === 'billing'
-                          ? 'border-success/20 bg-success-subtle'
+                          ? 'border-brand bg-accent'
                           : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}
                     >
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        formData.objective_type === 'billing' ? 'bg-success-subtle' : 'bg-secondary'
-                      }`}>
-                        <svg className={`h-5 w-5 ${formData.objective_type === 'billing' ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                        <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div className="text-left">
-                        <p className={`font-medium ${formData.objective_type === 'billing' ? 'text-[var(--green-700)]' : 'text-secondary-foreground'}`}>Facturación</p>
+                        <p className="text-sm font-medium text-foreground">Facturación</p>
                         <p className="text-xs text-muted-foreground">Objetivo anual</p>
                       </div>
                     </button>
@@ -375,15 +350,13 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                           : 'border-[var(--border)] hover:border-[var(--border)]'
                       }`}
                     >
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        formData.objective_type === 'nps' ? 'bg-accent' : 'bg-secondary'
-                      }`}>
-                        <svg className={`h-5 w-5 ${formData.objective_type === 'nps' ? 'text-accent-foreground' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                        <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div className="text-left">
-                        <p className={`font-medium ${formData.objective_type === 'nps' ? 'text-accent-foreground' : 'text-secondary-foreground'}`}>NPS</p>
+                        <p className="text-sm font-medium text-foreground">NPS</p>
                         <p className="text-xs text-muted-foreground">Objetivo trimestral</p>
                       </div>
                     </button>
@@ -394,28 +367,24 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-secondary-foreground mb-1">Año</label>
-                    <select
-                      value={formData.year}
-                      onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
-                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      {years.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
+                    <SelectMenu
+                      ariaLabel="Año"
+                      className="w-full"
+                      value={String(formData.year)}
+                      onChange={(v) => setFormData(prev => ({ ...prev, year: Number(v) }))}
+                      options={years.map((y) => ({ value: String(y), label: String(y) }))}
+                    />
                   </div>
                   {formData.objective_type === 'nps' && (
                     <div>
                       <label className="block text-sm font-medium text-secondary-foreground mb-1">Trimestre</label>
-                      <select
+                      <SelectMenu
+                        ariaLabel="Trimestre"
+                        className="w-full"
                         value={formData.quarter || 'q1'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, quarter: e.target.value as Quarter }))}
-                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        {QUARTERS.map(q => (
-                          <option key={q} value={q}>{QUARTER_LABELS[q]}</option>
-                        ))}
-                      </select>
+                        onChange={(v) => setFormData(prev => ({ ...prev, quarter: v as Quarter }))}
+                        options={QUARTERS.map((q) => ({ value: q, label: QUARTER_LABELS[q] }))}
+                      />
                     </div>
                   )}
                 </div>
@@ -433,7 +402,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       ? `Facturación ${formData.year}` 
                       : `NPS ${formData.quarter ? QUARTER_LABELS[formData.quarter] : ''} ${formData.year}`
                     }
-                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
@@ -446,7 +415,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                     type="text"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
@@ -461,7 +430,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       value={formData.target_value}
                       onChange={(e) => setFormData(prev => ({ ...prev, target_value: e.target.value }))}
                       placeholder={formData.objective_type === 'billing' ? '1000000' : '75'}
-                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -473,7 +442,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                       value={formData.actual_value}
                       onChange={(e) => setFormData(prev => ({ ...prev, actual_value: e.target.value }))}
                       placeholder="0"
-                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -489,7 +458,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                         onChange={(e) => setFormData(prev => ({ ...prev, gate_percentage: Number(e.target.value) }))}
                         min={0}
                         max={100}
-                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       />
                       <p className="mt-1 text-xs text-muted-foreground">Mínimo para aplicar bono</p>
                     </div>
@@ -501,34 +470,24 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
                         onChange={(e) => setFormData(prev => ({ ...prev, cap_percentage: Number(e.target.value) }))}
                         min={100}
                         max={200}
-                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       />
                       <p className="mt-1 text-xs text-muted-foreground">Máximo multiplicador</p>
                     </div>
                   </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
-                </button>
-              </div>
+              )}
             </div>
-          </div>
-        </div>
+
+            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
+              <Button variant="outline" onClick={closeModal}>
+                Cancelar
+              </Button>
+              <Button type="button" loading={saving} onClick={handleSave}>
+                {editingObjective ? 'Guardar cambios' : 'Crear objetivo'}
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

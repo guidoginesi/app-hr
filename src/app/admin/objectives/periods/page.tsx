@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { ObjectivesShell } from '../ObjectivesShell';
+import { ObjectivesLayout } from '../ObjectivesLayout';
 import { PeriodsClient } from './PeriodsClient';
 
 export const dynamic = 'force-dynamic';
@@ -23,11 +23,11 @@ export default async function PeriodsPage() {
     .order('period_type', { ascending: true });
 
   return (
-    <ObjectivesShell active="periods">
-      <PeriodsClient 
-        initialPeriods={periods || []} 
+    <ObjectivesLayout active="periods">
+      <PeriodsClient
+        initialPeriods={periods || []}
         currentYear={currentYear}
       />
-    </ObjectivesShell>
+    </ObjectivesLayout>
   );
 }

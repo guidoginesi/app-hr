@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { EvaluationsShell } from '../EvaluationsShell';
+import { EvaluationsLayout } from '../EvaluationsLayout';
 import { AllEvaluationsClient } from './AllEvaluationsClient';
 
 export const dynamic = 'force-dynamic';
@@ -34,11 +33,11 @@ export default async function AllEvaluationsPage() {
     .order('year', { ascending: false });
 
   return (
-    <EvaluationsShell active="all">
-      <AllEvaluationsClient 
-        evaluations={evaluations || []} 
+    <EvaluationsLayout active="all">
+      <AllEvaluationsClient
+        evaluations={evaluations || []}
         periods={periods || []}
       />
-    </EvaluationsShell>
+    </EvaluationsLayout>
   );
 }

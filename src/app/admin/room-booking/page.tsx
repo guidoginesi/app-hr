@@ -1,8 +1,12 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { RoomBookingShell } from './RoomBookingShell';
 import Link from 'next/link';
+import { RoomBookingLayout } from './RoomBookingLayout';
+import { Stat } from '@pow/ui/components/ui/stat';
+import { Card } from '@pow/ui/components/ui/card';
+import { buttonVariants } from '@pow/ui/components/ui/button';
+import { DoorOpen, CalendarCheck, CalendarDays } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,46 +69,17 @@ export default async function RoomBookingDashboardPage() {
   const todayDetails = todayDetailResult.data || [];
 
   return (
-    <RoomBookingShell active="dashboard">
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Dashboard de Reserva de Salas
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Resumen general de salas y reservas
-          </p>
-        </div>
-
+    <RoomBookingLayout active="dashboard">
+      <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Salas activas
-            </p>
-            <p className="mt-3 text-4xl font-bold text-cat-cyan">{activeRooms}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Disponibles para reservar</p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Reservas hoy
-            </p>
-            <p className="mt-3 text-4xl font-bold text-cat-cyan">{todayBookings}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {buenosAires}
-            </p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Reservas esta semana
-            </p>
-            <p className="mt-3 text-4xl font-bold text-cat-cyan">{weekBookings}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Confirmadas</p>
-          </div>
+          <Stat icon={<DoorOpen className="h-6 w-6" />} label="Salas activas" value={String(activeRooms)} sub="Disponibles para reservar" />
+          <Stat icon={<CalendarCheck className="h-6 w-6" />} label="Reservas hoy" value={String(todayBookings)} sub={buenosAires} />
+          <Stat icon={<CalendarDays className="h-6 w-6" />} label="Reservas esta semana" value={String(weekBookings)} sub="Confirmadas" />
         </div>
 
         {/* Today's bookings */}
-        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <Card>
           <div className="border-b border-[var(--border)] px-6 py-4">
             <h3 className="text-base font-semibold text-foreground">Reservas de hoy</h3>
           </div>
@@ -112,13 +87,13 @@ export default async function RoomBookingDashboardPage() {
             <ul className="divide-y divide-[var(--border)]">
               {todayDetails.map((booking: Record<string, string>) => (
                 <li key={booking.id} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">{booking.room_name}</p>
-                      <p className="text-sm text-muted-foreground">{booking.title}</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{booking.room_name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{booking.title}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium tabular-nums text-foreground">
                         {new Date(booking.start_at).toLocaleTimeString('es-AR', {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -131,7 +106,7 @@ export default async function RoomBookingDashboardPage() {
                           timeZone: 'America/Argentina/Buenos_Aires',
                         })}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {booking.employee_first_name} {booking.employee_last_name}
                       </p>
                     </div>
@@ -144,28 +119,22 @@ export default async function RoomBookingDashboardPage() {
               No hay reservas para hoy
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Quick Actions */}
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+        <Card className="p-6">
           <h3 className="text-base font-semibold text-foreground">Acciones rápidas</h3>
           <p className="mt-1 text-sm text-muted-foreground">Administra salas y reservas</p>
           <div className="mt-4 flex gap-3">
-            <Link
-              href="/admin/room-booking/rooms"
-              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-            >
+            <Link href="/admin/room-booking/rooms" className={buttonVariants({ variant: 'secondary' })}>
               Gestionar salas
             </Link>
-            <Link
-              href="/admin/room-booking/bookings"
-              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-            >
+            <Link href="/admin/room-booking/bookings" className={buttonVariants({ variant: 'secondary' })}>
               Ver reservas
             </Link>
           </div>
-        </div>
+        </Card>
       </div>
-    </RoomBookingShell>
+    </RoomBookingLayout>
   );
 }

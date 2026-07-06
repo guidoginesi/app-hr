@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { EvaluationsShell } from '../EvaluationsShell';
+import { EvaluationsLayout } from '../EvaluationsLayout';
 import { DimensionsClient } from './DimensionsClient';
 
 export const dynamic = 'force-dynamic';
@@ -41,12 +41,12 @@ export default async function EvaluationDimensionsPage() {
   }
 
   return (
-    <EvaluationsShell active="dimensions">
+    <EvaluationsLayout active="dimensions">
       <DimensionsClient
         periods={periods || []}
         initialPeriodId={activePeriod?.id || null}
         initialDimensions={dimensions}
       />
-    </EvaluationsShell>
+    </EvaluationsLayout>
   );
 }

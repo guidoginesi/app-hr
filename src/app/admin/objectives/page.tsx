@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { ObjectivesShell } from './ObjectivesShell';
+import { ObjectivesLayout } from './ObjectivesLayout';
 import { ObjectivesDashboardClient } from './ObjectivesDashboardClient';
 
 export const dynamic = 'force-dynamic';
@@ -146,7 +146,7 @@ export default async function ObjectivesDashboardPage({
     .order('name');
 
   return (
-    <ObjectivesShell active="dashboard">
+    <ObjectivesLayout active="dashboard">
       <ObjectivesDashboardClient
         initialEmployees={processedEmployees}
         initialStats={stats}
@@ -154,6 +154,6 @@ export default async function ObjectivesDashboardPage({
         corporateObjectives={corporateObjectives || []}
         currentYear={selectedYear}
       />
-    </ObjectivesShell>
+    </ObjectivesLayout>
   );
 }

@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-import { TimeOffShell } from '../TimeOffShell';
+import { TimeOffLayout } from '../TimeOffLayout';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { formatDateLocal } from '@/lib/dateUtils';
 
 interface Novedad {
@@ -47,7 +49,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   approved: 'bg-success-subtle text-[var(--green-700)]',
   pending_leader: 'bg-warning-subtle text-[var(--amber-600)]',
-  pending_hr: 'bg-accent text-accent-foreground',
+  pending_hr: 'bg-warning-subtle text-[var(--amber-600)]',
   rejected_leader: 'bg-danger-subtle text-[var(--red-600)]',
   rejected_hr: 'bg-danger-subtle text-[var(--red-600)]',
   rejected: 'bg-danger-subtle text-[var(--red-600)]',
@@ -128,89 +130,77 @@ export function NovedadesClient() {
   const yearOptions = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
 
   return (
-    <TimeOffShell active="novedades">
+    <TimeOffLayout active="novedades">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Novedades</h1>
-          <p className="text-sm text-muted-foreground">Licencias y ausencias del período seleccionado</p>
-        </div>
-
         {/* Filters */}
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           <div className="flex flex-wrap items-end gap-4 px-6 py-4">
             {/* Period */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">Mes</label>
-              <select
-                value={month}
-                onChange={(e) => setMonth(Number(e.target.value))}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {MONTH_NAMES.map((name, i) => (
-                  <option key={i + 1} value={i + 1}>{name}</option>
-                ))}
-              </select>
+              <SelectMenu
+                ariaLabel="Mes"
+                value={String(month)}
+                onChange={(v) => setMonth(Number(v))}
+                options={MONTH_NAMES.map((name, i) => ({ value: String(i + 1), label: name }))}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">Año</label>
-              <select
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+              <SelectMenu
+                ariaLabel="Año"
+                value={String(year)}
+                onChange={(v) => setYear(Number(v))}
+                options={yearOptions.map((y) => ({ value: String(y), label: String(y) }))}
+              />
             </div>
 
             {/* Employee filter */}
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-muted-foreground">Persona</label>
-              <select
+              <SelectMenu
+                ariaLabel="Persona"
+                className="w-full"
                 value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">Todos</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.first_name} {emp.last_name}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setEmployeeId(v)}
+                options={[
+                  { value: '', label: 'Todos' },
+                  ...employees.map((emp) => ({ value: emp.id, label: `${emp.first_name} ${emp.last_name}` })),
+                ]}
+              />
             </div>
 
             {/* Status filter */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">Estado</label>
-              <select
+              <SelectMenu
+                ariaLabel="Estado"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground shadow-sm focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">Todos</option>
-                <option value="approved">Aprobadas</option>
-                <option value="pending_leader">Pend. Líder</option>
-                <option value="pending_hr">Pend. HR</option>
-                <option value="rejected_leader">Rechazadas Líder</option>
-                <option value="rejected_hr">Rechazadas HR</option>
-              </select>
+                onChange={(v) => setStatusFilter(v)}
+                options={[
+                  { value: '', label: 'Todos' },
+                  { value: 'approved', label: 'Aprobadas' },
+                  { value: 'pending_leader', label: 'Pend. Líder' },
+                  { value: 'pending_hr', label: 'Pend. HR' },
+                  { value: 'rejected_leader', label: 'Rechazadas Líder' },
+                  { value: 'rejected_hr', label: 'Rechazadas HR' },
+                ]}
+              />
             </div>
 
             {/* Spacer + Export */}
             <div className="ml-auto flex items-end">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => exportToExcel(novedades, year, month)}
                 disabled={novedades.length === 0}
-                className="flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40"
+                className="gap-2"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Exportar Excel
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -228,7 +218,7 @@ export function NovedadesClient() {
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
             </div>
           ) : novedades.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -260,7 +250,7 @@ export function NovedadesClient() {
                         key={n.id}
                         className="hover:bg-muted transition-colors"
                       >
-                        <td className="px-6 py-3 font-medium text-foreground">{n.employee_name}</td>
+                        <td className="px-6 py-3 text-sm font-medium text-foreground">{n.employee_name}</td>
                         <td className="px-6 py-3 text-muted-foreground">{n.leave_type_name}</td>
                         <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.start_date)}</td>
                         <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.end_date)}</td>
@@ -302,6 +292,6 @@ export function NovedadesClient() {
           )}
         </div>
       </div>
-    </TimeOffShell>
+    </TimeOffLayout>
   );
 }

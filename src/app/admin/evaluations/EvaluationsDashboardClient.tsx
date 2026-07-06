@@ -2,6 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { BarList } from '@pow/ui/components/ui/bar-list';
+import { Stat } from '@pow/ui/components/ui/stat';
+import { Star, ClipboardList, ClipboardCheck, UserSquare, Users } from 'lucide-react';
 
 type Period = {
   id: string;
@@ -54,6 +60,7 @@ export function EvaluationsDashboardClient({
   itemScores,
   activePeriodId,
 }: Props) {
+  const router = useRouter();
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(activePeriodId || 'all');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [employeeDeptFilter, setEmployeeDeptFilter] = useState<string>('all');
@@ -172,40 +179,29 @@ export function EvaluationsDashboardClient({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de Evaluaciones</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Resumen general del módulo de evaluaciones de desempeño
-          </p>
-        </div>
-        
-        {/* Period Filter */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-secondary-foreground">Período:</label>
-          <select
-            value={selectedPeriodId}
-            onChange={(e) => setSelectedPeriodId(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-          >
-            <option value="all">Todos los períodos</option>
-            {periods.map((period) => (
-              <option key={period.id} value={period.id}>
-                {period.name} ({period.year})
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Period Filter */}
+      <div className="flex items-center justify-end gap-3">
+        <label className="text-sm font-medium text-secondary-foreground">Período:</label>
+        <SelectMenu
+          ariaLabel="Filtrar por período"
+          align="end"
+          value={selectedPeriodId}
+          onChange={(v) => setSelectedPeriodId(v)}
+          options={[
+            { value: 'all', label: 'Todos los períodos' },
+            ...periods.map((period) => ({ value: period.id, label: `${period.name} (${period.year})` })),
+          ]}
+        />
       </div>
 
       {/* Selected Period Info */}
       {selectedPeriod && (
-        <div className="rounded-xl border border-cat-violet/20 bg-cat-violet-subtle p-6">
+        <div className="rounded-xl border border-[var(--border)] bg-muted p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  selectedPeriod.status === 'open' 
+                  selectedPeriod.status === 'open'
                     ? 'bg-success-subtle text-[var(--green-700)]'
                     : selectedPeriod.status === 'closed'
                     ? 'bg-secondary text-muted-foreground'
@@ -213,85 +209,69 @@ export function EvaluationsDashboardClient({
                 }`}>
                   {selectedPeriod.status === 'open' ? 'Abierto' : selectedPeriod.status === 'closed' ? 'Cerrado' : 'Borrador'}
                 </span>
-                <h2 className="text-lg font-semibold text-cat-violet">{selectedPeriod.name}</h2>
+                <h2 className="text-base font-semibold text-foreground">{selectedPeriod.name}</h2>
               </div>
-              <p className="mt-1 text-sm text-cat-violet">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {formatDate(selectedPeriod.start_date)} - {formatDate(selectedPeriod.end_date)}
               </p>
             </div>
-            <Link
-              href="/admin/evaluations/periods"
-              className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet"
-            >
+            <Button onClick={() => router.push('/admin/evaluations/periods')}>
               Gestionar períodos
-            </Link>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Score Promedio</p>
-          <p className="mt-3 text-4xl font-bold text-cat-violet">
-            {stats.avgScore !== null ? stats.avgScore.toFixed(1) : '-'}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">Evaluaciones de líderes</p>
-        </div>
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Evaluaciones</p>
-          <p className="mt-3 text-4xl font-bold text-foreground">{stats.total}</p>
-          <p className="mt-2 text-xs text-muted-foreground">En el período</p>
-        </div>
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Completadas</p>
-          <p className="mt-3 text-4xl font-bold text-[var(--green-700)]">{stats.submitted}</p>
-          <p className="mt-2 text-xs text-muted-foreground">Enviadas</p>
-        </div>
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Autoevaluaciones</p>
-          <p className="mt-3 text-4xl font-bold text-accent-foreground">{stats.selfCount}</p>
-          <p className="mt-2 text-xs text-muted-foreground">De colaboradores</p>
-        </div>
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Eval. Líderes</p>
-          <p className="mt-3 text-4xl font-bold text-cat-violet">{stats.leaderCount}</p>
-          <p className="mt-2 text-xs text-muted-foreground">De líderes</p>
-        </div>
+        <Stat
+          icon={<Star className="h-6 w-6" />}
+          label="Score promedio"
+          value={stats.avgScore !== null ? stats.avgScore.toFixed(1) : '-'}
+          sub="Evaluaciones de líderes"
+        />
+        <Stat
+          icon={<ClipboardList className="h-6 w-6" />}
+          label="Total evaluaciones"
+          value={String(stats.total)}
+          sub="En el período"
+        />
+        <Stat
+          icon={<ClipboardCheck className="h-6 w-6" />}
+          label="Completadas"
+          value={String(stats.submitted)}
+          sub="Enviadas"
+        />
+        <Stat
+          icon={<UserSquare className="h-6 w-6" />}
+          label="Autoevaluaciones"
+          value={String(stats.selfCount)}
+          sub="De colaboradores"
+        />
+        <Stat
+          icon={<Users className="h-6 w-6" />}
+          label="Eval. líderes"
+          value={String(stats.leaderCount)}
+          sub="De líderes"
+        />
       </div>
 
       {/* Performance by Department */}
       {filteredDepartmentScores.length > 0 && (
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
           <div className="border-b border-[var(--border)] px-6 py-4">
-            <h3 className="text-base font-semibold text-foreground">Performance por Área</h3>
+            <h3 className="text-base font-semibold text-foreground">Performance por área</h3>
             <p className="text-sm text-muted-foreground">Score promedio de evaluaciones de líder por departamento</p>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {filteredDepartmentScores.map((dept) => (
-                <div key={dept.department_id} className="flex items-center gap-4">
-                  <div className="w-40 truncate">
-                    <span className="text-sm font-medium text-secondary-foreground">{dept.department_name}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-4 w-full rounded-full bg-secondary">
-                      <div
-                        className="h-4 rounded-full bg-cat-violet"
-                        style={{ width: `${(dept.avg_score / 10) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-20 text-right">
-                    <span className="text-sm font-semibold text-foreground">{dept.avg_score.toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground"> / 10</span>
-                  </div>
-                  <div className="w-24 text-right">
-                    <span className="text-xs text-muted-foreground">{dept.employee_count} empleados</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <BarList
+              max={10}
+              items={filteredDepartmentScores.map((dept) => ({
+                label: dept.department_name,
+                value: Number(dept.avg_score.toFixed(1)),
+                hint: `${dept.avg_score.toFixed(1)} / 10`,
+              }))}
+            />
           </div>
         </div>
       )}
@@ -299,30 +279,30 @@ export function EvaluationsDashboardClient({
       {/* Top/Bottom Items */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top 3 */}
-        <div className="rounded-xl border border-success/20 bg-success-subtle shadow-sm">
-          <div className="border-b border-success/20 px-6 py-4">
-            <h3 className="text-base font-semibold text-[var(--green-700)]">Top 3 Competencias</h3>
-            <p className="text-sm text-[var(--green-700)]">Mejor puntuadas en evaluaciones</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">Top 3 competencias</h3>
+            <p className="text-sm text-muted-foreground">Mejor puntuadas en evaluaciones</p>
           </div>
           <ul className="divide-y divide-[var(--border)]">
             {topItems.length > 0 ? topItems.map((item, idx) => (
               <li key={item.item_id} className="px-6 py-4">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-subtle text-xs font-bold text-[var(--green-700)]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--green-700)] truncate">{item.statement}</p>
-                    <p className="text-xs text-[var(--green-700)]">{item.dimension_name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{item.statement}</p>
+                    <p className="text-xs text-muted-foreground">{item.dimension_name}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-[var(--green-700)]">{item.avg_score.toFixed(1)}</p>
-                    <p className="text-xs text-[var(--green-700)]">{item.response_count} respuestas</p>
+                    <p className="text-base font-bold text-foreground tabular-nums">{item.avg_score.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">{item.response_count} respuestas</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-[var(--green-700)]">
+              <li className="px-6 py-8 text-center text-sm text-muted-foreground">
                 No hay datos suficientes
               </li>
             )}
@@ -330,30 +310,30 @@ export function EvaluationsDashboardClient({
         </div>
 
         {/* Bottom 3 */}
-        <div className="rounded-xl border border-warning/30 bg-warning-subtle shadow-sm">
-          <div className="border-b border-warning/30 px-6 py-4">
-            <h3 className="text-base font-semibold text-[var(--amber-600)]">Áreas de Mejora</h3>
-            <p className="text-sm text-[var(--amber-600)]">Competencias con menor puntuación</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">Áreas de mejora</h3>
+            <p className="text-sm text-muted-foreground">Competencias con menor puntuación</p>
           </div>
           <ul className="divide-y divide-[var(--border)]">
             {bottomItems.length > 0 ? bottomItems.map((item, idx) => (
               <li key={item.item_id} className="px-6 py-4">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning-subtle text-xs font-bold text-[var(--amber-600)]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--amber-600)] truncate">{item.statement}</p>
-                    <p className="text-xs text-[var(--amber-600)]">{item.dimension_name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{item.statement}</p>
+                    <p className="text-xs text-muted-foreground">{item.dimension_name}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-[var(--amber-600)]">{item.avg_score.toFixed(1)}</p>
-                    <p className="text-xs text-[var(--amber-600)]">{item.response_count} respuestas</p>
+                    <p className="text-base font-bold text-foreground tabular-nums">{item.avg_score.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">{item.response_count} respuestas</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-[var(--amber-600)]">
+              <li className="px-6 py-8 text-center text-sm text-muted-foreground">
                 No hay datos suficientes
               </li>
             )}
@@ -364,29 +344,29 @@ export function EvaluationsDashboardClient({
       {/* Top/Bottom Employees */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top Employees */}
-        <div className="rounded-xl border border-success/20 bg-success-subtle shadow-sm">
-          <div className="border-b border-success/20 px-6 py-4">
-            <h3 className="text-base font-semibold text-[var(--green-700)]">Top Performers</h3>
-            <p className="text-sm text-[var(--green-700)]">Empleados con mejor puntuación</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">Top performers</h3>
+            <p className="text-sm text-muted-foreground">Empleados con mejor puntuación</p>
           </div>
           <ul className="divide-y divide-[var(--border)]">
             {topEmployees.length > 0 ? topEmployees.map((emp, idx) => (
               <li key={emp.id} className="px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-subtle text-sm font-bold text-[var(--green-700)]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--green-700)]">{emp.name}</p>
-                    <p className="text-xs text-[var(--green-700)]">{emp.department}</p>
+                    <p className="text-sm font-medium text-foreground">{emp.name}</p>
+                    <p className="text-xs text-muted-foreground">{emp.department}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold text-[var(--green-700)]">{emp.score.toFixed(1)}</p>
+                    <p className="text-2xl font-bold text-foreground tabular-nums">{emp.score.toFixed(1)}</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-[var(--green-700)]">
+              <li className="px-6 py-8 text-center text-sm text-muted-foreground">
                 No hay datos suficientes
               </li>
             )}
@@ -394,29 +374,29 @@ export function EvaluationsDashboardClient({
         </div>
 
         {/* Bottom Employees */}
-        <div className="rounded-xl border border-warning/30 bg-warning-subtle shadow-sm">
-          <div className="border-b border-warning/30 px-6 py-4">
-            <h3 className="text-base font-semibold text-[var(--amber-600)]">Requieren Atención</h3>
-            <p className="text-sm text-[var(--amber-600)]">Empleados con menor puntuación</p>
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+          <div className="border-b border-[var(--border)] px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">Requieren atención</h3>
+            <p className="text-sm text-muted-foreground">Empleados con menor puntuación</p>
           </div>
           <ul className="divide-y divide-[var(--border)]">
             {bottomEmployees.length > 0 ? bottomEmployees.map((emp, idx) => (
               <li key={emp.id} className="px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning-subtle text-sm font-bold text-[var(--amber-600)]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--amber-600)]">{emp.name}</p>
-                    <p className="text-xs text-[var(--amber-600)]">{emp.department}</p>
+                    <p className="text-sm font-medium text-foreground">{emp.name}</p>
+                    <p className="text-xs text-muted-foreground">{emp.department}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-2xl font-bold text-[var(--amber-600)]">{emp.score.toFixed(1)}</p>
+                    <p className="text-2xl font-bold text-foreground tabular-nums">{emp.score.toFixed(1)}</p>
                   </div>
                 </div>
               </li>
             )) : (
-              <li className="px-6 py-8 text-center text-sm text-[var(--amber-600)]">
+              <li className="px-6 py-8 text-center text-sm text-muted-foreground">
                 No hay datos suficientes
               </li>
             )}
@@ -438,7 +418,7 @@ export function EvaluationsDashboardClient({
               <div className="flex items-center gap-4">
                 {globalAvgScore !== null && (
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-cat-violet" />
+                    <div className="h-3 w-3 rounded-full bg-brand" />
                     <span className="text-sm text-muted-foreground">Media: <span className="font-semibold">{globalAvgScore.toFixed(1)}</span></span>
                   </div>
                 )}
@@ -453,19 +433,19 @@ export function EvaluationsDashboardClient({
                   placeholder="Buscar por nombre o área..."
                   value={employeeSearch}
                   onChange={(e) => setEmployeeSearch(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2 text-sm placeholder:text-muted-foreground focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2 text-sm placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
-              <select
+              <SelectMenu
+                ariaLabel="Filtrar por área"
+                className="w-56"
                 value={employeeDeptFilter}
-                onChange={(e) => setEmployeeDeptFilter(e.target.value)}
-                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-              >
-                <option value="all">Todas las áreas</option>
-                {availableDepartments.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
+                onChange={(v) => setEmployeeDeptFilter(v)}
+                options={[
+                  { value: 'all', label: 'Todas las áreas' },
+                  ...availableDepartments.map(dept => ({ value: dept, label: dept })),
+                ]}
+              />
             </div>
           </div>
           <div className="p-6">
@@ -503,8 +483,8 @@ export function EvaluationsDashboardClient({
                       
                       {/* Mean Marker */}
                       {globalAvgScore !== null && (
-                        <div 
-                          className="absolute top-0 bottom-0 w-0.5 bg-cat-violet z-10"
+                        <div
+                          className="absolute top-0 bottom-0 w-0.5 bg-brand z-10"
                           style={{ left: `${((globalAvgScore - 1) / 9) * 100}%` }}
                         />
                       )}
@@ -549,7 +529,7 @@ export function EvaluationsDashboardClient({
                 <span>7-10: Superior</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-0.5 bg-cat-violet" />
+                <div className="h-3 w-0.5 bg-brand" />
                 <span>Media del equipo</span>
               </div>
             </div>

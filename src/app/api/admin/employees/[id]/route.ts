@@ -141,9 +141,16 @@ export async function PUT(req: NextRequest, context: RouteContext) {
       }
     }
 
+    // Garantiza que toda baja tenga fecha: si se marca "terminated" sin
+    // termination_date, se setea a hoy (necesario para métricas de rotación).
+    const updateData = { ...parsed.data };
+    if (updateData.status === 'terminated' && !updateData.termination_date) {
+      updateData.termination_date = new Date().toISOString().split('T')[0];
+    }
+
     const { data, error } = await supabase
       .from('employees')
-      .update(parsed.data)
+      .update(updateData)
       .eq('id', id)
       .select(`
         *,

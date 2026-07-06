@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { RecruitingShell } from '../RecruitingShell';
+import { RecruitingLayout } from '../RecruitingLayout';
 import { JobsClient } from '../../jobs/JobsClient';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +24,8 @@ export default async function RecruitingJobsPage() {
   }
 
   return (
-    <RecruitingShell active="busquedas">
+    <RecruitingLayout active="busquedas">
       <JobsClient jobs={jobs || []} />
-    </RecruitingShell>
+    </RecruitingLayout>
   );
 }

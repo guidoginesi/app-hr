@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AiTrainingCycle, AiTrainingSession } from '@/types/entrenamiento-ia';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type Props = {
   cycles: AiTrainingCycle[];
@@ -59,24 +61,15 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Sesiones</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Gestioná las sesiones de capacitación por ciclo</p>
-      </div>
-
       <div className="max-w-xs">
         <label className="block text-xs font-medium text-muted-foreground mb-1">Ciclo</label>
-        <select
+        <SelectMenu
+          ariaLabel="Ciclo"
+          className="w-full"
           value={selectedCycleId ?? ''}
-          onChange={(e) => handleCycleChange(e.target.value)}
-          className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-        >
-          {cycles.map((cycle) => (
-            <option key={cycle.id} value={cycle.id}>
-              {cycle.name}
-            </option>
-          ))}
-        </select>
+          onChange={handleCycleChange}
+          options={cycles.map((cycle) => ({ value: cycle.id, label: cycle.name }))}
+        />
       </div>
 
       <form onSubmit={handleCreate} className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm space-y-4 max-w-xl">
@@ -88,7 +81,7 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder="Ej. Introducción a prompts"
           />
         </div>
@@ -99,7 +92,7 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
             value={sessionDate}
             onChange={(e) => setSessionDate(e.target.value)}
             required
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
         <div>
@@ -108,17 +101,13 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
         {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
-        <button
-          type="submit"
-          disabled={saving || !selectedCycleId}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-        >
-          {saving ? 'Creando…' : 'Crear sesión'}
-        </button>
+        <Button type="submit" loading={saving} disabled={!selectedCycleId}>
+          Crear sesión
+        </Button>
       </form>
 
       <div className="rounded-2xl border border-[var(--border)] bg-white shadow-sm overflow-hidden">
@@ -134,7 +123,7 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
             {cycleSessions.map((session) => (
               <li key={session.id} className="flex items-center justify-between px-6 py-4">
                 <div>
-                  <p className="font-medium text-foreground">{session.title}</p>
+                  <p className="text-sm font-medium text-foreground">{session.title}</p>
                   <p className="text-xs text-muted-foreground">{session.session_date}</p>
                   {session.description && (
                     <p className="mt-1 text-sm text-muted-foreground">{session.description}</p>
@@ -142,7 +131,7 @@ export function SessionsClient({ cycles, sessions, selectedCycleId }: Props) {
                 </div>
                 <a
                   href={`/admin/entrenamiento-ia/puntuacion?cycle_id=${selectedCycleId}&session_id=${session.id}`}
-                  className="text-sm font-medium text-accent-foreground hover:text-accent-foreground"
+                  className="shrink-0 text-sm font-medium text-accent-foreground hover:underline"
                 >
                   Cargar puntos →
                 </a>

@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { AiTrainingCycle, AiTrainingSession } from '@/types/entrenamiento-ia';
 import { calculateSessionPoints } from '@/types/entrenamiento-ia';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 type ScoreRow = {
   employee_id: string;
@@ -187,42 +191,30 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Cargar puntos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Asigná o corregí el puntaje de cada colaborador por sesión
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Ciclo</label>
-          <select
+          <SelectMenu
+            ariaLabel="Ciclo"
+            className="w-full"
             value={selectedCycleId ?? ''}
-            onChange={(e) => updateParams(e.target.value, undefined)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-          >
-            {cycles.map((cycle) => (
-              <option key={cycle.id} value={cycle.id}>
-                {cycle.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => updateParams(v, undefined)}
+            options={cycles.map((cycle) => ({ value: cycle.id, label: cycle.name }))}
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Sesión</label>
-          <select
+          <SelectMenu
+            ariaLabel="Sesión"
+            className="w-full"
             value={selectedSessionId ?? ''}
-            onChange={(e) => updateParams(selectedCycleId ?? undefined, e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-          >
-            <option value="">Seleccionar sesión…</option>
-            {cycleSessions.map((session) => (
-              <option key={session.id} value={session.id}>
-                {session.session_date} — {session.title}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => updateParams(selectedCycleId ?? undefined, v)}
+            placeholder="Seleccionar sesión…"
+            options={cycleSessions.map((session) => ({
+              value: session.id,
+              label: `${session.session_date} — ${session.title}`,
+            }))}
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Buscar</label>
@@ -231,7 +223,7 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Nombre del colaborador"
-            className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
             disabled={!selectedSessionId}
           />
         </div>
@@ -253,8 +245,8 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
           <p className="text-sm text-muted-foreground">Seleccioná una sesión para cargar puntajes.</p>
         </div>
       ) : loading ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-white p-12 text-center text-sm text-muted-foreground">
-          Cargando colaboradores…
+        <div className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm">
+          <SkeletonRows rows={6} />
         </div>
       ) : (
         <>
@@ -277,17 +269,19 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
                   {filteredRows.map((row) => (
                     <tr key={row.employee_id} className="hover:bg-muted">
                       <td className="px-3 py-2 sticky left-0 bg-white z-10">
-                        <p className="font-medium text-foreground">
+                        <p className="text-sm font-medium text-foreground">
                           {row.first_name} {row.last_name}
                         </p>
                         <p className="text-xs text-muted-foreground">{row.department_name ?? '—'}</p>
                       </td>
-                      <td className="px-2 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={row.attended}
-                          onChange={(e) => updateRow(row.employee_id, { attended: e.target.checked })}
-                        />
+                      <td className="px-2 py-2">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            aria-label="Asistió"
+                            checked={row.attended}
+                            onCheckedChange={(c) => updateRow(row.employee_id, { attended: c === true })}
+                          />
+                        </div>
                       </td>
                       <td className="px-2 py-2 text-center">
                         <input
@@ -300,7 +294,7 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
                               participation_count: Math.max(0, parseInt(e.target.value, 10) || 0),
                             })
                           }
-                          className="w-14 rounded border border-[var(--border)] px-2 py-1 text-center text-sm"
+                          className="w-14 rounded border border-[var(--border)] px-2 py-1 text-center text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </td>
                       <td className="px-2 py-2 text-center">
@@ -315,18 +309,18 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
                                 e.target.value === '' ? '' : Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)),
                             })
                           }
-                          className="w-16 rounded border border-[var(--border)] px-2 py-1 text-center text-sm"
+                          className="w-16 rounded border border-[var(--border)] px-2 py-1 text-center text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                           placeholder="—"
                         />
                       </td>
-                      <td className="px-2 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={row.activity_on_time}
-                          onChange={(e) =>
-                            updateRow(row.employee_id, { activity_on_time: e.target.checked })
-                          }
-                        />
+                      <td className="px-2 py-2">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            aria-label="Actividad a tiempo"
+                            checked={row.activity_on_time}
+                            onCheckedChange={(c) => updateRow(row.employee_id, { activity_on_time: c === true })}
+                          />
+                        </div>
                       </td>
                       <td className="px-2 py-2 text-center">
                         <input
@@ -337,7 +331,7 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
                               manual_adjustment: parseInt(e.target.value, 10) || 0,
                             })
                           }
-                          className="w-16 rounded border border-[var(--border)] px-2 py-1 text-center text-sm"
+                          className="w-16 rounded border border-[var(--border)] px-2 py-1 text-center text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -345,11 +339,11 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
                           type="text"
                           value={row.notes}
                           onChange={(e) => updateRow(row.employee_id, { notes: e.target.value })}
-                          className="w-full min-w-[120px] rounded border border-[var(--border)] px-2 py-1 text-sm"
+                          className="w-full min-w-[120px] rounded border border-[var(--border)] px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                           placeholder="Opcional"
                         />
                       </td>
-                      <td className="px-3 py-2 text-right font-bold text-accent-foreground">{row.total_points}</td>
+                      <td className="px-3 py-2 text-right font-bold text-foreground">{row.total_points}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -358,13 +352,9 @@ export function PuntuacionClient({ cycles, sessions, selectedCycleId, selectedSe
           </div>
 
           <div className="flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[var(--primary-hover)] disabled:opacity-50"
-            >
-              {saving ? 'Guardando…' : 'Guardar puntajes'}
-            </button>
+            <Button onClick={handleSave} loading={saving} size="lg">
+              Guardar puntajes
+            </Button>
           </div>
         </>
       )}

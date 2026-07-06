@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { calculateEmployeeBonus } from '@/lib/calculateBonus';
-import { ObjectivesShell } from '../ObjectivesShell';
+import { ObjectivesLayout } from '../ObjectivesLayout';
 import { BonosClient } from './BonosClient';
 
 export const dynamic = 'force-dynamic';
@@ -94,13 +94,13 @@ export default async function BonosPage({ searchParams }: { searchParams: Search
   };
 
   return (
-    <ObjectivesShell active="bonos">
+    <ObjectivesLayout active="bonos">
       <BonosClient
         bonusRows={bonusRows}
         corporateSummary={corporateSummary}
         selectedYear={selectedYear}
         availableYears={availableYears.length > 0 ? availableYears : [selectedYear]}
       />
-    </ObjectivesShell>
+    </ObjectivesLayout>
   );
 }

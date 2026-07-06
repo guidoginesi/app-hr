@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import { formatDateLocal } from '@/lib/dateUtils';
 import type { EmployeeStatus } from '@/types/employee';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Button } from '@pow/ui/components/ui/button';
 
 type EmployeeWithRelations = {
   id: string;
@@ -75,39 +78,38 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
-
-        <div className="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                {employee.first_name} {employee.last_name}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">{employee.personal_email}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${statusColors[employee.status]}`}
-              >
-                {statusLabels[employee.status]}
-              </span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent
+        side="right"
+        flush
+        title={`${employee.first_name} ${employee.last_name}`}
+        className="max-w-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-[var(--border)] px-6 py-4">
+          <div>
+            <h2 className="type-title">
+              {employee.first_name} {employee.last_name}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{employee.personal_email}</p>
           </div>
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${statusColors[employee.status]}`}
+            >
+              {statusLabels[employee.status]}
+            </span>
+            <SheetClose
+              aria-label="Cerrar"
+              className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="h-5 w-5" />
+            </SheetClose>
+          </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-6">
+        {/* Content */}
+        <div className="flex-1 space-y-6 overflow-y-auto p-6">
             {/* Personal Information */}
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3">Información Personal</h3>
@@ -229,24 +231,13 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-            >
+          <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+            <Button variant="outline" onClick={onClose}>
               Cerrar
-            </button>
-            <button
-              type="button"
-              onClick={onEdit}
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-secondary"
-            >
-              Editar
-            </button>
+            </Button>
+            <Button onClick={onEdit}>Editar</Button>
           </div>
-        </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

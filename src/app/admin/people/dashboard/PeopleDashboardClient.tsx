@@ -8,6 +8,7 @@ import {
   SENIORITY_CATEGORY_LABELS,
   SeniorityCategory
 } from '@/types/corporate-objectives';
+import { BarList } from '@pow/ui/components/ui/bar-list';
 
 type Employee = {
   id: string;
@@ -16,6 +17,7 @@ type Employee = {
   status: string;
   hire_date: string | null;
   termination_date: string | null;
+  termination_reason: string | null;
   seniority_level: string | null;
   department_id: string | null;
   legal_entity_id: string | null;
@@ -54,18 +56,29 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       return new Date(e.hire_date) >= sixMonthsAgo;
     });
 
-    // Terminations (last 12 months)
+    // Bajas de los últimos 12 meses (por termination_date).
     const recentTerminations = terminatedEmployees.filter(e => {
       if (!e.termination_date) return false;
       return new Date(e.termination_date) >= oneYearAgo;
     });
 
-    // Retention rate (last 12 months)
-    // Formula: (Employees at start - Terminations) / Employees at start * 100
+    // Retención (12m): (dotación al inicio − bajas) / dotación al inicio.
     const employeesAtStart = totalActive + recentTerminations.length;
-    const retentionRate = employeesAtStart > 0 
+    const retentionRate = employeesAtStart > 0
       ? ((employeesAtStart - recentTerminations.length) / employeesAtStart * 100)
       : 100;
+
+    // Rotación anualizada (12m): bajas / dotación promedio * 100.
+    // dotación promedio = (dotación al inicio + dotación al cierre) / 2.
+    const hires12m = activeEmployees.filter(e => e.hire_date && new Date(e.hire_date) >= oneYearAgo).length;
+    const headcountStart = Math.max(0, totalActive - hires12m + recentTerminations.length);
+    const avgHeadcount = (headcountStart + totalActive) / 2;
+    const turnoverRate = avgHeadcount > 0 ? (recentTerminations.length / avgHeadcount * 100) : 0;
+
+    // Desglose por motivo: voluntaria (renuncias) vs involuntaria (desvinculaciones).
+    const voluntaryCount = recentTerminations.filter(e => e.termination_reason === 'resignation').length;
+    const involuntaryCount = recentTerminations.filter(e => e.termination_reason === 'dismissal').length;
+    const voluntaryTurnoverRate = avgHeadcount > 0 ? (voluntaryCount / avgHeadcount * 100) : 0;
 
     // Average tenure (in years)
     const tenures = activeEmployees
@@ -145,6 +158,10 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
       newHires: newHires.length,
       recentTerminations: recentTerminations.length,
       retentionRate,
+      turnoverRate,
+      voluntaryTurnoverRate,
+      voluntaryCount,
+      involuntaryCount,
       avgTenure,
       byDepartment,
       bySeniority,
@@ -155,51 +172,21 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
     };
   }, [employees]);
 
-  // Colors for charts
-  const departmentColors = [
-    'bg-success', 'bg-primary', 'bg-cat-violet', 'bg-warning', 
-    'bg-danger', 'bg-cat-cyan', 'bg-brand', 'bg-primary'
-  ];
-
-  const seniorityColors: Record<number, string> = {
-    1: 'bg-secondary',
-    2: 'bg-primary',
-    3: 'bg-success',
-    4: 'bg-cat-violet',
-    5: 'bg-warning',
-  };
-
-  const tenureColors = [
-    'bg-danger', 'bg-warning', 'bg-success', 'bg-primary', 'bg-cat-violet'
-  ];
-
-  // Calculate max for bar charts
-  const maxDept = Math.max(...Object.values(metrics.byDepartment), 1);
-  const maxSeniority = Math.max(...Object.values(metrics.bySeniority), 1);
-  const maxTenure = Math.max(...Object.values(metrics.tenureRanges), 1);
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de People</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Indicadores de gestión del equipo</p>
-      </div>
-
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Active */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success-subtle">
-              <svg className="h-6 w-6 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <svg className="h-6 w-6 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Empleados activos</p>
-              <p className="text-2xl font-bold text-foreground">{metrics.totalActive}</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{metrics.totalActive}</p>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Empleados activos</p>
         </div>
 
         {/* New Hires */}
@@ -210,96 +197,107 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Nuevos (últimos 6 meses)</p>
-              <p className="text-2xl font-bold text-foreground">{metrics.newHires}</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{metrics.newHires}</p>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Nuevos (últimos 6 meses)</p>
         </div>
 
         {/* Retention Rate */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cat-violet-subtle">
-              <svg className="h-6 w-6 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <svg className="h-6 w-6 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Tasa de retención (12m)</p>
-              <p className="text-2xl font-bold text-foreground">{metrics.retentionRate.toFixed(1)}%</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{metrics.retentionRate.toFixed(1)}%</p>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Tasa de retención (12m)</p>
         </div>
 
         {/* Average Tenure */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warning-subtle">
-              <svg className="h-6 w-6 text-[var(--amber-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <svg className="h-6 w-6 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Antigüedad promedio</p>
-              <p className="text-2xl font-bold text-foreground">{metrics.avgTenure.toFixed(1)} años</p>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{metrics.avgTenure.toFixed(1)} años</p>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Antigüedad promedio</p>
         </div>
+
+        {/* Turnover / Rotación */}
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <svg className="h-6 w-6 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{metrics.turnoverRate.toFixed(1)}%</p>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">Rotación (12m)</p>
+        </div>
+
       </div>
+
+      {/* Bajas por motivo (12m) */}
+      {(metrics.voluntaryCount + metrics.involuntaryCount) > 0 && (
+        <div className="rounded-xl border border-[var(--border)] bg-white p-6">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">Bajas por motivo (12m)</h3>
+            <span className="text-xs text-muted-foreground">
+              Rotación voluntaria <span className="font-semibold text-foreground">{metrics.voluntaryTurnoverRate.toFixed(1)}%</span>
+            </span>
+          </div>
+          <BarList
+            max={metrics.voluntaryCount + metrics.involuntaryCount}
+            items={[
+              {
+                label: 'Renuncias (voluntaria)',
+                value: metrics.voluntaryCount,
+                hint: `${Math.round((metrics.voluntaryCount / (metrics.voluntaryCount + metrics.involuntaryCount)) * 100)}%`,
+              },
+              {
+                label: 'Desvinculaciones (involuntaria)',
+                value: metrics.involuntaryCount,
+                hint: `${Math.round((metrics.involuntaryCount / (metrics.voluntaryCount + metrics.involuntaryCount)) * 100)}%`,
+              },
+            ]}
+          />
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* By Department */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <h3 className="text-sm font-semibold text-foreground mb-4">Distribución por Departamento</h3>
-          <div className="space-y-3">
-            {Object.entries(metrics.byDepartment)
+          <BarList
+            showPercent
+            items={Object.entries(metrics.byDepartment)
               .sort(([, a], [, b]) => b - a)
-              .map(([dept, count], index) => (
-                <div key={dept} className="flex items-center gap-3">
-                  <div className="w-32 text-sm text-muted-foreground truncate" title={dept}>{dept}</div>
-                  <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${departmentColors[index % departmentColors.length]} rounded-full transition-all duration-500`}
-                      style={{ width: `${(count / maxDept) * 100}%` }}
-                    />
-                  </div>
-                  <div className="w-8 text-sm font-semibold text-foreground text-right">{count}</div>
-                </div>
-              ))}
-          </div>
+              .map(([dept, count]) => ({ label: dept, value: count }))}
+          />
         </div>
 
         {/* By Seniority */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <h3 className="text-sm font-semibold text-foreground mb-4">Distribución por Seniority</h3>
-          <div className="space-y-3">
-            {([1, 2, 3, 4, 5] as SeniorityCategory[]).map((category) => (
-              <div key={category} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-muted-foreground">{SENIORITY_CATEGORY_LABELS[category]}</div>
-                <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${seniorityColors[category]} rounded-full transition-all duration-500`}
-                    style={{ width: `${(metrics.bySeniority[category] / maxSeniority) * 100}%` }}
-                  />
-                </div>
-                <div className="w-8 text-sm font-semibold text-foreground text-right">{metrics.bySeniority[category]}</div>
-              </div>
-            ))}
-            {metrics.withoutSeniority > 0 && (
-              <div className="flex items-center gap-3">
-                <div className="w-32 text-sm text-muted-foreground">Sin asignar</div>
-                <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-secondary rounded-full transition-all duration-500"
-                    style={{ width: `${(metrics.withoutSeniority / maxSeniority) * 100}%` }}
-                  />
-                </div>
-                <div className="w-8 text-sm font-semibold text-muted-foreground text-right">{metrics.withoutSeniority}</div>
-              </div>
-            )}
-          </div>
+          <BarList
+            showPercent
+            items={[
+              ...([1, 2, 3, 4, 5] as SeniorityCategory[]).map((category) => ({
+                label: SENIORITY_CATEGORY_LABELS[category],
+                value: metrics.bySeniority[category],
+              })),
+              ...(metrics.withoutSeniority > 0
+                ? [{ label: 'Sin asignar', value: metrics.withoutSeniority }]
+                : []),
+            ]}
+          />
         </div>
       </div>
 
@@ -308,44 +306,21 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
         {/* By Tenure */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <h3 className="text-sm font-semibold text-foreground mb-4">Distribución por Antigüedad</h3>
-          <div className="space-y-3">
-            {Object.entries(metrics.tenureRanges).map(([range, count], index) => (
-              <div key={range} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-muted-foreground">{range}</div>
-                <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${tenureColors[index]} rounded-full transition-all duration-500`}
-                    style={{ width: `${(count / maxTenure) * 100}%` }}
-                  />
-                </div>
-                <div className="w-8 text-sm font-semibold text-foreground text-right">{count}</div>
-              </div>
-            ))}
-          </div>
+          <BarList
+            showPercent
+            items={Object.entries(metrics.tenureRanges).map(([range, count]) => ({ label: range, value: count }))}
+          />
         </div>
 
         {/* By Legal Entity */}
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <h3 className="text-sm font-semibold text-foreground mb-4">Headcount por Sociedad</h3>
-          <div className="space-y-3">
-            {Object.entries(metrics.byLegalEntity)
+          <BarList
+            showPercent
+            items={Object.entries(metrics.byLegalEntity)
               .sort(([, a], [, b]) => b - a)
-              .map(([entity, count], index) => {
-                const maxEntity = Math.max(...Object.values(metrics.byLegalEntity), 1);
-                return (
-                  <div key={entity} className="flex items-center gap-3">
-                    <div className="w-32 text-sm text-muted-foreground truncate" title={entity}>{entity}</div>
-                    <div className="flex-1 h-6 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${departmentColors[(index + 3) % departmentColors.length]} rounded-full transition-all duration-500`}
-                        style={{ width: `${(count / maxEntity) * 100}%` }}
-                      />
-                    </div>
-                    <div className="w-8 text-sm font-semibold text-foreground text-right">{count}</div>
-                  </div>
-                );
-              })}
-          </div>
+              .map(([entity, count]) => ({ label: entity, value: count }))}
+          />
         </div>
       </div>
 
@@ -383,7 +358,7 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
                         cy="18"
                         r="15.915"
                         fill="transparent"
-                        stroke="#10b981"
+                        stroke="var(--primary)"
                         strokeWidth="3.5"
                         strokeDasharray={`${dependencyPct} ${100 - dependencyPct}`}
                         strokeDashoffset={-offset}
@@ -401,7 +376,7 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
                         cy="18"
                         r="15.915"
                         fill="transparent"
-                        stroke="#f59e0b"
+                        stroke="var(--brand)"
                         strokeWidth="3.5"
                         strokeDasharray={`${monotributoPct} ${100 - monotributoPct}`}
                         strokeDashoffset={-offset}
@@ -443,7 +418,7 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
             <div className="space-y-3 flex-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-success" />
+                  <div className="w-3 h-3 rounded-full bg-primary" />
                   <span className="text-sm text-muted-foreground">Relación de dependencia</span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">
@@ -452,7 +427,7 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-warning" />
+                  <div className="w-3 h-3 rounded-full bg-brand" />
                   <span className="text-sm text-muted-foreground">Monotributo</span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">
@@ -490,24 +465,24 @@ export function PeopleDashboardClient({ employees, departments, legalEntities }:
               
               return (
                 <>
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-success-subtle">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
                     <div>
-                      <p className="text-sm font-medium text-[var(--green-700)]">Relación de dependencia</p>
-                      <p className="text-xs text-[var(--green-700)]">Empleados en nómina</p>
+                      <p className="text-sm font-medium text-foreground">Relación de dependencia</p>
+                      <p className="text-xs text-muted-foreground">Empleados en nómina</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-[var(--green-700)]">{dependencyPct}%</p>
-                      <p className="text-xs text-[var(--green-700)]">{metrics.byEmploymentType['Relación de dependencia']} personas</p>
+                      <p className="text-2xl font-bold text-foreground">{dependencyPct}%</p>
+                      <p className="text-xs text-muted-foreground">{metrics.byEmploymentType['Relación de dependencia']} personas</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-warning-subtle">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-accent">
                     <div>
-                      <p className="text-sm font-medium text-[var(--amber-600)]">Monotributo</p>
-                      <p className="text-xs text-[var(--amber-600)]">Contratistas independientes</p>
+                      <p className="text-sm font-medium text-accent-foreground">Monotributo</p>
+                      <p className="text-xs text-accent-foreground/80">Contratistas independientes</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-[var(--amber-600)]">{monotributoPct}%</p>
-                      <p className="text-xs text-[var(--amber-600)]">{metrics.byEmploymentType['Monotributo']} personas</p>
+                      <p className="text-2xl font-bold text-accent-foreground">{monotributoPct}%</p>
+                      <p className="text-xs text-accent-foreground/80">{metrics.byEmploymentType['Monotributo']} personas</p>
                     </div>
                   </div>
                 </>

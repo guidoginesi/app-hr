@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { RecruitingShell } from './RecruitingShell';
+import { RecruitingLayout } from './RecruitingLayout';
 import { PipelineDashboard } from '../dashboard/PipelineDashboard';
 import { STAGE_ORDER } from '@/types/funnel';
+import { Stat } from '@pow/ui/components/ui/stat';
+import { Card, CardContent } from '@pow/ui/components/ui/card';
+import { Users, Briefcase, FileText } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,40 +107,38 @@ export default async function RecruitingDashboardPage() {
     const totalApplications = pipelineStats.reduce((acc, stat) => acc + stat.total, 0);
 
     return (
-      <RecruitingShell active="dashboard">
-        <div className="space-y-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de Reclutamiento</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Resumen general del proceso de selección
-            </p>
-          </div>
-
+      <RecruitingLayout active="dashboard">
+        <div className="space-y-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="group rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Candidatos registrados</p>
-              <p className="mt-3 text-4xl font-bold text-foreground">{totalCandidates || 0}</p>
-              <p className="mt-2 text-xs text-muted-foreground">Total en el sistema</p>
-            </div>
-            <div className="group rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Búsquedas abiertas</p>
-              <p className="mt-3 text-4xl font-bold text-black">{jobs?.filter((j) => j.is_published).length ?? 0}</p>
-              <p className="mt-2 text-xs text-muted-foreground">Publicadas actualmente</p>
-            </div>
-            <div className="group rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aplicaciones activas</p>
-              <p className="mt-3 text-4xl font-bold text-foreground">{totalApplications}</p>
-              <p className="mt-2 text-xs text-muted-foreground">En proceso de selección</p>
-            </div>
+            <Stat
+              icon={<Users className="h-6 w-6" />}
+              label="Candidatos registrados"
+              value={String(totalCandidates || 0)}
+              sub="Total en el sistema"
+            />
+            <Stat
+              icon={<Briefcase className="h-6 w-6" />}
+              label="Búsquedas abiertas"
+              value={String(jobs?.filter((j) => j.is_published).length ?? 0)}
+              sub="Publicadas actualmente"
+            />
+            <Stat
+              icon={<FileText className="h-6 w-6" />}
+              label="Aplicaciones activas"
+              value={String(totalApplications)}
+              sub="En proceso de selección"
+            />
           </div>
 
           {/* Pipeline Dashboard */}
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Pipeline por Búsqueda</h2>
-            <PipelineDashboard stats={pipelineStats} />
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="type-title font-semibold text-foreground mb-4">Pipeline por Búsqueda</h2>
+              <PipelineDashboard stats={pipelineStats} />
+            </CardContent>
+          </Card>
         </div>
-      </RecruitingShell>
+      </RecruitingLayout>
     );
   } catch (error: any) {
     if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message === 'NEXT_REDIRECT') {
@@ -145,16 +146,14 @@ export default async function RecruitingDashboardPage() {
     }
     console.error('Error in RecruitingDashboard:', error);
     return (
-      <RecruitingShell active="dashboard">
-        <div className="space-y-8">
-          <div className="rounded-xl border border-danger/20 bg-danger-subtle p-6">
-            <h2 className="text-lg font-semibold text-[var(--red-600)]">Error al cargar el dashboard</h2>
-            <p className="mt-2 text-sm text-[var(--red-600)]">
-              {error?.message || 'Ocurrió un error inesperado. Por favor intenta recargar la página.'}
-            </p>
-          </div>
+      <RecruitingLayout active="dashboard">
+        <div className="rounded-[var(--radius)] border border-danger/20 bg-danger-subtle p-6">
+          <h2 className="type-title font-semibold text-[var(--red-600)]">Error al cargar el dashboard</h2>
+          <p className="mt-2 text-sm text-[var(--red-600)]">
+            {error?.message || 'Ocurrió un error inesperado. Por favor intenta recargar la página.'}
+          </p>
         </div>
-      </RecruitingShell>
+      </RecruitingLayout>
     );
   }
 }

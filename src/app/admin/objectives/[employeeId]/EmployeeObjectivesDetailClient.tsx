@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { CorporateObjective, ObjectiveWeightDistribution, getSeniorityLabel, getSeniorityCategory, SENIORITY_CATEGORY_COLORS, SENIORITY_CATEGORY_LABELS, SeniorityCategory, Quarter, QUARTER_LABELS } from '@/types/corporate-objectives';
 import { Objective, STATUS_LABELS, STATUS_COLORS, PERIOD_TYPE_LABELS } from '@/types/objective';
+import { BarList } from '@pow/ui/components/ui/bar-list';
 
 type Employee = {
   id: string;
@@ -93,11 +95,9 @@ export function EmployeeObjectivesDetailClient({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/objectives"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="h-4 w-4" aria-hidden />
           Volver al dashboard
         </Link>
       </div>
@@ -106,14 +106,14 @@ export function EmployeeObjectivesDetailClient({
       <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-danger-subtle text-xl font-semibold text-[var(--red-600)]">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-xl font-semibold text-secondary-foreground">
               {employee.first_name[0]}{employee.last_name[0]}
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-foreground">
+              <h1 className="text-base font-semibold text-foreground">
                 {employee.first_name} {employee.last_name}
               </h1>
-              <p className="text-sm text-muted-foreground">{employee.job_title || 'Sin cargo definido'}</p>
+              <p className="text-xs text-muted-foreground">{employee.job_title || 'Sin cargo definido'}</p>
               <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
                 {employee.department_name && (
                   <span>{employee.department_name}</span>
@@ -157,17 +157,13 @@ export function EmployeeObjectivesDetailClient({
             <div className="mt-1 flex items-center gap-2">
               {totalWeightedProgress !== null ? (
                 <>
-                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-secondary">
-                    <div 
-                      className={`h-full rounded-full ${
-                        totalWeightedProgress >= 100 ? 'bg-success' :
-                        totalWeightedProgress >= 75 ? 'bg-primary' :
-                        totalWeightedProgress >= 50 ? 'bg-warning' : 'bg-danger'
-                      }`}
+                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-accent">
+                    <div
+                      className="h-full rounded-full bg-brand transition-all duration-500"
                       style={{ width: `${Math.min(totalWeightedProgress, 100)}%` }}
                     />
                   </div>
-                  <span className="text-lg font-bold text-foreground">{totalWeightedProgress}%</span>
+                  <span className="text-base font-bold text-foreground tabular-nums">{totalWeightedProgress}%</span>
                 </>
               ) : (
                 <span className="text-sm text-muted-foreground">Sin datos suficientes</span>
@@ -239,17 +235,17 @@ export function EmployeeObjectivesDetailClient({
         <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-subtle">
-                <svg className="h-5 w-5 text-[var(--green-700)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Facturación</h3>
+                <h3 className="text-base font-semibold text-foreground">Facturación</h3>
                 <p className="text-xs text-muted-foreground">Peso: {weights.billing}%</p>
               </div>
             </div>
-            <span className="rounded-full bg-success-subtle px-2 py-0.5 text-xs font-medium text-[var(--green-700)]">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
               Corporativo
             </span>
           </div>
@@ -263,13 +259,13 @@ export function EmployeeObjectivesDetailClient({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Meta</p>
-                  <p className="font-medium text-foreground">
+                  <p className="text-sm font-medium text-foreground">
                     ${billingObjective.target_value?.toLocaleString('es-AR') || '-'}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Actual</p>
-                  <p className="font-medium text-foreground">
+                  <p className="text-sm font-medium text-foreground">
                     ${billingObjective.actual_value?.toLocaleString('es-AR') || '-'}
                   </p>
                 </div>
@@ -278,14 +274,11 @@ export function EmployeeObjectivesDetailClient({
                 <div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Progreso</span>
-                    <span className="font-medium text-foreground">{Math.round(billingProgress)}%</span>
+                    <span className="font-medium text-foreground tabular-nums">{Math.round(billingProgress)}%</span>
                   </div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
-                    <div 
-                      className={`h-full rounded-full ${
-                        billingProgress >= 100 ? 'bg-success' :
-                        billingProgress >= 90 ? 'bg-primary' : 'bg-warning'
-                      }`}
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-accent">
+                    <div
+                      className="h-full rounded-full bg-brand transition-all duration-500"
                       style={{ width: `${Math.min(billingProgress, 100)}%` }}
                     />
                   </div>
@@ -301,13 +294,13 @@ export function EmployeeObjectivesDetailClient({
         <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                <svg className="h-5 w-5 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">NPS (Trimestral)</h3>
+                <h3 className="text-base font-semibold text-foreground">NPS (Trimestral)</h3>
                 <p className="text-xs text-muted-foreground">Peso total: {weights.nps}%</p>
               </div>
             </div>
@@ -324,17 +317,14 @@ export function EmployeeObjectivesDetailClient({
             <div className="space-y-3">
               {/* Progress summary */}
               {npsProgress !== null && (
-                <div className="rounded-lg bg-accent p-3">
+                <div className="rounded-lg bg-muted p-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-accent-foreground">Progreso promedio</span>
-                    <span className="font-bold text-accent-foreground">{Math.round(npsProgress)}%</span>
+                    <span className="text-sm font-medium text-foreground">Progreso promedio</span>
+                    <span className="font-bold text-foreground tabular-nums">{Math.round(npsProgress)}%</span>
                   </div>
                   <div className="mt-2 h-2 overflow-hidden rounded-full bg-accent">
-                    <div 
-                      className={`h-full rounded-full ${
-                        npsProgress >= 100 ? 'bg-success' :
-                        npsProgress >= 75 ? 'bg-primary' : 'bg-warning'
-                      }`}
+                    <div
+                      className="h-full rounded-full bg-brand transition-all duration-500"
                       style={{ width: `${Math.min(npsProgress, 100)}%` }}
                     />
                   </div>
@@ -386,17 +376,17 @@ export function EmployeeObjectivesDetailClient({
         <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cat-violet-subtle">
-                <svg className="h-5 w-5 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Objetivo de Área 1</h3>
+                <h3 className="text-base font-semibold text-foreground">Objetivo de Área 1</h3>
                 <p className="text-xs text-muted-foreground">Peso: {weights.area1}%</p>
               </div>
             </div>
-            <span className="rounded-full bg-cat-violet-subtle px-2 py-0.5 text-xs font-medium text-cat-violet">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
               Área/Rol
             </span>
           </div>
@@ -425,15 +415,11 @@ export function EmployeeObjectivesDetailClient({
               <div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Progreso</span>
-                  <span className="font-medium text-foreground">{area1.progress_percentage}%</span>
+                  <span className="font-medium text-foreground tabular-nums">{area1.progress_percentage}%</span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
-                  <div 
-                    className={`h-full rounded-full ${
-                      area1.progress_percentage >= 100 ? 'bg-success' :
-                      area1.progress_percentage >= 75 ? 'bg-primary' :
-                      area1.progress_percentage >= 50 ? 'bg-warning' : 'bg-danger'
-                    }`}
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-accent">
+                  <div
+                    className="h-full rounded-full bg-brand transition-all duration-500"
                     style={{ width: `${Math.min(area1.progress_percentage, 100)}%` }}
                   />
                 </div>
@@ -448,17 +434,17 @@ export function EmployeeObjectivesDetailClient({
         <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-subtle">
-                <svg className="h-5 w-5 text-[var(--amber-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Objetivo de Área 2</h3>
+                <h3 className="text-base font-semibold text-foreground">Objetivo de Área 2</h3>
                 <p className="text-xs text-muted-foreground">Peso: {weights.area2}%</p>
               </div>
             </div>
-            <span className="rounded-full bg-warning-subtle px-2 py-0.5 text-xs font-medium text-[var(--amber-600)]">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
               Área/Rol
             </span>
           </div>
@@ -487,15 +473,11 @@ export function EmployeeObjectivesDetailClient({
               <div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Progreso</span>
-                  <span className="font-medium text-foreground">{area2.progress_percentage}%</span>
+                  <span className="font-medium text-foreground tabular-nums">{area2.progress_percentage}%</span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
-                  <div 
-                    className={`h-full rounded-full ${
-                      area2.progress_percentage >= 100 ? 'bg-success' :
-                      area2.progress_percentage >= 75 ? 'bg-primary' :
-                      area2.progress_percentage >= 50 ? 'bg-warning' : 'bg-danger'
-                    }`}
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-accent">
+                  <div
+                    className="h-full rounded-full bg-brand transition-all duration-500"
                     style={{ width: `${Math.min(area2.progress_percentage, 100)}%` }}
                   />
                 </div>
@@ -509,33 +491,16 @@ export function EmployeeObjectivesDetailClient({
 
       {/* Weight Distribution Info */}
       <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Distribución de Pesos - {seniorityLevel ? getSeniorityLabel(seniorityLevel) : SENIORITY_CATEGORY_LABELS[seniorityCategory]}</h3>
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[var(--green-700)]">{weights.billing}%</div>
-            <div className="text-sm text-muted-foreground">Facturación</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-accent-foreground">{weights.nps}%</div>
-            <div className="text-sm text-muted-foreground">NPS</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-cat-violet">{weights.area1}%</div>
-            <div className="text-sm text-muted-foreground">Área 1</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[var(--amber-600)]">{weights.area2}%</div>
-            <div className="text-sm text-muted-foreground">Área 2</div>
-          </div>
-        </div>
-        <div className="mt-4 h-4 overflow-hidden rounded-full bg-secondary">
-          <div className="flex h-full">
-            <div className="bg-success" style={{ width: `${weights.billing}%` }} />
-            <div className="bg-primary" style={{ width: `${weights.nps}%` }} />
-            <div className="bg-cat-violet" style={{ width: `${weights.area1}%` }} />
-            <div className="bg-warning" style={{ width: `${weights.area2}%` }} />
-          </div>
-        </div>
+        <h3 className="text-base font-semibold text-foreground mb-4">Distribución de Pesos - {seniorityLevel ? getSeniorityLabel(seniorityLevel) : SENIORITY_CATEGORY_LABELS[seniorityCategory]}</h3>
+        <BarList
+          max={100}
+          items={[
+            { label: 'Facturación', value: weights.billing, hint: `${weights.billing}%` },
+            { label: 'NPS', value: weights.nps, hint: `${weights.nps}%` },
+            { label: 'Área 1', value: weights.area1, hint: `${weights.area1}%` },
+            { label: 'Área 2', value: weights.area2, hint: `${weights.area2}%` },
+          ]}
+        />
       </div>
     </div>
   );

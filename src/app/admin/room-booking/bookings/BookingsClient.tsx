@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 interface Booking {
   id: string;
@@ -115,34 +118,24 @@ export function BookingsClient() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reservas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Listado de reservas de salas de reunión
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por sala"
           value={roomFilter}
-          onChange={(e) => setRoomFilter(e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan"
-        >
-          <option value="">Todas las salas</option>
-          {rooms.map((room) => (
-            <option key={room.id} value={room.id}>
-              {room.name}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setRoomFilter(v)}
+          options={[
+            { value: '', label: 'Todas las salas' },
+            ...rooms.map((room) => ({ value: room.id, label: room.name })),
+          ]}
+        />
         <div className="flex items-center gap-2">
           <label className="text-sm text-muted-foreground">Desde:</label>
           <input
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -151,28 +144,28 @@ export function BookingsClient() {
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan"
+            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
         {(roomFilter || fromDate || toDate) && (
-          <button
+          <Button
+            variant="ghost"
             onClick={() => {
               setRoomFilter('');
               setFromDate('');
               setToDate('');
             }}
-            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
           >
             Limpiar filtros
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Table */}
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-cat-cyan border-t-transparent" />
+          <div className="px-6 py-5">
+            <SkeletonRows rows={5} />
           </div>
         ) : bookings.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">No hay reservas</div>
@@ -199,7 +192,7 @@ export function BookingsClient() {
                     {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-medium text-foreground">{booking.room_name}</p>
+                    <p className="text-sm font-semibold text-foreground">{booking.room_name}</p>
                     {booking.room_floor && (
                       <p className="text-xs text-muted-foreground">Piso {booking.room_floor}</p>
                     )}
@@ -228,13 +221,15 @@ export function BookingsClient() {
                   </td>
                   <td className="px-6 py-4">
                     {booking.status === 'confirmed' && (
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-danger/20 text-[var(--red-600)] hover:bg-danger-subtle hover:text-[var(--red-600)]"
+                        loading={cancellingId === booking.id}
                         onClick={() => handleCancel(booking.id)}
-                        disabled={cancellingId === booking.id}
-                        className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
                       >
-                        {cancellingId === booking.id ? '...' : 'Cancelar'}
-                      </button>
+                        Cancelar
+                      </Button>
                     )}
                   </td>
                 </tr>

@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { X } from 'lucide-react';
 import type { LegalEntity, Department, EmployeeStatus } from '@/types/employee';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import { SENIORITY_LEVELS, SENIORITY_CATEGORY_LABELS, getSeniorityCategory, SeniorityCategory } from '@/types/corporate-objectives';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
 type EducationLevel = 'primary' | 'secondary' | 'tertiary' | 'university' | 'postgraduate';
@@ -268,30 +272,29 @@ export function EmployeeFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent
+        side="right"
+        flush
+        title={isEditing ? 'Editar empleado' : 'Nuevo empleado'}
+        className="max-w-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+          <h2 className="type-title">
+            {isEditing ? 'Editar empleado' : 'Nuevo empleado'}
+          </h2>
+          <SheetClose
+            aria-label="Cerrar"
+            className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" />
+          </SheetClose>
+        </div>
 
-        <div className="relative w-full max-w-3xl rounded-xl bg-white shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-            <h2 className="text-xl font-semibold text-foreground">
-              {isEditing ? 'Editar empleado' : 'Nuevo empleado'}
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 space-y-6 overflow-y-auto p-6">
               {error && (
                 <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
               )}
@@ -367,7 +370,7 @@ export function EmployeeFormModal({
                       value={formData.first_name}
                       onChange={handleInputChange}
                       required
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -378,7 +381,7 @@ export function EmployeeFormModal({
                       value={formData.last_name}
                       onChange={handleInputChange}
                       required
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -389,7 +392,7 @@ export function EmployeeFormModal({
                       value={formData.dni}
                       onChange={handleInputChange}
                       placeholder="12345678"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -400,7 +403,7 @@ export function EmployeeFormModal({
                       value={formData.cuil}
                       onChange={handleInputChange}
                       placeholder="20-12345678-9"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -410,7 +413,7 @@ export function EmployeeFormModal({
                       name="birth_date"
                       value={formData.birth_date}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -420,24 +423,25 @@ export function EmployeeFormModal({
                       name="nationality"
                       value={formData.nationality}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Estado civil</label>
-                    <select
-                      name="marital_status"
+                    <SelectMenu
+                      ariaLabel="Estado civil"
+                      className="w-full"
                       value={formData.marital_status}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="single">Soltero/a</option>
-                      <option value="married">Casado/a</option>
-                      <option value="divorced">Divorciado/a</option>
-                      <option value="widowed">Viudo/a</option>
-                      <option value="other">Otro</option>
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, marital_status: v as MaritalStatus | '' }))}
+                      placeholder="Seleccionar..."
+                      options={[
+                        { value: 'single', label: 'Soltero/a' },
+                        { value: 'married', label: 'Casado/a' },
+                        { value: 'divorced', label: 'Divorciado/a' },
+                        { value: 'widowed', label: 'Viudo/a' },
+                        { value: 'other', label: 'Otro' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Teléfono</label>
@@ -447,7 +451,7 @@ export function EmployeeFormModal({
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="+54 11 1234-5678"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -458,7 +462,7 @@ export function EmployeeFormModal({
                       value={formData.personal_email}
                       onChange={handleInputChange}
                       required
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -468,7 +472,7 @@ export function EmployeeFormModal({
                       name="work_email"
                       value={formData.work_email}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -485,7 +489,7 @@ export function EmployeeFormModal({
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -495,7 +499,7 @@ export function EmployeeFormModal({
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -505,7 +509,7 @@ export function EmployeeFormModal({
                       name="postal_code"
                       value={formData.postal_code}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -515,7 +519,7 @@ export function EmployeeFormModal({
                       name="country"
                       value={formData.country}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -527,19 +531,20 @@ export function EmployeeFormModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Nivel académico</label>
-                    <select
-                      name="education_level"
+                    <SelectMenu
+                      ariaLabel="Nivel académico"
+                      className="w-full"
                       value={formData.education_level}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="primary">Primario</option>
-                      <option value="secondary">Secundario</option>
-                      <option value="tertiary">Terciario</option>
-                      <option value="university">Universitario</option>
-                      <option value="postgraduate">Posgrado</option>
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, education_level: v as EducationLevel | '' }))}
+                      placeholder="Seleccionar..."
+                      options={[
+                        { value: 'primary', label: 'Primario' },
+                        { value: 'secondary', label: 'Secundario' },
+                        { value: 'tertiary', label: 'Terciario' },
+                        { value: 'university', label: 'Universitario' },
+                        { value: 'postgraduate', label: 'Posgrado' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Título</label>
@@ -549,7 +554,7 @@ export function EmployeeFormModal({
                       value={formData.education_title}
                       onChange={handleInputChange}
                       placeholder="Ej: Licenciatura en Administración"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div className="col-span-2">
@@ -560,7 +565,7 @@ export function EmployeeFormModal({
                       value={formData.languages}
                       onChange={handleInputChange}
                       placeholder="Ej: Español (nativo), Inglés (avanzado), Portugués (intermedio)"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -572,20 +577,21 @@ export function EmployeeFormModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Parentesco</label>
-                    <select
-                      name="emergency_contact_relationship"
+                    <SelectMenu
+                      ariaLabel="Parentesco"
+                      className="w-full"
                       value={formData.emergency_contact_relationship}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="spouse">Cónyuge</option>
-                      <option value="parent">Padre/Madre</option>
-                      <option value="sibling">Hermano/a</option>
-                      <option value="child">Hijo/a</option>
-                      <option value="friend">Amigo/a</option>
-                      <option value="other">Otro</option>
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, emergency_contact_relationship: v }))}
+                      placeholder="Seleccionar..."
+                      options={[
+                        { value: 'spouse', label: 'Cónyuge' },
+                        { value: 'parent', label: 'Padre/Madre' },
+                        { value: 'sibling', label: 'Hermano/a' },
+                        { value: 'child', label: 'Hijo/a' },
+                        { value: 'friend', label: 'Amigo/a' },
+                        { value: 'other', label: 'Otro' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Teléfono</label>
@@ -595,7 +601,7 @@ export function EmployeeFormModal({
                       value={formData.emergency_contact_phone}
                       onChange={handleInputChange}
                       placeholder="+54 11 1234-5678"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -605,7 +611,7 @@ export function EmployeeFormModal({
                       name="emergency_contact_first_name"
                       value={formData.emergency_contact_first_name}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -615,7 +621,7 @@ export function EmployeeFormModal({
                       name="emergency_contact_last_name"
                       value={formData.emergency_contact_last_name}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div className="col-span-2">
@@ -625,7 +631,7 @@ export function EmployeeFormModal({
                       name="emergency_contact_address"
                       value={formData.emergency_contact_address}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -642,7 +648,7 @@ export function EmployeeFormModal({
                       name="hire_date"
                       value={formData.hire_date}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -653,131 +659,118 @@ export function EmployeeFormModal({
                       value={formData.job_title}
                       onChange={handleInputChange}
                       placeholder="Ej: Desarrollador Senior"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Nivel de Seniority</label>
-                    <select
-                      name="seniority_level"
+                    <SelectMenu
+                      ariaLabel="Nivel de Seniority"
+                      className="w-full"
                       value={formData.seniority_level}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {([1, 2, 3, 4, 5] as SeniorityCategory[]).map(cat => (
-                        <optgroup key={cat} label={SENIORITY_CATEGORY_LABELS[cat]}>
-                          {[1, 2, 3, 4].map(sub => {
-                            const level = `${cat}.${sub}`;
-                            return (
-                              <option key={level} value={level}>
-                                Lev. {level} - {SENIORITY_CATEGORY_LABELS[cat]}
-                              </option>
-                            );
-                          })}
-                        </optgroup>
-                      ))}
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, seniority_level: v }))}
+                      placeholder="Seleccionar..."
+                      options={([1, 2, 3, 4, 5] as SeniorityCategory[]).flatMap((cat) =>
+                        [1, 2, 3, 4].map((sub) => {
+                          const level = `${cat}.${sub}`;
+                          return {
+                            value: level,
+                            label: `Lev. ${level} - ${SENIORITY_CATEGORY_LABELS[cat]}`,
+                          };
+                        })
+                      )}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Condición laboral</label>
-                    <select
-                      name="employment_type"
+                    <SelectMenu
+                      ariaLabel="Condición laboral"
+                      className="w-full"
                       value={formData.employment_type}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="dependency">Relación de dependencia</option>
-                      <option value="monotributista">Monotributista</option>
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, employment_type: v }))}
+                      placeholder="Seleccionar..."
+                      options={[
+                        { value: 'dependency', label: 'Relación de dependencia' },
+                        { value: 'monotributista', label: 'Monotributista' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Sociedad</label>
-                    <select
-                      name="legal_entity_id"
+                    <SelectMenu
+                      ariaLabel="Sociedad"
+                      className="w-full"
                       value={formData.legal_entity_id}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {legalEntities.map((entity) => (
-                        <option key={entity.id} value={entity.id}>
-                          {entity.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) =>
+                        setFormData((prev) => {
+                          const next = { ...prev, legal_entity_id: v };
+                          // Reset department if legal entity changes and current department doesn't match
+                          if (prev.department_id) {
+                            const currentDept = departments.find((d) => d.id === prev.department_id);
+                            if (currentDept?.legal_entity_id && currentDept.legal_entity_id !== v) {
+                              next.department_id = '';
+                            }
+                          }
+                          return next;
+                        })
+                      }
+                      placeholder="Seleccionar..."
+                      options={legalEntities.map((entity) => ({ value: entity.id, label: entity.name }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Departamento</label>
-                    <select
-                      name="department_id"
+                    <SelectMenu
+                      ariaLabel="Departamento"
+                      className="w-full"
                       value={formData.department_id}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {filteredDepartments.map((dept) => (
-                        <option key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, department_id: v }))}
+                      placeholder="Seleccionar..."
+                      options={filteredDepartments.map((dept) => ({ value: dept.id, label: dept.name }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Manager</label>
-                    <select
-                      name="manager_id"
+                    <SelectMenu
+                      ariaLabel="Manager"
+                      className="w-full"
                       value={formData.manager_id}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {managers.map((mgr) => (
-                        <option key={mgr.id} value={mgr.id}>
-                          {mgr.first_name} {mgr.last_name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, manager_id: v }))}
+                      placeholder="Seleccionar..."
+                      options={managers.map((mgr) => ({ value: mgr.id, label: `${mgr.first_name} ${mgr.last_name}` }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">Estado</label>
-                    <select
-                      name="status"
+                    <SelectMenu
+                      ariaLabel="Estado"
+                      className="w-full"
                       value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="active">Activo</option>
-                      <option value="inactive">Inactivo</option>
-                      <option value="terminated">Desvinculado</option>
-                    </select>
+                      onChange={(v) => setFormData((prev) => ({ ...prev, status: v as EmployeeStatus }))}
+                      options={[
+                        { value: 'active', label: 'Activo' },
+                        { value: 'inactive', label: 'Inactivo' },
+                        // "Desvinculado" solo se muestra si ya lo está (para no ocultar el estado
+                        // actual). Para dar de baja se usa el flujo "Registrar baja" (pide fecha + motivo).
+                        ...(formData.status === 'terminated' ? [{ value: 'terminated', label: 'Desvinculado' }] : []),
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting || isUploading}
-                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-secondary disabled:opacity-50"
-              >
-                {isSubmitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear empleado'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          {/* Footer */}
+          <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" loading={isSubmitting || isUploading}>
+              {isEditing ? 'Guardar cambios' : 'Crear empleado'}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }

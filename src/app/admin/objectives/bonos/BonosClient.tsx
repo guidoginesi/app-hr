@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { X, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 
 type PersonalObjective = { title: string; achievement: number | null };
 
@@ -48,43 +52,43 @@ function getBonusColor(pct: number) {
 
 function BonusBar({ value, max = 100 }: { value: number; max?: number }) {
   const width = Math.min((value / max) * 100, 100);
-  const color = value >= 80 ? 'bg-success' : value >= 50 ? 'bg-warning' : 'bg-danger';
   return (
-    <div className="h-1.5 w-full rounded-full bg-secondary">
-      <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${width}%` }} />
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent">
+      <div className="h-1.5 rounded-full bg-brand transition-all duration-500" style={{ width: `${width}%` }} />
     </div>
   );
 }
 
 function DetailModal({ row, onClose }: { row: BonusRow; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" flush title={`Detalle de bono · ${row.name}`} className="max-w-lg">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <div>
-            <h3 className="font-semibold text-foreground">{row.name}</h3>
+            <h3 className="text-base font-semibold text-foreground">{row.name}</h3>
             <p className="text-xs text-muted-foreground">{row.department} · {row.seniority_label}</p>
           </div>
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary text-muted-foreground">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <SheetClose
+            aria-label="Cerrar"
+            className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" />
+          </SheetClose>
         </div>
 
-        <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* Weights */}
           <div className="rounded-xl border border-[var(--border)] bg-muted p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pesos por seniority</p>
             <div className="grid grid-cols-2 gap-3 text-center">
               <div>
                 <p className="text-xs text-muted-foreground">Corporativo</p>
-                <p className="text-xl font-bold text-cat-violet">{row.weights.company}%</p>
+                <p className="text-xl font-bold text-foreground tabular-nums">{row.weights.company}%</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Personal</p>
-                <p className="text-xl font-bold text-accent-foreground">{row.weights.area}%</p>
+                <p className="text-xl font-bold text-foreground tabular-nums">{row.weights.area}%</p>
               </div>
             </div>
           </div>
@@ -139,7 +143,7 @@ function DetailModal({ row, onClose }: { row: BonusRow; onClose: () => void }) {
                 <span className="text-muted-foreground">
                   Componente corporativo ({row.corporate.completion.toFixed(1)}% × {row.weights.company}%)
                 </span>
-                <span className="font-semibold text-cat-violet">
+                <span className="font-semibold text-foreground tabular-nums">
                   {(row.corporate.completion * row.weights.company / 100).toFixed(2)}%
                 </span>
               </div>
@@ -147,7 +151,7 @@ function DetailModal({ row, onClose }: { row: BonusRow; onClose: () => void }) {
                 <span className="text-muted-foreground">
                   Componente personal ({row.personal.completion.toFixed(1)}% × {row.weights.area}%)
                 </span>
-                <span className="font-semibold text-accent-foreground">
+                <span className="font-semibold text-foreground tabular-nums">
                   {(row.personal.completion * row.weights.area / 100).toFixed(2)}%
                 </span>
               </div>
@@ -164,15 +168,14 @@ function DetailModal({ row, onClose }: { row: BonusRow; onClose: () => void }) {
             </div>
             <div className="mt-3 flex items-center justify-between rounded-lg bg-muted px-4 py-3">
               <span className="font-semibold text-foreground">Bono a pagar</span>
-              <span className={`text-2xl font-bold ${row.bonus.final >= 80 ? 'text-[var(--green-700)]' : row.bonus.final >= 50 ? 'text-[var(--amber-600)]' : 'text-[var(--red-600)]'}`}>
+              <span className={`text-2xl font-bold tabular-nums ${row.bonus.final >= 80 ? 'text-[var(--green-700)]' : row.bonus.final >= 50 ? 'text-[var(--amber-600)]' : 'text-[var(--red-600)]'}`}>
                 {row.bonus.final.toFixed(2)}%
               </span>
             </div>
           </div>
         </div>
-      </div>
-      <div className="absolute inset-0" onClick={onClose} />
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -225,27 +228,22 @@ export function BonosClient({ bonusRows, corporateSummary, selectedYear, availab
   }
 
   function SortIcon({ col }: { col: typeof sortBy }) {
-    if (sortBy !== col) return <span className="text-muted-foreground">↕</span>;
-    return <span className="text-[var(--red-600)]">{sortDesc ? '↓' : '↑'}</span>;
+    if (sortBy !== col) return <ChevronsUpDown className="inline h-3.5 w-3.5 text-muted-foreground/60" aria-hidden />;
+    return sortDesc
+      ? <ChevronDown className="inline h-3.5 w-3.5 text-brand" aria-hidden />
+      : <ChevronUp className="inline h-3.5 w-3.5 text-brand" aria-hidden />;
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Bonos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Cálculo de bono a pagar por empleado según objetivos</p>
-        </div>
-        <select
-          value={selectedYear}
-          onChange={e => router.push(`/admin/objectives/bonos?year=${e.target.value}`)}
-          className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          {availableYears.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+      {/* Toolbar */}
+      <div className="flex items-center justify-end">
+        <SelectMenu
+          ariaLabel="Filtrar por año"
+          value={String(selectedYear)}
+          onChange={(v) => router.push(`/admin/objectives/bonos?year=${v}`)}
+          options={availableYears.map((y) => ({ value: String(y), label: String(y) }))}
+        />
       </div>
 
       {/* Corporate summary banner */}
@@ -292,20 +290,20 @@ export function BonosClient({ bonusRows, corporateSummary, selectedYear, availab
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Promedio bono a pagar</p>
-          <p className="mt-2 text-3xl font-bold text-[var(--red-600)]">{stats.avg.toFixed(1)}%</p>
+          <p className="mt-2 text-3xl font-bold text-foreground tabular-nums">{stats.avg.toFixed(1)}%</p>
           <p className="mt-1 text-xs text-muted-foreground">{stats.calculable} con bono calculado</p>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empleados</p>
-          <p className="mt-2 text-3xl font-bold text-foreground">{bonusRows.length}</p>
+          <p className="mt-2 text-3xl font-bold text-foreground tabular-nums">{bonusRows.length}</p>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sin objetivos</p>
-          <p className="mt-2 text-3xl font-bold text-muted-foreground">{stats.noPersonal}</p>
+          <p className="mt-2 text-3xl font-bold text-muted-foreground tabular-nums">{stats.noPersonal}</p>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pend. evaluación</p>
-          <p className="mt-2 text-3xl font-bold text-[var(--amber-600)]">{stats.pendingEval}</p>
+          <p className="mt-2 text-3xl font-bold text-[var(--amber-600)] tabular-nums">{stats.pendingEval}</p>
         </div>
       </div>
 
@@ -318,16 +316,17 @@ export function BonosClient({ bonusRows, corporateSummary, selectedYear, availab
             placeholder="Buscar empleado..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          <select
+          <SelectMenu
+            ariaLabel="Filtrar por área"
             value={deptFilter}
-            onChange={e => setDeptFilter(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="all">Todas las áreas</option>
-            {departments.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
+            onChange={(v) => setDeptFilter(v)}
+            options={[
+              { value: 'all', label: 'Todas las áreas' },
+              ...departments.map((d) => ({ value: d, label: d })),
+            ]}
+          />
           <span className="text-xs text-muted-foreground shrink-0">{filtered.length} empleados</span>
         </div>
 
@@ -425,12 +424,9 @@ export function BonosClient({ bonusRows, corporateSummary, selectedYear, availab
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <button
-                        onClick={() => setDetailRow(row)}
-                        className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setDetailRow(row)}>
                         Ver
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
-import { NotificationBell } from '@/components/NotificationBell';
+import { X } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { RichTextEditor } from '../RichTextEditor';
 import { isMessageBodyEmpty } from '@/lib/messageBody';
 
@@ -31,7 +33,7 @@ const statusBadge: Record<string, string> = {
 };
 
 const priorityBadge: Record<string, string> = {
-  info: 'bg-accent text-accent-foreground',
+  info: 'bg-secondary text-muted-foreground',
   warning: 'bg-warning-subtle text-[var(--amber-600)]',
   critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
@@ -71,7 +73,6 @@ function audienceLabel(audience: Record<string, unknown> | null): string {
 }
 
 export function AdminMessagesClient({ messages: initialMessages }: { messages: Message[] }) {
-  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<CreateForm>(DEFAULT_FORM);
@@ -188,75 +189,8 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
   };
 
   return (
-    <div className="flex min-h-screen bg-muted text-foreground">
-      {/* Sidebar */}
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-[var(--border)] bg-white shadow-sm">
-        <div className="flex h-16 items-center border-b border-[var(--border)] px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cat-violet-subtle">
-              <svg className="h-5 w-5 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Mensajes</p>
-              <p className="text-xs text-muted-foreground">Centro de comunicación</p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex-1 space-y-0.5 px-3 py-4">
-          <span className="flex w-full items-center justify-between rounded-lg bg-cat-violet px-3 py-2.5 text-sm font-medium text-white shadow-sm">
-            <span>Todos los mensajes</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-white" />
-          </span>
-          <div className="my-3 border-t border-[var(--border)]" />
-          <Link
-            href="/admin/messages/config"
-            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-secondary hover:text-black transition-all duration-150"
-          >
-            <span>Configuración</span>
-          </Link>
-        </nav>
-        <div className="border-t border-[var(--border)] px-3 py-3">
-          <Link
-            href="/admin"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver al inicio
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-white px-8 shadow-sm">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Centro de Mensajes</h1>
-            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
-              Gestión de comunicaciones y anuncios
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-cat-violet px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cat-violet"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Nuevo mensaje
-            </button>
-            <NotificationBell detailBasePath="/portal/messages" />
-            <AdminProfileDropdown />
-          </div>
-        </header>
-
-        <main className="flex-1 bg-muted px-8 py-8">
-          {/* Feedback banners */}
+    <div className="space-y-4">
+      {/* Feedback banners */}
           {success && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-success/20 bg-success-subtle px-4 py-3 text-sm text-[var(--green-700)]">
               <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -276,174 +210,160 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
             </div>
           )}
 
-          {/* Create modal */}
-          {showCreate && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-              <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                  <h2 className="text-base font-semibold text-foreground">Nuevo mensaje</h2>
-                  <button type="button" onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+          {/* Toolbar */}
+          <div className="flex items-center justify-end">
+            <Button onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}>
+              Nuevo mensaje
+            </Button>
+          </div>
 
-                <div className="max-h-[70vh] space-y-4 overflow-y-auto px-6 py-5">
-                  {/* Title */}
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Título</label>
-                    <input
-                      type="text"
-                      value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      placeholder="Título del mensaje..."
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-                    />
-                  </div>
-
-                  {/* Body */}
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Cuerpo</label>
-                    <RichTextEditor
-                      content={form.body}
-                      onChange={(html) => setForm({ ...form, body: html })}
-                      placeholder="Redactá el contenido del mensaje..."
-                    />
-                  </div>
-
-                  {/* Row: priority + audience */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Prioridad</label>
-                      <select
-                        value={form.priority}
-                        onChange={(e) => setForm({ ...form, priority: e.target.value as CreateForm['priority'] })}
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-                      >
-                        <option value="info">Informativo</option>
-                        <option value="warning">Advertencia</option>
-                        <option value="critical">Crítico</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audiencia</label>
-                      <select
-                        value={form.audience}
-                        onChange={(e) => setForm({ ...form, audience: e.target.value as CreateForm['audience'] })}
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-                      >
-                        <option value="all">Todos los empleados</option>
-                        <option value="leaders">Solo líderes</option>
-                        <option value="employees">Solo empleados</option>
-                        <option value="monotributista">Empleados monotributo</option>
-                        <option value="dependency">Empleados relación de dependencia</option>
-                        <option value="test">🧪 Test (Agustina, Guido, Antonella)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Expires at */}
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-muted-foreground uppercase tracking-wide">Expira el (opcional)</label>
-                    <input
-                      type="datetime-local"
-                      value={form.expires_at}
-                      onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-                    />
-                  </div>
-
-                  {/* Require confirmation */}
-                  <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
-                    <input
-                      type="checkbox"
-                      id="require_confirmation"
-                      checked={form.require_confirmation}
-                      onChange={(e) => setForm({ ...form, require_confirmation: e.target.checked })}
-                      className="h-4 w-4 rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
-                    />
-                    <label htmlFor="require_confirmation" className="text-sm font-medium text-secondary-foreground">
-                      Requiere confirmación de lectura
-                    </label>
-                  </div>
-
-                  {/* Google Chat */}
-                  <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
-                    <input
-                      type="checkbox"
-                      id="send_to_google_chat"
-                      checked={form.send_to_google_chat}
-                      onChange={(e) => setForm({ ...form, send_to_google_chat: e.target.checked })}
-                      className="h-4 w-4 rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
-                    />
-                    <label htmlFor="send_to_google_chat" className="flex items-center gap-2 text-sm font-medium text-secondary-foreground cursor-pointer">
-                      <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-                      </svg>
-                      Enviar también al chat grupal de Pow (Google Chat)
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreate(false)}
-                    disabled={saving}
-                    className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCreate(false)}
-                    disabled={saving}
-                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                  >
-                    Guardar borrador
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCreate(true)}
-                    disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-cat-violet px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cat-violet disabled:opacity-60"
-                  >
-                    {saving ? (
-                      <>
-                        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                        </svg>
-                        Publicando...
-                      </>
-                    ) : (
-                      'Publicar ahora'
-                    )}
-                  </button>
-                </div>
+          {/* Create sheet */}
+          <Sheet open={showCreate} onOpenChange={(o) => { if (!o) setShowCreate(false); }}>
+            <SheetContent side="right" flush title="Nuevo mensaje" className="max-w-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+                <h2 className="type-title">Nuevo mensaje</h2>
+                <SheetClose
+                  aria-label="Cerrar"
+                  className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="h-5 w-5" />
+                </SheetClose>
               </div>
-            </div>
-          )}
+
+              {/* Body */}
+              <div className="flex-1 space-y-4 overflow-y-auto p-6">
+                {/* Title */}
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Título</label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    placeholder="Título del mensaje..."
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Body */}
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Cuerpo</label>
+                  <RichTextEditor
+                    content={form.body}
+                    onChange={(html) => setForm({ ...form, body: html })}
+                    placeholder="Redactá el contenido del mensaje..."
+                  />
+                </div>
+
+                {/* Row: priority + audience */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-secondary-foreground">Prioridad</label>
+                    <SelectMenu
+                      ariaLabel="Prioridad"
+                      className="w-full"
+                      value={form.priority}
+                      onChange={(v) => setForm({ ...form, priority: v as CreateForm['priority'] })}
+                      options={[
+                        { value: 'info', label: 'Informativo' },
+                        { value: 'warning', label: 'Advertencia' },
+                        { value: 'critical', label: 'Crítico' },
+                      ]}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-secondary-foreground">Audiencia</label>
+                    <SelectMenu
+                      ariaLabel="Audiencia"
+                      className="w-full"
+                      value={form.audience}
+                      onChange={(v) => setForm({ ...form, audience: v as CreateForm['audience'] })}
+                      options={[
+                        { value: 'all', label: 'Todos los empleados' },
+                        { value: 'leaders', label: 'Solo líderes' },
+                        { value: 'employees', label: 'Solo empleados' },
+                        { value: 'monotributista', label: 'Empleados monotributo' },
+                        { value: 'dependency', label: 'Empleados relación de dependencia' },
+                        { value: 'test', label: '🧪 Test (Agustina, Guido, Antonella)' },
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                {/* Expires at */}
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Expira el (opcional)</label>
+                  <input
+                    type="datetime-local"
+                    value={form.expires_at}
+                    onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+
+                {/* Require confirmation */}
+                <label
+                  htmlFor="require_confirmation"
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3"
+                >
+                  <Checkbox
+                    id="require_confirmation"
+                    checked={form.require_confirmation}
+                    onCheckedChange={(c) => setForm({ ...form, require_confirmation: c === true })}
+                  />
+                  <span className="text-sm font-medium text-secondary-foreground">
+                    Requiere confirmación de lectura
+                  </span>
+                </label>
+
+                {/* Google Chat */}
+                <label
+                  htmlFor="send_to_google_chat"
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3"
+                >
+                  <Checkbox
+                    id="send_to_google_chat"
+                    checked={form.send_to_google_chat}
+                    onCheckedChange={(c) => setForm({ ...form, send_to_google_chat: c === true })}
+                  />
+                  <span className="flex items-center gap-2 text-sm font-medium text-secondary-foreground">
+                    <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                    </svg>
+                    Enviar también al chat grupal de Pow (Google Chat)
+                  </span>
+                </label>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] p-4">
+                <Button variant="ghost" onClick={() => setShowCreate(false)} disabled={saving}>
+                  Cancelar
+                </Button>
+                <Button variant="outline" onClick={() => handleCreate(false)} disabled={saving}>
+                  Guardar borrador
+                </Button>
+                <Button onClick={() => handleCreate(true)} loading={saving}>
+                  Publicar ahora
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
 
           {/* Messages table */}
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-white py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-cat-violet-subtle">
-                <svg className="h-7 w-7 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
+                <svg className="h-7 w-7 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </div>
               <p className="mt-3 font-semibold text-secondary-foreground">No hay mensajes todavía</p>
               <p className="mt-1 text-sm text-muted-foreground">Crea el primer anuncio para tu organización</p>
-              <button
-                type="button"
-                onClick={() => setShowCreate(true)}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-cat-violet px-4 py-2 text-sm font-semibold text-white hover:bg-cat-violet"
-              >
+              <Button className="mt-4" onClick={() => setShowCreate(true)}>
                 Nuevo mensaje
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
@@ -517,14 +437,13 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                             Ver detalle
                           </Link>
                           {msg.status === 'draft' && (
-                            <button
-                              type="button"
+                            <Button
+                              size="sm"
                               onClick={() => handlePublish(msg.id)}
-                              disabled={publishing === msg.id}
-                              className="rounded-lg bg-cat-violet px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-cat-violet disabled:opacity-60"
+                              loading={publishing === msg.id}
                             >
-                              {publishing === msg.id ? 'Publicando...' : 'Publicar'}
-                            </button>
+                              Publicar
+                            </Button>
                           )}
                         </div>
                       </td>
@@ -534,8 +453,6 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
               </table>
             </div>
           )}
-        </main>
-      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { X } from 'lucide-react';
 import {
   formatPayrollPeriodLabelFromKey,
   MONTH_NAMES,
@@ -9,6 +10,10 @@ import {
   periodTypeBadge,
   type PayrollPeriodType,
 } from '@/lib/payrollPeriods';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 type PeriodStatus = 'DRAFT' | 'IN_REVIEW' | 'SENT' | 'CLOSED';
 
@@ -103,21 +108,6 @@ export function PayrollPeriodsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Periodos de Liquidación</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona liquidaciones mensuales y períodos de SAC (Sueldo Anual Complementario)
-          </p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)]"
-        >
-          Nuevo periodo
-        </button>
-      </div>
-
       {message && (
         <div className={`rounded-lg p-4 text-sm ${
           message.type === 'success' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'
@@ -129,98 +119,99 @@ export function PayrollPeriodsClient() {
         </div>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-            <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">Nuevo periodo</h2>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4 p-6">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Tipo de periodo *</label>
-                    <select
-                      value={formData.period_type}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          period_type: e.target.value as PayrollPeriodType,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      {PAYROLL_PERIOD_TYPE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedType && (
-                      <p className="mt-1 text-xs text-muted-foreground">{selectedType.description}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Año *</label>
-                    <input
-                      type="number"
-                      value={formData.year}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, year: parseInt(e.target.value) }))}
-                      min={2020}
-                      max={2100}
-                      required
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-                  </div>
-                  {formData.period_type === 'MONTHLY' ? (
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-secondary-foreground">Mes *</label>
-                      <select
-                        value={formData.month}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, month: parseInt(e.target.value) }))}
-                        required
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
-                      >
-                        {MONTH_NAMES.map((name, idx) => (
-                          <option key={idx + 1} value={idx + 1}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-[var(--orange-100)] bg-accent px-3 py-2 text-sm text-accent-foreground">
-                      Se liquidará en Diciembre (2do semestre: Julio–Diciembre).
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-                  >
-                    {saving ? 'Creando...' : 'Crear periodo'}
-                  </button>
-                </div>
-              </form>
-            </div>
+      <Sheet open={showModal} onOpenChange={(o) => { if (!o) setShowModal(false); }}>
+        <SheetContent side="right" flush title="Nuevo periodo">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+            <h2 className="text-base font-semibold text-foreground">Nuevo periodo</h2>
+            <SheetClose
+              aria-label="Cerrar"
+              className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="h-5 w-5" />
+            </SheetClose>
           </div>
-        </div>
-      )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-4 overflow-y-auto p-6">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-secondary-foreground">Tipo de periodo *</label>
+                <SelectMenu
+                  ariaLabel="Tipo de periodo"
+                  className="w-full"
+                  value={formData.period_type}
+                  onChange={(v) =>
+                    setFormData((prev) => ({ ...prev, period_type: v as PayrollPeriodType }))
+                  }
+                  options={PAYROLL_PERIOD_TYPE_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                />
+                {selectedType && (
+                  <p className="mt-1 text-xs text-muted-foreground">{selectedType.description}</p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-secondary-foreground">Año *</label>
+                <input
+                  type="number"
+                  value={formData.year}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, year: parseInt(e.target.value) }))}
+                  min={2020}
+                  max={2100}
+                  required
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              {formData.period_type === 'MONTHLY' ? (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-secondary-foreground">Mes *</label>
+                  <SelectMenu
+                    ariaLabel="Mes"
+                    className="w-full"
+                    value={String(formData.month)}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, month: parseInt(v) }))}
+                    options={MONTH_NAMES.map((name, idx) => ({
+                      value: String(idx + 1),
+                      label: name,
+                    }))}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-lg border border-[var(--orange-100)] bg-accent px-3 py-2 text-sm text-accent-foreground">
+                  Se liquidará en Diciembre (2do semestre: Julio–Diciembre).
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" loading={saving}>
+                Crear periodo
+              </Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
 
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-6 py-4">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Periodos de liquidación</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Liquidaciones mensuales y períodos de SAC (Sueldo Anual Complementario)
+            </p>
+          </div>
+          <Button onClick={() => setShowModal(true)}>Nuevo periodo</Button>
+        </div>
         {loading ? (
-          <div className="px-6 py-12 text-center">
-            <p className="text-sm text-muted-foreground">Cargando periodos...</p>
+          <div className="px-6 py-6">
+            <SkeletonRows rows={5} />
           </div>
         ) : periods.length === 0 ? (
           <div className="px-6 py-12 text-center">
@@ -271,7 +262,7 @@ export function PayrollPeriodsClient() {
                       <td className="px-6 py-4">
                         <Link
                           href={`/admin/payroll/${period.id}`}
-                          className="text-sm font-medium text-accent-foreground hover:text-accent-foreground"
+                          className="text-sm font-medium text-foreground hover:text-brand"
                         >
                           Ver detalle
                         </Link>
