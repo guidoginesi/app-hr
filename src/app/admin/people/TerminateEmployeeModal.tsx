@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { X } from 'lucide-react';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type TerminateEmployeeModalProps = {
   employee: {
@@ -60,31 +64,34 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
-
-        <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-          {/* Header */}
-          <div className="border-b border-[var(--border)] px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-subtle">
-                <svg className="h-5 w-5 text-[var(--red-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Registrar baja</h2>
-                <p className="text-sm text-muted-foreground">
-                  {employee.first_name} {employee.last_name}
-                </p>
-              </div>
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" flush title="Registrar baja" className="max-w-lg">
+        {/* Header */}
+        <div className="border-b border-[var(--border)] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-danger-subtle">
+              <svg className="h-5 w-5 text-[var(--red-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
             </div>
+            <div className="flex-1">
+              <h2 className="type-title">Registrar baja</h2>
+              <p className="text-sm text-muted-foreground">
+                {employee.first_name} {employee.last_name}
+              </p>
+            </div>
+            <SheetClose
+              aria-label="Cerrar"
+              className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="h-5 w-5" />
+            </SheetClose>
           </div>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="p-6 space-y-5">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 space-y-5 overflow-y-auto p-6">
               {error && (
                 <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">
                   {error}
@@ -102,7 +109,7 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
                   value={terminationDate}
                   onChange={(e) => setTerminationDate(e.target.value)}
                   required
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -111,16 +118,16 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
                 <label htmlFor="terminationReason" className="block text-sm font-medium text-secondary-foreground">
                   Motivo <span className="text-[var(--red-600)]">*</span>
                 </label>
-                <select
-                  id="terminationReason"
+                <SelectMenu
+                  ariaLabel="Motivo"
+                  className="mt-1 w-full"
                   value={terminationReason}
-                  onChange={(e) => setTerminationReason(e.target.value as TerminationReason)}
-                  required
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="resignation">Renuncia</option>
-                  <option value="dismissal">Despido</option>
-                </select>
+                  onChange={(v) => setTerminationReason(v as TerminationReason)}
+                  options={[
+                    { value: 'resignation', label: 'Renuncia' },
+                    { value: 'dismissal', label: 'Despido' },
+                  ]}
+                />
               </div>
 
               {/* Notes */}
@@ -134,7 +141,7 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
                   onChange={(e) => setTerminationNotes(e.target.value)}
                   rows={3}
                   placeholder="Información adicional sobre la baja..."
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -176,27 +183,17 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
-              >
-                {isSubmitting ? 'Registrando...' : 'Confirmar baja'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          {/* Footer */}
+          <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="destructive" loading={isSubmitting}>
+              Confirmar baja
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }

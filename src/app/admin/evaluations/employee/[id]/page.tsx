@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { EvaluationsShell } from '../../EvaluationsShell';
+import { EvaluationsLayout } from '../../EvaluationsLayout';
 import { EmployeeEvaluationsClient } from './EmployeeEvaluationsClient';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +80,7 @@ export default async function EmployeeEvaluationsPage({ params }: PageProps) {
   }
 
   return (
-    <EvaluationsShell active="all">
+    <EvaluationsLayout active="all">
       <EmployeeEvaluationsClient
         employee={employee}
         evaluations={evaluations || []}
@@ -88,6 +88,6 @@ export default async function EmployeeEvaluationsPage({ params }: PageProps) {
         recategorizations={recategorizations || []}
         seniorityHistory={seniorityHistory}
       />
-    </EvaluationsShell>
+    </EvaluationsLayout>
   );
 }

@@ -20,6 +20,8 @@ import {
 	canHaveFinalOutcome,
 	getValidRejectionReasons
 } from '@/lib/funnel';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type StageHistory = {
 	id: string;
@@ -180,13 +182,9 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 			<div className="flex items-center justify-between">
 				<h4 className="text-sm font-semibold text-foreground">Pipeline de Selección</h4>
 				{!isEditing && !isDiscarded && (
-					<button
-						type="button"
-						onClick={() => setIsEditing(true)}
-						className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted hover:text-black"
-					>
+					<Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
 						Editar etapa
-					</button>
+					</Button>
 				)}
 				{isDiscarded && (
 					<span className="text-xs font-medium text-[var(--red-600)]">Candidato descartado</span>
@@ -216,7 +214,7 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 											isCurrent
 												? isDiscarded
 													? 'bg-danger-subtle text-[var(--red-600)] shadow-md'
-													: 'bg-black text-white shadow-md'
+													: 'bg-primary text-primary-foreground shadow-md'
 												: isPast
 												? 'bg-secondary text-secondary-foreground'
 												: isFutureAndDiscarded
@@ -278,62 +276,50 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 				<form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-[var(--border)] bg-white p-4">
 					<div>
 						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Nueva etapa</label>
-						<select
+						<SelectMenu
+							ariaLabel="Nueva etapa"
+							className="w-full"
 							value={formData.to_stage}
-							onChange={(e) => setFormData({ ...formData, to_stage: e.target.value as Stage })}
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-							required
-						>
-							{STAGE_ORDER.map((stage) => (
-								<option key={stage} value={stage}>
-									{StageLabels[stage]}
-								</option>
-							))}
-						</select>
+							onChange={(v) => setFormData({ ...formData, to_stage: v as Stage })}
+							options={STAGE_ORDER.map((stage) => ({ value: stage, label: StageLabels[stage] }))}
+						/>
 					</div>
 
 					<div>
 						<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Estado dentro de la etapa</label>
-						<select
+						<SelectMenu
+							ariaLabel="Estado dentro de la etapa"
+							className="w-full"
 							value={formData.status}
-							onChange={(e) => {
-								const newStatus = e.target.value as StageStatus;
+							onChange={(v) => {
+								const newStatus = v as StageStatus;
 								setFormData((prev) => ({ ...prev, status: newStatus }));
 							}}
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-							required
-						>
-							{Object.values(StageStatus)
+							options={Object.values(StageStatus)
 								.filter((status) => status !== StageStatus.IN_PROGRESS && status !== StageStatus.ON_HOLD)
-								.map((status) => (
-									<option key={status} value={status}>
-										{StageStatusLabels[status]}
-									</option>
-								))}
-						</select>
+								.map((status) => ({ value: status, label: StageStatusLabels[status] }))}
+						/>
 					</div>
 
 					{requiresOfferStatus(formData.to_stage) && (
 						<div>
 							<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Estado de oferta</label>
-							<select
+							<SelectMenu
+								ariaLabel="Estado de oferta"
+								className="w-full"
+								placeholder="Selecciona..."
 								value={formData.offer_status || ''}
-								onChange={(e) =>
+								onChange={(v) =>
 									setFormData({
 										...formData,
-										offer_status: (e.target.value || null) as OfferStatus | null
+										offer_status: (v || null) as OfferStatus | null
 									})
 								}
-								className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-								required
-							>
-								<option value="">Selecciona...</option>
-								{Object.values(OfferStatus).map((status) => (
-									<option key={status} value={status}>
-										{OfferStatusLabels[status]}
-									</option>
-								))}
-							</select>
+								options={[
+									{ value: '', label: 'Selecciona...' },
+									...Object.values(OfferStatus).map((status) => ({ value: status, label: OfferStatusLabels[status] }))
+								]}
+							/>
 						</div>
 					)}
 
@@ -341,24 +327,22 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 						<>
 							<div>
 								<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Resultado final</label>
-								<select
+								<SelectMenu
+									ariaLabel="Resultado final"
+									className="w-full"
+									placeholder="Selecciona..."
 									value={formData.final_outcome || ''}
-									onChange={(e) =>
+									onChange={(v) =>
 										setFormData({
 											...formData,
-											final_outcome: (e.target.value || null) as FinalOutcome | null
+											final_outcome: (v || null) as FinalOutcome | null
 										})
 									}
-									className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-									required
-								>
-									<option value="">Selecciona...</option>
-									{Object.values(FinalOutcome).map((outcome) => (
-										<option key={outcome} value={outcome}>
-											{FinalOutcomeLabels[outcome]}
-										</option>
-									))}
-								</select>
+									options={[
+										{ value: '', label: 'Selecciona...' },
+										...Object.values(FinalOutcome).map((outcome) => ({ value: outcome, label: FinalOutcomeLabels[outcome] }))
+									]}
+								/>
 							</div>
 
 							{formData.final_outcome &&
@@ -368,26 +352,25 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 										<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">
 											Motivo de rechazo
 										</label>
-										<select
+										<SelectMenu
+											ariaLabel="Motivo de rechazo"
+											className="w-full"
+											placeholder="Opcional"
 											value={formData.final_rejection_reason || ''}
-											onChange={(e) =>
+											onChange={(v) =>
 												setFormData({
 													...formData,
-													final_rejection_reason: (e.target.value || null) as RejectionReason | null
+													final_rejection_reason: (v || null) as RejectionReason | null
 												})
 											}
-											className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-										>
-											<option value="">Opcional</option>
-											{getValidRejectionReasons(formData.final_outcome).map((reason) => {
-												const reasonEnum = reason as RejectionReason;
-												return (
-													<option key={reasonEnum} value={reasonEnum}>
-														{RejectionReasonLabels[reasonEnum]}
-													</option>
-												);
-											})}
-										</select>
+											options={[
+												{ value: '', label: 'Opcional' },
+												...getValidRejectionReasons(formData.final_outcome).map((reason) => {
+													const reasonEnum = reason as RejectionReason;
+													return { value: reasonEnum, label: RejectionReasonLabels[reasonEnum] };
+												})
+											]}
+										/>
 									</div>
 								)}
 						</>
@@ -399,7 +382,7 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 							value={formData.notes}
 							onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
 							rows={2}
-							className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+							className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 							placeholder="Agregar notas sobre este cambio..."
 						/>
 					</div>
@@ -411,15 +394,13 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 					)}
 
 					<div className="flex gap-3 pt-2">
-						<button
-							type="submit"
-							disabled={loading}
-							className="flex-1 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50"
-						>
-							{loading ? 'Guardando...' : 'Guardar cambios'}
-						</button>
-						<button
+						<Button type="submit" loading={loading} className="flex-1">
+							Guardar cambios
+						</Button>
+						<Button
 							type="button"
+							variant="outline"
+							disabled={loading}
 							onClick={() => {
 								setIsEditing(false);
 								setError(null);
@@ -432,11 +413,9 @@ export function PipelineView({ application, onUpdate }: PipelineViewProps) {
 									notes: ''
 								});
 							}}
-							disabled={loading}
-							className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-secondary-foreground transition-all hover:bg-muted disabled:opacity-50"
 						>
 							Cancelar
-						</button>
+						</Button>
 					</div>
 				</form>
 			)}

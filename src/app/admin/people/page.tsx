@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { PeopleShell } from './PeopleShell';
+import { PeopleLayout } from './PeopleLayout';
 import { PeopleClient } from './PeopleClient';
 
 export const dynamic = 'force-dynamic';
@@ -50,12 +50,12 @@ export default async function AdminPeoplePage() {
     .order('name');
 
   return (
-    <PeopleShell active="empleados">
+    <PeopleLayout active="empleados">
       <PeopleClient
         employees={employees || []}
         legalEntities={legalEntities || []}
         departments={departments || []}
       />
-    </PeopleShell>
+    </PeopleLayout>
   );
 }

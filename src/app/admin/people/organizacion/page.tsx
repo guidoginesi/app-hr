@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { PeopleShell } from '../PeopleShell';
+import { PeopleLayout } from '../PeopleLayout';
 import { OrganizacionClient } from './OrganizacionClient';
 
 export const dynamic = 'force-dynamic';
@@ -30,11 +30,11 @@ export default async function OrganizacionPage() {
     .order('name');
 
   return (
-    <PeopleShell active="organizacion">
+    <PeopleLayout active="organizacion">
       <OrganizacionClient
         initialLegalEntities={legalEntities || []}
         initialDepartments={departments || []}
       />
-    </PeopleShell>
+    </PeopleLayout>
   );
 }

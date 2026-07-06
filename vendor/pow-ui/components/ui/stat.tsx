@@ -25,14 +25,47 @@ interface StatProps {
   sub?: string;
   tone?: Tone;
   trend?: React.ReactNode; // ej. un <Badge>
+  /** Ícono opcional. Si se pasa, el layout es: ícono + valor arriba, label debajo. */
+  icon?: React.ReactNode;
   /** Hace la tarjeta clickeable (drill-down). */
   onClick?: () => void;
   className?: string;
 }
 
 // KPI / métrica. La superficie de dashboard más repetida de la app.
-export function Stat({ label, value, sub, tone = "default", trend, onClick, className }: StatProps) {
+export function Stat({ label, value, sub, tone = "default", trend, icon, onClick, className }: StatProps) {
   const Comp = onClick ? "button" : "div";
+
+  // Con ícono: ícono + valor en una fila arriba, label debajo (a lo ancho).
+  if (icon) {
+    return (
+      <Comp
+        onClick={onClick}
+        className={cn(
+          "rounded-[var(--radius)] border p-6 text-left shadow-sm",
+          surfaceTone[tone],
+          onClick && "w-full cursor-pointer transition-shadow hover:shadow-md",
+          className
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            {icon}
+          </div>
+          <span className={cn("text-2xl font-bold nums-tabular", valueTone[tone])}>{value}</span>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">{label}</p>
+        {(sub || trend) && (
+          <div className="flex items-center gap-2 mt-1">
+            {sub && <span className="type-secondary text-muted-foreground">{sub}</span>}
+            {trend}
+          </div>
+        )}
+      </Comp>
+    );
+  }
+
+  // Sin ícono: layout clásico (label arriba, valor debajo).
   return (
     <Comp
       onClick={onClick}

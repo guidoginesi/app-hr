@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
 import type { LeaveRequestWithDetails } from '@/types/time-off';
 import { formatDateLocal } from '@/lib/dateUtils';
 
@@ -88,14 +89,14 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
   }
 
   return (
-    <div className="rounded-xl border border-[var(--orange-100)] bg-white shadow-sm">
-      <div className="border-b border-[var(--orange-100)] bg-accent px-6 py-4">
+    <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="border-b border-[var(--border)] bg-muted px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-accent-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               Pendientes de tu aprobación ({requests.length})
             </h3>
-            <p className="text-sm text-accent-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Estas solicitudes ya fueron aprobadas por el líder. Tu aprobación es el paso final.
             </p>
           </div>
@@ -120,8 +121,8 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                     className="h-12 w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
-                    <span className="text-sm font-semibold text-accent-foreground">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+                    <span className="text-sm font-semibold text-secondary-foreground">
                       {request.employee_name
                         ?.split(' ')
                         .map((n) => n[0])
@@ -131,14 +132,14 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                   </div>
                 )}
                 <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">{request.employee_name}</h4>
+                  <h4 className="text-sm font-semibold text-foreground">{request.employee_name}</h4>
                   <p className="mt-1 text-sm font-medium text-secondary-foreground">
                     {request.leave_type_name} • {request.days_requested}{' '}
                     {request.count_type === 'weeks'
                       ? `semana${request.days_requested > 1 ? 's' : ''}`
                       : `día${request.days_requested > 1 ? 's' : ''}`}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {formatDateLocal(request.start_date, 'es-AR', {
                       weekday: 'short',
                       day: 'numeric',
@@ -153,7 +154,7 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                     })}
                   </p>
                   {request.notes && (
-                    <p className="mt-2 text-sm text-muted-foreground">"{request.notes}"</p>
+                    <p className="mt-2 text-xs text-muted-foreground">"{request.notes}"</p>
                   )}
                   
                   {/* Leader approval info */}
@@ -184,40 +185,43 @@ export function PendingHRSection({ initialRequests }: PendingHRSectionProps) {
                       className="w-56 rounded border border-[var(--border)] px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
                         onClick={() => handleReject(request.id)}
                         disabled={!rejectReason.trim() || actionLoading === request.id}
-                        className="flex-1 rounded bg-danger px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--red-600)] disabled:opacity-50"
+                        loading={actionLoading === request.id}
                       >
-                        {actionLoading === request.id ? '...' : 'Rechazar'}
-                      </button>
-                      <button
+                        Rechazar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           setRejectingId(null);
                           setRejectReason('');
                         }}
-                        className="rounded border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                       >
                         Cancelar
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <button
+                    <Button
                       onClick={() => handleApprove(request.id)}
-                      disabled={actionLoading === request.id}
-                      className="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
+                      loading={actionLoading === request.id}
                     >
-                      {actionLoading === request.id ? '...' : 'Aprobar'}
-                    </button>
-                    <button
+                      Aprobar
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={() => setRejectingId(request.id)}
-                      className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
                     >
                       Rechazar
-                    </button>
-                    <p className="text-center text-xs text-accent-foreground">
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground">
                       Aprobación final
                     </p>
                   </>

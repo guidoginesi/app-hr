@@ -6,8 +6,9 @@ import {
   getAiTrainingRanking,
   resolveCycleId,
 } from '@/lib/entrenamientoIaQueries';
-import { EntrenamientoIAShell } from './EntrenamientoIAShell';
+import { EntrenamientoIALayout } from './EntrenamientoIALayout';
 import { AdminRankingClient } from './AdminRankingClient';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,14 +27,14 @@ export default async function EntrenamientoIAPage({
   const ranking = selectedCycleId ? await getAiTrainingRanking(selectedCycleId) : [];
 
   return (
-    <EntrenamientoIAShell active="ranking">
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Cargando ranking…</div>}>
+    <EntrenamientoIALayout active="ranking">
+      <Suspense fallback={<SkeletonRows rows={6} />}>
         <AdminRankingClient
           cycles={cycles}
           ranking={ranking}
           selectedCycleId={selectedCycleId}
         />
       </Suspense>
-    </EntrenamientoIAShell>
+    </EntrenamientoIALayout>
   );
 }

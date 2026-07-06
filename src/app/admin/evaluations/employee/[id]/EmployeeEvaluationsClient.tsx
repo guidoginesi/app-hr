@@ -2,7 +2,11 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-import { 
+import { X, Loader2 } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { TabNav } from '@pow/ui/components/ui/tab-nav';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import {
   getSeniorityLabel, 
   getSeniorityCategory, 
   SENIORITY_CATEGORY_COLORS,
@@ -147,12 +151,6 @@ function ResponsesModal({
     fetchResponses();
   }, [fetchResponses]);
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose]);
-
   // Group responses by dimension
   const byDimension = data
     ? data.responses.reduce((acc, r) => {
@@ -163,37 +161,37 @@ function ResponsesModal({
     : {};
 
   const typeLabel = evaluation.type === 'self' ? 'Autoevaluación' : 'Evaluación de Líder';
-  const typeBg = evaluation.type === 'self' ? 'bg-accent text-accent-foreground' : 'bg-cat-violet-subtle text-cat-violet';
+  const typeBg = evaluation.type === 'self' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" flush title="Respuestas de la evaluación" className="max-w-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--border)] bg-white px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <div className="flex items-center gap-3">
             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${typeBg}`}>
               {typeLabel}
             </span>
             {evaluation.total_score !== null && (
-              <span className="text-lg font-semibold text-foreground">
+              <span className="text-base font-semibold text-foreground tabular-nums">
                 {evaluation.total_score.toFixed(1)}/10
               </span>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary text-muted-foreground"
+          <SheetClose
+            aria-label="Cerrar"
+            className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <X className="h-5 w-5" />
+          </SheetClose>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 space-y-6 overflow-y-auto p-6">
           {loading && (
-            <div className="py-12 text-center text-sm text-muted-foreground">Cargando respuestas...</div>
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           )}
           {error && (
             <div className="py-12 text-center text-sm text-[var(--red-600)]">{error}</div>
@@ -250,9 +248,8 @@ function ResponsesModal({
             </>
           )}
         </div>
-      </div>
-      <div className="absolute inset-0" onClick={onClose} />
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -334,8 +331,8 @@ export function EmployeeEvaluationsClient({
               className="h-20 w-20 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cat-violet-subtle">
-              <span className="text-2xl font-semibold text-cat-violet">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+              <span className="text-2xl font-semibold text-muted-foreground">
                 {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
               </span>
             </div>
@@ -396,36 +393,20 @@ export function EmployeeEvaluationsClient({
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-[var(--border)]">
-        <nav className="flex gap-6">
-          {[
-            { id: 'evaluations', label: 'Evaluaciones', count: evaluations.length },
-            { id: 'objectives', label: 'Objetivos', count: objectives.length },
-            { id: 'recategorizations', label: 'Recategorizaciones', count: recategorizations.length },
-            { id: 'history', label: 'Historial Seniority', count: seniorityHistory.length },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`relative pb-3 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'text-cat-violet'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-              {tab.count > 0 && (
-                <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs">
-                  {tab.count}
-                </span>
-              )}
-              {activeTab === tab.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cat-violet" />
-              )}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <TabNav
+        value={activeTab}
+        onChange={(v) => setActiveTab(v as typeof activeTab)}
+        options={[
+          { id: 'evaluations', label: 'Evaluaciones', count: evaluations.length },
+          { id: 'objectives', label: 'Objetivos', count: objectives.length },
+          { id: 'recategorizations', label: 'Recategorizaciones', count: recategorizations.length },
+          { id: 'history', label: 'Historial Seniority', count: seniorityHistory.length },
+        ].map((tab) => ({
+          value: tab.id,
+          label: tab.count > 0 ? `${tab.label} (${tab.count})` : tab.label,
+        }))}
+        aria-label="Secciones del empleado"
+      />
 
       {/* Tab Content */}
       {activeTab === 'evaluations' && (
@@ -438,7 +419,7 @@ export function EmployeeEvaluationsClient({
             Object.values(evaluationsByPeriod).map(({ period, evaluations: periodEvals }) => (
               <div key={period?.id || 'sin-periodo'} className="rounded-xl border border-[var(--border)] bg-white">
                 <div className="border-b border-[var(--border)] px-6 py-4">
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="text-base font-semibold text-foreground">
                     {period?.name || 'Sin período'} {period?.year && `(${period.year})`}
                   </h3>
                 </div>
@@ -449,7 +430,7 @@ export function EmployeeEvaluationsClient({
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           evaluation.type === 'self'
                             ? 'bg-accent text-accent-foreground'
-                            : 'bg-cat-violet-subtle text-cat-violet'
+                            : 'bg-muted text-muted-foreground'
                         }`}>
                           {evaluation.type === 'self' ? 'Autoevaluación' : 'Evaluación de Líder'}
                         </span>
@@ -470,12 +451,13 @@ export function EmployeeEvaluationsClient({
                           {new Date(evaluation.created_at).toLocaleDateString('es-AR')}
                         </span>
                         {evaluation.status === 'submitted' && (
-                          <button
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setSelectedEvaluation(evaluation)}
-                            className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
                           >
                             Ver respuestas
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -499,7 +481,7 @@ export function EmployeeEvaluationsClient({
               .map(([year, yearObjectives]) => (
                 <div key={year} className="rounded-xl border border-[var(--border)] bg-white">
                   <div className="border-b border-[var(--border)] px-6 py-4">
-                    <h3 className="font-semibold text-foreground">Objetivos {year}</h3>
+                    <h3 className="text-base font-semibold text-foreground">Objetivos {year}</h3>
                   </div>
                   <div className="divide-y divide-[var(--border)]">
                     {yearObjectives.map((objective) => (
@@ -512,7 +494,7 @@ export function EmployeeEvaluationsClient({
                               </span>
                               <span className="text-xs text-muted-foreground">Peso: {objective.weight}%</span>
                             </div>
-                            <p className="font-medium text-foreground">{objective.title}</p>
+                            <p className="text-sm font-medium text-foreground">{objective.title}</p>
                             {objective.description && (
                               <p className="mt-1 text-sm text-muted-foreground">{objective.description}</p>
                             )}
@@ -555,12 +537,12 @@ export function EmployeeEvaluationsClient({
                     </p>
                     <div className="flex gap-2">
                       {recat.level_recategorization === 'approved' && (
-                        <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                           Dentro del nivel
                         </span>
                       )}
                       {recat.position_recategorization === 'approved' && (
-                        <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                           Ascenso de nivel
                         </span>
                       )}
@@ -603,8 +585,8 @@ export function EmployeeEvaluationsClient({
               <div className="divide-y divide-[var(--border)]">
                 {seniorityHistory.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-4 px-6 py-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cat-violet-subtle">
-                      <svg className="h-5 w-5 text-cat-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                       </svg>
                     </div>
@@ -618,7 +600,7 @@ export function EmployeeEvaluationsClient({
                             </svg>
                           </>
                         )}
-                        <span className="font-medium text-foreground">{getSeniorityLabel(item.new_level)}</span>
+                        <span className="text-sm font-medium text-foreground">{getSeniorityLabel(item.new_level)}</span>
                       </div>
                       {item.notes && (
                         <p className="mt-1 text-sm text-muted-foreground">{item.notes}</p>

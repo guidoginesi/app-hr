@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
-import { RoomBookingShell } from '../RoomBookingShell';
+import { RoomBookingLayout } from '../RoomBookingLayout';
 import { RoomsClient } from './RoomsClient';
 
 export const dynamic = 'force-dynamic';
@@ -12,8 +12,8 @@ export default async function RoomsPage() {
   }
 
   return (
-    <RoomBookingShell active="rooms">
+    <RoomBookingLayout active="rooms">
       <RoomsClient />
-    </RoomBookingShell>
+    </RoomBookingLayout>
   );
 }

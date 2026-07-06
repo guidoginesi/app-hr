@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type Evaluation = {
   id: string;
@@ -92,19 +93,8 @@ export function AllEvaluationsClient({ evaluations, periods }: Props) {
     }
   };
 
-  const totalCount = evaluations.length;
-  const filteredCount = groupedByEmployee.reduce((acc, g) => acc + g.evaluations.length, 0);
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Todas las Evaluaciones</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {filteredCount} {filteredCount === 1 ? 'evaluación' : 'evaluaciones'} 
-          {filteredCount !== totalCount && ` de ${totalCount} total`}
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
@@ -117,46 +107,45 @@ export function AllEvaluationsClient({ evaluations, periods }: Props) {
             placeholder="Buscar empleado..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white py-2 pl-10 pr-4 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+            className="w-full rounded-lg border border-[var(--border)] bg-white py-2 pl-10 pr-4 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
         {/* Period Filter */}
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por período"
           value={periodFilter}
-          onChange={(e) => setPeriodFilter(e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-        >
-          <option value="all">Todos los períodos</option>
-          {periods.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} ({p.year})
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setPeriodFilter(v)}
+          options={[
+            { value: 'all', label: 'Todos los períodos' },
+            ...periods.map((p) => ({ value: p.id, label: `${p.name} (${p.year})` })),
+          ]}
+        />
 
         {/* Type Filter */}
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por tipo"
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-        >
-          <option value="all">Todos los tipos</option>
-          <option value="self">Autoevaluación</option>
-          <option value="leader">Evaluación de Líder</option>
-        </select>
+          onChange={(v) => setTypeFilter(v as typeof typeFilter)}
+          options={[
+            { value: 'all', label: 'Todos los tipos' },
+            { value: 'self', label: 'Autoevaluación' },
+            { value: 'leader', label: 'Evaluación de Líder' },
+          ]}
+        />
 
         {/* Status Filter */}
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por estado"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="submitted">Completadas</option>
-          <option value="in_progress">En progreso</option>
-          <option value="draft">Borrador</option>
-        </select>
+          onChange={(v) => setStatusFilter(v as typeof statusFilter)}
+          options={[
+            { value: 'all', label: 'Todos los estados' },
+            { value: 'submitted', label: 'Completadas' },
+            { value: 'in_progress', label: 'En progreso' },
+            { value: 'draft', label: 'Borrador' },
+          ]}
+        />
       </div>
 
       {/* List grouped by employee */}
@@ -178,8 +167,8 @@ export function AllEvaluationsClient({ evaluations, periods }: Props) {
                         className="h-12 w-12 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cat-violet-subtle flex-shrink-0">
-                        <span className="text-sm font-semibold text-cat-violet">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted flex-shrink-0">
+                        <span className="text-sm font-semibold text-muted-foreground">
                           {employee.first_name.charAt(0)}{employee.last_name.charAt(0)}
                         </span>
                       </div>
@@ -209,11 +198,7 @@ export function AllEvaluationsClient({ evaluations, periods }: Props) {
                             key={evaluation.id} 
                             className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-muted px-2 py-1"
                           >
-                            <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ${
-                              evaluation.type === 'self'
-                                ? 'bg-accent text-accent-foreground'
-                                : 'bg-cat-violet-subtle text-cat-violet'
-                            }`}>
+                            <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                               {evaluation.type === 'self' ? 'Auto' : 'Líder'}
                             </span>
                             {evaluation.total_score !== null && (

@@ -1,6 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 interface Room {
   id: string;
@@ -144,17 +149,15 @@ export function RoomsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Salas</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Gestiona las salas de reunión disponibles</p>
-        </div>
-        <button onClick={openCreate} className="rounded-lg bg-cat-cyan px-4 py-2 text-sm font-medium text-white hover:bg-cat-cyan">Nueva sala</button>
+      <div className="flex items-center justify-end">
+        <Button onClick={openCreate}>Nueva sala</Button>
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {loading ? (
-          <div className="flex items-center justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-cat-cyan border-t-transparent" /></div>
+          <div className="px-6 py-5">
+            <SkeletonRows rows={5} />
+          </div>
         ) : rooms.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">No hay salas configuradas</div>
         ) : (
@@ -173,23 +176,30 @@ export function RoomsClient() {
               {rooms.map((room) => (
                 <tr key={room.id} className="hover:bg-muted">
                   <td className="px-6 py-4">
-                    <p className="font-medium text-foreground">{room.name}</p>
+                    <p className="text-sm font-semibold text-foreground">{room.name}</p>
                     {room.description && <p className="mt-0.5 text-xs text-muted-foreground">{room.description}</p>}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{room.location || '—'}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{room.capacity} {room.capacity === 1 ? 'persona' : 'personas'}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{room.equipment || '—'}</td>
                   <td className="px-6 py-4">
-                    <button onClick={() => handleToggleActive(room)} disabled={togglingId === room.id} className="focus:outline-none">
+                    <button onClick={() => handleToggleActive(room)} disabled={togglingId === room.id} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${room.is_active ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-secondary text-muted-foreground'}`}>
-                        {togglingId === room.id ? '...' : room.is_active ? 'Activa' : 'Inactiva'}
+                        {togglingId === room.id ? '…' : room.is_active ? 'Activa' : 'Inactiva'}
                       </span>
                     </button>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button onClick={() => openEdit(room)} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted">Editar</button>
-                      <button onClick={() => handleDelete(room)} className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle">Eliminar</button>
+                      <Button variant="outline" size="sm" onClick={() => openEdit(room)}>Editar</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-danger/20 text-[var(--red-600)] hover:bg-danger-subtle hover:text-[var(--red-600)]"
+                        onClick={() => handleDelete(room)}
+                      >
+                        Eliminar
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -200,51 +210,56 @@ export function RoomsClient() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={closeModal} />
-            <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">{editingRoom ? 'Editar sala' : 'Nueva sala'}</h2>
-                <button type="button" onClick={closeModal} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              <form onSubmit={handleSave}>
-                <div className="space-y-4 p-6">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Nombre <span className="text-[var(--red-600)]">*</span></label>
-                    <input type="text" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ej: Sala Patagonia" required className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Ubicación</label>
-                    <input type="text" value={form.location} onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))} placeholder="Ej: Piso 2, Ala Norte" className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Capacidad <span className="text-[var(--red-600)]">*</span></label>
-                    <input type="number" min="1" max="100" value={form.capacity} onChange={(e) => setForm((p) => ({ ...p, capacity: parseInt(e.target.value) || 1 }))} required className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Equipamiento</label>
-                    <input type="text" value={form.equipment} onChange={(e) => setForm((p) => ({ ...p, equipment: e.target.value }))} placeholder="Ej: TV, Pizarra, Videoconferencia" className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-secondary-foreground">Descripción</label>
-                    <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} placeholder="Descripción de la sala..." className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-cyan focus:outline-none focus:ring-1 focus:ring-cat-cyan" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="is_active" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-[var(--border)] text-cat-cyan focus:ring-cat-cyan" />
-                    <label htmlFor="is_active" className="text-sm text-secondary-foreground">Sala activa</label>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                  <button type="button" onClick={closeModal} className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted">Cancelar</button>
-                  <button type="submit" disabled={saving} className="rounded-lg bg-cat-cyan px-4 py-2 text-sm font-medium text-white hover:bg-cat-cyan disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
-                </div>
-              </form>
+        <Sheet open onOpenChange={(o) => { if (!o) closeModal(); }}>
+          <SheetContent side="right" flush title={editingRoom ? 'Editar sala' : 'Nueva sala'} className="max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+              <h2 className="text-base font-semibold text-foreground">{editingRoom ? 'Editar sala' : 'Nueva sala'}</h2>
+              <SheetClose
+                aria-label="Cerrar"
+                className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-5 w-5" />
+              </SheetClose>
             </div>
-          </div>
-        </div>
+
+            {/* Form */}
+            <form onSubmit={handleSave} className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex-1 space-y-4 overflow-y-auto p-6">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Nombre <span className="text-[var(--red-600)]">*</span></label>
+                  <input type="text" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ej: Sala Patagonia" required className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Ubicación</label>
+                  <input type="text" value={form.location} onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))} placeholder="Ej: Piso 2, Ala Norte" className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Capacidad <span className="text-[var(--red-600)]">*</span></label>
+                  <input type="number" min="1" max="100" value={form.capacity} onChange={(e) => setForm((p) => ({ ...p, capacity: parseInt(e.target.value) || 1 }))} required className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Equipamiento</label>
+                  <input type="text" value={form.equipment} onChange={(e) => setForm((p) => ({ ...p, equipment: e.target.value }))} placeholder="Ej: TV, Pizarra, Videoconferencia" className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-secondary-foreground">Descripción</label>
+                  <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} placeholder="Descripción de la sala..." className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox id="is_active" checked={form.is_active} onCheckedChange={(v) => setForm((p) => ({ ...p, is_active: v === true }))} />
+                  <label htmlFor="is_active" className="text-sm text-secondary-foreground">Sala activa</label>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
+                <Button type="button" variant="outline" onClick={closeModal} disabled={saving}>Cancelar</Button>
+                <Button type="submit" loading={saving}>Guardar</Button>
+              </div>
+            </form>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

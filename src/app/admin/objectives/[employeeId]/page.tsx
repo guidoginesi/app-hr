@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { ObjectivesShell } from '../ObjectivesShell';
+import { ObjectivesLayout } from '../ObjectivesLayout';
 import { EmployeeObjectivesDetailClient } from './EmployeeObjectivesDetailClient';
 import { getWeightsForLevel, getSeniorityCategory, SeniorityCategory } from '@/types/corporate-objectives';
 
@@ -69,7 +69,7 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
   const weights = getWeightsForLevel(seniorityLevel);
 
   return (
-    <ObjectivesShell active="employee">
+    <ObjectivesLayout active="dashboard">
       <EmployeeObjectivesDetailClient
         employee={{
           ...employee,
@@ -85,6 +85,6 @@ export default async function EmployeeObjectivesDetailPage({ params, searchParam
         seniorityCategory={seniorityCategory}
         currentYear={currentYear}
       />
-    </ObjectivesShell>
+    </ObjectivesLayout>
   );
 }

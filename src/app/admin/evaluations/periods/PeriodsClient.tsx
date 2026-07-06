@@ -2,6 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import type { EvaluationPeriod, PeriodStatus } from '@/types/evaluation';
 
 // Helper to format date without timezone issues
@@ -155,19 +160,8 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Períodos de Evaluación</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona los ciclos de evaluación de desempeño
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet"
-        >
-          Nuevo período
-        </button>
+      <div className="flex justify-end">
+        <Button onClick={() => setShowForm(true)}>Nuevo período</Button>
       </div>
 
       {message && (
@@ -178,19 +172,28 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
         </div>
       )}
 
-      {/* Form Modal */}
+      {/* Form Sheet */}
       {showForm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={resetForm} />
-            <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">
-                  {editingPeriod ? 'Editar período' : 'Nuevo período'}
-                </h2>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+        <Sheet open onOpenChange={(o) => { if (!o) resetForm(); }}>
+          <SheetContent
+            side="right"
+            flush
+            title={editingPeriod ? 'Editar período' : 'Nuevo período'}
+            className="max-w-lg"
+          >
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+              <h2 className="type-title">
+                {editingPeriod ? 'Editar período' : 'Nuevo período'}
+              </h2>
+              <SheetClose
+                aria-label="Cerrar"
+                className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-5 w-5" />
+              </SheetClose>
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+                <div className="flex-1 space-y-4 overflow-y-auto p-6">
                   <div>
                     <label className="block text-sm font-medium text-secondary-foreground mb-1">Nombre *</label>
                     <input
@@ -199,7 +202,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Ej: Evaluación de Desempeño 2025"
                       required
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -211,7 +214,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                       min={2020}
                       max={2100}
                       required
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
                   
@@ -225,7 +228,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                           value={formData.start_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                           required
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                       <div>
@@ -235,14 +238,14 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                           value={formData.end_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                           required
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-cat-violet-subtle p-4 space-y-3">
-                    <p className="text-xs font-semibold text-cat-violet uppercase tracking-wider">Ventana para completar evaluación</p>
+                  <div className="rounded-lg bg-muted p-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ventana para completar evaluación</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-secondary-foreground mb-1">Inicio</label>
@@ -250,7 +253,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                           type="date"
                           value={formData.evaluation_start_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, evaluation_start_date: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                       <div>
@@ -259,40 +262,38 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                           type="date"
                           value={formData.evaluation_end_date}
                           onChange={(e) => setFormData(prev => ({ ...prev, evaluation_end_date: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-secondary-foreground mb-1">Estado</label>
-                    <select
+                    <SelectMenu
+                      ariaLabel="Estado"
+                      className="w-full"
                       value={formData.status}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as PeriodStatus }))}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-                    >
-                      <option value="draft">Borrador</option>
-                      <option value="open">Abierto</option>
-                      <option value="closed">Cerrado</option>
-                    </select>
+                      onChange={(v) => setFormData(prev => ({ ...prev, status: v as PeriodStatus }))}
+                      options={[
+                        { value: 'draft', label: 'Borrador' },
+                        { value: 'open', label: 'Abierto' },
+                        { value: 'closed', label: 'Cerrado' },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-3 pt-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tipos de evaluación</p>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={formData.self_evaluation_enabled}
-                        onChange={(e) => setFormData(prev => ({ ...prev, self_evaluation_enabled: e.target.checked }))}
-                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, self_evaluation_enabled: checked === true }))}
                       />
                       <span className="text-sm text-secondary-foreground">Autoevaluación habilitada</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={formData.leader_evaluation_enabled}
-                        onChange={(e) => setFormData(prev => ({ ...prev, leader_evaluation_enabled: e.target.checked }))}
-                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, leader_evaluation_enabled: checked === true }))}
                       />
                       <span className="text-sm text-secondary-foreground">Evaluación de líder habilitada</span>
                     </label>
@@ -301,20 +302,16 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                   <div className="space-y-3 pt-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Módulos de evaluación del líder</p>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={formData.objectives_enabled}
-                        onChange={(e) => setFormData(prev => ({ ...prev, objectives_enabled: e.target.checked }))}
-                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, objectives_enabled: checked === true }))}
                       />
                       <span className="text-sm text-secondary-foreground">Cumplimiento de objetivos</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={formData.recategorization_enabled}
-                        onChange={(e) => setFormData(prev => ({ ...prev, recategorization_enabled: e.target.checked }))}
-                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, recategorization_enabled: checked === true }))}
                       />
                       <span className="text-sm text-secondary-foreground">Recategorización / Ascenso</span>
                     </label>
@@ -323,45 +320,32 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                   <div className="space-y-3 pt-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Configuración general</p>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={formData.show_results_to_employee}
-                        onChange={(e) => setFormData(prev => ({ ...prev, show_results_to_employee: e.target.checked }))}
-                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_results_to_employee: checked === true }))}
                       />
                       <span className="text-sm text-secondary-foreground">Mostrar resultados al empleado</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={formData.is_active}
-                        onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                        className="rounded border-[var(--border)] text-cat-violet focus:ring-cat-violet"
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked === true }))}
                       />
                       <span className="text-sm text-secondary-foreground">Período activo (solo uno puede estar activo)</span>
                     </label>
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                  >
+                <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+                  <Button type="button" variant="outline" onClick={resetForm}>
                     Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-lg bg-cat-violet px-4 py-2 text-sm font-medium text-white hover:bg-cat-violet disabled:opacity-50"
-                  >
-                    {saving ? 'Guardando...' : editingPeriod ? 'Guardar cambios' : 'Crear período'}
-                  </button>
+                  </Button>
+                  <Button type="submit" loading={saving}>
+                    {editingPeriod ? 'Guardar cambios' : 'Crear período'}
+                  </Button>
                 </div>
-              </form>
-            </div>
-          </div>
-        </div>
+            </form>
+          </SheetContent>
+        </Sheet>
       )}
 
       {/* Periods List */}
@@ -377,7 +361,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-medium text-foreground">{period.name}</h3>
+                      <h3 className="text-base font-semibold text-foreground">{period.name}</h3>
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         period.status === 'open'
                           ? 'bg-success-subtle text-[var(--green-700)]'
@@ -388,7 +372,7 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                         {period.status === 'open' ? 'Abierto' : period.status === 'closed' ? 'Cerrado' : 'Borrador'}
                       </span>
                       {period.is_active && (
-                        <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
+                        <span className="inline-flex items-center rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-[var(--green-700)]">
                           Activo
                         </span>
                       )}
@@ -397,40 +381,28 @@ export function PeriodsClient({ periods: initialPeriods }: PeriodsClientProps) {
                       Período: {formatDate(period.start_date)} - {formatDate(period.end_date)}
                     </p>
                     {period.evaluation_start_date && period.evaluation_end_date && (
-                      <p className="text-xs text-cat-violet">
+                      <p className="text-xs text-muted-foreground">
                         Ventana: {formatDate(period.evaluation_start_date)} - {formatDate(period.evaluation_end_date)}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     {period.status === 'draft' && (
-                      <button
-                        onClick={() => toggleStatus(period, 'open')}
-                        className="rounded-lg border border-success/20 px-3 py-1.5 text-xs font-medium text-[var(--green-700)] hover:bg-success-subtle"
-                      >
+                      <Button size="sm" onClick={() => toggleStatus(period, 'open')}>
                         Abrir
-                      </button>
+                      </Button>
                     )}
                     {period.status === 'open' && (
-                      <button
-                        onClick={() => toggleStatus(period, 'closed')}
-                        className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => toggleStatus(period, 'closed')}>
                         Cerrar
-                      </button>
+                      </Button>
                     )}
-                    <button
-                      onClick={() => openEditForm(period)}
-                      className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => openEditForm(period)}>
                       Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(period.id)}
-                      className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
-                    >
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-danger/30 text-[var(--red-600)] hover:bg-danger-subtle" onClick={() => handleDelete(period.id)}>
                       Eliminar
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </li>

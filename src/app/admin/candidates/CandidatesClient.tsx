@@ -2,13 +2,14 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Modal } from '../Modal';
 import { Stage, StageStatus, StageLabels, StageStatusLabels } from '@/types/funnel';
 import { useDebounce } from '@/lib/useDebounce';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 // Lazy load heavy modals for better initial load performance
 const CandidateDetailModal = dynamic(() => import('./CandidateDetailModal').then(mod => mod.CandidateDetailModal), {
-	loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"><div className="animate-pulse text-white">Cargando...</div></div>,
+	loading: () => null,
 });
 const AddCandidateModal = dynamic(() => import('./AddCandidateModal').then(mod => mod.AddCandidateModal), {
 	loading: () => null,
@@ -215,33 +216,20 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 
 	return (
 		<>
-			<div className="space-y-8">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-2xl font-semibold tracking-tight text-foreground">Candidatos</h1>
-						<p className="mt-1 text-sm text-muted-foreground">
-							{candidates.length} candidatos registrados en el sistema
-						</p>
-					</div>
-					<button
-						type="button"
-						onClick={() => setIsAddModalOpen(true)}
-						className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md"
-					>
-						Agregar candidato
-					</button>
-				</div>
-
+			<div className="space-y-6">
 				<div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
 					{/* Filtros */}
 					<div className="border-b border-[var(--border)] px-6 py-4 space-y-4">
-						<div>
-							<h2 className="text-base font-semibold text-foreground">Lista de candidatos</h2>
-							<p className="mt-1 text-xs text-muted-foreground">
-								{filteredApplications.length} de {flattenedApplications.length} aplicaciones
-							</p>
+						<div className="flex items-start justify-between gap-3">
+							<div>
+								<h2 className="text-base font-semibold text-foreground">Lista de candidatos</h2>
+								<p className="mt-1 text-xs text-muted-foreground">
+									{filteredApplications.length} de {flattenedApplications.length} aplicaciones
+								</p>
+							</div>
+							<Button onClick={() => setIsAddModalOpen(true)}>Agregar candidato</Button>
 						</div>
-						
+
 						<div className="flex flex-col lg:flex-row gap-3">
 							{/* Búsqueda de texto */}
 							<div className="flex-1">
@@ -250,43 +238,39 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 									placeholder="Buscar por nombre, email..."
 									value={searchQuery}
 									onChange={(e) => handleSearchChange(e.target.value)}
-									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 								/>
 							</div>
 
 							{/* Filtro por búsqueda/job */}
 							<div className="lg:w-64">
-								<select
+								<SelectMenu
+									ariaLabel="Filtrar por búsqueda"
+									className="w-full"
 									value={jobFilter}
-									onChange={(e) => handleJobFilterChange(e.target.value)}
-									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-								>
-									<option value="ALL">Todas las búsquedas</option>
-									{uniqueJobs.map((job) => (
-										<option key={job.id} value={job.id}>
-											{job.title}
-										</option>
-									))}
-								</select>
+									onChange={handleJobFilterChange}
+									options={[
+										{ value: 'ALL', label: 'Todas las búsquedas' },
+										...uniqueJobs.map((job) => ({ value: job.id, label: job.title })),
+									]}
+								/>
 							</div>
 
 							{/* Filtro por etapa */}
 							<div className="lg:w-64">
-								<select
+								<SelectMenu
+									ariaLabel="Filtrar por etapa"
+									className="w-full"
 									value={stageFilter}
-									onChange={(e) => handleStageFilterChange(e.target.value as Stage | 'ALL' | 'DISCARDED')}
-									className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-								>
-									<option value="ALL">Todas las etapas</option>
-									{Object.entries(StageLabels)
-										.filter(([stage]) => stage !== 'CV_RECEIVED')
-										.map(([stage, label]) => (
-											<option key={stage} value={stage}>
-												{label}
-											</option>
-										))}
-									<option value="DISCARDED">Descartados</option>
-								</select>
+									onChange={(v) => handleStageFilterChange(v as Stage | 'ALL' | 'DISCARDED')}
+									options={[
+										{ value: 'ALL', label: 'Todas las etapas' },
+										...Object.entries(StageLabels)
+											.filter(([stage]) => stage !== 'CV_RECEIVED')
+											.map(([stage, label]) => ({ value: stage, label })),
+										{ value: 'DISCARDED', label: 'Descartados' },
+									]}
+								/>
 							</div>
 						</div>
 					</div>
@@ -299,7 +283,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 									<div className="flex items-center justify-between gap-4">
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2.5 flex-wrap">
-												<h3 className="text-base font-semibold text-foreground">{candidate.name}</h3>
+												<h3 className="text-sm font-semibold text-foreground">{candidate.name}</h3>
 												
 												{/* Calificación con estrellas */}
 												{application.recruiter_rating && (
@@ -309,7 +293,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 																key={star}
 																className={`w-4 h-4 ${
 																	(application.recruiter_rating || 0) >= star
-																		? 'text-[var(--amber-600)] text-[var(--amber-600)]'
+																		? 'text-foreground'
 																		: 'text-muted-foreground'
 																}`}
 																fill={
@@ -364,8 +348,8 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 											{application.referral_id && (
 												<>
 													<span className="text-xs text-muted-foreground">·</span>
-													<span className="inline-flex items-center gap-1 rounded-full bg-cat-violet-subtle px-2 py-0.5 text-xs font-semibold text-cat-violet">
-														⭐ Referido
+													<span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+														Referido
 													</span>
 												</>
 											)}
@@ -375,7 +359,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 												<>
 													<span className="text-xs text-muted-foreground">·</span>
 													<span className="text-xs font-medium text-muted-foreground">
-														Score: <span className="font-semibold text-black">{application.ai_score}/100</span>
+														Score: <span className="font-semibold text-foreground">{application.ai_score}/100</span>
 													</span>
 												</>
 											)}
@@ -406,16 +390,16 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 												)}
 											</div>
 										</div>
-										<button
-											type="button"
+										<Button
+											variant="outline"
+											size="sm"
 											onClick={() => {
 												setSelectedCandidate(candidate);
 												setSelectedApplicationId(application.id);
 											}}
-											className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted hover:text-black"
 										>
 											Ver candidato
-										</button>
+										</Button>
 									</div>
 								</li>
 							))

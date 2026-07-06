@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@pow/ui/components/ui/button';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 
+// Logo de marca Pow arriba del título. Para probar la variante horizontal:
+// cambiar a { src: '/brand/pow-logo-horizontal.svg', className: 'mx-auto mb-5 h-20 w-auto' }
+const POW_LOGO = { src: '/brand/pow-logo-vertical.svg', className: 'mx-auto mb-2 h-28 w-auto' };
+
 export default function PortalLoginPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -69,7 +73,8 @@ export default function PortalLoginPage() {
       <div className="flex min-h-screen items-center justify-center bg-muted px-4">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
-            <span className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-white shadow-sm">
+            <img src={POW_LOGO.src} alt="Pow" className={POW_LOGO.className} />
+            <span className="inline-block rounded-lg bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
               Portal de Empleados
             </span>
             <h1 className="mt-6 text-2xl font-bold text-foreground">
@@ -136,14 +141,11 @@ export default function PortalLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <span className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-white shadow-sm">
+        <div className="mb-10 text-center">
+          <img src={POW_LOGO.src} alt="Pow" className={POW_LOGO.className} />
+          <span className="inline-block rounded-lg bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
             Portal de Empleados
           </span>
-          <h1 className="mt-6 text-2xl font-bold text-foreground">Iniciar sesión</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Ingresa con tu cuenta de empleado
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -217,7 +219,7 @@ export default function PortalLoginPage() {
           </button>
         </div>
 
-        <p className="mt-8 text-center text-xs text-muted-foreground">
+        <p className="mt-10 text-center text-xs text-muted-foreground">
           ¿Sos administrador?{' '}
           <a href="/admin/login" className="font-medium text-foreground hover:text-[var(--primary-hover)]">
             Ir al panel de admin

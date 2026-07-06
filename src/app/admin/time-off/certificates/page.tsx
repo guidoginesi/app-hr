@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { TimeOffShell } from '../TimeOffShell';
+import { TimeOffLayout } from '../TimeOffLayout';
 import { CertificatesAdminClient } from '@/app/admin/certificates/CertificatesAdminClient';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +24,8 @@ export default async function TimeOffCertificatesPage() {
     .order('uploaded_at', { ascending: false });
 
   return (
-    <TimeOffShell active="certificates">
+    <TimeOffLayout active="certificates">
       <CertificatesAdminClient initialCertificates={certificates || []} />
-    </TimeOffShell>
+    </TimeOffLayout>
   );
 }

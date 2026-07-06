@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@pow/ui/components/ui/button';
+import { SegmentedControl } from '@pow/ui/components/ui/segmented-control';
 
 const CERTIFICATE_TYPE_LABELS: Record<string, string> = {
   exam: 'Certificado de exámen',
@@ -9,9 +11,9 @@ const CERTIFICATE_TYPE_LABELS: Record<string, string> = {
 };
 
 const CERTIFICATE_TYPE_COLORS: Record<string, string> = {
-  exam: 'bg-accent text-accent-foreground',
-  medical: 'bg-danger-subtle text-[var(--red-600)]',
-  travel_assistance: 'bg-cat-violet-subtle text-cat-violet',
+  exam: 'bg-secondary text-secondary-foreground',
+  medical: 'bg-secondary text-secondary-foreground',
+  travel_assistance: 'bg-secondary text-secondary-foreground',
 };
 
 type Certificate = {
@@ -71,13 +73,6 @@ export function CertificatesAdminClient({ initialCertificates }: { initialCertif
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Certificados</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Documentos subidos por los empleados
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-48">
@@ -89,33 +84,26 @@ export function CertificatesAdminClient({ initialCertificates }: { initialCertif
             placeholder="Buscar por empleado..."
             value={searchEmployee}
             onChange={(e) => setSearchEmployee(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white pl-9 pr-4 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-[var(--border)] bg-white pl-9 pr-4 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Tipo:</span>
-          <div className="flex rounded-lg border border-[var(--border)] bg-white p-1">
-            {[
+          <span className="text-xs text-muted-foreground">Tipo:</span>
+          <SegmentedControl
+            aria-label="Filtrar por tipo"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={[
               { value: 'all', label: 'Todos' },
               { value: 'exam', label: 'Exámen' },
               { value: 'medical', label: 'Médico' },
               { value: 'travel_assistance', label: 'Viajero' },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setTypeFilter(opt.value)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  typeFilter === opt.value ? 'bg-foreground text-white' : 'text-muted-foreground hover:bg-secondary'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+            ]}
+          />
         </div>
 
-        <span className="text-sm text-muted-foreground">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-muted-foreground">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Table */}
@@ -135,12 +123,12 @@ export function CertificatesAdminClient({ initialCertificates }: { initialCertif
           <table className="min-w-full divide-y divide-[var(--border)]">
             <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Empleado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Tipo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Archivo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Observaciones</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha</th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empleado</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Archivo</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Observaciones</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fecha</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)] bg-white">
@@ -178,16 +166,18 @@ export function CertificatesAdminClient({ initialCertificates }: { initialCertif
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleDownload(cert)}
-                      disabled={downloadingId === cert.id}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
+                      loading={downloadingId === cert.id}
+                      className="gap-1.5"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                      {downloadingId === cert.id ? 'Descargando...' : 'Descargar'}
-                    </button>
+                      Descargar
+                    </Button>
                   </td>
                 </tr>
               ))}

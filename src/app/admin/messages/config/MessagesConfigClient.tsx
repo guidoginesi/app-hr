@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@pow/ui/components/ui/button';
+import { Switch } from '@pow/ui/components/ui/switch';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { RichTextEditor } from '../../RichTextEditor';
 
 type Template = {
@@ -124,11 +127,6 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-foreground">Configuración de Mensajes</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Administrá las automatizaciones y plantillas de email enviadas a empleados</p>
-      </div>
-
       <div className="grid grid-cols-12 gap-6">
         {/* Left: template list */}
         <div className="col-span-4">
@@ -147,7 +145,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                         onClick={() => selectTemplate(t)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                           selected?.template_key === t.template_key
-                            ? 'bg-cat-violet text-white'
+                            ? 'bg-primary text-primary-foreground'
                             : 'text-secondary-foreground hover:bg-secondary'
                         }`}
                       >
@@ -155,7 +153,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                           {TEMPLATE_NAMES[t.template_key] ?? t.template_key}
                         </div>
                         {t.description && (
-                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-cat-violet' : 'text-muted-foreground'}`}>
+                          <div className={`text-xs mt-0.5 line-clamp-2 ${selected?.template_key === t.template_key ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                             {t.description}
                           </div>
                         )}
@@ -175,32 +173,30 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">
+                  <h2 className="text-base font-semibold text-foreground">
                     {TEMPLATE_NAMES[selected.template_key] ?? selected.template_key}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm font-medium ${editActive ? 'text-cat-violet' : 'text-muted-foreground'}`}>
+                  <span className={`text-sm font-medium ${editActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {editActive ? 'Activo' : 'Desactivado'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setEditActive(v => !v)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editActive ? 'bg-cat-violet' : 'bg-secondary'}`}
-                  >
-                    <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${editActive ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
+                  <Switch
+                    aria-label={editActive ? 'Desactivar plantilla' : 'Activar plantilla'}
+                    checked={editActive}
+                    onCheckedChange={(c) => setEditActive(c === true)}
+                  />
                 </div>
               </div>
 
               {/* Variables */}
               {selected.variables && selected.variables.length > 0 && (
-                <div className="rounded-lg bg-accent border border-[var(--orange-100)] p-4">
-                  <h3 className="text-sm font-semibold text-accent-foreground mb-2">Variables disponibles</h3>
+                <div className="rounded-lg bg-muted border border-[var(--border)] p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Variables disponibles</h3>
                   <div className="flex flex-wrap gap-2">
                     {selected.variables.map((v: string) => (
-                      <code key={v} className="px-2 py-1 bg-white rounded text-xs font-mono text-accent-foreground border border-[var(--orange-100)]">
+                      <code key={v} className="px-2 py-1 bg-white rounded text-xs font-mono text-secondary-foreground border border-[var(--border)]">
                         {`{{${v}}}`}
                       </code>
                     ))}
@@ -213,16 +209,16 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Canales de envío</label>
                   <div className="flex flex-wrap gap-5">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary-foreground">
-                      <input type="checkbox" checked readOnly className="accent-violet-600 w-4 h-4" />
+                    <label className="flex items-center gap-2 text-sm text-secondary-foreground">
+                      <Checkbox checked disabled aria-label="Email (siempre activo)" />
                       📧 Email
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary-foreground">
-                      <input type="checkbox" checked={editSendMessage} onChange={e => setEditSendMessage(e.target.checked)} className="accent-violet-600 w-4 h-4" />
+                      <Checkbox checked={editSendMessage} onCheckedChange={c => setEditSendMessage(c === true)} />
                       💬 Mensaje interno en el portal
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary-foreground">
-                      <input type="checkbox" checked={editSendGoogleChat} onChange={e => setEditSendGoogleChat(e.target.checked)} className="accent-violet-600 w-4 h-4" />
+                      <Checkbox checked={editSendGoogleChat} onCheckedChange={c => setEditSendGoogleChat(c === true)} />
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
                       Chat grupal de Pow (Google Chat)
                     </label>
@@ -237,7 +233,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                   type="text"
                   value={editSubject}
                   onChange={e => setEditSubject(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                  className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -258,7 +254,7 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
                     value={editMessageText}
                     onChange={e => setEditMessageText(e.target.value)}
                     placeholder="Texto corto que aparecerá como notificación en el portal..."
-                    className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                    className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
               )}
@@ -270,20 +266,12 @@ export function MessagesConfigClient({ initialTemplates }: Props) {
               )}
 
               <div className="flex gap-3">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="rounded-lg bg-cat-violet px-5 py-2 text-sm font-semibold text-white hover:bg-cat-violet disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-                <button
-                  onClick={handleReset}
-                  disabled={saving}
-                  className="rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                >
+                <Button onClick={handleSave} loading={saving}>
+                  Guardar Cambios
+                </Button>
+                <Button variant="outline" onClick={handleReset} disabled={saving}>
                   Restablecer
-                </button>
+                </Button>
               </div>
             </div>
           ) : (

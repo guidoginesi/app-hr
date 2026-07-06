@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { TimeOffShell } from './TimeOffShell';
+import { TimeOffLayout } from './TimeOffLayout';
 import Link from 'next/link';
 import { PendingHRSection } from './PendingHRSection';
 import type { LeaveRequestWithDetails } from '@/types/time-off';
 import { formatDateLocal } from '@/lib/dateUtils';
+import { Stat } from '@pow/ui/components/ui/stat';
+import { Clock, CheckCircle2, Plane, CalendarClock } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,42 +75,26 @@ export default async function TimeOffDashboardPage() {
     .limit(5);
 
   return (
-    <TimeOffShell active="dashboard">
+    <TimeOffLayout active="dashboard">
       <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard de Time Off</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Resumen general de vacaciones y licencias
-          </p>
-        </div>
-
         {/* Stats */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <div className="rounded-xl border border-[var(--orange-100)] bg-accent p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent-foreground">Pendientes HR</p>
-            <p className="mt-3 text-4xl font-bold text-accent-foreground">{pendingHRRequests}</p>
-            <p className="mt-2 text-xs text-accent-foreground">Tu aprobación final</p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pendientes Líder</p>
-            <p className="mt-3 text-4xl font-bold text-[var(--amber-600)]">{pendingLeaderRequests}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Esperando primera aprobación</p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aprobadas</p>
-            <p className="mt-3 text-4xl font-bold text-[var(--green-700)]">{approvedThisMonth}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Este mes</p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">De licencia hoy</p>
-            <p className="mt-3 text-4xl font-bold text-accent-foreground">{employeesOnLeaveToday}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Empleados</p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Próximas</p>
-            <p className="mt-3 text-4xl font-bold text-cat-violet">{upcomingLeaves}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Licencias programadas</p>
-          </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+          <Stat
+            icon={<Clock className="h-6 w-6" />}
+            label="Pendientes HR"
+            value={String(pendingHRRequests)}
+            sub="Tu aprobación final"
+            tone={pendingHRRequests > 0 ? 'warning' : 'default'}
+          />
+          <Stat
+            icon={<Clock className="h-6 w-6" />}
+            label="Pendientes Líder"
+            value={String(pendingLeaderRequests)}
+            sub="Esperando primera aprobación"
+          />
+          <Stat icon={<CheckCircle2 className="h-6 w-6" />} label="Aprobadas" value={String(approvedThisMonth)} sub="Este mes" />
+          <Stat icon={<Plane className="h-6 w-6" />} label="De licencia hoy" value={String(employeesOnLeaveToday)} sub="Empleados" />
+          <Stat icon={<CalendarClock className="h-6 w-6" />} label="Próximas" value={String(upcomingLeaves)} sub="Licencias programadas" />
         </div>
 
         {/* HR Approval Section */}
@@ -119,14 +105,14 @@ export default async function TimeOffDashboardPage() {
           <h3 className="text-sm font-semibold text-foreground">Flujo de aprobación de 2 niveles</h3>
           <div className="mt-3 flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-warning-subtle text-xs font-bold text-[var(--amber-600)]">1</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">1</span>
               <span className="text-muted-foreground">Líder aprueba</span>
             </div>
             <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">2</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">2</span>
               <span className="text-muted-foreground">HR aprueba (final)</span>
             </div>
             <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,7 +136,7 @@ export default async function TimeOffDashboardPage() {
                 <li key={request.id} className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{request.employee_name}</p>
+                      <p className="text-sm font-medium text-foreground">{request.employee_name}</p>
                       <p className="text-sm text-muted-foreground">
                         {request.leave_type_name}
                       </p>
@@ -195,6 +181,6 @@ export default async function TimeOffDashboardPage() {
           </div>
         </div>
       </div>
-    </TimeOffShell>
+    </TimeOffLayout>
   );
 }

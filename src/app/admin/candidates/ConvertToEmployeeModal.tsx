@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import type { LegalEntity, Department } from '@/types/employee';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type DepartmentWithEntity = Department & {
   legal_entity: { id: string; name: string } | null;
@@ -114,6 +118,19 @@ export function ConvertToEmployeeModal({
     }
   };
 
+  // Cambio de un campo select preservando el nombre y los efectos secundarios
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Reset department if legal entity changes
+    if (name === 'legal_entity_id' && formData.department_id) {
+      const currentDept = departments.find((d) => d.id === formData.department_id);
+      if (currentDept?.legal_entity_id && currentDept.legal_entity_id !== value) {
+        setFormData((prev) => ({ ...prev, department_id: '' }));
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -154,38 +171,32 @@ export function ConvertToEmployeeModal({
   const lastName = nameParts.slice(1).join(' ') || '';
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
-
-        <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Convertir a Empleado</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {candidateName} ({candidateEmail})
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" flush title="Convertir a Empleado">
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-[var(--border)] px-6 py-4">
+          <div>
+            <h2 className="type-title">Convertir a Empleado</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {candidateName} ({candidateEmail})
+            </p>
           </div>
+          <SheetClose
+            aria-label="Cerrar"
+            className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" />
+          </SheetClose>
+        </div>
 
-          {/* Content */}
-          {loading ? (
-            <div className="p-6 text-center">
-              <p className="text-sm text-muted-foreground">Cargando...</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="p-6 space-y-4">
+        {/* Content */}
+        {loading ? (
+          <div className="flex-1 p-6 text-center">
+            <p className="text-sm text-muted-foreground">Cargando...</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-4 overflow-y-auto p-6">
                 {error && (
                   <div className="rounded-lg bg-danger-subtle p-4 text-sm text-[var(--red-600)]">{error}</div>
                 )}
@@ -215,57 +226,51 @@ export function ConvertToEmployeeModal({
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">
                       Sociedad
                     </label>
-                    <select
-                      name="legal_entity_id"
+                    <SelectMenu
+                      ariaLabel="Sociedad"
+                      className="w-full"
+                      placeholder="Seleccionar..."
                       value={formData.legal_entity_id}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {legalEntities.filter(e => e.is_active).map((entity) => (
-                        <option key={entity.id} value={entity.id}>
-                          {entity.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => handleSelectChange('legal_entity_id', v)}
+                      options={[
+                        { value: '', label: 'Seleccionar...' },
+                        ...legalEntities.filter(e => e.is_active).map((entity) => ({ value: entity.id, label: entity.name })),
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">
                       Departamento
                     </label>
-                    <select
-                      name="department_id"
+                    <SelectMenu
+                      ariaLabel="Departamento"
+                      className="w-full"
+                      placeholder="Seleccionar..."
                       value={formData.department_id}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {filteredDepartments.filter(d => d.is_active).map((dept) => (
-                        <option key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => handleSelectChange('department_id', v)}
+                      options={[
+                        { value: '', label: 'Seleccionar...' },
+                        ...filteredDepartments.filter(d => d.is_active).map((dept) => ({ value: dept.id, label: dept.name })),
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-secondary-foreground mb-1">
                       Manager
                     </label>
-                    <select
-                      name="manager_id"
+                    <SelectMenu
+                      ariaLabel="Manager"
+                      className="w-full"
+                      placeholder="Seleccionar..."
                       value={formData.manager_id}
-                      onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {managers.map((mgr) => (
-                        <option key={mgr.id} value={mgr.id}>
-                          {mgr.first_name} {mgr.last_name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => handleSelectChange('manager_id', v)}
+                      options={[
+                        { value: '', label: 'Seleccionar...' },
+                        ...managers.map((mgr) => ({ value: mgr.id, label: `${mgr.first_name} ${mgr.last_name}` })),
+                      ]}
+                    />
                   </div>
 
                   <div>
@@ -277,7 +282,7 @@ export function ConvertToEmployeeModal({
                       name="hire_date"
                       value={formData.hire_date}
                       onChange={handleInputChange}
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
 
@@ -291,7 +296,7 @@ export function ConvertToEmployeeModal({
                       value={formData.work_email}
                       onChange={handleInputChange}
                       placeholder="nombre@empresa.com"
-                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   </div>
 
@@ -302,7 +307,7 @@ export function ConvertToEmployeeModal({
                         name="create_user_account"
                         checked={formData.create_user_account}
                         onChange={handleInputChange}
-                        className="rounded border-[var(--border)]"
+                        className="rounded border-[var(--border)] accent-[var(--primary)] focus:ring-ring"
                       />
                       <span className="text-sm text-secondary-foreground">
                         Crear cuenta de usuario para acceder al portal
@@ -313,30 +318,20 @@ export function ConvertToEmployeeModal({
                     </p>
                   </div>
                 </div>
-              </div>
+            </div>
 
-              {/* Footer */}
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={submitting}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
-                >
-                  {submitting ? 'Creando...' : 'Crear Empleado'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+            {/* Footer */}
+            <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+              <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+                Cancelar
+              </Button>
+              <Button type="submit" loading={submitting}>
+                Crear Empleado
+              </Button>
+            </div>
+          </form>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }

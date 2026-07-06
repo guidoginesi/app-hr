@@ -3,6 +3,9 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { AiTrainingCycle, AiTrainingRankingRow } from '@/types/entrenamiento-ia';
 import { RankingTable, ScoringRulesCard } from '@/components/entrenamiento-ia/RankingTable';
+import { Stat } from '@pow/ui/components/ui/stat';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Users, Award, Trophy } from 'lucide-react';
 
 type Props = {
   cycles: AiTrainingCycle[];
@@ -25,52 +28,33 @@ export function AdminRankingClient({ cycles, ranking, selectedCycleId }: Props) 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Ranking del ciclo</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tablero general visible para todo el equipo Pow
-          </p>
-        </div>
-        {cycles.length > 0 && (
+      {cycles.length > 0 && (
+        <div className="flex justify-end">
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">Ciclo</label>
-            <select
+            <SelectMenu
+              ariaLabel="Ciclo"
+              align="end"
               value={selectedCycle?.id ?? ''}
-              onChange={(e) => handleCycleChange(e.target.value)}
-              className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
-            >
-              {cycles.map((cycle) => (
-                <option key={cycle.id} value={cycle.id}>
-                  {cycle.name}
-                  {cycle.is_active ? ' (activo)' : ''}
-                </option>
-              ))}
-            </select>
+              onChange={handleCycleChange}
+              options={cycles.map((cycle) => ({
+                value: cycle.id,
+                label: `${cycle.name}${cycle.is_active ? ' (activo)' : ''}`,
+              }))}
+            />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Participantes</p>
-          <p className="mt-2 text-3xl font-bold text-foreground">{ranking.length}</p>
-        </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Con puntos</p>
-          <p className="mt-2 text-3xl font-bold text-accent-foreground">{participantsWithPoints}</p>
-        </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Líder del ciclo</p>
-          <p className="mt-2 text-lg font-bold text-foreground truncate">
-            {topThree[0]
-              ? `${topThree[0].first_name} ${topThree[0].last_name}`
-              : '—'}
-          </p>
-          {topThree[0] && (
-            <p className="text-sm text-accent-foreground font-semibold">{topThree[0].total_points} pts</p>
-          )}
-        </div>
+        <Stat icon={<Users className="h-6 w-6" />} label="Participantes" value={String(ranking.length)} />
+        <Stat icon={<Award className="h-6 w-6" />} label="Con puntos" value={String(participantsWithPoints)} />
+        <Stat
+          icon={<Trophy className="h-6 w-6" />}
+          label="Líder del ciclo"
+          value={topThree[0] ? `${topThree[0].first_name} ${topThree[0].last_name}` : '—'}
+          sub={topThree[0] ? `${topThree[0].total_points} pts` : undefined}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

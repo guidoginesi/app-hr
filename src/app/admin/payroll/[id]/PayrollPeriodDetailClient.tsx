@@ -8,6 +8,8 @@ import {
 } from '@/lib/payrollPeriods';
 
 import { payslipHasBothPdfs, type PayslipSlot } from '@/lib/payrollPayslips';
+import { Button } from '@pow/ui/components/ui/button';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 async function openPayslipPdf(settlementId: string, slot: PayslipSlot = 1): Promise<void> {
   const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip?slot=${slot}`);
@@ -441,8 +443,8 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-sm text-muted-foreground">Cargando periodo...</p>
+      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
+        <SkeletonRows rows={6} />
       </div>
     );
   }
@@ -458,7 +460,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
         {!message && (
           <p className="text-sm font-medium text-muted-foreground">Periodo no encontrado</p>
         )}
-        <Link href="/admin/payroll" className="text-sm text-accent-foreground hover:text-accent-foreground">
+        <Link href="/admin/payroll" className="text-sm font-medium text-foreground hover:text-brand">
           Volver a periodos
         </Link>
       </div>
@@ -469,55 +471,54 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Liquidación {formatPayrollPeriodLabelFromKey(period)}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+      {/* Toolbar: contexto del periodo + acciones */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <Link
+            href="/admin/payroll"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            ← Periodos
+          </Link>
+          <h2 className="mt-1 text-base font-semibold text-foreground">
+            {formatPayrollPeriodLabelFromKey(period)}
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {settlements.length} liquidaciones · {filteredSettlements.length} mostradas
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Excel export (solo Monotributo) */}
-          <button
-            onClick={handleExport}
-            className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-          >
-            ↓ Excel Monotributo
-          </button>
+          <Button variant="outline" onClick={handleExport}>
+            Excel Monotributo
+          </Button>
 
           {/* Excel import */}
-          <label className={`cursor-pointer rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
-            {importing ? 'Importando...' : '↑ Importar Excel'}
-            <input
-              ref={importInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={handleImportFile}
-              disabled={importing}
-            />
-          </label>
+          <Button
+            variant="outline"
+            loading={importing}
+            onClick={() => importInputRef.current?.click()}
+          >
+            Importar Excel
+          </Button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImportFile}
+            disabled={importing}
+          />
 
           {/* Reclamar facturas pendientes */}
-          <button
-            onClick={handleClaimInvoices}
-            disabled={claimingInvoices}
-            className="rounded-lg border border-warning/30 bg-warning-subtle px-4 py-2 text-sm font-medium text-[var(--amber-600)] hover:bg-warning-subtle disabled:opacity-50"
-          >
-            {claimingInvoices ? 'Enviando...' : '⚠ Reclamar facturas'}
-          </button>
+          <Button variant="outline" loading={claimingInvoices} onClick={handleClaimInvoices}>
+            Reclamar facturas
+          </Button>
 
           {!isClosed && (
-            <button
-              onClick={() => handlePeriodAction('send-all')}
-              disabled={actionLoading}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-            >
-              {actionLoading ? 'Enviando...' : 'Enviar a todos'}
-            </button>
+            <Button loading={actionLoading} onClick={() => handlePeriodAction('send-all')}>
+              Enviar a todos
+            </Button>
           )}
         </div>
       </div>
@@ -562,20 +563,17 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           </span>
           <div className="ml-auto flex items-center gap-2">
             {!isClosed && (
-              <button
+              <Button
+                size="sm"
+                loading={actionLoading}
                 onClick={() => handlePeriodAction('send-all', Array.from(selectedIds))}
-                disabled={actionLoading}
-                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
               >
                 Enviar seleccionados
-              </button>
+              </Button>
             )}
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
-            >
+            <Button size="sm" variant="outline" onClick={() => setSelectedIds(new Set())}>
               Deseleccionar
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -916,13 +914,9 @@ function SettlementRow({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           {isMonotributo && hasChanges && (
-            <button
-              onClick={() => onSave(settlement.id)}
-              disabled={isSaving}
-              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
-            >
-              {isSaving ? 'Guardando...' : 'Guardar'}
-            </button>
+            <Button size="sm" loading={isSaving} onClick={() => onSave(settlement.id)}>
+              Guardar
+            </Button>
           )}
         </div>
       </td>

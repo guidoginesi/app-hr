@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
-import { PayrollShell } from '../PayrollShell';
+import { PayrollLayout } from '../PayrollLayout';
 import { PayrollPeriodDetailClient } from './PayrollPeriodDetailClient';
 
 export const dynamic = 'force-dynamic';
@@ -18,8 +18,8 @@ export default async function PayrollPeriodDetailPage({ params }: PageProps) {
   const { id } = await params;
 
   return (
-    <PayrollShell active="detail">
+    <PayrollLayout>
       <PayrollPeriodDetailClient periodId={id} />
-    </PayrollShell>
+    </PayrollLayout>
   );
 }

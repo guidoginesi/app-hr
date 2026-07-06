@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { MessagesShell } from '../MessagesShell';
+import { MessagesLayout } from '../MessagesLayout';
 import { MessagesConfigClient } from './MessagesConfigClient';
 
 
@@ -20,8 +20,8 @@ export default async function MessagesConfigPage() {
     .order('template_key');
 
   return (
-    <MessagesShell active="configuracion">
+    <MessagesLayout active="configuracion">
       <MessagesConfigClient initialTemplates={templates || []} />
-    </MessagesShell>
+    </MessagesLayout>
   );
 }

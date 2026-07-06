@@ -6,8 +6,9 @@ import {
   getAiTrainingSessions,
   resolveCycleId,
 } from '@/lib/entrenamientoIaQueries';
-import { EntrenamientoIAShell } from '../EntrenamientoIAShell';
+import { EntrenamientoIALayout } from '../EntrenamientoIALayout';
 import { PuntuacionClient } from './PuntuacionClient';
+import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +31,8 @@ export default async function PuntuacionPage({
     params.session_id ?? (sessions.length > 0 ? sessions[0].id : null);
 
   return (
-    <EntrenamientoIAShell active="puntuacion">
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Cargando…</div>}>
+    <EntrenamientoIALayout active="puntuacion">
+      <Suspense fallback={<SkeletonRows rows={6} />}>
         <PuntuacionClient
           cycles={cycles}
           sessions={sessions}
@@ -39,6 +40,6 @@ export default async function PuntuacionPage({
           selectedSessionId={selectedSessionId}
         />
       </Suspense>
-    </EntrenamientoIAShell>
+    </EntrenamientoIALayout>
   );
 }

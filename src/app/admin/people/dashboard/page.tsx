@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { PeopleShell } from '../PeopleShell';
+import { PeopleLayout } from '../PeopleLayout';
 import { PeopleDashboardClient } from './PeopleDashboardClient';
 
 export const dynamic = 'force-dynamic';
@@ -24,6 +24,7 @@ export default async function PeopleDashboardPage() {
       status,
       hire_date,
       termination_date,
+      termination_reason,
       seniority_level,
       department_id,
       legal_entity_id,
@@ -54,12 +55,12 @@ export default async function PeopleDashboardPage() {
     .order('name');
 
   return (
-    <PeopleShell active="dashboard">
-      <PeopleDashboardClient 
-        employees={employees || []} 
+    <PeopleLayout active="dashboard">
+      <PeopleDashboardClient
+        employees={employees || []}
         departments={departments || []}
         legalEntities={legalEntities || []}
       />
-    </PeopleShell>
+    </PeopleLayout>
   );
 }

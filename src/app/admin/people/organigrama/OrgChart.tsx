@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 interface Employee {
   id: string;
@@ -83,18 +84,18 @@ function EmployeeCard({ employee, isRoot = false }: { employee: OrgNode; isRoot?
         ) : (
           <div className={`
             flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold
-            ${isRoot ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-secondary text-muted-foreground'}
+            ${isRoot ? 'bg-accent text-accent-foreground' : 'bg-secondary text-muted-foreground'}
           `}>
             {initials}
           </div>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground">
+        <p className="truncate text-sm font-medium text-foreground">
           {employee.first_name} {employee.last_name}
         </p>
         {employee.job_title && (
-          <p className="truncate text-sm text-muted-foreground">{employee.job_title}</p>
+          <p className="truncate text-xs text-muted-foreground">{employee.job_title}</p>
         )}
         {employee.department && (
           <p className="truncate text-xs text-muted-foreground">{employee.department.name}</p>
@@ -229,19 +230,13 @@ export function OrgChart({ employees }: OrgChartProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Organigrama</h2>
-          <p className="text-sm text-muted-foreground">Estructura organizacional de la empresa</p>
-        </div>
-        
-        {/* View mode toggle */}
+      {/* View mode toggle */}
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-white p-1">
           <button
             onClick={() => setViewMode('tree')}
             className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              viewMode === 'tree' ? 'bg-success-subtle text-[var(--green-700)]' : 'text-muted-foreground hover:bg-muted'
+              viewMode === 'tree' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +247,7 @@ export function OrgChart({ employees }: OrgChartProps) {
           <button
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              viewMode === 'list' ? 'bg-success-subtle text-[var(--green-700)]' : 'text-muted-foreground hover:bg-muted'
+              viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -294,19 +289,18 @@ export function OrgChart({ employees }: OrgChartProps) {
             placeholder="Buscar empleado..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] py-2 pl-10 pr-4 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-[var(--border)] py-2 pl-10 pr-4 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por departamento"
           value={selectedDepartment}
-          onChange={(e) => setSelectedDepartment(e.target.value)}
-          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="">Todos los departamentos</option>
-          {departments.map(([id, name]) => (
-            <option key={id} value={id}>{name}</option>
-          ))}
-        </select>
+          onChange={setSelectedDepartment}
+          options={[
+            { value: '', label: 'Todos los departamentos' },
+            ...departments.map(([id, name]) => ({ value: id, label: name })),
+          ]}
+        />
         {(searchQuery || selectedDepartment) && (
           <button
             onClick={() => { setSearchQuery(''); setSelectedDepartment(''); }}
@@ -363,8 +357,8 @@ export function OrgChart({ employees }: OrgChartProps) {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground">{emp.first_name} {emp.last_name}</p>
-                  <p className="text-sm text-muted-foreground">{emp.job_title || 'Sin cargo'}</p>
+                  <p className="text-sm font-medium text-foreground">{emp.first_name} {emp.last_name}</p>
+                  <p className="text-xs text-muted-foreground">{emp.job_title || 'Sin cargo'}</p>
                 </div>
                 {emp.department && (
                   <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">

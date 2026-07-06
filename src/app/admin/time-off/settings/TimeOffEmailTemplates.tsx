@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@pow/ui/components/ui/button';
+import { Switch } from '@pow/ui/components/ui/switch';
 import { RichTextEditor } from '../../RichTextEditor';
 
 type EmailTemplate = {
@@ -128,7 +130,7 @@ export function TimeOffEmailTemplates() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-warning/30 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
       </div>
     );
   }
@@ -157,7 +159,7 @@ export function TimeOffEmailTemplates() {
               onClick={() => selectTemplate(template)}
               className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-colors ${
                 selectedTemplate?.id === template.id
-                  ? 'bg-warning text-white shadow-sm'
+                  ? 'bg-foreground text-white shadow-sm'
                   : 'bg-white border border-[var(--border)] text-secondary-foreground hover:bg-muted'
               }`}
             >
@@ -165,7 +167,7 @@ export function TimeOffEmailTemplates() {
                 {TEMPLATE_NAMES[template.template_key] || template.template_key}
               </div>
               <div className={`text-xs mt-1 flex items-center gap-2 ${
-                selectedTemplate?.id === template.id ? 'text-[var(--amber-600)]' : 'text-muted-foreground'
+                selectedTemplate?.id === template.id ? 'text-white/80' : 'text-muted-foreground'
               }`}>
                 <span className={`inline-flex h-2 w-2 rounded-full ${
                   template.is_active 
@@ -185,40 +187,32 @@ export function TimeOffEmailTemplates() {
           <div className="rounded-xl border border-[var(--border)] bg-white p-6 space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-base font-semibold text-foreground">
                   {TEMPLATE_NAMES[selectedTemplate.template_key] || selectedTemplate.template_key}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">{selectedTemplate.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedTemplate.description}</p>
               </div>
-              
+
               <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${editedIsActive ? 'text-[var(--green-700)]' : 'text-muted-foreground'}`}>
+                <span className={`text-sm font-medium ${editedIsActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {editedIsActive ? 'Activo' : 'Desactivado'}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setEditedIsActive(!editedIsActive)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    editedIsActive ? 'bg-success' : 'bg-secondary'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      editedIsActive ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
+                <Switch
+                  checked={editedIsActive}
+                  onCheckedChange={setEditedIsActive}
+                  aria-label={editedIsActive ? 'Desactivar plantilla' : 'Activar plantilla'}
+                />
               </div>
             </div>
 
             {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-              <div className="rounded-lg bg-warning-subtle border border-warning/30 p-4">
-                <h4 className="text-sm font-semibold text-[var(--amber-600)] mb-2">Variables disponibles</h4>
+              <div className="rounded-lg bg-muted border border-[var(--border)] p-4">
+                <h4 className="text-sm font-semibold text-foreground mb-2">Variables disponibles</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedTemplate.variables.map((variable) => (
                     <code
                       key={variable}
-                      className="px-2 py-1 bg-white rounded text-xs font-mono text-[var(--amber-600)] border border-warning/30"
+                      className="px-2 py-1 bg-white rounded text-xs font-mono text-secondary-foreground border border-[var(--border)]"
                     >
                       {`{{${variable}}}`}
                     </code>
@@ -236,7 +230,7 @@ export function TimeOffEmailTemplates() {
                 type="text"
                 value={editedSubject}
                 onChange={(e) => setEditedSubject(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground focus:border-warning/30 focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
 
@@ -264,20 +258,12 @@ export function TimeOffEmailTemplates() {
             )}
 
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="rounded-lg bg-warning px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-warning disabled:opacity-50"
-              >
-                {saving ? 'Guardando...' : 'Guardar Cambios'}
-              </button>
-              <button
-                onClick={handleReset}
-                disabled={saving}
-                className="rounded-lg border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-semibold text-secondary-foreground shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
-              >
+              <Button size="lg" onClick={handleSave} disabled={saving} loading={saving}>
+                Guardar Cambios
+              </Button>
+              <Button variant="outline" size="lg" onClick={handleReset} disabled={saving}>
                 Restablecer
-              </button>
+              </Button>
             </div>
           </div>
         ) : (

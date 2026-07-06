@@ -1,6 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { X, UserPlus, Clock, RefreshCw, UserCheck } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { Stat } from '@pow/ui/components/ui/stat';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
@@ -12,7 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning-subtle text-[var(--amber-600)]',
-  in_process: 'bg-accent text-accent-foreground',
+  in_process: 'bg-secondary text-secondary-foreground',
   hired: 'bg-success-subtle text-[var(--green-700)]',
   rejected: 'bg-danger-subtle text-[var(--red-600)]',
   closed: 'bg-secondary text-muted-foreground',
@@ -99,29 +105,16 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Referidos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Gestión de candidatos referidos por empleados de Pow</p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { label: 'Total referidos', value: referrals.length, color: 'bg-muted border-[var(--border)]', text: 'text-foreground' },
-          { label: 'Pendientes', value: pending, color: 'bg-warning-subtle border-warning/30', text: 'text-[var(--amber-600)]' },
-          { label: 'En proceso', value: inProcess, color: 'bg-accent border-[var(--orange-100)]', text: 'text-accent-foreground' },
-          { label: 'Contratados', value: hired, color: 'bg-success-subtle border-success/20', text: 'text-[var(--green-700)]' },
-        ].map(stat => (
-          <div key={stat.label} className={`rounded-xl border ${stat.color} p-4`}>
-            <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
-            <p className={`mt-1 text-3xl font-bold ${stat.text}`}>{stat.value}</p>
-          </div>
-        ))}
+        <Stat icon={<UserPlus className="h-6 w-6" />} label="Total referidos" value={String(referrals.length)} />
+        <Stat icon={<Clock className="h-6 w-6" />} label="Pendientes" value={String(pending)} tone="warning" />
+        <Stat icon={<RefreshCw className="h-6 w-6" />} label="En proceso" value={String(inProcess)} />
+        <Stat icon={<UserCheck className="h-6 w-6" />} label="Contratados" value={String(hired)} tone="success" />
       </div>
 
       {bonusPending > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning-subtle px-4 py-3">
-          <span className="text-lg">🎉</span>
+        <div className="rounded-[var(--radius)] border border-warning/30 bg-warning-subtle px-4 py-3">
           <p className="text-sm font-medium text-[var(--amber-600)]">
             {bonusPending} bonificación{bonusPending > 1 ? 'es' : ''} pendiente{bonusPending > 1 ? 's' : ''} de pagar
           </p>
@@ -139,27 +132,27 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
             placeholder="Buscar candidato o quien refirió..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white pl-9 pr-4 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-[var(--border)] bg-white pl-9 pr-4 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por estado"
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-foreground focus:outline-none"
-        >
-          <option value="all">Todos los estados</option>
-          {Object.entries(STATUS_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
-        <select
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: 'Todos los estados' },
+            ...Object.entries(STATUS_LABELS).map(([k, v]) => ({ value: k, label: v })),
+          ]}
+        />
+        <SelectMenu
+          ariaLabel="Filtrar por búsqueda"
           value={jobFilter}
-          onChange={e => setJobFilter(e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-foreground focus:outline-none"
-        >
-          <option value="all">Todas las búsquedas</option>
-          {jobs.map(j => <option key={j.id} value={j.id}>{j.title}</option>)}
-        </select>
+          onChange={setJobFilter}
+          options={[
+            { value: 'all', label: 'Todas las búsquedas' },
+            ...jobs.map(j => ({ value: j.id, label: j.title })),
+          ]}
+        />
         <span className="text-sm text-muted-foreground">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
@@ -216,12 +209,9 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
                     {new Date(ref.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openDetail(ref)}
-                      className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => openDetail(ref)}>
                       Ver / Editar
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -230,21 +220,21 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
         </div>
       )}
 
-      {/* Detail Modal */}
+      {/* Detail Sheet */}
       {selectedReferral && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={closeDetail} />
-            <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">Detalle del referido</h2>
-                <button onClick={closeDetail} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="p-6 space-y-4">
+        <Sheet open onOpenChange={(o) => { if (!o) closeDetail(); }}>
+          <SheetContent side="right" flush title="Detalle del referido" className="max-w-lg">
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+              <h2 className="type-title">Detalle del referido</h2>
+              <SheetClose
+                aria-label="Cerrar"
+                className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-5 w-5" />
+              </SheetClose>
+            </div>
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {/* Candidate info */}
                 <div className="rounded-lg bg-muted p-4 space-y-1.5">
                   <p className="text-sm font-semibold text-foreground">{selectedReferral.candidate_name}</p>
@@ -293,24 +283,20 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
                 {/* Editable fields */}
                 <div>
                   <label className="block text-sm font-medium text-secondary-foreground mb-1">Estado</label>
-                  <select
+                  <SelectMenu
+                    ariaLabel="Estado"
+                    className="w-full"
                     value={editStatus}
-                    onChange={e => setEditStatus(e.target.value)}
-                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none"
-                  >
-                    {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
-                    ))}
-                  </select>
+                    onChange={setEditStatus}
+                    options={Object.entries(STATUS_LABELS).map(([k, v]) => ({ value: k, label: v }))}
+                  />
                 </div>
 
                 {editStatus === 'hired' && (
                   <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={editBonusPaid}
-                      onChange={e => setEditBonusPaid(e.target.checked)}
-                      className="h-4 w-4 rounded border-[var(--border)] text-[var(--green-700)] focus:ring-ring"
+                      onCheckedChange={c => setEditBonusPaid(c === true)}
                     />
                     <span className="text-sm font-medium text-secondary-foreground">Bonificación pagada al empleado</span>
                   </label>
@@ -325,29 +311,21 @@ export function ReferidosAdminClient({ initialReferrals, jobs }: Props) {
                     onChange={e => setEditHrNotes(e.target.value)}
                     rows={3}
                     placeholder="Ej: El candidato fue entrevistado, continuamos proceso..."
-                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-foreground focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
-                  onClick={closeDetail}
-                  disabled={saving}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-                >
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+                <Button variant="outline" onClick={closeDetail} disabled={saving}>
                   Cancelar
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-white hover:bg-secondary disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : 'Guardar cambios'}
-                </button>
+                </Button>
+                <Button onClick={handleSave} loading={saving}>
+                  Guardar cambios
+                </Button>
               </div>
             </div>
-          </div>
-        </div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

@@ -3,6 +3,8 @@
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { RichTextEditor } from './RichTextEditor';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type Job = {
 	id?: string;
@@ -42,6 +44,10 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 	const [description, setDescription] = useState<string>(job?.description || '');
 	const [responsibilities, setResponsibilities] = useState<string>(job?.responsibilities || '');
 	const [requirements, setRequirements] = useState<string>(job?.requirements || '');
+
+	// Estados para los selects (equivalen a los defaultValue del <select> nativo)
+	const [workMode, setWorkMode] = useState<string>(job?.work_mode || 'Remota');
+	const [isPublished, setIsPublished] = useState<string>(job?.is_published ? 'true' : 'false');
 
 	function handleSalaryChange(e: React.ChangeEvent<HTMLInputElement>) {
 		const value = e.target.value.replace(/\D/g, '');
@@ -127,7 +133,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				<div>
 					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Título *</label>
 					<input
-						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 						name="title"
 						placeholder="Ej: Desarrollador Backend Senior"
 						defaultValue={job?.title || ''}
@@ -137,7 +143,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				<div>
 					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Área</label>
 					<input
-						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 						name="department"
 						placeholder="Ej: Tecnología"
 						defaultValue={job?.department || ''}
@@ -145,21 +151,23 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				</div>
 				<div>
 					<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Modalidad *</label>
-					<select
-						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-						name="work_mode"
-						defaultValue={job?.work_mode || 'Remota'}
-						required
-					>
-						<option value="Remota">Remota</option>
-						<option value="Híbrida">Híbrida</option>
-						<option value="Presencial">Presencial</option>
-					</select>
+					<input type="hidden" name="work_mode" value={workMode} />
+					<SelectMenu
+						ariaLabel="Modalidad"
+						className="w-full"
+						value={workMode}
+						onChange={setWorkMode}
+						options={[
+							{ value: 'Remota', label: 'Remota' },
+							{ value: 'Híbrida', label: 'Híbrida' },
+							{ value: 'Presencial', label: 'Presencial' },
+						]}
+					/>
 				</div>
 			<div>
 				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Ubicación</label>
 				<input
-					className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+					className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 					name="location"
 					placeholder="Ej: Buenos Aires"
 					defaultValue={job?.location || ''}
@@ -175,7 +183,7 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				<div className="relative">
 					<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
 					<input
-						className="w-full rounded-lg border border-[var(--border)] bg-white pl-7 pr-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+						className="w-full rounded-lg border border-[var(--border)] bg-white pl-7 pr-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
 						name="max_salary"
 						type="text"
 						inputMode="numeric"
@@ -187,14 +195,17 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 			</div>
 			<div>
 				<label className="mb-1.5 block text-xs font-medium text-secondary-foreground">Estado</label>
-					<select
-						className="w-full rounded-lg border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-						name="is_published"
-						defaultValue={job?.is_published ? 'true' : 'false'}
-					>
-						<option value="true">Publicada</option>
-						<option value="false">Oculta</option>
-					</select>
+					<input type="hidden" name="is_published" value={isPublished} />
+					<SelectMenu
+						ariaLabel="Estado"
+						className="w-full"
+						value={isPublished}
+						onChange={setIsPublished}
+						options={[
+							{ value: 'true', label: 'Publicada' },
+							{ value: 'false', label: 'Oculta' },
+						]}
+					/>
 				</div>
 			</div>
 			<div>
@@ -227,22 +238,13 @@ export function JobForm({ job, onSuccess, onCancel }: JobFormProps) {
 				</div>
 			)}
 			<div className="flex gap-3 pt-2">
-				<button
-					type="submit"
-					disabled={loading}
-					className="flex-1 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{loading ? (isEditing ? 'Guardando…' : 'Creando…') : isEditing ? 'Guardar cambios' : 'Crear búsqueda'}
-				</button>
+				<Button type="submit" loading={loading} className="flex-1">
+					{isEditing ? 'Guardar cambios' : 'Crear búsqueda'}
+				</Button>
 				{onCancel && (
-					<button
-						type="button"
-						onClick={onCancel}
-						disabled={loading}
-						className="rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-all hover:bg-muted disabled:opacity-50"
-					>
+					<Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
 						Cancelar
-					</button>
+					</Button>
 				)}
 			</div>
 		</form>

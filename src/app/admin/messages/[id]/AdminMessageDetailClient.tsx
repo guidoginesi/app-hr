@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { MessageBody } from '@/components/MessageBody';
+import { TabNav } from '@pow/ui/components/ui/tab-nav';
 
 type Message = {
   id: string;
@@ -43,7 +43,7 @@ type Metrics = {
 type Filter = 'all' | 'unread' | 'read' | 'confirmed';
 
 const priorityBadge: Record<string, string> = {
-  info: 'bg-accent text-accent-foreground',
+  info: 'bg-secondary text-muted-foreground',
   warning: 'bg-warning-subtle text-[var(--amber-600)]',
   critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
@@ -111,12 +111,12 @@ export function AdminMessageDetailClient({
                 {message.status === 'draft' ? 'Borrador' : message.status === 'published' ? 'Publicado' : 'Archivado'}
               </span>
               {message.require_confirmation && (
-                <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
+                <span className="rounded-full bg-warning-subtle px-2.5 py-0.5 text-xs font-semibold text-[var(--amber-600)]">
                   Requiere confirmación
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-semibold text-foreground">{message.title}</h2>
+            <h2 className="text-base font-semibold text-foreground">{message.title}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Publicado: {formatDate(message.published_at)} &middot; Creado: {formatDate(message.created_at)}
               {message.expires_at && ` · Expira: ${formatDate(message.expires_at)}`}
@@ -163,22 +163,19 @@ export function AdminMessageDetailClient({
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <h3 className="text-sm font-semibold text-foreground">Destinatarios</h3>
-          <div className="flex gap-2">
-            {(['all', 'unread', 'read', 'confirmed'] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  filter === f
-                    ? 'bg-cat-violet text-white'
-                    : 'border border-[var(--border)] text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {f === 'all' ? 'Todos' : f === 'unread' ? 'No leídos' : f === 'read' ? 'Leídos' : 'Confirmados'}
-              </button>
-            ))}
-          </div>
+          <TabNav<Filter>
+            size="sm"
+            bar={false}
+            aria-label="Filtrar destinatarios"
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: 'all', label: 'Todos' },
+              { value: 'unread', label: 'No leídos' },
+              { value: 'read', label: 'Leídos' },
+              { value: 'confirmed', label: 'Confirmados' },
+            ]}
+          />
         </div>
 
         {filtered.length === 0 ? (
@@ -228,7 +225,7 @@ export function AdminMessageDetailClient({
                         {r.confirmed_at ? (
                           <span className="text-xs font-medium text-[var(--green-700)]">{formatDate(r.confirmed_at)}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-accent-foreground">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-warning-subtle px-2 py-0.5 text-[10px] font-semibold text-[var(--amber-600)]">
                             Pendiente
                           </span>
                         )}

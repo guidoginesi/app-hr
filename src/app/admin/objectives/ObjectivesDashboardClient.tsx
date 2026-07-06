@@ -2,7 +2,11 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { X, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import {
   CorporateObjective,
   EmployeeObjectivesStatus,
@@ -134,44 +138,28 @@ function ObjectivesModal({
     fetchObjectives();
   }, [fetchObjectives]);
 
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-      {/* Panel */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+    <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" flush title={`Objetivos de ${employeeName}`} className="max-w-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <div>
             <h2 className="text-base font-semibold text-foreground">{employeeName}</h2>
-            <p className="text-sm text-muted-foreground">Objetivos personales · {year}</p>
+            <p className="text-xs text-muted-foreground">Objetivos personales · {year}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <SheetClose
+            aria-label="Cerrar"
+            className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" />
+          </SheetClose>
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           {loading && (
             <div className="flex items-center justify-center py-12">
-              <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--border)] border-t-danger" />
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
 
@@ -197,7 +185,7 @@ function ObjectivesModal({
                         {/* Objective header */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-danger-subtle text-xs font-bold text-[var(--red-600)]">
+                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
                               {idx + 1}
                             </span>
                             <div className="min-w-0">
@@ -234,21 +222,13 @@ function ObjectivesModal({
 
                         {/* Progress bar */}
                         <div className="mt-3 flex items-center gap-3">
-                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-accent">
                             <div
-                              className={`h-full rounded-full transition-all ${
-                                pct >= 100 ? 'bg-success' :
-                                pct >= 75 ? 'bg-primary' :
-                                pct >= 50 ? 'bg-warning' : 'bg-danger'
-                              }`}
+                              className="h-full rounded-full bg-brand transition-all duration-500"
                               style={{ width: `${Math.min(pct, 100)}%` }}
                             />
                           </div>
-                          <span className={`w-10 shrink-0 text-right text-xs font-semibold ${
-                            pct >= 100 ? 'text-[var(--green-700)]' :
-                            pct >= 75 ? 'text-accent-foreground' :
-                            pct >= 50 ? 'text-[var(--amber-600)]' : 'text-[var(--red-600)]'
-                          }`}>
+                          <span className="w-10 shrink-0 text-right text-xs font-semibold text-foreground tabular-nums">
                             {pct}%
                           </span>
                         </div>
@@ -268,17 +248,13 @@ function ObjectivesModal({
                                     {subEval && (
                                       <span className="shrink-0 text-xs text-cat-violet font-medium">eval.</span>
                                     )}
-                                    <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-secondary">
+                                    <div className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-accent">
                                       <div
-                                        className={`h-full rounded-full ${
-                                          subPct >= 100 ? 'bg-success' :
-                                          subPct >= 75 ? 'bg-primary' :
-                                          subPct >= 50 ? 'bg-warning' : 'bg-danger'
-                                        }`}
+                                        className="h-full rounded-full bg-brand transition-all duration-500"
                                         style={{ width: `${Math.min(subPct, 100)}%` }}
                                       />
                                     </div>
-                                    <span className="w-8 shrink-0 text-right text-xs font-medium text-muted-foreground">
+                                    <span className="w-8 shrink-0 text-right text-xs font-medium text-muted-foreground tabular-nums">
                                       {subPct}%
                                     </span>
                                   </div>
@@ -294,8 +270,8 @@ function ObjectivesModal({
             </>
           )}
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -348,30 +324,17 @@ export function ObjectivesDashboardClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Dashboard de Objetivos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Estado de objetivos de todos los empleados</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-medium text-secondary-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            Actualizar
-          </button>
-          <select
-            value={currentYear}
-            onChange={(e) => handleYearChange(Number(e.target.value))}
-            className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {years.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
+      {/* Toolbar */}
+      <div className="flex items-center justify-end gap-3">
+        <Button variant="outline" onClick={handleRefresh}>
+          Actualizar
+        </Button>
+        <SelectMenu
+          ariaLabel="Filtrar por año"
+          value={String(currentYear)}
+          onChange={(v) => handleYearChange(Number(v))}
+          options={years.map((year) => ({ value: String(year), label: String(year) }))}
+        />
       </div>
 
       {/* Corporate Objectives Status */}
@@ -469,42 +432,44 @@ export function ObjectivesDashboardClient({
             placeholder="Buscar empleado..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white py-2 pl-10 pr-4 text-sm shadow-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-[var(--border)] bg-white py-2 pl-10 pr-4 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por departamento"
           value={selectedDepartment}
-          onChange={(e) => setSelectedDepartment(e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm shadow-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="">Todos los departamentos</option>
-          {departments.map(dept => (
-            <option key={dept.id} value={dept.name}>{dept.name}</option>
-          ))}
-        </select>
+          onChange={(v) => setSelectedDepartment(v)}
+          options={[
+            { value: '', label: 'Todos los departamentos' },
+            ...departments.map((dept) => ({ value: dept.name, label: dept.name })),
+          ]}
+        />
 
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por nivel"
           value={selectedSeniority}
-          onChange={(e) => setSelectedSeniority(e.target.value)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm shadow-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="">Todos los niveles</option>
-          {([1, 2, 3, 4, 5] as SeniorityCategory[]).map(cat => (
-            <option key={cat} value={cat}>{SENIORITY_CATEGORY_LABELS[cat]}</option>
-          ))}
-        </select>
+          onChange={(v) => setSelectedSeniority(v)}
+          options={[
+            { value: '', label: 'Todos los niveles' },
+            ...([1, 2, 3, 4, 5] as SeniorityCategory[]).map((cat) => ({
+              value: String(cat),
+              label: SENIORITY_CATEGORY_LABELS[cat],
+            })),
+          ]}
+        />
 
-        <select
+        <SelectMenu
+          ariaLabel="Filtrar por estado"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm shadow-sm focus:border-danger/20 focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="complete">Completos (4/4)</option>
-          <option value="partial">Parciales</option>
-          <option value="none">Sin objetivos personales</option>
-        </select>
+          onChange={(v) => setStatusFilter(v as any)}
+          options={[
+            { value: 'all', label: 'Todos los estados' },
+            { value: 'complete', label: 'Completos (4/4)' },
+            { value: 'partial', label: 'Parciales' },
+            { value: 'none', label: 'Sin objetivos personales' },
+          ]}
+        />
       </div>
 
       {/* Employees Table */}
@@ -528,7 +493,7 @@ export function ObjectivesDashboardClient({
                 <tr key={emp.id} className="hover:bg-muted">
                   <td className="whitespace-nowrap px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-danger-subtle text-sm font-medium text-[var(--red-600)]">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-sm font-medium text-secondary-foreground">
                         {emp.first_name[0]}{emp.last_name[0]}
                       </div>
                       <span className="text-sm font-medium text-foreground">
@@ -586,34 +551,26 @@ export function ObjectivesDashboardClient({
                   <td className="whitespace-nowrap px-6 py-4 text-center">
                     {emp.total_progress !== null ? (
                       <div className="flex items-center justify-center gap-2">
-                        <div className="h-2 w-16 overflow-hidden rounded-full bg-secondary">
+                        <div className="h-2 w-16 overflow-hidden rounded-full bg-accent">
                           <div
-                            className={`h-full rounded-full ${
-                              emp.total_progress >= 100 ? 'bg-success' :
-                              emp.total_progress >= 75 ? 'bg-primary' :
-                              emp.total_progress >= 50 ? 'bg-warning' : 'bg-danger'
-                            }`}
+                            className="h-full rounded-full bg-brand transition-all duration-500"
                             style={{ width: `${Math.min(emp.total_progress, 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground">{emp.total_progress}%</span>
+                        <span className="text-xs font-medium text-muted-foreground tabular-nums">{emp.total_progress}%</span>
                       </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right">
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setModalEmployee({ id: emp.id, name: `${emp.first_name} ${emp.last_name}` })}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-[var(--red-600)] hover:text-[var(--red-600)]"
                     >
                       Ver
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}

@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { X } from 'lucide-react';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { SegmentedControl } from '@pow/ui/components/ui/segmented-control';
+import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { SENIORITY_LEVELS, getSeniorityLabel } from '@/types/corporate-objectives';
 
 type EmployeeInfo = {
@@ -189,58 +194,46 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Recategorizaciones</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Revisión y aprobación de propuestas de recategorización de líderes
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Estado:</span>
-          <div className="flex rounded-lg border border-[var(--border)] bg-white p-1">
-            {[
-              { value: 'pending', label: 'Pendientes', count: pendingCount },
+          <SegmentedControl<typeof filter>
+            aria-label="Filtrar por estado"
+            value={filter}
+            onChange={(v) => setFilter(v)}
+            options={[
+              {
+                value: 'pending',
+                label: (
+                  <span className="inline-flex items-center gap-1.5">
+                    Pendientes
+                    {pendingCount > 0 && (
+                      <span className="rounded-full bg-warning-subtle px-1.5 py-0.5 text-xs font-medium text-[var(--amber-600)] tabular-nums">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </span>
+                ),
+              },
               { value: 'approved', label: 'Aprobadas' },
               { value: 'rejected', label: 'Rechazadas' },
               { value: 'all', label: 'Todas' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setFilter(option.value as typeof filter)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  filter === option.value
-                    ? 'bg-cat-violet text-white'
-                    : 'text-muted-foreground hover:bg-secondary'
-                }`}
-              >
-                {option.label}
-                {option.count !== undefined && option.count > 0 && (
-                  <span className="ml-1.5 rounded-full bg-warning px-1.5 py-0.5 text-xs text-white">
-                    {option.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+            ]}
+          />
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Período:</span>
-          <select
+          <SelectMenu
+            ariaLabel="Filtrar por período"
             value={periodFilter}
-            onChange={(e) => setPeriodFilter(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
-          >
-            <option value="all">Todos los períodos</option>
-            {periods.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.year})
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setPeriodFilter(v)}
+            options={[
+              { value: 'all', label: 'Todos los períodos' },
+              ...periods.map((p) => ({ value: p.id, label: `${p.name} (${p.year})` })),
+            ]}
+          />
         </div>
       </div>
 
@@ -322,7 +315,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-cat-violet">
+                    <span className="text-sm font-medium text-foreground">
                       {getLeaderDecision(recat)}
                     </span>
                   </td>
@@ -338,26 +331,28 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     {!isNotApplicable(recat) && (!recat.hr_status || recat.hr_status === 'pending') && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           setSelectedRecat(recat);
                           setHrNotes('');
                         }}
-                        className="text-sm font-medium text-cat-violet hover:text-cat-violet"
                       >
                         Revisar
-                      </button>
+                      </Button>
                     )}
                     {(isNotApplicable(recat) || (recat.hr_status && recat.hr_status !== 'pending')) && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           setSelectedRecat(recat);
                           setHrNotes(recat.hr_notes || '');
                         }}
-                        className="text-sm font-medium text-muted-foreground hover:text-foreground"
                       >
                         Ver detalle
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -368,30 +363,30 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
         </div>
       )}
 
-      {/* Modal */}
+      {/* Review Sheet */}
       {selectedRecat && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={() => setSelectedRecat(null)} />
-
-            <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl">
+        <Sheet open onOpenChange={(o) => { if (!o) setSelectedRecat(null); }}>
+          <SheetContent
+            side="right"
+            flush
+            title={isNotApplicable(selectedRecat) ? 'No aplica recategorización' : 'Revisar recategorización'}
+            className="max-w-lg"
+          >
               <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="type-title">
                   {selectedRecat && isNotApplicable(selectedRecat)
                     ? 'No aplica recategorización'
-                    : 'Revisar Recategorización'}
+                    : 'Revisar recategorización'}
                 </h2>
-                <button
-                  onClick={() => setSelectedRecat(null)}
-                  className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                <SheetClose
+                  aria-label="Cerrar"
+                  className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  <X className="h-5 w-5" />
+                </SheetClose>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="flex-1 space-y-4 overflow-y-auto p-6">
                 {/* Employee Info */}
                 <div className="rounded-lg bg-muted p-4">
                   <h3 className="text-sm font-medium text-secondary-foreground mb-2">Empleado</h3>
@@ -418,8 +413,8 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Nivel recomendado</p>
-                    <p className="text-sm font-medium text-cat-violet">
-                      {selectedRecat.recommended_level 
+                    <p className="text-sm font-medium text-foreground">
+                      {selectedRecat.recommended_level
                         ? getSeniorityLabel(selectedRecat.recommended_level)
                         : '-'}
                     </p>
@@ -437,12 +432,12 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                     ) : (
                       <>
                         {selectedRecat.level_recategorization === 'approved' && (
-                          <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">
                             Dentro del nivel
                           </span>
                         )}
                         {selectedRecat.position_recategorization === 'approved' && (
-                          <span className="inline-flex items-center rounded-full bg-cat-violet-subtle px-2.5 py-0.5 text-xs font-medium text-cat-violet">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">
                             Ascenso de nivel
                           </span>
                         )}
@@ -473,7 +468,7 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
                         onChange={(e) => setHrNotes(e.target.value)}
                         placeholder="Agregar comentarios..."
                         rows={3}
-                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-cat-violet focus:outline-none focus:ring-1 focus:ring-cat-violet"
+                        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       />
                     ) : (
                       <p className="text-sm text-secondary-foreground bg-muted rounded-lg p-3">
@@ -485,37 +480,36 @@ export function RecategorizationsClient({ recategorizations: initialRecategoriza
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-                <button
+              <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
+                <Button
+                  variant="outline"
                   onClick={() => setSelectedRecat(null)}
-                  className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
                 >
                   {(!isNotApplicable(selectedRecat) && (!selectedRecat.hr_status || selectedRecat.hr_status === 'pending'))
                     ? 'Cancelar'
                     : 'Cerrar'}
-                </button>
+                </Button>
                 {!isNotApplicable(selectedRecat) && (!selectedRecat.hr_status || selectedRecat.hr_status === 'pending') && (
                   <>
-                    <button
+                    <Button
+                      variant="outline"
+                      className="border-danger/30 text-[var(--red-600)] hover:bg-danger-subtle"
                       onClick={() => handleReject(selectedRecat)}
-                      disabled={isProcessing}
-                      className="rounded-lg border border-danger/20 bg-white px-4 py-2 text-sm font-medium text-[var(--red-600)] hover:bg-danger-subtle disabled:opacity-50"
+                      loading={isProcessing}
                     >
-                      {isProcessing ? 'Procesando...' : 'Rechazar'}
-                    </button>
-                    <button
+                      Rechazar
+                    </Button>
+                    <Button
                       onClick={() => handleApprove(selectedRecat)}
-                      disabled={isProcessing}
-                      className="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
+                      loading={isProcessing}
                     >
-                      {isProcessing ? 'Procesando...' : 'Aprobar'}
-                    </button>
+                      Aprobar
+                    </Button>
                   </>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

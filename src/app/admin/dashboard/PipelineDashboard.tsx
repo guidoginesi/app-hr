@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Stage, STAGE_ORDER, StageLabels } from '@/types/funnel';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type PipelineStats = {
 	job_id: string;
@@ -115,7 +116,7 @@ function FunnelVisualization({ stats }: { stats: PipelineStats }) {
 								points.push('Z');
 								return points.join(' ');
 							})()}
-							fill="#d4d4d8"
+							fill="var(--border)"
 						/>
 					</svg>
 					
@@ -164,19 +165,16 @@ export function PipelineDashboard({ stats }: PipelineDashboardProps) {
 				<label className="mb-2 block text-sm font-medium text-secondary-foreground">
 					Seleccionar búsqueda
 				</label>
-				<select
+				<SelectMenu
+					ariaLabel="Seleccionar búsqueda"
+					className="w-full"
 					value={selectedJobId}
-					onChange={(e) => setSelectedJobId(e.target.value)}
-					className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-				>
-					{stats.map((stat) => (
-						<option key={stat.job_id} value={stat.job_id}>
-							{stat.job_title}
-							{stat.job_department && ` - ${stat.job_department}`}
-							{` (${stat.total} candidatos)`}
-						</option>
-					))}
-				</select>
+					onChange={setSelectedJobId}
+					options={stats.map((stat) => ({
+						value: stat.job_id,
+						label: `${stat.job_title}${stat.job_department ? ` - ${stat.job_department}` : ''} (${stat.total} candidatos)`,
+					}))}
+				/>
 			</div>
 
 			{/* Pipeline visual de la búsqueda seleccionada */}

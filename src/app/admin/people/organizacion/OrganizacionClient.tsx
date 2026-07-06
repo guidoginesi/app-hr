@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { LegalEntity, Department } from '@/types/employee';
+import { TabNav } from '@pow/ui/components/ui/tab-nav';
+import { Button } from '@pow/ui/components/ui/button';
+import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
 type DepartmentWithEntity = Department & {
   legal_entity: { id: string; name: string } | null;
@@ -208,38 +211,20 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Organización</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Administra las sociedades y departamentos de tu organización
-        </p>
-      </div>
-
       {/* Tabs */}
-      <div className="border-b border-[var(--border)]">
-        <nav className="flex gap-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-success/20 text-[var(--green-700)]'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <TabNav<Tab>
+        aria-label="Secciones de Organización"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={tabs.map((t) => ({ value: t.key, label: t.label }))}
+      />
 
       {/* Legal Entities Tab */}
       {activeTab === 'entities' && (
         <div className="space-y-6">
           {/* Create new entity */}
           <div className="rounded-xl border border-[var(--border)] bg-white p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Nueva Sociedad</h2>
+            <h2 className="text-base font-semibold text-foreground mb-4">Nueva Sociedad</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Las sociedades representan las entidades legales de tu organización (empresas, filiales, etc.)
             </p>
@@ -251,7 +236,7 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                   value={newEntityName}
                   onChange={(e) => setNewEntityName(e.target.value)}
                   placeholder="Nombre de la sociedad"
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
               <div className="w-48">
@@ -261,16 +246,16 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                   value={newEntityCountry}
                   onChange={(e) => setNewEntityCountry(e.target.value)}
                   placeholder="País"
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
-              <button
+              <Button
                 onClick={handleCreateEntity}
-                disabled={entitySaving || !newEntityName.trim()}
-                className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success disabled:opacity-50"
+                disabled={!newEntityName.trim()}
+                loading={entitySaving}
               >
                 Crear
-              </button>
+              </Button>
             </div>
             {entityMessage && (
               <div className={`mt-4 rounded-lg p-3 text-sm ${
@@ -296,7 +281,7 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                           type="text"
                           value={editingEntity.name}
                           onChange={(e) => setEditingEntity({ ...editingEntity, name: e.target.value })}
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                       <div className="w-48">
@@ -305,7 +290,7 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                           value={editingEntity.country || ''}
                           onChange={(e) => setEditingEntity({ ...editingEntity, country: e.target.value })}
                           placeholder="País"
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                       <label className="flex items-center gap-2">
@@ -313,29 +298,22 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                           type="checkbox"
                           checked={editingEntity.is_active}
                           onChange={(e) => setEditingEntity({ ...editingEntity, is_active: e.target.checked })}
-                          className="rounded border-[var(--border)] text-[var(--green-700)] focus:ring-ring"
+                          className="rounded border-[var(--border)] accent-[var(--primary)] focus:ring-ring"
                         />
                         <span className="text-sm text-muted-foreground">Activo</span>
                       </label>
-                      <button
-                        onClick={handleUpdateEntity}
-                        disabled={entitySaving}
-                        className="rounded-lg bg-success px-3 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
-                      >
+                      <Button onClick={handleUpdateEntity} loading={entitySaving}>
                         Guardar
-                      </button>
-                      <button
-                        onClick={() => setEditingEntity(null)}
-                        className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                      >
+                      </Button>
+                      <Button variant="outline" onClick={() => setEditingEntity(null)}>
                         Cancelar
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-medium text-foreground">{entity.name}</span>
-                        {entity.country && <span className="ml-2 text-sm text-muted-foreground">({entity.country})</span>}
+                        <span className="text-sm font-medium text-foreground">{entity.name}</span>
+                        {entity.country && <span className="ml-2 text-xs text-muted-foreground">({entity.country})</span>}
                         {!entity.is_active && (
                           <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                             Inactivo
@@ -343,18 +321,12 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setEditingEntity(entity)}
-                          className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setEditingEntity(entity)}>
                           Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEntity(entity.id)}
-                          className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
-                        >
+                        </Button>
+                        <Button variant="outline" size="sm" className="border-danger/30 text-[var(--red-600)] hover:bg-danger-subtle" onClick={() => handleDeleteEntity(entity.id)}>
                           Eliminar
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -375,7 +347,7 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
         <div className="space-y-6">
           {/* Create new department */}
           <div className="rounded-xl border border-[var(--border)] bg-white p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Nuevo Departamento</h2>
+            <h2 className="text-base font-semibold text-foreground mb-4">Nuevo Departamento</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Los departamentos te permiten organizar a tus empleados por área funcional
             </p>
@@ -387,29 +359,29 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                   value={newDeptName}
                   onChange={(e) => setNewDeptName(e.target.value)}
                   placeholder="Nombre del departamento"
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
               <div className="w-64">
                 <label className="block text-sm font-medium text-secondary-foreground mb-1">Sociedad (opcional)</label>
-                <select
+                <SelectMenu
+                  ariaLabel="Sociedad (opcional)"
+                  className="w-full"
                   value={newDeptEntityId}
-                  onChange={(e) => setNewDeptEntityId(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Todas las sociedades</option>
-                  {legalEntities.filter(e => e.is_active).map((entity) => (
-                    <option key={entity.id} value={entity.id}>{entity.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setNewDeptEntityId(v)}
+                  options={[
+                    { value: '', label: 'Todas las sociedades' },
+                    ...legalEntities.filter(e => e.is_active).map((entity) => ({ value: entity.id, label: entity.name })),
+                  ]}
+                />
               </div>
-              <button
+              <Button
                 onClick={handleCreateDepartment}
-                disabled={deptSaving || !newDeptName.trim()}
-                className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success disabled:opacity-50"
+                disabled={!newDeptName.trim()}
+                loading={deptSaving}
               >
                 Crear
-              </button>
+              </Button>
             </div>
             {deptMessage && (
               <div className={`mt-4 rounded-lg p-3 text-sm ${
@@ -435,50 +407,43 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                           type="text"
                           value={editingDepartment.name}
                           onChange={(e) => setEditingDepartment({ ...editingDepartment, name: e.target.value })}
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
                       <div className="w-64">
-                        <select
+                        <SelectMenu
+                          ariaLabel="Sociedad"
+                          className="w-full"
                           value={editingDepartment.legal_entity_id || ''}
-                          onChange={(e) => setEditingDepartment({ ...editingDepartment, legal_entity_id: e.target.value || null })}
-                          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-success/20 focus:outline-none focus:ring-1 focus:ring-ring"
-                        >
-                          <option value="">Todas las sociedades</option>
-                          {legalEntities.filter(e => e.is_active).map((entity) => (
-                            <option key={entity.id} value={entity.id}>{entity.name}</option>
-                          ))}
-                        </select>
+                          onChange={(v) => setEditingDepartment({ ...editingDepartment, legal_entity_id: v || null })}
+                          options={[
+                            { value: '', label: 'Todas las sociedades' },
+                            ...legalEntities.filter(e => e.is_active).map((entity) => ({ value: entity.id, label: entity.name })),
+                          ]}
+                        />
                       </div>
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={editingDepartment.is_active}
                           onChange={(e) => setEditingDepartment({ ...editingDepartment, is_active: e.target.checked })}
-                          className="rounded border-[var(--border)] text-[var(--green-700)] focus:ring-ring"
+                          className="rounded border-[var(--border)] accent-[var(--primary)] focus:ring-ring"
                         />
                         <span className="text-sm text-muted-foreground">Activo</span>
                       </label>
-                      <button
-                        onClick={handleUpdateDepartment}
-                        disabled={deptSaving}
-                        className="rounded-lg bg-success px-3 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
-                      >
+                      <Button onClick={handleUpdateDepartment} loading={deptSaving}>
                         Guardar
-                      </button>
-                      <button
-                        onClick={() => setEditingDepartment(null)}
-                        className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-muted"
-                      >
+                      </Button>
+                      <Button variant="outline" onClick={() => setEditingDepartment(null)}>
                         Cancelar
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-medium text-foreground">{dept.name}</span>
+                        <span className="text-sm font-medium text-foreground">{dept.name}</span>
                         {dept.legal_entity && (
-                          <span className="ml-2 text-sm text-muted-foreground">({dept.legal_entity.name})</span>
+                          <span className="ml-2 text-xs text-muted-foreground">({dept.legal_entity.name})</span>
                         )}
                         {!dept.is_active && (
                           <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
@@ -487,18 +452,12 @@ export function OrganizacionClient({ initialLegalEntities, initialDepartments }:
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setEditingDepartment(dept)}
-                          className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setEditingDepartment(dept)}>
                           Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDepartment(dept.id)}
-                          className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-[var(--red-600)] hover:bg-danger-subtle"
-                        >
+                        </Button>
+                        <Button variant="outline" size="sm" className="border-danger/30 text-[var(--red-600)] hover:bg-danger-subtle" onClick={() => handleDeleteDepartment(dept.id)}>
                           Eliminar
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
