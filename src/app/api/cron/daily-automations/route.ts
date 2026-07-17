@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { sendTimeOffEmail } from '@/lib/emailService';
+import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { Resend } from 'resend';
 
@@ -14,16 +15,6 @@ function replaceVariables(text: string, vars: Record<string, string>): string {
     result = result.replace(new RegExp(`{{${key}}}`, 'g'), value || '');
   }
   return result;
-}
-
-function textToHtml(text: string): string {
-  return text
-    .split('\n')
-    .map(line => {
-      const bold = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      return bold ? `<p>${bold}</p>` : '<br/>';
-    })
-    .join('');
 }
 
 function getArgentinaDateString(offsetDays = 0): string {
@@ -86,7 +77,7 @@ export async function GET(req: NextRequest) {
 
   const supabase = getSupabaseServer();
   const resendKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+  const fromEmail = getEmailFrom();
   const resend = resendKey ? new Resend(resendKey) : null;
 
   const today = new Date();
@@ -142,11 +133,16 @@ export async function GET(req: NextRequest) {
             try {
               // Send email
               if (resend && emailTo) {
+                const bSubject = replaceVariables(tpl.subject, vars);
                 await resend.emails.send({
                   from: fromEmail,
                   to: emailTo,
-                  subject: replaceVariables(tpl.subject, vars),
-                  html: textToHtml(replaceVariables(tpl.body, vars)),
+                  subject: bSubject,
+                  html: renderPlainTemplate({
+                    templateKey: 'birthday_greeting',
+                    subject: bSubject,
+                    body: replaceVariables(tpl.body, vars),
+                  }),
                 });
               }
               // Send internal message
@@ -208,11 +204,16 @@ export async function GET(req: NextRequest) {
             };
             try {
               if (resend && emailTo) {
+                const aSubject = replaceVariables(tpl.subject, vars);
                 await resend.emails.send({
                   from: fromEmail,
                   to: emailTo,
-                  subject: replaceVariables(tpl.subject, vars),
-                  html: textToHtml(replaceVariables(tpl.body, vars)),
+                  subject: aSubject,
+                  html: renderPlainTemplate({
+                    templateKey: 'work_anniversary',
+                    subject: aSubject,
+                    body: replaceVariables(tpl.body, vars),
+                  }),
                 });
               }
               if (tpl.send_internal_message && emp.user_id && tpl.internal_message_text) {

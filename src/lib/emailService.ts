@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { getSupabaseServer } from './supabaseServer';
+import { getEmailFrom, renderPlainTemplate } from './email/layout';
 
 // Lazy initialization: solo crear la instancia cuando se use
 let resendInstance: Resend | null = null;
@@ -138,16 +139,16 @@ export async function sendTemplatedEmail(params: SendEmailParams): Promise<{ suc
 		// Reemplazar variables en subject y body
 		const subject = replaceVariables(template.subject, params.variables);
 		const body = replaceVariables(template.body, params.variables);
+		const html = renderPlainTemplate({ templateKey: params.templateKey, subject, body });
 
 		// Enviar email con Resend
-		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 		const resend = getResend();
-		
+
 		const { data, error } = await resend.emails.send({
-			from: fromEmail,
+			from: getEmailFrom(),
 			to: params.to,
 			subject,
-			html: body,
+			html,
 		});
 
 		if (error) {
@@ -238,7 +239,7 @@ export async function sendSimpleEmail(params: {
 	html: string;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
 	try {
-		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+		const fromEmail = getEmailFrom();
 		const resend = getResend();
 		
 		console.log('[sendSimpleEmail] Sending email:', {
@@ -291,7 +292,7 @@ export async function sendBatchEmails(
 	}
 
 	try {
-		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+		const fromEmail = getEmailFrom();
 		const resend = getResend();
 		const BATCH_SIZE = 100;
 		const allIds: (string | null)[] = [];
@@ -365,27 +366,6 @@ export async function logTimeOffEmail(params: {
 }
 
 /**
- * Convierte texto plano con saltos de línea a HTML
- */
-function textToHtml(text: string): string {
-	// Escapar caracteres HTML
-	let html = text
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;');
-	
-	// Convertir saltos de línea a <br>
-	html = html.replace(/\n/g, '<br>');
-	
-	// Wrap en un div con estilos básicos
-	return `
-		<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333;">
-			${html}
-		</div>
-	`;
-}
-
-/**
  * Envía un email de time-off usando una plantilla
  */
 export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ success: boolean; error?: string }> {
@@ -423,14 +403,13 @@ export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ su
 		// Reemplazar variables en subject y body
 		const subject = replaceVariables(template.subject, params.variables);
 		const bodyText = replaceVariables(template.body, params.variables);
-		const bodyHtml = textToHtml(bodyText);
+		const bodyHtml = renderPlainTemplate({ templateKey: params.templateKey, subject, body: bodyText });
 
 		// Enviar email con Resend
-		const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 		const resend = getResend();
-		
+
 		const { data, error } = await resend.emails.send({
-			from: fromEmail,
+			from: getEmailFrom(),
 			to: params.to,
 			subject,
 			html: bodyHtml,

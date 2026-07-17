@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendSimpleEmail, sendBatchEmails } from '@/lib/emailService';
+import { renderEmail, type DetailRow } from '@/lib/email/layout';
 import { createSystemNotification } from '@/lib/notificationService';
 
 // GET /api/portal/room-booking/bookings - List bookings
@@ -166,40 +167,32 @@ function buildConfirmationEmail(params: {
   const timeRange = `${formatTimeAR(params.firstStart)} – ${formatTimeAR(params.firstEnd)}`;
   const dateStr = formatDateTimeAR(params.firstStart);
 
-  const recurrenceSection = params.recurrenceType
-    ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Recurrencia</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">
-        ${recurrenceLabel(params.recurrenceType)} (${params.occurrenceCount} ocurrencias)
-      </td></tr>`
-    : '';
+  const details: DetailRow[] = [
+    { label: 'Reunión', value: params.title },
+    { label: 'Sala', value: `${params.roomName}${params.roomLocation ? ` – ${params.roomLocation}` : ''}` },
+    { label: 'Fecha', value: dateStr },
+    { label: 'Horario', value: timeRange },
+  ];
+  if (params.recurrenceType) {
+    details.push({
+      label: 'Recurrencia',
+      value: `${recurrenceLabel(params.recurrenceType)} (${params.occurrenceCount} ocurrencias)`,
+    });
+  }
 
-  const inviteesSection = params.invitees.length > 0
-    ? `<div style="margin-top:16px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
-        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#15803d;">Participantes invitados</p>
-        <p style="margin:0;font-size:13px;color:#166534;">${params.invitees.join(' · ')}</p>
-      </div>`
-    : '';
-
-  return `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
-      <div style="background:#0891b2;padding:24px 32px;border-radius:12px 12px 0 0;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">✅ Reserva confirmada</h1>
-      </div>
-      <div style="padding:24px 32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
-        <p style="margin:0 0 20px;font-size:15px;color:#374151;">Hola <strong>${params.organizer}</strong>, tu reserva fue creada exitosamente.</p>
-        <div style="background:#f0f9ff;border-radius:10px;padding:20px 24px;margin-bottom:20px;">
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Reunión</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${params.title}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Sala</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${params.roomName}${params.roomLocation ? ` – ${params.roomLocation}` : ''}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Fecha</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${dateStr}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Horario</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${timeRange}</td></tr>
-            ${recurrenceSection}
-          </table>
-        </div>
-        ${inviteesSection}
-        <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;">Este es un mensaje automático del sistema de reservas.</p>
-      </div>
-    </div>
-  `;
+  return renderEmail({
+    title: 'Reserva confirmada',
+    contextLabel: 'Salas · Reservas',
+    badge: { tone: 'success', label: 'Confirmada' },
+    preheader: `Tu reserva "${params.title}" fue confirmada.`,
+    intro: `Hola ${params.organizer}, tu reserva fue creada exitosamente.`,
+    details,
+    outro:
+      params.invitees.length > 0
+        ? `Participantes invitados: ${params.invitees.join(' · ')}`
+        : undefined,
+    footerNote: 'Mensaje automático del sistema de reservas.',
+  });
 }
 
 function buildInvitationEmail(params: {
@@ -216,30 +209,28 @@ function buildInvitationEmail(params: {
   const timeRange = `${formatTimeAR(params.start)} – ${formatTimeAR(params.end)}`;
   const dateStr = formatDateTimeAR(params.start);
 
-  const recurrenceSection = params.recurrenceType
-    ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Recurrencia</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${recurrenceLabel(params.recurrenceType)} (${params.occurrenceCount} ocurrencias)</td></tr>`
-    : '';
+  const details: DetailRow[] = [
+    { label: 'Reunión', value: params.title },
+    { label: 'Sala', value: `${params.roomName}${params.roomLocation ? ` – ${params.roomLocation}` : ''}` },
+    { label: 'Fecha', value: dateStr },
+    { label: 'Horario', value: timeRange },
+  ];
+  if (params.recurrenceType) {
+    details.push({
+      label: 'Recurrencia',
+      value: `${recurrenceLabel(params.recurrenceType)} (${params.occurrenceCount} ocurrencias)`,
+    });
+  }
 
-  return `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
-      <div style="background:#7c3aed;padding:24px 32px;border-radius:12px 12px 0 0;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">📅 Invitación a reunión</h1>
-      </div>
-      <div style="padding:24px 32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
-        <p style="margin:0 0 20px;font-size:15px;color:#374151;">Hola <strong>${params.inviteeName}</strong>, <strong>${params.organizer}</strong> te invitó a una reunión.</p>
-        <div style="background:#faf5ff;border-radius:10px;padding:20px 24px;margin-bottom:20px;">
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Reunión</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${params.title}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Sala</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${params.roomName}${params.roomLocation ? ` – ${params.roomLocation}` : ''}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Fecha</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${dateStr}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Horario</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${timeRange}</td></tr>
-            ${recurrenceSection}
-          </table>
-        </div>
-        <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;">Este es un mensaje automático del sistema de reservas.</p>
-      </div>
-    </div>
-  `;
+  return renderEmail({
+    title: 'Te invitaron a una reunión',
+    contextLabel: 'Salas · Reservas',
+    badge: { tone: 'neutral', label: 'Invitación' },
+    preheader: `${params.organizer} te invitó a "${params.title}".`,
+    intro: `Hola ${params.inviteeName}, ${params.organizer} te invitó a una reunión.`,
+    details,
+    footerNote: 'Mensaje automático del sistema de reservas.',
+  });
 }
 
 // ---------------------------------------------------------------

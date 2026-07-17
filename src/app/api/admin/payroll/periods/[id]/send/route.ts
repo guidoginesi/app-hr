@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendBatchEmails } from '@/lib/emailService';
+import { renderEmail, type DetailRow } from '@/lib/email/layout';
 import { createSystemNotification } from '@/lib/notificationService';
 import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
@@ -95,48 +96,45 @@ export async function POST(req: NextRequest, context: RouteContext) {
       if (s.contract_type_snapshot === 'MONOTRIBUTO') {
         emailSubject = `Liquidación ${periodLabel}`;
 
-        const buildRow = (label: string, amount: number, isNegative = false) =>
-          amount !== 0 ? `
-              <tr style="border-bottom:1px solid #e4e4e7">
-                <td style="padding:10px 0;color:#52525b">${label}</td>
-                <td style="padding:10px 0;text-align:right;font-weight:600">${isNegative ? '−' : ''}${formatARS(Math.abs(amount))}</td>
-              </tr>` : '';
+        const lineItems: Array<[string, number, boolean?]> = [
+          ['Sueldo', s.sueldo ?? 0],
+          ['Monotributo', s.monotributo ?? 0],
+          ['Reintegro Internet', s.reintegro_internet ?? 0],
+          ['Reintegro Extraordinario', s.reintegro_extraordinario ?? 0],
+          ['Plus Vacacional', s.plus_vacacional ?? 0],
+          ['Bonificación Anual', s.bonificacion_anual ?? 0],
+          ['Aguinaldo', s.aguinaldo ?? 0],
+          ['Adelanto de Sueldo', s.adelanto_sueldo ?? 0, true],
+        ];
+        const details: DetailRow[] = lineItems
+          .filter(([, amount]) => amount !== 0)
+          .map(([label, amount, isNegative]) => ({
+            label,
+            value: `${isNegative ? '−' : ''}${formatARS(Math.abs(amount))}`,
+          }));
+        details.push({ label: 'Total a Facturar', value: formatARS(s.total_a_facturar ?? 0), strong: true });
 
-        emailHtml = `
-          <div style="font-family:sans-serif;max-width:580px;margin:0 auto;color:#18181b">
-            <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Liquidación ${periodLabel}</h2>
-            <p style="color:#71717a;margin-top:0">Hola ${employeeName}, ya podés ver el detalle de tu liquidación.</p>
-            <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              ${buildRow('Sueldo', s.sueldo ?? 0)}
-              ${buildRow('Monotributo', s.monotributo ?? 0)}
-              ${buildRow('Reintegro Internet', s.reintegro_internet ?? 0)}
-              ${buildRow('Reintegro Extraordinario', s.reintegro_extraordinario ?? 0)}
-              ${buildRow('Plus Vacacional', s.plus_vacacional ?? 0)}
-              ${buildRow('Bonificación Anual', s.bonificacion_anual ?? 0)}
-              ${buildRow('Aguinaldo', s.aguinaldo ?? 0)}
-              ${buildRow('Adelanto de Sueldo', s.adelanto_sueldo ?? 0, true)}
-              <tr style="background:#f4f4f5">
-                <td style="padding:12px;font-weight:700;font-size:16px">Total a Facturar</td>
-                <td style="padding:12px;text-align:right;font-weight:700;font-size:16px;color:#4f46e5">${formatARS(s.total_a_facturar ?? 0)}</td>
-              </tr>
-            </table>
-            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:24px">
-              <p style="margin:0;font-size:14px;color:#92400e">
-                <strong>Recordá:</strong> emití la factura por el Total a Facturar y cargala en el portal dentro de 1 día hábil.
-              </p>
-            </div>
-            <a href="${portalUrl}/portal/liquidaciones" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Ver en el portal</a>
-          </div>`;
+        emailHtml = renderEmail({
+          title: 'Tu liquidación está disponible',
+          contextLabel: 'People · Liquidaciones',
+          badge: { tone: 'neutral', label: periodLabel },
+          preheader: `Tu liquidación de ${periodLabel} ya está disponible.`,
+          intro: `Hola ${employeeName}, ya podés ver el detalle de tu liquidación.`,
+          details,
+          cta: { label: 'Ver en el portal', url: `${portalUrl}/portal/liquidaciones` },
+          outro: 'Recordá: emití la factura por el Total a Facturar y cargala en el portal dentro de 1 día hábil.',
+        });
       } else {
         // RELACION_DEPENDENCIA
         emailSubject = `Recibo de sueldo ${periodLabel}`;
-        emailHtml = `
-          <div style="font-family:sans-serif;max-width:580px;margin:0 auto;color:#18181b">
-            <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Recibo de sueldo ${periodLabel}</h2>
-            <p style="color:#71717a;margin-top:0">Hola ${employeeName}, tu recibo de sueldo de ${periodLabel} ya está disponible.</p>
-            <p style="color:#52525b">Podés descargarlo desde el portal haciendo clic en el botón de abajo.</p>
-            <a href="${portalUrl}/portal/recibos" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Descargar recibo</a>
-          </div>`;
+        emailHtml = renderEmail({
+          title: 'Tu recibo de sueldo está disponible',
+          contextLabel: 'People · Recibos',
+          badge: { tone: 'neutral', label: periodLabel },
+          preheader: `Tu recibo de sueldo de ${periodLabel} ya está disponible.`,
+          intro: `Hola ${employeeName}, tu recibo de sueldo de ${periodLabel} ya está disponible. Podés descargarlo desde el portal.`,
+          cta: { label: 'Descargar recibo', url: `${portalUrl}/portal/recibos` },
+        });
       }
 
       // Mark settlement as SENT in DB; also persist resolved email so future re-sends work

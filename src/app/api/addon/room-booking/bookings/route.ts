@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAddon } from '../_auth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendSimpleEmail } from '@/lib/emailService';
+import { renderEmail, type DetailRow } from '@/lib/email/layout';
 
 const TZ = 'America/Argentina/Buenos_Aires';
 
@@ -31,25 +32,21 @@ function buildConfirmationEmailHtml(params: {
 }): string {
   const timeRange = `${formatTimeAR(params.start)} – ${formatTimeAR(params.end)}`;
   const dateStr = formatDateTimeAR(params.start);
-  return `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
-      <div style="background:#0891b2;padding:24px 32px;border-radius:12px 12px 0 0;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">✅ Reserva confirmada</h1>
-      </div>
-      <div style="padding:24px 32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
-        <p style="margin:0 0 20px;font-size:15px;color:#374151;">Hola <strong>${params.organizer}</strong>, tu reserva fue creada desde Google Calendar.</p>
-        <div style="background:#f0f9ff;border-radius:10px;padding:20px 24px;">
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Reunión</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${params.title}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Sala</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${params.roomName}${params.roomLocation ? ` – ${params.roomLocation}` : ''}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Fecha</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${dateStr}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Horario</td><td style="padding:6px 0 6px 16px;font-size:14px;font-weight:600;">${timeRange}</td></tr>
-          </table>
-        </div>
-        <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;">Reserva creada desde el Add-on de Google Calendar.</p>
-      </div>
-    </div>
-  `;
+  const details: DetailRow[] = [
+    { label: 'Reunión', value: params.title },
+    { label: 'Sala', value: `${params.roomName}${params.roomLocation ? ` – ${params.roomLocation}` : ''}` },
+    { label: 'Fecha', value: dateStr },
+    { label: 'Horario', value: timeRange },
+  ];
+  return renderEmail({
+    title: 'Reserva confirmada',
+    contextLabel: 'Salas · Reservas',
+    badge: { tone: 'success', label: 'Confirmada' },
+    preheader: `Tu reserva "${params.title}" fue confirmada.`,
+    intro: `Hola ${params.organizer}, tu reserva fue creada desde Google Calendar.`,
+    details,
+    footerNote: 'Reserva creada desde el Add-on de Google Calendar.',
+  });
 }
 
 // GET /api/addon/room-booking/bookings

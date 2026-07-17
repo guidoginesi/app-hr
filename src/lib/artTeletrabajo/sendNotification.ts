@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { buildPdfFilename, generateArtTeletrabajoPdf } from './pdf';
+import { renderEmail, getEmailFrom, escapeHtml } from '../email/layout';
 import { buildTeleworkRoster, getArtTeletrabajoConfig } from './roster';
 import type { ArtNotificationType } from './types';
 import type { LeaveTrigger } from './roster';
@@ -22,26 +23,31 @@ function buildEmailHtml(params: {
       ? 'cambio de domicilio de teletrabajo (inicio mañana)'
       : 'retorno a domicilio habitual';
 
+  const facts = `
+    <p style="margin:0 0 4px;font-size:13px;line-height:1.55;color:#374151;"><strong>Fecha de referencia del listado:</strong> ${escapeHtml(params.rosterDate)}</p>
+    <p style="margin:0 0 13px;font-size:13px;line-height:1.55;color:#374151;"><strong>Empleados en relación de dependencia incluidos:</strong> ${params.employeeCount}</p>`;
+
   const peopleList =
     params.triggers.length > 0
-      ? `<ul>${params.triggers
+      ? `<ul style="margin:0;padding-left:18px;color:#374151;font-size:13px;line-height:1.7;">${params.triggers
           .map(
             (t) =>
-              `<li><strong>${t.employee_name}</strong> (${t.leave_type_code === 'remote_work_trip' ? 'Fuera de domicilio' : 'Trabajo remoto'}) — ${t.start_date} a ${t.end_date}</li>`,
+              `<li><strong>${escapeHtml(t.employee_name)}</strong> (${t.leave_type_code === 'remote_work_trip' ? 'Fuera de domicilio' : 'Trabajo remoto'}) — ${escapeHtml(t.start_date)} a ${escapeHtml(t.end_date)}</li>`,
           )
           .join('')}</ul>`
-      : '<p>Sin movimientos individuales registrados.</p>';
+      : '<p style="margin:0;font-size:13px;color:#6B7280;">Sin movimientos individuales registrados.</p>';
 
-  return `
-    <div style="font-family: sans-serif; color: #18181b; line-height: 1.5;">
-      <p>Hola,</p>
-      <p>Se adjunta el formulario <strong>Teletrabajo Berkley ART</strong> actualizado por ${actionLabel}.</p>
-      <p><strong>Fecha de referencia del listado:</strong> ${params.rosterDate}</p>
-      <p><strong>Empleados en relación de dependencia incluidos:</strong> ${params.employeeCount}</p>
-      ${peopleList}
-      <p style="color:#71717a;font-size:13px;">Envío automático desde app-hr.</p>
-    </div>
-  `;
+  return renderEmail({
+    title: 'Formulario de Teletrabajo ART actualizado',
+    contextLabel: 'ART · Teletrabajo',
+    badge: {
+      tone: 'neutral',
+      label: params.notificationType === 'pre_departure' ? 'Salida' : 'Retorno',
+    },
+    intro: `Se adjunta el formulario Teletrabajo Berkley ART actualizado por ${actionLabel}.`,
+    bodyHtml: facts + peopleList,
+    footerNote: 'Envío automático desde app-hr.',
+  });
 }
 
 function buildSubject(notificationType: ArtNotificationType, employerCuit: string, rosterDate: string) {
@@ -86,7 +92,7 @@ export async function sendArtTeletrabajoNotification(params: {
   const roster = await buildTeleworkRoster(params.supabase, params.rosterDate, config);
   const pdfBytes = await generateArtTeletrabajoPdf(roster, config);
   const filename = buildPdfFilename(params.rosterDate, params.notificationType);
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+  const fromEmail = getEmailFrom();
   const resend = getResend();
 
   const subject = buildSubject(params.notificationType, config.employerCuit, params.rosterDate);
