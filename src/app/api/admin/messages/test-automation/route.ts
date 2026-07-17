@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
 
 function replaceVariables(text: string, vars: Record<string, string>): string {
   let result = text;
@@ -8,16 +9,6 @@ function replaceVariables(text: string, vars: Record<string, string>): string {
     result = result.replace(new RegExp(`{{${key}}}`, 'g'), value || '');
   }
   return result;
-}
-
-function textToHtml(text: string): string {
-  return text
-    .split('\n')
-    .map(line => {
-      const bold = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      return bold ? `<p style="margin:0 0 12px 0">${bold}</p>` : '<br/>';
-    })
-    .join('');
 }
 
 // POST /api/admin/messages/test-automation
@@ -68,17 +59,20 @@ export async function POST(req: NextRequest) {
   };
 
   const subject = replaceVariables(tpl.subject, vars);
-  const bodyHtml = textToHtml(replaceVariables(tpl.body, vars));
+  const bodyHtml = renderPlainTemplate({
+    templateKey: tpl.template_key,
+    subject,
+    body: replaceVariables(tpl.body, vars),
+  });
 
   const resendKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
   if (!resendKey) return NextResponse.json({ error: 'RESEND_API_KEY no configurado' }, { status: 500 });
   if (!emailTo) return NextResponse.json({ error: 'El empleado no tiene email configurado' }, { status: 400 });
 
   const resend = new Resend(resendKey);
   const { error: sendError } = await resend.emails.send({
-    from: fromEmail,
+    from: getEmailFrom(),
     to: emailTo,
     subject: `[TEST] ${subject}`,
     html: bodyHtml,
