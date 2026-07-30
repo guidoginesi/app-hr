@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { PayrollLayout } from '../PayrollLayout';
 import { PayrollPeriodDetailClient } from './PayrollPeriodDetailClient';
+import { PeriodAdvancesSection } from './PeriodAdvancesSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,10 @@ export default async function PayrollPeriodDetailPage({ params }: PageProps) {
 
   return (
     <PayrollLayout>
-      <PayrollPeriodDetailClient periodId={id} />
+      <div className="space-y-6">
+        <PayrollPeriodDetailClient periodId={id} />
+        <PeriodAdvancesSection periodId={id} />
+      </div>
     </PayrollLayout>
   );
 }

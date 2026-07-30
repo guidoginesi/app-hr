@@ -58,6 +58,7 @@ export type SalaryAdvance = {
   transferred_by: string | null;
   transferred_at: string | null;
   settled_at: string | null;
+  applied_period_id: string | null;
   requested_at: string;
   created_by: string | null;
   created_at: string;

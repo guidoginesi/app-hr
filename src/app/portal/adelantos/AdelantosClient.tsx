@@ -177,7 +177,7 @@ export function AdelantosClient() {
               </ul>
               {preview.classification !== 'standard' && (
                 <p className="mt-3 text-xs text-[var(--amber-600)]">
-                  Tu solicitud sería {preview.classification === 'extraordinary' ? 'extraordinaria' : 'una excepción'}: requiere un motivo y una aprobación adicional.
+                  Tu solicitud sería {preview.classification === 'extraordinary' ? 'extraordinaria' : 'una excepción'}: requiere un motivo. La revisan People y Administración.
                 </p>
               )}
             </div>
