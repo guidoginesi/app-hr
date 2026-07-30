@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { TimeOffLayout } from '../TimeOffLayout';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { Switch } from '@pow/ui/components/ui/switch';
 import { formatDateLocal } from '@/lib/dateUtils';
 
 interface Novedad {
@@ -22,6 +23,7 @@ interface Novedad {
   rejection_reason: string | null;
   hr_rejection_reason: string | null;
   leader_rejection_reason: string | null;
+  plus_paid: boolean;
 }
 
 interface Employee {
@@ -74,6 +76,7 @@ function exportToExcel(novedades: Novedad[], year: number, month: number) {
       ? `${n.days_requested} semana${n.days_requested !== 1 ? 's' : ''}`
       : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`,
     Estado: STATUS_LABELS[n.status] ?? n.status,
+    'Vacaciones ya liquidadas': n.leave_type_code === 'vacation' ? (n.plus_paid ? 'Sí' : 'No') : '',
     Observaciones: [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
       .filter(Boolean).join(' | '),
   }));
@@ -96,9 +99,58 @@ export function NovedadesClient() {
   const [novedades, setNovedades] = useState<Novedad[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  // Borrador de "ya liquidada": overrides pendientes de guardar (id -> valor).
+  const [plusDraft, setPlusDraft] = useState<Record<string, boolean>>({});
+  const [savingPlus, setSavingPlus] = useState(false);
+
+  const dirtyIds = Object.keys(plusDraft);
+  const plusChecked = (n: Novedad) => (n.id in plusDraft ? plusDraft[n.id] : n.plus_paid);
+
+  const setPlusValue = (n: Novedad, next: boolean) => {
+    setPlusDraft((prev) => {
+      const copy = { ...prev };
+      if (next === n.plus_paid) delete copy[n.id]; // volvió al valor guardado → sin cambio
+      else copy[n.id] = next;
+      return copy;
+    });
+  };
+
+  const discardPlus = () => setPlusDraft({});
+
+  const savePlusChanges = async () => {
+    setSavingPlus(true);
+    const results = await Promise.all(
+      Object.entries(plusDraft).map(([id, val]) =>
+        fetch(`/api/admin/time-off/requests/${id}/plus-paid`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plus_paid: val }),
+        })
+          .then((r) => ({ id, val, ok: r.ok }))
+          .catch(() => ({ id, val, ok: false })),
+      ),
+    );
+    const okResults = results.filter((r) => r.ok);
+    if (okResults.length) {
+      setNovedades((prev) =>
+        prev.map((n) => {
+          const r = okResults.find((x) => x.id === n.id);
+          return r ? { ...n, plus_paid: r.val } : n;
+        }),
+      );
+    }
+    // Los que fallaron quedan en el borrador para reintentar.
+    setPlusDraft((prev) => {
+      const copy = { ...prev };
+      for (const r of okResults) delete copy[r.id];
+      return copy;
+    });
+    setSavingPlus(false);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setPlusDraft({}); // descartar cambios sin guardar al recargar/cambiar filtros
     try {
       const params = new URLSearchParams({
         year: String(year),
@@ -238,6 +290,19 @@ export function NovedadesClient() {
                 {loading ? 'Cargando...' : `${novedades.length} novedad${novedades.length !== 1 ? 'es' : ''}`}
               </p>
             </div>
+            {dirtyIds.length > 0 && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {dirtyIds.length} cambio{dirtyIds.length !== 1 ? 's' : ''} sin guardar
+                </span>
+                <Button variant="ghost" onClick={discardPlus} disabled={savingPlus}>
+                  Descartar
+                </Button>
+                <Button onClick={savePlusChanges} loading={savingPlus}>
+                  Guardar cambios
+                </Button>
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -262,6 +327,7 @@ export function NovedadesClient() {
                     <th className="px-6 py-3">Fecha fin</th>
                     <th className="px-6 py-3 text-center">Duración</th>
                     <th className="px-6 py-3">Estado</th>
+                    <th className="px-6 py-3 text-center">Ya liquidada</th>
                     <th className="px-6 py-3">Observaciones</th>
                   </tr>
                 </thead>
@@ -287,6 +353,20 @@ export function NovedadesClient() {
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[n.status] ?? 'bg-secondary text-muted-foreground'}`}>
                             {STATUS_LABELS[n.status] ?? n.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          {n.leave_type_code === 'vacation' ? (
+                            <span className="inline-flex items-center justify-center" title="Vacaciones ya liquidadas: se excluyen del reporte de plus vacacional">
+                              <Switch
+                                aria-label="Vacaciones ya liquidadas"
+                                checked={plusChecked(n)}
+                                disabled={savingPlus}
+                                onCheckedChange={(v) => setPlusValue(n, v)}
+                              />
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-3 max-w-xs">
                           {obs ? (
