@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/checkAuth';
+import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import Link from 'next/link';
 import { AdminShell } from '@/app/admin/AdminShell';
@@ -9,8 +9,10 @@ import { Card, CardContent, CardFooter } from '@pow/ui/components/ui/card';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminHome() {
-  const { isAdmin } = await requireAdmin();
-  if (!isAdmin) {
+  const auth = await getAuthResult();
+  if (!auth.isAdmin) {
+    // El perfil Administración solo accede al módulo de Adelantos.
+    if (auth.isAdministracion) redirect('/admin/salary-advances');
     redirect('/admin/login');
   }
 

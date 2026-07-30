@@ -69,6 +69,7 @@ export async function getAuthResult(): Promise<AuthResult> {
       isAdmin: false,
       isEmployee: false,
       isLeader: false,
+      isAdministracion: false,
       employee: null,
     };
   }
@@ -90,6 +91,7 @@ export async function getAuthResult(): Promise<AuthResult> {
     isAdmin: roles.includes('admin'),
     isEmployee: roles.includes('employee') || !!employee,
     isLeader,
+    isAdministracion: roles.includes('administracion'),
     employee,
   };
 }
@@ -109,6 +111,7 @@ export async function requireRole(allowedRoles: UserRole[]): Promise<AuthResult 
     if (role === 'admin') return auth.isAdmin;
     if (role === 'employee') return auth.isEmployee;
     if (role === 'leader') return auth.isLeader;
+    if (role === 'administracion') return auth.isAdministracion;
     return false;
   });
 
@@ -135,6 +138,14 @@ export async function requireAdmin(): Promise<{ user: { id: string; email?: stri
  */
 export async function requirePortalAccess(): Promise<AuthResult | null> {
   return requireRole(['employee', 'leader']);
+}
+
+/**
+ * Require access to the salary-advances admin module.
+ * Admin completo o perfil Administración (aprobador de adelantos).
+ */
+export async function requireAdvanceApprover(): Promise<AuthResult | null> {
+  return requireRole(['admin', 'administracion']);
 }
 
 /**

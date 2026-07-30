@@ -25,9 +25,11 @@ type AdminShellProps = {
   // Aceptado por compatibilidad con llamadas existentes; el ítem activo se
   // deriva del pathname, así que no hace falta pasarlo.
   active?: string;
+  // Perfil Administración (aprobador de adelantos): nav recortada a Adelantos.
+  advancesOnly?: boolean;
 };
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({ children, advancesOnly = false }: AdminShellProps) {
   const pathname = usePathname() || '';
 
   const match = (href: string, ...aliases: string[]) =>
@@ -78,10 +80,21 @@ export function AdminShell({ children }: AdminShellProps) {
     },
   ];
 
+  const navGroups: NavGroup[] = advancesOnly
+    ? [
+        {
+          label: 'Gestión',
+          items: [
+            { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
+          ],
+        },
+      ]
+    : groups;
+
   return (
     <div className="flex min-h-screen bg-muted text-foreground">
       <NavSidebar
-        groups={groups}
+        groups={navGroups}
         header={
           <a href="/admin" className="flex items-center gap-2">
             <img src="/brand/pow-logo-horizontal.svg" alt="Pow" className="h-6 w-auto" />

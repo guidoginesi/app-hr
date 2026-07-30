@@ -126,9 +126,18 @@ export async function middleware(request: NextRequest) {
     }
 
     const isAdmin = cachedRoles.roles.includes('admin');
+    const isAdministracion = cachedRoles.roles.includes('administracion');
 
     if (!isAdmin) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      if (isAdministracion) {
+        // Perfil Administración: solo el módulo de Adelantos. El resto del
+        // admin lo redirige a esa pantalla.
+        if (!pathname.startsWith('/admin/salary-advances')) {
+          return NextResponse.redirect(new URL('/admin/salary-advances', request.url));
+        }
+      } else {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
+      }
     }
   }
 

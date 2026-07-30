@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdvanceApprover } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 // GET /api/admin/salary-advances?status=...
 export async function GET(req: NextRequest) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    const auth = await requireAdvanceApprover();
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
