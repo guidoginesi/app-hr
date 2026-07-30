@@ -30,6 +30,11 @@ interface Employee {
   last_name: string;
 }
 
+interface LeaveType {
+  code: string;
+  name: string;
+}
+
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -85,7 +90,9 @@ export function NovedadesClient() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [employeeId, setEmployeeId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [leaveTypeFilter, setLeaveTypeFilter] = useState('');
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [novedades, setNovedades] = useState<Novedad[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -99,17 +106,19 @@ export function NovedadesClient() {
       });
       if (employeeId) params.set('employee_id', employeeId);
       if (statusFilter) params.set('status', statusFilter);
+      if (leaveTypeFilter) params.set('leave_type', leaveTypeFilter);
 
       const res = await fetch(`/api/admin/time-off/novedades?${params}`);
       const data = await res.json();
       if (res.ok) {
         setNovedades(data.novedades ?? []);
         setEmployees(data.employees ?? []);
+        setLeaveTypes(data.leaveTypes ?? []);
       }
     } finally {
       setLoading(false);
     }
-  }, [year, month, employeeId, statusFilter]);
+  }, [year, month, employeeId, statusFilter, leaveTypeFilter]);
 
   useEffect(() => {
     fetchData();
@@ -166,6 +175,21 @@ export function NovedadesClient() {
                 options={[
                   { value: '', label: 'Todos' },
                   ...employees.map((emp) => ({ value: emp.id, label: `${emp.first_name} ${emp.last_name}` })),
+                ]}
+              />
+            </div>
+
+            {/* Leave type filter */}
+            <div className="flex flex-col gap-1 min-w-[180px]">
+              <label className="text-xs font-medium text-muted-foreground">Tipo de licencia</label>
+              <SelectMenu
+                ariaLabel="Tipo de licencia"
+                className="w-full"
+                value={leaveTypeFilter}
+                onChange={(v) => setLeaveTypeFilter(v)}
+                options={[
+                  { value: '', label: 'Todos' },
+                  ...leaveTypes.map((lt) => ({ value: lt.code, label: lt.name })),
                 ]}
               />
             </div>
