@@ -12,6 +12,7 @@ import {
   GraduationCap,
   CalendarDays,
   Wallet,
+  Banknote,
   DoorOpen,
   MessageSquare,
   Settings,
@@ -59,6 +60,7 @@ export function AdminShell({ children }: AdminShellProps) {
       items: [
         { label: 'Time Off', href: '/admin/time-off', icon: CalendarDays, active: match('/admin/time-off') },
         { label: 'Liquidaciones', href: '/admin/payroll', icon: Wallet, active: match('/admin/payroll') },
+        { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
       ],
     },
     {
