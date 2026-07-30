@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     const month = parseInt(searchParams.get('month') ?? String(new Date().getMonth() + 1));
     const employeeId = searchParams.get('employee_id') ?? null;
     const statusFilter = searchParams.get('status') ?? null;
+    const leaveType = searchParams.get('leave_type') ?? null;
 
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       return NextResponse.json({ error: 'Parámetros de período inválidos' }, { status: 400 });
@@ -45,6 +46,10 @@ export async function GET(req: NextRequest) {
       query = query.eq('status', statusFilter);
     }
 
+    if (leaveType) {
+      query = query.eq('leave_type_code', leaveType);
+    }
+
     query = query.order('start_date', { ascending: true });
 
     const { data, error } = await query;
@@ -62,7 +67,17 @@ export async function GET(req: NextRequest) {
       .order('last_name')
       .order('first_name');
 
-    return NextResponse.json({ novedades: data ?? [], employees: employees ?? [] });
+    // Fetch leave types for the filter dropdown
+    const { data: leaveTypes } = await supabase
+      .from('leave_types')
+      .select('code, name')
+      .order('name');
+
+    return NextResponse.json({
+      novedades: data ?? [],
+      employees: employees ?? [],
+      leaveTypes: leaveTypes ?? [],
+    });
   } catch (error: any) {
     console.error('Error in GET /api/admin/time-off/novedades:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
