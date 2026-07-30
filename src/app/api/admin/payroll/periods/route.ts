@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { applyAdvancesToPeriod } from '@/lib/payrollAdvances';
 import {
   buildPeriodKey,
   formatPayrollPeriodLabel,
@@ -206,6 +207,13 @@ export async function POST(req: NextRequest) {
     }
 
     await Promise.all(inserts);
+
+    // Fase 3: aplicar adelantos pendientes de este mes al recién creado período
+    try {
+      await applyAdvancesToPeriod(supabase, period);
+    } catch (e) {
+      console.error('[Payroll] applyAdvancesToPeriod on create failed:', e);
+    }
 
     return NextResponse.json(
       { period, settlement_count: createdSettlements.length },

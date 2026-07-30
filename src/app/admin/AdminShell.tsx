@@ -16,6 +16,7 @@ import {
   DoorOpen,
   MessageSquare,
   Settings,
+  BookOpen,
 } from 'lucide-react';
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
@@ -76,6 +77,7 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
       label: 'Sistema',
       items: [
         { label: 'Configuración', href: '/admin/configuracion', icon: Settings, active: match('/admin/configuracion') },
+        { label: 'Ayuda', href: '/admin/ayuda', icon: BookOpen, active: match('/admin/ayuda') },
       ],
     },
   ];

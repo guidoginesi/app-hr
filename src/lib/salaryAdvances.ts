@@ -35,7 +35,7 @@ function monthsBetween(from: Date, to: Date): number {
 /**
  * Evalúa las 6 reglas automáticas + clasifica la solicitud.
  * - Falla de elegibilidad/timing (1, 2, 4) → excepción (pide motivo, avanza).
- * - Falla de límites/frecuencia (5, 6, 7) → extraordinaria (pide motivo → Guido en Fase 2).
+ * - Falla de límites/frecuencia (5, 6, 7) → extraordinaria (pide motivo; mismo flujo RRHH → Administración).
  * - Reglas 3 y 8: manuales (se muestran informativas).
  */
 export function evaluateAdvanceRules(input: {

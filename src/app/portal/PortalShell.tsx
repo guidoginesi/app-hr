@@ -11,7 +11,7 @@ type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'liquidaciones' | 'recibos' | 'messages' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'liquidaciones' | 'recibos' | 'messages' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia' | 'ayuda';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -49,7 +49,10 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
   const navGroups: { label: string; items: { key: PortalShellProps['active']; label: string; href: string }[] }[] = [
     {
       label: 'General',
-      items: [{ key: 'dashboard', label: 'Dashboard', href: '/portal' }],
+      items: [
+        { key: 'dashboard', label: 'Dashboard', href: '/portal' },
+        { key: 'ayuda', label: 'Ayuda', href: '/portal/ayuda' },
+      ],
     },
     {
       label: 'Mi trabajo',

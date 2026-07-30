@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { settlePeriodAdvances } from '@/lib/payrollAdvances';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -40,8 +41,18 @@ export async function POST(_req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
+    // Fase 3: marcar saldados los adelantos descontados en este período
+    let settledAdvances = 0;
+    try {
+      const r = await settlePeriodAdvances(supabase, id);
+      settledAdvances = r.settled;
+    } catch (e) {
+      console.error('[Payroll] settlePeriodAdvances on close failed:', e);
+    }
+
     return NextResponse.json({
       period: updatedPeriod,
+      settled_advances: settledAdvances,
       message: 'Período cerrado correctamente',
     });
   } catch (error: any) {
