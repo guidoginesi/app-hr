@@ -1,6 +1,6 @@
 // Employee module types
 
-export type UserRole = 'admin' | 'employee' | 'leader';
+export type UserRole = 'admin' | 'employee' | 'leader' | 'administracion';
 
 export type EmployeeStatus = 'active' | 'inactive' | 'terminated';
 
@@ -158,5 +158,6 @@ export interface AuthResult {
   isAdmin: boolean;
   isEmployee: boolean;
   isLeader: boolean;
+  isAdministracion: boolean;
   employee: Employee | null;
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdvanceApprover } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { createSystemNotification } from '@/lib/notificationService';
 import { sendSimpleEmail } from '@/lib/emailService';
@@ -16,16 +16,26 @@ const ars = (n: number) =>
 // PATCH /api/admin/salary-advances/[id]  { action, note?, rejection_reason?, no_resignation_confirmed? }
 export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin, user } = await requireAdmin();
-    if (!isAdmin || !user) {
+    const auth = await requireAdvanceApprover();
+    if (!auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const user = auth.user;
 
     const { id } = await context.params;
     const body = await req.json().catch(() => ({}));
     const action = body?.action as Action;
     const note: string | null = body?.note?.trim?.() || null;
     const rejectionReason: string | null = body?.rejection_reason?.trim?.() || null;
+
+    // Perfil Administración (sin admin completo): solo su paso del flujo.
+    const ADMINISTRACION_ACTIONS: Action[] = ['approve_admin', 'transfer', 'settle', 'reject'];
+    if (!auth.isAdmin && !ADMINISTRACION_ACTIONS.includes(action)) {
+      return NextResponse.json(
+        { error: 'Tu perfil solo puede gestionar el paso de Administración.' },
+        { status: 403 },
+      );
+    }
 
     const supabase = getSupabaseServer();
     const { data: adv, error: fetchErr } = await supabase
