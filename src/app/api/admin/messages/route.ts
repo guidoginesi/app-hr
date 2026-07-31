@@ -17,6 +17,9 @@ const CreateMessageSchema = z.object({
       z.object({ roles: z.array(z.string()).min(1) }),
       z.object({ test: z.literal(true) }),
       z.object({ employment_type: z.enum(['monotributista', 'dependency']) }),
+      z.object({ department_id: z.string().uuid() }),
+      z.object({ manager_id: z.string().uuid() }),
+      z.object({ user_ids: z.array(z.string().uuid()).min(1) }),
     ])
     .default({ all: true }),
 });
