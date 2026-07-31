@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdvanceApprover } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { createSystemNotification } from '@/lib/notificationService';
+import { createSystemNotification, getUserIdsForRoles } from '@/lib/notificationService';
 import { sendSimpleEmail } from '@/lib/emailService';
 import { renderEmail, getAppUrl, type BadgeTone } from '@/lib/email/layout';
 import type { SalaryAdvanceStatus } from '@/types/salaryAdvance';
@@ -129,6 +129,21 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         deepLink: '/portal/adelantos',
         dedupeKey: `advance-${id}-${to}`,
       }).catch((e) => console.error('[SalaryAdvance] employee notif failed:', e));
+    }
+
+    // Aviso in-app al siguiente aprobador cuando el adelanto entra a su cola
+    if (action === 'approve_hr') {
+      getUserIdsForRoles(['administracion'])
+        .then((ids) =>
+          createSystemNotification({
+            userIds: ids,
+            title: 'Adelanto pendiente de Administración',
+            body: `${adv.employee_name} tiene un adelanto por ${ars(adv.amount)} esperando la aprobación de Administración.`,
+            deepLink: '/admin/salary-advances',
+            dedupeKey: `advance-admin-${id}`,
+          }),
+        )
+        .catch((e) => console.error('[SalaryAdvance] administracion notif failed:', e));
     }
 
     if (email && adv.employee_email) {

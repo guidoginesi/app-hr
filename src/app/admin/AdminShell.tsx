@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type AdminShellProps = {
   children: ReactNode;
@@ -105,7 +106,12 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
             <span className="type-label text-muted-foreground">Admin</span>
           </a>
         }
-        footer={<AdminProfileDropdown direction="up" fullWidth />}
+        footer={
+          <div className="space-y-1">
+            <NotificationBell direction="up" label="Notificaciones" detailBasePath="/admin/messages" />
+            <AdminProfileDropdown direction="up" fullWidth />
+          </div>
+        }
       />
 
       <main className="min-w-0 flex-1">
