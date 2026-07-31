@@ -29,36 +29,36 @@ export default async function AyudaAdelantosPage() {
       </div>
 
       <div className="mt-8 space-y-10">
-        <ManualStep n={1} title="Dónde encontrarlo" imageAlt="Menú lateral del admin con 'Adelantos' resaltado en la sección Gestión.">
+        <ManualStep n={1} title="Dónde encontrarlo" image="/manual/adelantos-admin/02-cola.png" imageAlt="Menú lateral del admin con 'Adelantos' resaltado en la sección Gestión.">
           <p>En el menú lateral, dentro de <b>Gestión → Adelantos</b>. Ahí ves todas las solicitudes de adelanto de sueldo.</p>
         </ManualStep>
 
-        <ManualStep n={2} title="La cola de solicitudes" imageAlt="Tabla de solicitudes con columnas Colaborador, Monto, Mes de descuento, Tipo y Estado, y el filtro de Estado arriba.">
+        <ManualStep n={2} title="La cola de solicitudes" image="/manual/adelantos-admin/02-cola.png" imageAlt="Tabla de solicitudes con columnas Colaborador, Monto, Mes de descuento, Tipo y Estado, y el filtro de Estado arriba.">
           <p>Cada fila es una solicitud, con su <b>monto</b>, el <b>mes de descuento</b>, el <b>tipo</b> (Estándar / Excepción / Emergencia) y el <b>estado</b>. Podés filtrar por estado arriba.</p>
           <p>Los estados siguen el flujo: <b>Pendiente RRHH → Pendiente Administración → Aprobado → Transferido → Saldado</b> (o Rechazado / Bloqueado).</p>
         </ManualStep>
 
-        <ManualStep n={3} title="Gestionar una solicitud" imageAlt="Fila expandida al hacer clic en 'Gestionar', mostrando el motivo del colaborador y los botones de acción.">
+        <ManualStep n={3} title="Gestionar una solicitud" image="/manual/adelantos-admin/05-pendiente-administracion.png" imageAlt="Fila expandida al hacer clic en 'Gestionar', mostrando el motivo del colaborador y los botones de acción.">
           <p>Tocá <b>Gestionar</b> en una fila para abrir el panel de acciones. Ahí ves el motivo del colaborador (si lo hay) y las acciones disponibles según el estado.</p>
         </ManualStep>
 
-        <ManualStep n={4} title="Aprobación de People (RRHH)" imageAlt="Panel de una solicitud en Pendiente RRHH: el switch 'Confirmo que no tiene renuncia comunicada' y el botón 'Aprobar → Administración'.">
+        <ManualStep n={4} title="Aprobación de People (RRHH)" image="/manual/adelantos-admin/04-pendiente-rrhh.png" imageAlt="Panel de una solicitud en Pendiente RRHH: el switch 'Confirmo que no tiene renuncia comunicada' y el botón 'Aprobar → Administración'.">
           <p>Con la solicitud en <b>Pendiente RRHH</b>, confirmá con el switch que el colaborador <b>no tiene una renuncia comunicada</b> y tocá <b>Aprobar → Administración</b>. Sin ese check no se puede aprobar.</p>
         </ManualStep>
 
-        <ManualStep n={5} title="Aprobación de Administración" imageAlt="Panel de una solicitud en Pendiente Administración con el recordatorio del 50% y el botón 'Aprobar'.">
+        <ManualStep n={5} title="Aprobación de Administración" image="/manual/adelantos-admin/05-pendiente-administracion.png" imageAlt="Panel de una solicitud en Pendiente Administración con el recordatorio del 50% y el botón 'Aprobar'.">
           <p>En <b>Pendiente Administración</b>, validá manualmente que el monto no supere el <b>50% del neto</b> del colaborador y tocá <b>Aprobar</b>. La solicitud pasa a <b>Aprobado</b>.</p>
         </ManualStep>
 
-        <ManualStep n={6} title="Transferir y saldar" imageAlt="Panel de una solicitud Aprobada con los botones 'Marcar transferido' y 'Marcar saldado'.">
+        <ManualStep n={6} title="Transferir y saldar" image="/manual/adelantos-admin/06-aprobado.png" imageAlt="Panel de una solicitud Aprobada con los botones 'Marcar transferido' y 'Marcar saldado'.">
           <p>Una vez aprobada, hacé la transferencia (dentro de los 5 días hábiles) y marcala como <b>Transferido</b>. El paso a <b>Saldado</b> se hace solo al cerrar la liquidación del mes (ver paso 9), o manualmente si hace falta.</p>
         </ManualStep>
 
-        <ManualStep n={7} title="Rechazar o bloquear" imageAlt="Panel con el campo de motivo y los botones 'Rechazar' y 'Bloquear (renuncia)'.">
+        <ManualStep n={7} title="Rechazar o bloquear" image="/manual/adelantos-admin/05-pendiente-administracion.png" imageAlt="Panel con el campo de motivo y los botones 'Rechazar' y 'Bloquear (renuncia)'.">
           <p>En cualquier paso podés <b>Rechazar</b> (con motivo) — el colaborador recibe el aviso con la explicación. Si hay una <b>renuncia comunicada</b>, usá <b>Bloquear</b>: corta el flujo y no se otorga.</p>
         </ManualStep>
 
-        <ManualStep n={8} title="Invitar un aprobador de Administración" imageAlt="Botón 'Invitar aprobador' y el formulario con el campo de email.">
+        <ManualStep n={8} title="Invitar un aprobador de Administración" image="/manual/adelantos-admin/08-invitar.png" imageAlt="Botón 'Invitar aprobador' y el formulario con el campo de email.">
           <p>Con el botón <b>Invitar aprobador</b> creás un acceso con perfil <b>Administración</b>: solo puede aprobar/transferir adelantos, nada más del admin. La persona recibe un email para configurar su contraseña.</p>
         </ManualStep>
 
