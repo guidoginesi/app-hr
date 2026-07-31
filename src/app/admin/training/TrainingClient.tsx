@@ -65,6 +65,14 @@ export function TrainingClient() {
     setExpandedId((p) => (p === id ? null : id));
   };
 
+  const viewFile = async (id: string, kind: string) => {
+    try {
+      const res = await fetch(`/api/training/${id}/file?kind=${kind}`);
+      const d = await res.json();
+      if (res.ok && d.url) window.open(d.url, '_blank', 'noopener');
+    } catch { /* noop */ }
+  };
+
   const act = async (id: string, action: string, extra: Record<string, unknown> = {}) => {
     setBusy(id); setActionError(null);
     try {
@@ -96,6 +104,14 @@ export function TrainingClient() {
         </div>
         {r.objective && <p className="text-sm"><span className="text-muted-foreground">Objetivo:</span> {r.objective}</p>}
 
+        {(r.invoice_initial_path || r.certificate_path || r.invoice_final_path) && (
+          <div className="flex flex-wrap gap-2">
+            {r.invoice_initial_path && <Button variant="outline" size="sm" onClick={() => viewFile(r.id, 'invoice_initial')}>Ver factura</Button>}
+            {r.certificate_path && <Button variant="outline" size="sm" onClick={() => viewFile(r.id, 'certificate')}>Ver certificado</Button>}
+            {r.invoice_final_path && <Button variant="outline" size="sm" onClick={() => viewFile(r.id, 'invoice_final')}>Ver factura final</Button>}
+          </div>
+        )}
+
         {r.status === 'requested' && (
           <Button loading={isBusy} onClick={() => act(r.id, 'approve_leader', { comment: inputs.comment || undefined })}>Aprobar (líder) → HR</Button>
         )}
@@ -115,13 +131,31 @@ export function TrainingClient() {
           </div>
         )}
 
+        {(r.status === 'invoice_uploaded' || r.status === 'certificate_uploaded') && (
+          <div className="space-y-3">
+            <p className="text-xs text-[var(--amber-600)]">
+              {r.status === 'invoice_uploaded' ? 'Pago 50% inicial' : 'Pago 50% final'}
+              {r.cost_usd != null && ` = USD ${(Number(r.cost_usd) / 2).toFixed(2)}`} · ingresá el MEP del día. Se imputa al período de liquidación abierto (reintegro extraordinario).
+            </p>
+            <div className="flex flex-col gap-1.5 max-w-xs">
+              <label className="text-xs font-medium text-muted-foreground">MEP del día *</label>
+              <Input type="number" min={0} value={inputs.mep} onChange={(e) => setInputs((s) => ({ ...s, mep: e.target.value }))} placeholder="Ej. 1509.87" />
+              {inputs.mep && Number(inputs.mep) > 0 && r.cost_usd != null && (
+                <span className="text-xs text-muted-foreground">≈ {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format((Number(r.cost_usd) / 2) * Number(inputs.mep))}</span>
+              )}
+            </div>
+            <Button loading={isBusy} disabled={!(Number(inputs.mep) > 0)} onClick={() => act(r.id, r.status === 'invoice_uploaded' ? 'pay_initial' : 'pay_final', { mep: Number(inputs.mep) })}>
+              Registrar {r.status === 'invoice_uploaded' ? 'pago 50% inicial' : 'pago 50% final'}
+            </Button>
+          </div>
+        )}
+
         {isFinal && (r.rejection_reason
           ? <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground">Motivo:</span> {r.rejection_reason}</p>
-          : <p className="text-sm text-muted-foreground">Sin acciones (seguimiento de pagos: próxima fase).</p>)}
+          : <p className="text-sm text-muted-foreground">Sin acciones disponibles.</p>)}
 
-        {!isFinal && !['requested', 'leader_approved'].includes(r.status) && (
-          <p className="text-sm text-muted-foreground">Carga de factura / certificado y pagos: próxima fase.</p>
-        )}
+        {r.status === 'hr_approved' && <p className="text-sm text-muted-foreground">Esperando que el colaborador cargue la factura.</p>}
+        {r.status === 'initial_paid' && <p className="text-sm text-muted-foreground">Esperando que el colaborador cargue el certificado de finalización.</p>}
 
         {canReject && (
           <div className="space-y-2 border-t border-[var(--border)] pt-3">

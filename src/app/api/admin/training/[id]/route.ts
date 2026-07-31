@@ -5,10 +5,11 @@ import { createSystemNotification, getAdminUserIds } from '@/lib/notificationSer
 import { sendSimpleEmail } from '@/lib/emailService';
 import { renderEmail, getAppUrl, type BadgeTone } from '@/lib/email/layout';
 import { computeBudget } from '@/lib/training';
+import { injectTrainingReintegro } from '@/lib/payrollTraining';
 import type { TrainingRequestStatus } from '@/types/training';
 
 type RouteContext = { params: Promise<{ id: string }> };
-type Action = 'approve_leader' | 'approve_hr' | 'reject';
+type Action = 'approve_leader' | 'approve_hr' | 'reject' | 'pay_initial' | 'pay_final';
 
 async function getEffectiveBudget(
   supabase: ReturnType<typeof getSupabaseServer>,
@@ -92,6 +93,33 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         to = 'hr_approved';
         update = { ...update, status: to, hr_approved_by: user.id, hr_approved_at: nowIso, hr_comment: comment, cost_usd: costUsd, mep_at_approval: r.currency === 'ARS' ? mep : null };
         email = { subject: 'Tu capacitación fue aprobada', title: 'Tu capacitación fue aprobada', badge: 'success', intro: `Hola ${r.employee_name}, tu solicitud para "${r.course_name}" fue aprobada. Ya podés cargar la factura para el pago del 50% inicial.` };
+        break;
+      }
+      case 'pay_initial':
+      case 'pay_final': {
+        const isInitial = action === 'pay_initial';
+        const expected: TrainingRequestStatus = isInitial ? 'invoice_uploaded' : 'certificate_uploaded';
+        if (from !== expected) {
+          return NextResponse.json({ error: isInitial ? 'Cargá la factura antes de pagar el 50% inicial.' : 'Cargá el certificado antes de pagar el 50% final.' }, { status: 400 });
+        }
+        if (!mep || mep <= 0) return NextResponse.json({ error: 'Ingresá el MEP del día de pago.' }, { status: 400 });
+        if (r.cost_usd == null) return NextResponse.json({ error: 'La solicitud no tiene el monto USD fijado.' }, { status: 400 });
+
+        const amountArs = Math.round((Number(r.cost_usd) / 2) * mep * 100) / 100;
+        const inj = await injectTrainingReintegro(supabase, r.employee_id, amountArs);
+        if (inj.mode === 'no_period') {
+          return NextResponse.json({ error: 'No hay un período de liquidación abierto para imputar el reintegro. Creá el período del mes primero.' }, { status: 400 });
+        }
+
+        to = isInitial ? 'initial_paid' : 'completed';
+        update = isInitial
+          ? { ...update, status: to, initial_paid_period_id: inj.periodId, initial_paid_amount_ars: amountArs, initial_paid_mep: mep, initial_paid_at: nowIso }
+          : { ...update, status: to, final_paid_period_id: inj.periodId, final_paid_amount_ars: amountArs, final_paid_mep: mep, final_paid_at: nowIso };
+
+        const arsLabel = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(amountArs);
+        email = isInitial
+          ? { subject: 'Pago 50% de tu capacitación', title: 'Procesamos el 50% de tu capacitación', badge: 'success', intro: `Hola ${r.employee_name}, procesamos el 50% inicial del reintegro de "${r.course_name}" (${arsLabel}), que se paga con tu próximo sueldo. Al terminar el curso, subí el certificado para el 50% restante.` }
+          : { subject: 'Tu capacitación fue finalizada', title: 'Tu capacitación fue finalizada', badge: 'success', intro: `Hola ${r.employee_name}, procesamos el 50% final del reintegro de "${r.course_name}" (${arsLabel}). ¡Listo!` };
         break;
       }
       case 'reject': {
