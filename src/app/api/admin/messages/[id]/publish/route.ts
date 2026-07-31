@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { resolveAudienceUserIds } from '@/lib/notificationService';
+import { resolveAudienceUserIds, getEmailsForUserIds } from '@/lib/notificationService';
 import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
+import { sendBatchEmails } from '@/lib/emailService';
+import { renderEmail, getAppUrl } from '@/lib/email/layout';
 
 const BATCH_SIZE = 500;
 
@@ -87,6 +89,34 @@ export async function POST(
         console.error('[publish] Error inserting recipients batch:', recipientsError);
       } else {
         insertedCount += batch.length;
+      }
+    }
+
+    // Enviar por mail a los destinatarios si está habilitado (opt-in por mensaje)
+    if (message.send_email) {
+      try {
+        const recipientEmails = await getEmailsForUserIds(userIds);
+        if (recipientEmails.length > 0) {
+          const preview = getMessageBodyPlainText(message.body).slice(0, 200);
+          const previewText = preview.length >= 200 ? `${preview.trimEnd()}…` : preview;
+          const html = renderEmail({
+            title: message.title,
+            contextLabel: 'Pow · Mensajes',
+            preheader: previewText || 'Tenés un mensaje nuevo en el portal',
+            intro: previewText || 'Tenés un mensaje nuevo esperándote en el portal.',
+            cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
+            outro: 'Entrá al portal para leer el mensaje completo.',
+          });
+          await sendBatchEmails(
+            recipientEmails.map((r) => ({
+              to: r.email,
+              subject: `Nuevo mensaje: ${message.title}`,
+              html,
+            })),
+          );
+        }
+      } catch (emailError: any) {
+        console.error('[publish] email fan-out error:', emailError.message);
       }
     }
 

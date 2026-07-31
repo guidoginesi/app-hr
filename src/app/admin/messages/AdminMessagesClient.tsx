@@ -8,12 +8,13 @@ import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { RichTextEditor } from '../RichTextEditor';
-import { isMessageBodyEmpty } from '@/lib/messageBody';
+import { isMessageBodyEmpty, getMessageBodyPlainText } from '@/lib/messageBody';
 
 type Message = {
   id: string;
   type: 'broadcast' | 'system';
   title: string;
+  body: string;
   priority: 'info' | 'warning' | 'critical';
   require_confirmation: boolean;
   status: 'draft' | 'published' | 'archived';
@@ -21,10 +22,15 @@ type Message = {
   published_at: string | null;
   expires_at: string | null;
   audience: Record<string, unknown> | null;
+  created_by: string | null;
+  metadata: Record<string, unknown> | null;
   recipients_total: number;
   read_count: number;
   confirmed_count: number;
 };
+
+const isAutomatic = (m: Message) =>
+  m.type === 'system' || (m.metadata as { automated?: boolean } | null)?.automated === true;
 
 const statusBadge: Record<string, string> = {
   draft: 'bg-secondary text-muted-foreground',
@@ -46,6 +52,7 @@ type CreateForm = {
   expires_at: string;
   audience: 'all' | 'leaders' | 'employees' | 'monotributista' | 'dependency' | 'test';
   send_to_google_chat: boolean;
+  send_email: boolean;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -56,6 +63,7 @@ const DEFAULT_FORM: CreateForm = {
   expires_at: '',
   audience: 'all',
   send_to_google_chat: false,
+  send_email: false,
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -80,6 +88,8 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
   const [publishing, setPublishing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [origin, setOrigin] = useState<'todos' | 'manuales' | 'automaticos'>('todos');
 
   const audiencePayload = (a: CreateForm['audience']) => {
     if (a === 'all') return { all: true };
@@ -107,6 +117,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
         priority: form.priority,
         require_confirmation: form.require_confirmation,
         send_to_google_chat: form.send_to_google_chat,
+        send_email: form.send_email,
         audience: audiencePayload(form.audience),
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
@@ -188,6 +199,17 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
     }
   };
 
+  const q = search.trim().toLowerCase();
+  const filtered = messages.filter((m) => {
+    if (origin === 'manuales' && isAutomatic(m)) return false;
+    if (origin === 'automaticos' && !isAutomatic(m)) return false;
+    if (q) {
+      const hay = `${m.title} ${getMessageBodyPlainText(m.body ?? '')}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-4">
       {/* Feedback banners */}
@@ -210,9 +232,34 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
             </div>
           )}
 
-          {/* Toolbar */}
-          <div className="flex items-center justify-end">
-            <Button onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}>
+          {/* Toolbar: búsqueda + filtro de origen + nuevo */}
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por palabra clave…"
+              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring sm:w-72"
+            />
+            <div className="inline-flex rounded-lg border border-[var(--border)] p-0.5">
+              {([
+                ['todos', 'Todos'],
+                ['manuales', 'Manuales'],
+                ['automaticos', 'Automáticos'],
+              ] as const).map(([val, label]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setOrigin(val)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    origin === val ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <Button className="ml-auto" onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}>
               Nuevo mensaje
             </Button>
           </div>
@@ -334,6 +381,24 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                     Enviar también al chat grupal de Pow (Google Chat)
                   </span>
                 </label>
+
+                {/* Email */}
+                <label
+                  htmlFor="send_email"
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3"
+                >
+                  <Checkbox
+                    id="send_email"
+                    checked={form.send_email}
+                    onCheckedChange={(c) => setForm({ ...form, send_email: c === true })}
+                  />
+                  <span className="flex items-center gap-2 text-sm font-medium text-secondary-foreground">
+                    <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Enviar también por mail a los destinatarios
+                  </span>
+                </label>
               </div>
 
               {/* Footer */}
@@ -381,7 +446,14 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)] bg-white">
-                  {messages.map((msg) => (
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                        No hay mensajes que coincidan con la búsqueda o el filtro.
+                      </td>
+                    </tr>
+                  )}
+                  {filtered.map((msg) => (
                     <tr key={msg.id} className="hover:bg-muted">
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-2">
@@ -390,7 +462,9 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                           </span>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-foreground truncate max-w-[240px]">{msg.title}</p>
-                            <p className="text-xs text-muted-foreground">{msg.type === 'broadcast' ? 'Anuncio' : 'Sistema'}</p>
+                            <span className={`mt-0.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${isAutomatic(msg) ? 'bg-secondary text-muted-foreground' : 'bg-accent text-[var(--brand-strong)]'}`}>
+                              {isAutomatic(msg) ? 'Automático' : 'Manual'}
+                            </span>
                           </div>
                         </div>
                       </td>
