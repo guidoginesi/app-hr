@@ -17,7 +17,10 @@ export type BroadcastAudience =
   | { all: true }
   | { roles: string[] }
   | { test: true }
-  | { employment_type: 'monotributista' | 'dependency' };
+  | { employment_type: 'monotributista' | 'dependency' }
+  | { department_id: string }
+  | { manager_id: string }
+  | { user_ids: string[] };
 
 export type BroadcastMessageParams = {
   createdBy: string; // auth.users id
@@ -175,6 +178,30 @@ export async function resolveAudienceUserIds(
       if (uid) userIds.push(uid);
     }
     return userIds;
+  }
+
+  if ('department_id' in audience && audience.department_id) {
+    const { data } = await supabase
+      .from('employees')
+      .select('user_id')
+      .eq('status', 'active')
+      .eq('department_id', audience.department_id)
+      .not('user_id', 'is', null);
+    return (data ?? []).map((e: any) => e.user_id as string).filter(Boolean);
+  }
+
+  if ('manager_id' in audience && audience.manager_id) {
+    const { data } = await supabase
+      .from('employees')
+      .select('user_id')
+      .eq('status', 'active')
+      .eq('manager_id', audience.manager_id)
+      .not('user_id', 'is', null);
+    return (data ?? []).map((e: any) => e.user_id as string).filter(Boolean);
+  }
+
+  if ('user_ids' in audience && Array.isArray(audience.user_ids) && audience.user_ids.length > 0) {
+    return audience.user_ids.filter(Boolean);
   }
 
   return [];

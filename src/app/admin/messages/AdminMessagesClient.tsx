@@ -44,13 +44,35 @@ const priorityBadge: Record<string, string> = {
   critical: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
+type MsgDept = { id: string; name: string };
+type MsgEmp = {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  department_id: string | null;
+  manager_id: string | null;
+};
+
 type CreateForm = {
   title: string;
   body: string;
   priority: 'info' | 'warning' | 'critical';
   require_confirmation: boolean;
   expires_at: string;
-  audience: 'all' | 'leaders' | 'employees' | 'monotributista' | 'dependency' | 'test';
+  audience:
+    | 'all'
+    | 'leaders'
+    | 'employees'
+    | 'monotributista'
+    | 'dependency'
+    | 'test'
+    | 'area'
+    | 'lider'
+    | 'individual';
+  department_id: string;
+  manager_id: string;
+  user_ids: string[];
   send_to_google_chat: boolean;
   send_email: boolean;
 };
@@ -62,6 +84,9 @@ const DEFAULT_FORM: CreateForm = {
   require_confirmation: false,
   expires_at: '',
   audience: 'all',
+  department_id: '',
+  manager_id: '',
+  user_ids: [],
   send_to_google_chat: false,
   send_email: false,
 };
@@ -80,7 +105,71 @@ function audienceLabel(audience: Record<string, unknown> | null): string {
   return 'Personalizado';
 }
 
-export function AdminMessagesClient({ messages: initialMessages }: { messages: Message[] }) {
+function EmployeeMultiSelect({
+  employees,
+  selected,
+  onChange,
+}: {
+  employees: MsgEmp[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [q, setQ] = useState('');
+  const sel = new Set(selected);
+  const term = q.trim().toLowerCase();
+  const filtered = term
+    ? employees.filter((e) => `${e.first_name} ${e.last_name}`.toLowerCase().includes(term))
+    : employees;
+  const toggle = (uid: string) => {
+    const next = new Set(sel);
+    if (next.has(uid)) next.delete(uid);
+    else next.add(uid);
+    onChange([...next]);
+  };
+  return (
+    <div className="space-y-2 rounded-lg border border-[var(--border)] p-3">
+      <div className="flex items-center justify-between gap-2">
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar persona…"
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+        <span className="whitespace-nowrap text-xs text-muted-foreground">{selected.length} sel.</span>
+      </div>
+      <div className="max-h-48 space-y-0.5 overflow-y-auto">
+        {filtered.length === 0 ? (
+          <p className="px-2 py-1 text-xs text-muted-foreground">Sin resultados.</p>
+        ) : (
+          filtered.map((e) => (
+            <label
+              key={e.user_id}
+              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted"
+            >
+              <Checkbox checked={sel.has(e.user_id)} onCheckedChange={() => toggle(e.user_id)} />
+              <span className="text-secondary-foreground">
+                {e.first_name} {e.last_name}
+              </span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function AdminMessagesClient({
+  messages: initialMessages,
+  departments,
+  employees,
+  leaders,
+}: {
+  messages: Message[];
+  departments: MsgDept[];
+  employees: MsgEmp[];
+  leaders: MsgEmp[];
+}) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<CreateForm>(DEFAULT_FORM);
@@ -98,12 +187,36 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
     if (a === 'monotributista') return { employment_type: 'monotributista' as const };
     if (a === 'dependency') return { employment_type: 'dependency' as const };
     if (a === 'test') return { test: true };
+    if (a === 'area') return { department_id: form.department_id };
+    if (a === 'lider') return { manager_id: form.manager_id };
+    if (a === 'individual') return { user_ids: form.user_ids };
     return { all: true };
+  };
+
+  const deptById = new Map(departments.map((d) => [d.id, d.name]));
+  const empById = new Map(employees.map((e) => [e.id, `${e.first_name} ${e.last_name}`.trim()]));
+  const labelForAudience = (audience: Record<string, unknown> | null): string => {
+    if (audience?.department_id) return `Área: ${deptById.get(audience.department_id as string) ?? '—'}`;
+    if (audience?.manager_id) return `Equipo de ${empById.get(audience.manager_id as string) ?? '—'}`;
+    if (Array.isArray(audience?.user_ids)) return `${(audience.user_ids as string[]).length} persona(s)`;
+    return audienceLabel(audience);
   };
 
   const handleCreate = async (publishNow: boolean) => {
     if (!form.title.trim() || isMessageBodyEmpty(form.body)) {
       setError('Título y cuerpo son requeridos');
+      return;
+    }
+    if (form.audience === 'area' && !form.department_id) {
+      setError('Elegí un área.');
+      return;
+    }
+    if (form.audience === 'lider' && !form.manager_id) {
+      setError('Elegí un líder.');
+      return;
+    }
+    if (form.audience === 'individual' && form.user_ids.length === 0) {
+      setError('Elegí al menos una persona.');
       return;
     }
 
@@ -333,10 +446,57 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                         { value: 'monotributista', label: 'Empleados monotributo' },
                         { value: 'dependency', label: 'Empleados relación de dependencia' },
                         { value: 'test', label: '🧪 Test (Agustina, Guido, Antonella)' },
+                        { value: 'area', label: 'Por área' },
+                        { value: 'lider', label: 'Por líder (su equipo directo)' },
+                        { value: 'individual', label: 'Personas específicas' },
                       ]}
                     />
                   </div>
                 </div>
+
+                {/* Picker condicional según audiencia */}
+                {form.audience === 'area' && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-secondary-foreground">Área</label>
+                    <SelectMenu
+                      ariaLabel="Área"
+                      className="w-full"
+                      value={form.department_id}
+                      onChange={(v) => setForm({ ...form, department_id: v })}
+                      options={[
+                        { value: '', label: 'Elegí un área…' },
+                        ...departments.map((d) => ({ value: d.id, label: d.name })),
+                      ]}
+                    />
+                  </div>
+                )}
+                {form.audience === 'lider' && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-secondary-foreground">
+                      Líder (se envía a su equipo directo)
+                    </label>
+                    <SelectMenu
+                      ariaLabel="Líder"
+                      className="w-full"
+                      value={form.manager_id}
+                      onChange={(v) => setForm({ ...form, manager_id: v })}
+                      options={[
+                        { value: '', label: 'Elegí un líder…' },
+                        ...leaders.map((l) => ({ value: l.id, label: `${l.first_name} ${l.last_name}` })),
+                      ]}
+                    />
+                  </div>
+                )}
+                {form.audience === 'individual' && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-secondary-foreground">Personas</label>
+                    <EmployeeMultiSelect
+                      employees={employees}
+                      selected={form.user_ids}
+                      onChange={(ids) => setForm({ ...form, user_ids: ids })}
+                    />
+                  </div>
+                )}
 
                 {/* Expires at */}
                 <div>
@@ -473,7 +633,7 @@ export function AdminMessagesClient({ messages: initialMessages }: { messages: M
                           {msg.status === 'draft' ? 'Borrador' : msg.status === 'published' ? 'Publicado' : 'Archivado'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-xs text-muted-foreground">{audienceLabel(msg.audience)}</td>
+                      <td className="px-4 py-4 text-xs text-muted-foreground">{labelForAudience(msg.audience)}</td>
                       <td className="px-4 py-4 text-center text-sm font-semibold text-secondary-foreground">{msg.recipients_total}</td>
                       <td className="px-4 py-4 text-center">
                         <span className="text-sm font-semibold text-secondary-foreground">{msg.read_count}</span>
