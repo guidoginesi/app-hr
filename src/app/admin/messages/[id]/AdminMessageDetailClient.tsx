@@ -26,6 +26,7 @@ type Recipient = {
   read_at: string | null;
   confirmed_at: string | null;
   dismissed_at: string | null;
+  email_status: string | null;
   employee: {
     first_name: string;
     last_name: string;
@@ -46,6 +47,14 @@ const priorityBadge: Record<string, string> = {
   info: 'bg-secondary text-muted-foreground',
   warning: 'bg-warning-subtle text-[var(--amber-600)]',
   critical: 'bg-danger-subtle text-[var(--red-600)]',
+};
+
+const emailStatusBadge: Record<string, { label: string; cls: string }> = {
+  sent: { label: 'Enviado', cls: 'bg-secondary text-muted-foreground' },
+  delivered: { label: 'Entregado', cls: 'bg-success-subtle text-[var(--green-700)]' },
+  delayed: { label: 'Demorado', cls: 'bg-warning-subtle text-[var(--amber-600)]' },
+  bounced: { label: 'Rebotado', cls: 'bg-danger-subtle text-[var(--red-600)]' },
+  complained: { label: 'Spam', cls: 'bg-danger-subtle text-[var(--red-600)]' },
 };
 
 function formatDate(dateStr: string | null): string {
@@ -188,6 +197,7 @@ export function AdminMessageDetailClient({
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Empleado</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Email</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Entregado</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mail</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Leído</th>
                   {message.require_confirmation && (
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confirmado</th>
@@ -211,6 +221,15 @@ export function AdminMessageDetailClient({
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{r.employee?.work_email || '—'}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(r.delivered_at)}</td>
+                    <td className="px-4 py-3">
+                      {r.email_status ? (
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${emailStatusBadge[r.email_status]?.cls ?? 'bg-secondary text-muted-foreground'}`}>
+                          {emailStatusBadge[r.email_status]?.label ?? r.email_status}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       {r.read_at ? (
                         <span className="text-xs text-muted-foreground">{formatDate(r.read_at)}</span>

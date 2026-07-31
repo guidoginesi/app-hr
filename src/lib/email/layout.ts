@@ -106,6 +106,12 @@ export function getEmailFrom(): string {
 }
 
 /** Base URL de la app para los CTA. */
+/** Reply-To para mails internos (env RESEND_REPLY_TO_EMAIL). Sin valor = no-reply. */
+export function getReplyTo(): string | undefined {
+  const raw = process.env.RESEND_REPLY_TO_EMAIL?.trim();
+  return raw || undefined;
+}
+
 export function getAppUrl(): string {
   return (
     process.env.APP_URL ||
