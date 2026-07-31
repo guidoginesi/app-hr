@@ -59,6 +59,22 @@ export function CapacitacionesClient() {
   const [error, setError] = useState<string | null>(null);
   const [uploadKey, setUploadKey] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const cancelRequest = async (id: string) => {
+    if (!window.confirm('¿Cancelar esta solicitud? Se libera el saldo reservado.')) return;
+    setCancellingId(id);
+    try {
+      const res = await fetch(`/api/portal/training/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+      if (res.ok) await fetchData();
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const upload = async (requestId: string, kind: string, file: File) => {
     setUploadKey(requestId + kind); setUploadError(null);
@@ -230,6 +246,12 @@ export function CapacitacionesClient() {
                   <UploadZone label="Subí el certificado de finalización" busy={uploadKey === r.id + 'certificate'} onFile={(f) => upload(r.id, 'certificate', f)} />
                 )}
                 {uploadError && uploadKey === null && <p className="mt-2 text-xs text-[var(--red-600)]">{uploadError}</p>}
+
+                {['requested', 'leader_approved', 'hr_approved'].includes(r.status) && (
+                  <div className="mt-3">
+                    <Button variant="ghost" size="sm" loading={cancellingId === r.id} onClick={() => cancelRequest(r.id)}>Cancelar solicitud</Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

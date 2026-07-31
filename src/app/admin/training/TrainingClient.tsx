@@ -7,6 +7,7 @@ import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import type { TrainingRequestWithDetails, TrainingRequestStatus } from '@/types/training';
 import { TRAINING_STATUS_LABELS } from '@/lib/training';
+import { BudgetView } from './BudgetView';
 
 const money = (n: number, cur: string) => `${cur} ${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n)}`;
 
@@ -36,6 +37,7 @@ const STATUS_OPTIONS = [
 const emptyInputs = { comment: '', motivo: '', mep: '' };
 
 export function TrainingClient() {
+  const [view, setView] = useState<'requests' | 'budget'>('requests');
   const [requests, setRequests] = useState<TrainingRequestWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -171,6 +173,16 @@ export function TrainingClient() {
 
   return (
     <div className="space-y-6">
+      <div className="inline-flex rounded-lg border border-[var(--border)] bg-white p-1 shadow-sm">
+        {(['requests', 'budget'] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            {v === 'requests' ? 'Solicitudes' : 'Budget'}
+          </button>
+        ))}
+      </div>
+
+      {view === 'budget' ? <BudgetView /> : (
+        <>
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex flex-wrap items-end gap-4 px-6 py-4">
           <div className="flex flex-col gap-1 min-w-[240px]">
@@ -228,6 +240,8 @@ export function TrainingClient() {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }
