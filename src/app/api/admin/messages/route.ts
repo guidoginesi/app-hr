@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { parseMessageFilters, queryMessages } from '@/lib/messagesQuery';
 
 const CreateMessageSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(200),
@@ -24,7 +25,7 @@ const CreateMessageSchema = z.object({
     .default({ all: true }),
 });
 
-// GET /api/admin/messages - List all broadcast messages with metrics
+// GET /api/admin/messages - Listado filtrado (server-side) con métricas
 export async function GET(req: NextRequest) {
   try {
     const { isAdmin, user } = await requireAdmin();
@@ -34,63 +35,10 @@ export async function GET(req: NextRequest) {
 
     const supabase = getSupabaseServer();
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 100);
-    const offset = parseInt(searchParams.get('offset') ?? '0', 10);
+    const filters = parseMessageFilters(searchParams);
+    const { items, total } = await queryMessages(supabase, filters);
 
-    let query = supabase
-      .from('messages')
-      .select(
-        `
-        id, type, title, priority, require_confirmation,
-        status, created_at, published_at, expires_at,
-        audience, created_by
-      `,
-        { count: 'exact' }
-      )
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    const { data: messages, error, count } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Enrich with recipient metrics
-    const messageIds = (messages ?? []).map((m: any) => m.id);
-
-    let metricsMap: Record<
-      string,
-      { recipients_total: number; read_count: number; confirmed_count: number }
-    > = {};
-
-    if (messageIds.length > 0) {
-      const { data: metrics } = await supabase
-        .from('message_recipients')
-        .select('message_id, read_at, confirmed_at')
-        .in('message_id', messageIds);
-
-      for (const m of messageIds) {
-        const rows = (metrics ?? []).filter((r: any) => r.message_id === m);
-        metricsMap[m] = {
-          recipients_total: rows.length,
-          read_count: rows.filter((r: any) => r.read_at !== null).length,
-          confirmed_count: rows.filter((r: any) => r.confirmed_at !== null).length,
-        };
-      }
-    }
-
-    const enriched = (messages ?? []).map((m: any) => ({
-      ...m,
-      ...(metricsMap[m.id] ?? { recipients_total: 0, read_count: 0, confirmed_count: 0 }),
-    }));
-
-    return NextResponse.json({ items: enriched, total: count ?? 0 });
+    return NextResponse.json({ items, total });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

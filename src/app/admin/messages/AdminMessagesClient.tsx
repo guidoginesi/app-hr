@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Button } from '@pow/ui/components/ui/button';
@@ -8,13 +8,13 @@ import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { RichTextEditor } from '../RichTextEditor';
-import { isMessageBodyEmpty, getMessageBodyPlainText } from '@/lib/messageBody';
+import { isMessageBodyEmpty } from '@/lib/messageBody';
 
 type Message = {
   id: string;
   type: 'broadcast' | 'system';
   title: string;
-  body: string;
+  body?: string;
   priority: 'info' | 'warning' | 'critical';
   require_confirmation: boolean;
   status: 'draft' | 'published' | 'archived';
@@ -31,6 +31,8 @@ type Message = {
 
 const isAutomatic = (m: Message) =>
   m.type === 'system' || (m.metadata as { automated?: boolean } | null)?.automated === true;
+
+const PAGE_SIZE = 50;
 
 const statusBadge: Record<string, string> = {
   draft: 'bg-secondary text-muted-foreground',
@@ -105,6 +107,93 @@ function audienceLabel(audience: Record<string, unknown> | null): string {
   return 'Personalizado';
 }
 
+function RecipientPicker({
+  value,
+  onChange,
+}: {
+  value: { user_id: string; name: string } | null;
+  onChange: (v: { user_id: string; name: string } | null) => void;
+}) {
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState<{ user_id: string; name: string; email: string }[]>([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (q.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/employees/search?q=${encodeURIComponent(q.trim())}`);
+        const data = await res.json();
+        if (!cancelled) setResults(data.items ?? []);
+      } catch {
+        /* ignore */
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [q]);
+
+  if (value) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-secondary px-2.5 py-1.5 text-xs">
+        <span>
+          Recibido por: <b>{value.name}</b>
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-muted-foreground hover:text-foreground"
+          aria-label="Quitar filtro de destinatario"
+        >
+          ✕
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <input
+        type="search"
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="Recibido por…"
+        className="w-44 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+      />
+      {open && results.length > 0 && (
+        <div className="absolute z-30 mt-1 max-h-52 w-64 overflow-y-auto rounded-lg border border-[var(--border)] bg-white shadow-lg">
+          {results.map((r) => (
+            <button
+              key={r.user_id}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onChange({ user_id: r.user_id, name: r.name });
+                setQ('');
+                setOpen(false);
+              }}
+              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
+            >
+              {r.name} <span className="text-xs text-muted-foreground">{r.email}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmployeeMultiSelect({
   employees,
   selected,
@@ -161,16 +250,21 @@ function EmployeeMultiSelect({
 
 export function AdminMessagesClient({
   messages: initialMessages,
+  total: initialTotal,
   departments,
   employees,
   leaders,
 }: {
   messages: Message[];
+  total: number;
   departments: MsgDept[];
   employees: MsgEmp[];
   leaders: MsgEmp[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [total, setTotal] = useState(initialTotal);
+  const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<CreateForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
@@ -179,6 +273,14 @@ export function AdminMessagesClient({
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [origin, setOrigin] = useState<'todos' | 'manuales' | 'automaticos'>('todos');
+  const [priority, setPriority] = useState('');
+  const [status, setStatus] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [dateField, setDateField] = useState<'created_at' | 'published_at'>('created_at');
+  const [readState, setReadState] = useState<'todos' | 'con_no_leidos' | 'todos_leidos'>('todos');
+  const [recipient, setRecipient] = useState<{ user_id: string; name: string } | null>(null);
+  const [offset, setOffset] = useState(0);
 
   const audiencePayload = (a: CreateForm['audience']) => {
     if (a === 'all') return { all: true };
@@ -247,34 +349,24 @@ export function AdminMessagesClient({
         return;
       }
 
-      const newMessage: Message = {
-        ...data,
-        recipients_total: 0,
-        read_count: 0,
-        confirmed_count: 0,
-      };
-
       if (publishNow) {
         const pubRes = await fetch(`/api/admin/messages/${data.id}/publish`, { method: 'POST' });
         const pubData = await pubRes.json();
         if (!pubRes.ok) {
           setError(pubData.error ?? 'Error al publicar');
-          setMessages((prev) => [{ ...newMessage, status: 'draft' }, ...prev]);
           setShowCreate(false);
           setForm(DEFAULT_FORM);
+          setRefreshKey((k) => k + 1);
           return;
         }
-        newMessage.status = 'published';
-        newMessage.published_at = new Date().toISOString();
-        newMessage.recipients_total = pubData.recipients_created ?? 0;
         setSuccess(`Mensaje publicado para ${pubData.recipients_created ?? 0} usuarios.`);
       } else {
         setSuccess('Borrador guardado.');
       }
 
-      setMessages((prev) => [newMessage, ...prev]);
       setShowCreate(false);
       setForm(DEFAULT_FORM);
+      setRefreshKey((k) => k + 1);
     } catch {
       setError('Error de red');
     } finally {
@@ -292,19 +384,8 @@ export function AdminMessagesClient({
         setError(data.error ?? 'Error al publicar');
         return;
       }
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === msgId
-            ? {
-                ...m,
-                status: 'published',
-                published_at: new Date().toISOString(),
-                recipients_total: data.recipients_created ?? 0,
-              }
-            : m
-        )
-      );
       setSuccess(`Publicado para ${data.recipients_created ?? 0} usuarios.`);
+      setRefreshKey((k) => k + 1);
     } catch {
       setError('Error de red');
     } finally {
@@ -312,16 +393,91 @@ export function AdminMessagesClient({
     }
   };
 
-  const q = search.trim().toLowerCase();
-  const filtered = messages.filter((m) => {
-    if (origin === 'manuales' && isAutomatic(m)) return false;
-    if (origin === 'automaticos' && !isAutomatic(m)) return false;
-    if (q) {
-      const hay = `${m.title} ${getMessageBodyPlainText(m.body ?? '')}`.toLowerCase();
-      if (!hay.includes(q)) return false;
+  const filterParams = () => {
+    const p = new URLSearchParams();
+    if (search.trim()) p.set('q', search.trim());
+    if (origin !== 'todos') p.set('origin', origin);
+    if (priority) p.set('priority', priority);
+    if (status) p.set('status', status);
+    if (dateFrom) p.set('from', dateFrom);
+    if (dateTo) p.set('to', dateTo);
+    if (dateFrom || dateTo) p.set('dateField', dateField);
+    if (readState !== 'todos') p.set('readState', readState);
+    if (recipient) p.set('recipient', recipient.user_id);
+    return p;
+  };
+
+  // Al cambiar cualquier filtro, volver a la página 1.
+  const firstFilterRun = useRef(true);
+  useEffect(() => {
+    if (firstFilterRun.current) return;
+    setOffset(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, origin, priority, status, dateFrom, dateTo, dateField, readState, recipient]);
+
+  // Fetch server-side (debounced) ante cambios de filtro / página / refresh.
+  // Se saltea el primer render (usa los datos del SSR).
+  const skipFirstFetch = useRef(true);
+  useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      firstFilterRun.current = false;
+      return;
     }
-    return true;
-  });
+    let cancelled = false;
+    setLoading(true);
+    const p = filterParams();
+    p.set('limit', String(PAGE_SIZE));
+    p.set('offset', String(offset));
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/messages?${p.toString()}`);
+        const data = await res.json();
+        if (!cancelled && res.ok) {
+          setMessages(data.items ?? []);
+          setTotal(data.total ?? 0);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, origin, priority, status, dateFrom, dateTo, dateField, readState, recipient, offset, refreshKey]);
+
+  const anyFilter =
+    !!search.trim() ||
+    origin !== 'todos' ||
+    !!priority ||
+    !!status ||
+    !!dateFrom ||
+    !!dateTo ||
+    readState !== 'todos' ||
+    !!recipient;
+
+  const clearFilters = () => {
+    setSearch('');
+    setOrigin('todos');
+    setPriority('');
+    setStatus('');
+    setDateFrom('');
+    setDateTo('');
+    setDateField('created_at');
+    setReadState('todos');
+    setRecipient(null);
+  };
+
+  const exportCsv = (granularity: 'messages' | 'recipients') => {
+    const p = filterParams();
+    p.set('granularity', granularity);
+    window.location.href = `/api/admin/messages/export?${p.toString()}`;
+  };
+
+  const pageStart = total === 0 ? 0 : offset + 1;
+  const pageEnd = offset + messages.length;
 
   return (
     <div className="space-y-4">
@@ -345,36 +501,126 @@ export function AdminMessagesClient({
             </div>
           )}
 
-          {/* Toolbar: búsqueda + filtro de origen + nuevo */}
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por palabra clave…"
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring sm:w-72"
-            />
-            <div className="inline-flex rounded-lg border border-[var(--border)] p-0.5">
-              {([
-                ['todos', 'Todos'],
-                ['manuales', 'Manuales'],
-                ['automaticos', 'Automáticos'],
-              ] as const).map(([val, label]) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => setOrigin(val)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    origin === val ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+          {/* Toolbar */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por palabra clave…"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring sm:w-72"
+              />
+              <div className="inline-flex rounded-lg border border-[var(--border)] p-0.5">
+                {([
+                  ['todos', 'Todos'],
+                  ['manuales', 'Manuales'],
+                  ['automaticos', 'Automáticos'],
+                ] as const).map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setOrigin(val)}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      origin === val ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <Button className="ml-auto" onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}>
+                Nuevo mensaje
+              </Button>
             </div>
-            <Button className="ml-auto" onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}>
-              Nuevo mensaje
-            </Button>
+
+            {/* Filtros avanzados */}
+            <div className="flex flex-wrap items-center gap-2">
+              <SelectMenu
+                ariaLabel="Prioridad"
+                className="min-w-[150px]"
+                value={priority}
+                onChange={setPriority}
+                options={[
+                  { value: '', label: 'Prioridad: todas' },
+                  { value: 'info', label: 'Informativo' },
+                  { value: 'warning', label: 'Advertencia' },
+                  { value: 'critical', label: 'Crítico' },
+                ]}
+              />
+              <SelectMenu
+                ariaLabel="Estado"
+                className="min-w-[150px]"
+                value={status}
+                onChange={setStatus}
+                options={[
+                  { value: '', label: 'Estado: todos' },
+                  { value: 'draft', label: 'Borrador' },
+                  { value: 'published', label: 'Publicado' },
+                  { value: 'archived', label: 'Archivado' },
+                ]}
+              />
+              <SelectMenu
+                ariaLabel="Estado de lectura"
+                className="min-w-[160px]"
+                value={readState}
+                onChange={(v) => setReadState(v as typeof readState)}
+                options={[
+                  { value: 'todos', label: 'Lectura: todas' },
+                  { value: 'con_no_leidos', label: 'Con no leídos' },
+                  { value: 'todos_leidos', label: 'Todos leídos' },
+                ]}
+              />
+              <div className="flex items-center gap-1.5">
+                <SelectMenu
+                  ariaLabel="Campo de fecha"
+                  value={dateField}
+                  onChange={(v) => setDateField(v as typeof dateField)}
+                  options={[
+                    { value: 'created_at', label: 'Creación' },
+                    { value: 'published_at', label: 'Publicación' },
+                  ]}
+                />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  aria-label="Desde"
+                  className="rounded-lg border border-[var(--border)] px-2 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <span className="text-xs text-muted-foreground">→</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  aria-label="Hasta"
+                  className="rounded-lg border border-[var(--border)] px-2 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              <RecipientPicker value={recipient} onChange={setRecipient} />
+              {anyFilter && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-medium text-[var(--brand-strong)] hover:underline"
+                >
+                  Limpiar
+                </button>
+              )}
+              <div className="ml-auto flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => exportCsv('messages')}>
+                  Exportar CSV
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => exportCsv('recipients')}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+                  title="Exporta una fila por destinatario (auditoría de lectura)"
+                >
+                  Detalle
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Create sheet */}
@@ -584,11 +830,25 @@ export function AdminMessagesClient({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </div>
-              <p className="mt-3 font-semibold text-secondary-foreground">No hay mensajes todavía</p>
-              <p className="mt-1 text-sm text-muted-foreground">Crea el primer anuncio para tu organización</p>
-              <Button className="mt-4" onClick={() => setShowCreate(true)}>
-                Nuevo mensaje
-              </Button>
+              <p className="mt-3 font-semibold text-secondary-foreground">
+                {anyFilter ? 'No hay mensajes que coincidan' : 'No hay mensajes todavía'}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {anyFilter ? 'Probá ajustar o limpiar los filtros.' : 'Crea el primer anuncio para tu organización'}
+              </p>
+              {anyFilter ? (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="mt-4 text-sm font-medium text-[var(--brand-strong)] hover:underline"
+                >
+                  Limpiar filtros
+                </button>
+              ) : (
+                <Button className="mt-4" onClick={() => setShowCreate(true)}>
+                  Nuevo mensaje
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
@@ -606,14 +866,7 @@ export function AdminMessagesClient({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)] bg-white">
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-sm text-muted-foreground">
-                        No hay mensajes que coincidan con la búsqueda o el filtro.
-                      </td>
-                    </tr>
-                  )}
-                  {filtered.map((msg) => (
+                  {messages.map((msg) => (
                     <tr key={msg.id} className="hover:bg-muted">
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-2">
@@ -685,6 +938,30 @@ export function AdminMessagesClient({
                   ))}
                 </tbody>
               </table>
+              <div className="flex items-center justify-between border-t border-[var(--border)] px-6 py-3 text-xs text-muted-foreground">
+                <span>
+                  {pageStart}–{pageEnd} de {total}
+                  {loading && ' · cargando…'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={offset === 0 || loading}
+                    onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+                    className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 font-medium text-muted-foreground hover:bg-muted disabled:opacity-40"
+                  >
+                    ← Anterior
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pageEnd >= total || loading}
+                    onClick={() => setOffset(offset + PAGE_SIZE)}
+                    className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 font-medium text-muted-foreground hover:bg-muted disabled:opacity-40"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              </div>
             </div>
           )}
     </div>
