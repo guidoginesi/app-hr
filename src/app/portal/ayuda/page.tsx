@@ -54,6 +54,45 @@ export default async function PortalAyudaPage() {
             </ManualStep>
           </div>
         </div>
+
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-foreground">Fondo de Capacitaciones</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Cómo pedir una capacitación y seguir tu reintegro.</p>
+
+          <div className="mt-4 rounded-xl border border-[var(--border)] bg-muted p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">En resumen</p>
+            <p className="mt-2 text-sm text-foreground">
+              Tenés un budget anual en <b>USD</b> para capacitarte. Pedís el curso → lo aprueban tu <b>líder</b> y <b>People</b> →
+              subís la <b>factura</b> y cobrás el <b>50%</b> con tu sueldo → al terminar subís el <b>certificado</b> y cobrás el <b>50%</b> restante.
+            </p>
+          </div>
+
+          <div className="mt-8 space-y-10">
+            <ManualStep n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Capacitaciones' resaltado en Recursos.">
+              <p>En el menú del portal, entrá a <b>Capacitaciones</b>. Ahí ves tu budget y solicitás.</p>
+            </ManualStep>
+
+            <ManualStep n={2} title="Tu budget" imageAlt="Las tres cards: Budget anual (USD 500), Consumido/comprometido y Disponible.">
+              <p>Arriba ves tu <b>budget anual</b>, lo <b>consumido/comprometido</b> y lo <b>disponible</b>. El saldo se reinicia cada año calendario (lo no usado se pierde).</p>
+            </ManualStep>
+
+            <ManualStep n={3} title="Solicitar" imageAlt="Formulario 'Nueva solicitud' con datos del curso, costo y moneda (USD/ARS).">
+              <p>Tocá <b>Solicitar capacitación</b> y completá los datos (curso, proveedor, fechas, <b>costo</b> y <b>moneda</b>). Podés cargarlo en USD o ARS. Necesitás <b>6 meses</b> de antigüedad y saldo disponible.</p>
+            </ManualStep>
+
+            <ManualStep n={4} title="Seguir el estado" imageAlt="Una solicitud con el stepper: Solicitado → Aprob. líder → Aprob. HR → Factura → Pago 50% → Certificado → Pago final.">
+              <p>Cada solicitud muestra un <b>stepper</b> con el avance. Podés <b>cancelar</b> mientras no se haya ejecutado (se libera el saldo reservado).</p>
+            </ManualStep>
+
+            <ManualStep n={5} title="Cargar factura y certificado" imageAlt="Dropzone para subir la factura (tras la aprobación de HR) y luego el certificado.">
+              <p>Cuando People aprueba, subís la <b>factura</b> para cobrar el 50% inicial. Al terminar el curso, subís el <b>certificado</b> para el 50% final.</p>
+            </ManualStep>
+
+            <ManualStep n={6} title="Qué pasa después" imageAlt="Ejemplo de email de aprobación / pago de la capacitación.">
+              <p>Te llega un <b>email</b> en cada paso. El reintegro se paga en <b>pesos</b> (al MEP del día) <b>junto con tu sueldo</b>. Si dejás Pow antes de terminar, no se paga el 50% final.</p>
+            </ManualStep>
+          </div>
+        </div>
       </div>
     </PortalShell>
   );

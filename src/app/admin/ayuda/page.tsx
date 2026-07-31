@@ -12,6 +12,12 @@ const MANUALS = [
     title: 'Adelantos de sueldo',
     desc: 'Solicitud, validación automática, aprobación (RRHH → Administración), transferencia y descuento en la liquidación.',
   },
+  {
+    href: '/admin/ayuda/capacitaciones',
+    emoji: '🎓',
+    title: 'Fondo de Capacitaciones',
+    desc: 'Solicitud, aprobación (líder → HR), cargas de factura/certificado, pagos con MEP y reintegro por liquidación, y vista de budget.',
+  },
 ];
 
 export default async function AyudaPage() {
