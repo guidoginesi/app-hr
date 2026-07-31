@@ -57,6 +57,21 @@ export function CapacitacionesClient() {
   const [form, setForm] = useState({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadKey, setUploadKey] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const upload = async (requestId: string, kind: string, file: File) => {
+    setUploadKey(requestId + kind); setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('kind', kind);
+      const res = await fetch(`/api/portal/training/${requestId}/upload`, { method: 'POST', body: fd });
+      if (!res.ok) { const d = await res.json(); setUploadError(d.error ?? 'No se pudo subir el archivo.'); return; }
+      await fetchData();
+    } catch { setUploadError('No se pudo subir el archivo.'); }
+    finally { setUploadKey(null); }
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -207,6 +222,14 @@ export function CapacitacionesClient() {
                   <p className="mt-2 text-xs text-muted-foreground"><span className="font-medium text-foreground">Motivo:</span> {r.rejection_reason}</p>
                 )}
                 <Stepper status={r.status} />
+
+                {r.status === 'hr_approved' && (
+                  <UploadZone label="Subí la factura para el pago del 50% inicial" busy={uploadKey === r.id + 'invoice_initial'} onFile={(f) => upload(r.id, 'invoice_initial', f)} />
+                )}
+                {r.status === 'initial_paid' && (
+                  <UploadZone label="Subí el certificado de finalización" busy={uploadKey === r.id + 'certificate'} onFile={(f) => upload(r.id, 'certificate', f)} />
+                )}
+                {uploadError && uploadKey === null && <p className="mt-2 text-xs text-[var(--red-600)]">{uploadError}</p>}
               </div>
             ))}
           </div>
@@ -222,5 +245,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <label className="text-xs font-medium text-muted-foreground">{label}</label>
       {children}
     </div>
+  );
+}
+
+function UploadZone({ label, busy, onFile }: { label: string; busy: boolean; onFile: (f: File) => void }) {
+  return (
+    <label className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--brand)] bg-accent px-4 py-5 text-center transition-colors hover:bg-[var(--orange-100)]">
+      <span className="text-sm font-medium text-foreground">{busy ? 'Subiendo…' : label}</span>
+      <span className="text-xs text-muted-foreground">PDF, JPG o PNG · máx. 10 MB</span>
+      <input
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        className="hidden"
+        disabled={busy}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.currentTarget.value = ''; }}
+      />
+    </label>
   );
 }
