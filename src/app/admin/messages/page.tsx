@@ -16,7 +16,7 @@ export default async function AdminMessagesPage() {
 
   const { data: messages } = await supabase
     .from('messages')
-    .select('id, type, title, priority, require_confirmation, status, created_at, published_at, expires_at, audience')
+    .select('id, type, title, body, priority, require_confirmation, status, created_at, published_at, expires_at, audience, created_by, metadata')
     .order('created_at', { ascending: false })
     .limit(100);
 

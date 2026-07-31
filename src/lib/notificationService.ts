@@ -213,10 +213,9 @@ export async function getUserIdsForRoles(roles: string[]): Promise<string[]> {
  * email for role holders that are not employees (e.g. the generic admin /
  * administración accounts). Reusable for any role-targeted email (digests, etc.).
  */
-export async function getRoleEmails(
-  roles: string[],
+export async function getEmailsForUserIds(
+  userIds: string[],
 ): Promise<{ userId: string; email: string; name: string }[]> {
-  const userIds = await getUserIdsForRoles(roles);
   if (userIds.length === 0) return [];
 
   const supabase = getSupabaseServer();
@@ -251,9 +250,16 @@ export async function getRoleEmails(
         }
       }
     } catch (err) {
-      console.error('[getRoleEmails] auth.users fallback failed:', err);
+      console.error('[getEmailsForUserIds] auth.users fallback failed:', err);
     }
   }
 
   return out;
+}
+
+export async function getRoleEmails(
+  roles: string[],
+): Promise<{ userId: string; email: string; name: string }[]> {
+  const userIds = await getUserIdsForRoles(roles);
+  return getEmailsForUserIds(userIds);
 }
