@@ -12,6 +12,7 @@ const CreateMessageSchema = z.object({
   expires_at: z.string().datetime().optional().nullable(),
   send_to_google_chat: z.boolean().default(false),
   send_email: z.boolean().default(false),
+  template_context: z.record(z.string(), z.string()).optional(),
   audience: z
     .union([
       z.object({ all: z.literal(true) }),
@@ -76,6 +77,10 @@ export async function POST(req: NextRequest) {
         send_to_google_chat: parsed.data.send_to_google_chat,
         send_email: parsed.data.send_email,
         audience: parsed.data.audience,
+        metadata:
+          parsed.data.template_context && Object.keys(parsed.data.template_context).length
+            ? { template_context: parsed.data.template_context }
+            : null,
         status: 'draft',
         created_by: user.id,
       })

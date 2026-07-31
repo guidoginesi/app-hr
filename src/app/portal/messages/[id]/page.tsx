@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
 import { PortalShell } from '@/app/portal/PortalShell';
 import { MessageDetailClient } from './MessageDetailClient';
+import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,14 @@ export default async function MessageDetailPage({ params }: Props) {
   }
 
   const message = recipient.messages as any;
+
+  // Render-on-read de variables de plantilla para el destinatario actual
+  if (hasTemplateTokens(message.title, message.body)) {
+    const ctx = (message.metadata?.template_context ?? {}) as Record<string, string>;
+    const vars = buildRecipientVars(auth.employee as any, ctx);
+    message.title = renderTemplate(message.title, vars);
+    message.body = renderTemplate(message.body, vars, true);
+  }
 
   // Mark as read (server-side, fire-and-forget)
   if (!recipient.read_at) {

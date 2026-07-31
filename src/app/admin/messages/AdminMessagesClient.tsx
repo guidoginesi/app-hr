@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { RichTextEditor } from '../RichTextEditor';
 import { isMessageBodyEmpty } from '@/lib/messageBody';
+import { TEMPLATE_VARS, hasTemplateTokens } from '@/lib/templateVars';
 
 type Message = {
   id: string;
@@ -56,6 +57,8 @@ type MsgEmp = {
   manager_id: string | null;
 };
 
+type MsgTemplate = { id: string; name: string; title: string; body: string };
+
 type CreateForm = {
   title: string;
   body: string;
@@ -75,6 +78,7 @@ type CreateForm = {
   department_id: string;
   manager_id: string;
   user_ids: string[];
+  periodo: string;
   send_to_google_chat: boolean;
   send_email: boolean;
 };
@@ -89,6 +93,7 @@ const DEFAULT_FORM: CreateForm = {
   department_id: '',
   manager_id: '',
   user_ids: [],
+  periodo: '',
   send_to_google_chat: false,
   send_email: false,
 };
@@ -254,14 +259,18 @@ export function AdminMessagesClient({
   departments,
   employees,
   leaders,
+  templates: initialTemplates,
 }: {
   messages: Message[];
   total: number;
   departments: MsgDept[];
   employees: MsgEmp[];
   leaders: MsgEmp[];
+  templates: MsgTemplate[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [templates, setTemplates] = useState<MsgTemplate[]>(initialTemplates);
+  const [templateId, setTemplateId] = useState('');
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -304,6 +313,33 @@ export function AdminMessagesClient({
     return audienceLabel(audience);
   };
 
+  const applyTemplate = (id: string) => {
+    setTemplateId(id);
+    const t = templates.find((x) => x.id === id);
+    if (t) setForm((f) => ({ ...f, title: t.title || f.title, body: t.body || f.body }));
+  };
+  const insertVar = (token: string) => setForm((f) => ({ ...f, body: `${f.body} {{${token}}}` }));
+  const saveAsTemplate = async () => {
+    const name = window.prompt('Nombre de la plantilla:');
+    if (!name?.trim()) return;
+    try {
+      const res = await fetch('/api/admin/messages/manual-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), title: form.title, body: form.body }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTemplates((prev) => [data, ...prev]);
+        setSuccess('Plantilla guardada.');
+      } else {
+        setError(data.error ?? 'No se pudo guardar la plantilla.');
+      }
+    } catch {
+      setError('Error de red al guardar la plantilla.');
+    }
+  };
+
   const handleCreate = async (publishNow: boolean) => {
     if (!form.title.trim() || isMessageBodyEmpty(form.body)) {
       setError('Título y cuerpo son requeridos');
@@ -336,6 +372,7 @@ export function AdminMessagesClient({
         audience: audiencePayload(form.audience),
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
+      if (form.periodo.trim()) payload.template_context = { periodo: form.periodo.trim() };
 
       const res = await fetch('/api/admin/messages', {
         method: 'POST',
@@ -659,6 +696,59 @@ export function AdminMessagesClient({
                     onChange={(html) => setForm({ ...form, body: html })}
                     placeholder="Redactá el contenido del mensaje..."
                   />
+                </div>
+
+                {/* Plantillas y variables */}
+                <div className="space-y-2.5 rounded-lg border border-[var(--border)] bg-muted p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-secondary-foreground">Plantilla:</span>
+                    <SelectMenu
+                      ariaLabel="Plantilla"
+                      className="min-w-[180px]"
+                      value={templateId}
+                      onChange={applyTemplate}
+                      options={[
+                        { value: '', label: 'Ninguna' },
+                        ...templates.map((t) => ({ value: t.id, label: t.name })),
+                      ]}
+                    />
+                    <button
+                      type="button"
+                      onClick={saveAsTemplate}
+                      className="text-xs font-medium text-[var(--brand-strong)] hover:underline"
+                    >
+                      Guardar como plantilla
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">Insertar variable:</span>
+                    {TEMPLATE_VARS.map((v) => (
+                      <button
+                        key={v.token}
+                        type="button"
+                        onClick={() => insertVar(v.token)}
+                        className="rounded border border-[var(--border)] bg-white px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground hover:bg-secondary"
+                        title={`Insertar {{${v.token}}}`}
+                      >
+                        {`{{${v.token}}}`}
+                      </button>
+                    ))}
+                  </div>
+                  {hasTemplateTokens(form.title, form.body) && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="text-xs font-medium text-secondary-foreground">Período</label>
+                      <input
+                        type="text"
+                        value={form.periodo}
+                        onChange={(e) => setForm({ ...form, periodo: e.target.value })}
+                        placeholder="Ej. Julio 2026"
+                        className="rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <span className="text-[11px] text-muted-foreground">
+                        Las variables se personalizan por destinatario al enviar.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Row: priority + audience */}

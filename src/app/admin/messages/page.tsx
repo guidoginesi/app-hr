@@ -37,6 +37,11 @@ export default async function AdminMessagesPage() {
   const managerIds = new Set(employees.filter((e) => e.manager_id).map((e) => e.manager_id as string));
   const leaders = employees.filter((e) => managerIds.has(e.id));
 
+  const { data: templates } = await supabase
+    .from('message_templates')
+    .select('id, name, title, body')
+    .order('created_at', { ascending: false });
+
   return (
     <MessagesLayout active="mensajes">
       <AdminMessagesClient
@@ -45,6 +50,7 @@ export default async function AdminMessagesPage() {
         departments={departments ?? []}
         employees={employees}
         leaders={leaders}
+        templates={templates ?? []}
       />
     </MessagesLayout>
   );

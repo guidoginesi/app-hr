@@ -6,6 +6,7 @@ import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 import { sendBatchEmails } from '@/lib/emailService';
 import { renderEmail, getAppUrl } from '@/lib/email/layout';
+import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 const BATCH_SIZE = 500;
 
@@ -97,23 +98,44 @@ export async function POST(
       try {
         const recipientEmails = await getEmailsForUserIds(userIds);
         if (recipientEmails.length > 0) {
-          const preview = getMessageBodyPlainText(message.body).slice(0, 200);
-          const previewText = preview.length >= 200 ? `${preview.trimEnd()}…` : preview;
-          const html = renderEmail({
-            title: message.title,
-            contextLabel: 'Pow · Mensajes',
-            preheader: previewText || 'Tenés un mensaje nuevo en el portal',
-            intro: previewText || 'Tenés un mensaje nuevo esperándote en el portal.',
-            cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
-            outro: 'Entrá al portal para leer el mensaje completo.',
-          });
-          await sendBatchEmails(
-            recipientEmails.map((r) => ({
-              to: r.email,
-              subject: `Nuevo mensaje: ${message.title}`,
-              html,
-            })),
-          );
+          const ctx = (message.metadata?.template_context ?? {}) as Record<string, string>;
+          if (hasTemplateTokens(message.title, message.body)) {
+            // Plantilla con variables: mail personalizado por destinatario (con el cuerpo renderizado).
+            const { data: emps } = await supabase
+              .from('employees')
+              .select('user_id, first_name, last_name, dni, cuil')
+              .in('user_id', userIds);
+            const empByUser = new Map<string, any>((emps ?? []).map((e: any) => [e.user_id, e]));
+            const items = recipientEmails.map((r) => {
+              const vars = buildRecipientVars(empByUser.get(r.userId) ?? null, ctx);
+              const title = renderTemplate(message.title, vars);
+              return {
+                to: r.email,
+                subject: `Nuevo mensaje: ${title}`,
+                html: renderEmail({
+                  title,
+                  contextLabel: 'Pow · Mensajes',
+                  bodyHtml: renderTemplate(message.body, vars, true),
+                  cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
+                }),
+              };
+            });
+            await sendBatchEmails(items);
+          } else {
+            const preview = getMessageBodyPlainText(message.body).slice(0, 200);
+            const previewText = preview.length >= 200 ? `${preview.trimEnd()}…` : preview;
+            const html = renderEmail({
+              title: message.title,
+              contextLabel: 'Pow · Mensajes',
+              preheader: previewText || 'Tenés un mensaje nuevo en el portal',
+              intro: previewText || 'Tenés un mensaje nuevo esperándote en el portal.',
+              cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
+              outro: 'Entrá al portal para leer el mensaje completo.',
+            });
+            await sendBatchEmails(
+              recipientEmails.map((r) => ({ to: r.email, subject: `Nuevo mensaje: ${message.title}`, html })),
+            );
+          }
         }
       } catch (emailError: any) {
         console.error('[publish] email fan-out error:', emailError.message);
@@ -124,7 +146,10 @@ export async function POST(
     if (message.send_to_google_chat) {
       try {
         const priorityEmoji = message.priority === 'critical' ? '🚨' : message.priority === 'warning' ? '⚠️' : 'ℹ️';
-        const chatText = `${priorityEmoji} *${message.title}*\n\n${getMessageBodyPlainText(message.body)}`;
+        const chatVars = buildRecipientVars(null, (message.metadata?.template_context ?? {}) as Record<string, string>);
+        const chatTitle = renderTemplate(message.title, chatVars);
+        const chatBody = renderTemplate(getMessageBodyPlainText(message.body), chatVars);
+        const chatText = `${priorityEmoji} *${chatTitle}*\n\n${chatBody}`;
         await sendGoogleChatMessage(chatText);
       } catch (chatError: any) {
         console.error('[publish] Google Chat error:', chatError.message);

@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
 import { PortalShell } from '@/app/portal/PortalShell';
 import { MessagesInboxClient } from './MessagesInboxClient';
+import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +46,21 @@ export default async function MessagesInboxPage() {
     return true;
   });
 
+  // Render-on-read de variables de plantilla para el destinatario actual
+  const emp = auth.employee as any;
+  const rendered = filtered.map((item: any) => {
+    const msg = item.messages;
+    if (msg && hasTemplateTokens(msg.title, msg.body)) {
+      const ctx = (msg.metadata?.template_context ?? {}) as Record<string, string>;
+      const vars = buildRecipientVars(emp, ctx);
+      return { ...item, messages: { ...msg, title: renderTemplate(msg.title, vars), body: renderTemplate(msg.body, vars, true) } };
+    }
+    return item;
+  });
+
   return (
     <PortalShell employee={auth.employee} isLeader={auth.isLeader} active="messages">
-      <MessagesInboxClient items={filtered as any} />
+      <MessagesInboxClient items={rendered as any} />
     </PortalShell>
   );
 }
