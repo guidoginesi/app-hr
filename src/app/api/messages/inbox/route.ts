@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 // GET /api/messages/inbox - Get authenticated user's message inbox
 export async function GET(req: NextRequest) {
@@ -62,6 +63,25 @@ export async function GET(req: NextRequest) {
     // Filter out items where message join is null (filtered out by the .eq on related table)
     const items = (data ?? []).filter((item: any) => item.messages !== null);
 
+    // Render-on-read de variables de plantilla para el destinatario actual
+    let renderedItems = items;
+    if (items.some((it: any) => hasTemplateTokens(it.messages?.title, it.messages?.body))) {
+      const { data: emp } = await supabase
+        .from('employees')
+        .select('first_name, last_name, dni, cuil')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      renderedItems = items.map((it: any) => {
+        const msg = it.messages;
+        if (msg && hasTemplateTokens(msg.title, msg.body)) {
+          const ctx = (msg.metadata?.template_context ?? {}) as Record<string, string>;
+          const vars = buildRecipientVars(emp ?? null, ctx);
+          return { ...it, messages: { ...msg, title: renderTemplate(msg.title, vars), body: renderTemplate(msg.body, vars, true) } };
+        }
+        return it;
+      });
+    }
+
     // Unread count (no read_at)
     const { count: unreadCount } = await supabase
       .from('message_recipients')
@@ -87,7 +107,7 @@ export async function GET(req: NextRequest) {
     }).length;
 
     return NextResponse.json({
-      items,
+      items: renderedItems,
       total: count ?? 0,
       unread_count: unreadCount ?? 0,
       pending_confirm_count: pendingConfirmCount,
