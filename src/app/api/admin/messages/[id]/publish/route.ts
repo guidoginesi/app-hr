@@ -5,7 +5,7 @@ import { resolveAudienceUserIds, getEmailsForUserIds } from '@/lib/notificationS
 import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 import { sendBatchEmails } from '@/lib/emailService';
-import { renderEmail, getAppUrl } from '@/lib/email/layout';
+import { renderEmail, getAppUrl, getReplyTo } from '@/lib/email/layout';
 import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 const BATCH_SIZE = 500;
@@ -50,6 +50,21 @@ export async function POST(
 
     // Resolve target users from audience
     const audience = message.audience ?? { all: true };
+
+    // Gate de envío masivo: audiencias amplias (todos / roles / tipo) requieren el permiso mass_sender.
+    const requiresMassSend =
+      ('all' in audience && (audience as any).all) || 'roles' in audience || 'employment_type' in audience;
+    if (requiresMassSend) {
+      const { data: userRoles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+      const canMassSend = (userRoles ?? []).some((r: any) => r.role === 'mass_sender');
+      if (!canMassSend) {
+        return NextResponse.json(
+          { error: 'No tenés permiso de envío masivo para esta audiencia. Pedí el permiso a un administrador.' },
+          { status: 403 },
+        );
+      }
+    }
+
     const userIds = await resolveAudienceUserIds(audience);
 
     if (userIds.length === 0) {
@@ -98,7 +113,10 @@ export async function POST(
       try {
         const recipientEmails = await getEmailsForUserIds(userIds);
         if (recipientEmails.length > 0) {
+          const replyTo = getReplyTo();
           const ctx = (message.metadata?.template_context ?? {}) as Record<string, string>;
+          let items: { to: string; subject: string; html: string; replyTo?: string }[];
+
           if (hasTemplateTokens(message.title, message.body)) {
             // Plantilla con variables: mail personalizado por destinatario (con el cuerpo renderizado).
             const { data: emps } = await supabase
@@ -106,12 +124,13 @@ export async function POST(
               .select('user_id, first_name, last_name, dni, cuil')
               .in('user_id', userIds);
             const empByUser = new Map<string, any>((emps ?? []).map((e: any) => [e.user_id, e]));
-            const items = recipientEmails.map((r) => {
+            items = recipientEmails.map((r) => {
               const vars = buildRecipientVars(empByUser.get(r.userId) ?? null, ctx);
               const title = renderTemplate(message.title, vars);
               return {
                 to: r.email,
                 subject: `Nuevo mensaje: ${title}`,
+                replyTo,
                 html: renderEmail({
                   title,
                   contextLabel: 'Pow · Mensajes',
@@ -120,7 +139,6 @@ export async function POST(
                 }),
               };
             });
-            await sendBatchEmails(items);
           } else {
             const preview = getMessageBodyPlainText(message.body).slice(0, 200);
             const previewText = preview.length >= 200 ? `${preview.trimEnd()}…` : preview;
@@ -132,8 +150,32 @@ export async function POST(
               cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
               outro: 'Entrá al portal para leer el mensaje completo.',
             });
-            await sendBatchEmails(
-              recipientEmails.map((r) => ({ to: r.email, subject: `Nuevo mensaje: ${message.title}`, html })),
+            items = recipientEmails.map((r) => ({
+              to: r.email,
+              subject: `Nuevo mensaje: ${message.title}`,
+              html,
+              replyTo,
+            }));
+          }
+
+          const sendResult = await sendBatchEmails(items);
+
+          // Persistir el id de proveedor por destinatario (para linkear los webhooks de estado).
+          const ids = sendResult.ids ?? [];
+          if (ids.some(Boolean)) {
+            const nowIso = new Date().toISOString();
+            await Promise.all(
+              recipientEmails
+                .map((r, i) =>
+                  ids[i]
+                    ? supabase
+                        .from('message_recipients')
+                        .update({ email_status: 'sent', email_provider_id: ids[i], email_status_at: nowIso })
+                        .eq('message_id', id)
+                        .eq('user_id', r.userId)
+                    : null,
+                )
+                .filter(Boolean) as any[],
             );
           }
         }

@@ -33,7 +33,7 @@ export default async function AdminMessageDetailPage({ params }: Props) {
 
   const { data: recipients } = await supabase
     .from('message_recipients')
-    .select('id, user_id, delivered_at, read_at, confirmed_at, dismissed_at')
+    .select('id, user_id, delivered_at, read_at, confirmed_at, dismissed_at, email_status, email_status_at')
     .eq('message_id', id)
     .order('delivered_at', { ascending: false });
 

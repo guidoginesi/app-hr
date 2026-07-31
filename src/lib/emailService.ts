@@ -237,6 +237,7 @@ export async function sendSimpleEmail(params: {
 	to: string;
 	subject: string;
 	html: string;
+	replyTo?: string;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
 	try {
 		const fromEmail = getEmailFrom();
@@ -253,6 +254,7 @@ export async function sendSimpleEmail(params: {
 			to: params.to,
 			subject: params.subject,
 			html: params.html,
+			replyTo: params.replyTo,
 		});
 
 		if (error) {
@@ -276,6 +278,7 @@ type BatchEmailItem = {
 	to: string;
 	subject: string;
 	html: string;
+	replyTo?: string;
 };
 
 /**
@@ -308,6 +311,7 @@ export async function sendBatchEmails(
 					to: e.to,
 					subject: e.subject,
 					html: e.html,
+					replyTo: e.replyTo,
 				})),
 			);
 
