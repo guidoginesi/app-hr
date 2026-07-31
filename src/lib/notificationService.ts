@@ -192,3 +192,68 @@ export async function getAdminUserIds(): Promise<string[]> {
 
   return (data ?? []).map((r: any) => r.user_id as string);
 }
+
+/**
+ * Get the distinct user IDs that hold any of the given roles.
+ */
+export async function getUserIdsForRoles(roles: string[]): Promise<string[]> {
+  if (roles.length === 0) return [];
+  const supabase = getSupabaseServer();
+  const { data } = await supabase
+    .from('user_roles')
+    .select('user_id')
+    .in('role', roles);
+
+  return [...new Set((data ?? []).map((r: any) => r.user_id as string).filter(Boolean))];
+}
+
+/**
+ * Resolve email addresses for all users holding the given roles.
+ * Prefers the employee work/personal email, and falls back to the auth.users
+ * email for role holders that are not employees (e.g. the generic admin /
+ * administración accounts). Reusable for any role-targeted email (digests, etc.).
+ */
+export async function getRoleEmails(
+  roles: string[],
+): Promise<{ userId: string; email: string; name: string }[]> {
+  const userIds = await getUserIdsForRoles(roles);
+  if (userIds.length === 0) return [];
+
+  const supabase = getSupabaseServer();
+  const { data: emps } = await supabase
+    .from('employees')
+    .select('user_id, first_name, last_name, work_email, personal_email')
+    .in('user_id', userIds);
+  const empByUser = new Map<string, any>((emps ?? []).map((e: any) => [e.user_id, e]));
+
+  const out: { userId: string; email: string; name: string }[] = [];
+  const missing: string[] = [];
+  for (const uid of userIds) {
+    const e = empByUser.get(uid);
+    const email = e?.work_email || e?.personal_email;
+    if (email) {
+      out.push({ userId: uid, email, name: `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() });
+    } else {
+      missing.push(uid);
+    }
+  }
+
+  if (missing.length > 0) {
+    try {
+      const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const authById = new Map<string, any>((list?.users ?? []).map((u: any) => [u.id, u]));
+      for (const uid of missing) {
+        const u = authById.get(uid);
+        if (u?.email) {
+          const metaName =
+            (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || '';
+          out.push({ userId: uid, email: u.email as string, name: metaName });
+        }
+      }
+    } catch (err) {
+      console.error('[getRoleEmails] auth.users fallback failed:', err);
+    }
+  }
+
+  return out;
+}

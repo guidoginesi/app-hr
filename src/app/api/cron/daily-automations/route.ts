@@ -4,6 +4,7 @@ import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
+import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -89,6 +90,7 @@ export async function GET(req: NextRequest) {
     birthdays: [] as string[],
     anniversaries: [] as string[],
     preLeaveReminders: [] as string[],
+    approvalDigests: { sent: [] as string[], errors: [] as string[] },
     errors: [] as string[],
   };
 
@@ -334,6 +336,13 @@ export async function GET(req: NextRequest) {
         results.errors.push(`Pre-leave ${fullName}: ${e.message}`);
       }
     }
+  }
+
+  // ── PENDING APPROVALS DIGEST (adelantos + capacitaciones) ──────
+  try {
+    results.approvalDigests = await sendApprovalDigests();
+  } catch (e: any) {
+    results.errors.push(`Approval digests: ${e.message}`);
   }
 
   return NextResponse.json({
