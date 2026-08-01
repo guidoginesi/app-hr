@@ -18,6 +18,12 @@ const MANUALS = [
     title: 'Fondo de Capacitaciones',
     desc: 'Solicitud, aprobación (líder → HR), cargas de factura/certificado, pagos con MEP y reintegro por liquidación, y vista de budget.',
   },
+  {
+    href: '/admin/ayuda/mensajes',
+    emoji: '📣',
+    title: 'Mensajes',
+    desc: 'Redactar y segmentar comunicaciones (por área/líder/personas), plantillas con variables, envío por mail/Chat, filtros + export, y seguimiento de lectura y entrega.',
+  },
 ];
 
 export default async function AyudaPage() {

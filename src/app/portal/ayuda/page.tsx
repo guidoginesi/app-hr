@@ -93,6 +93,33 @@ export default async function PortalAyudaPage() {
             </ManualStep>
           </div>
         </div>
+
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-foreground">Mensajes</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Cómo ver, leer y confirmar los mensajes que te enviamos.</p>
+
+          <div className="mt-4 rounded-xl border border-[var(--border)] bg-muted p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">En resumen</p>
+            <p className="mt-2 text-sm text-foreground">
+              Recibís anuncios y avisos de People en <b>Mensajes</b> del portal (y un aviso por <b>mail</b> cuando corresponde).
+              Los abrís, se marcan como <b>leídos</b>, y algunos te piden <b>confirmar la lectura</b>.
+            </p>
+          </div>
+
+          <div className="mt-8 space-y-10">
+            <ManualStep image="/manual/mensajes-portal/01-inbox.png" n={1} title="Dónde verlos" imageAlt="Sección 'Mensajes' del portal con la lista de anuncios recibidos.">
+              <p>En el menú del portal entrá a <b>Mensajes</b> (o tocá la <b>campanita</b> de notificaciones arriba). Ahí está todo lo que te enviamos, con los no leídos destacados.</p>
+            </ManualStep>
+
+            <ManualStep n={2} title="Leer y confirmar" imageAlt="Un mensaje abierto con su contenido y, si corresponde, el botón de confirmar lectura.">
+              <p>Tocá un mensaje para leerlo: se marca como <b>leído</b> automáticamente. Si el mensaje <b>requiere confirmación</b>, vas a ver un botón para <b>confirmar</b> que lo leíste (queda registrado).</p>
+            </ManualStep>
+
+            <ManualStep n={3} title="Avisos por mail" imageAlt="Ejemplo del mail de aviso de un mensaje nuevo con un botón 'Ver en el portal'.">
+              <p>Algunos mensajes también te llegan por <b>mail</b>, con un botón <b>Ver en el portal</b> para entrar y leerlo completo. Si el mensaje está personalizado, el mail ya trae <b>tus datos</b>.</p>
+            </ManualStep>
+          </div>
+        </div>
       </div>
     </PortalShell>
   );
