@@ -30,7 +30,7 @@ export default async function PortalAyudaPage() {
           </div>
 
           <div className="mt-8 space-y-10">
-            <ManualStep n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Adelantos' resaltado en 'Mi trabajo'.">
+            <ManualStep image="/manual/adelantos-portal/01-lista.png" n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Adelantos' resaltado en 'Mi trabajo' y la pantalla de adelantos.">
               <p>En el menú del portal, entrá a <b>Adelantos</b>. Ahí solicitás y ves el estado de tus adelantos.</p>
             </ManualStep>
 
@@ -43,12 +43,12 @@ export default async function PortalAyudaPage() {
               <p>Dos cosas las revisa el equipo a mano: que el monto no supere el 50% de tu neto, y que no haya una renuncia comunicada.</p>
             </ManualStep>
 
-            <ManualStep n={4} title="Enviar y seguir el estado" imageAlt="Lista 'Mis adelantos' con la columna Estado (Pendiente RRHH, Aprobado, etc.).">
+            <ManualStep image="/manual/adelantos-portal/01-lista.png" n={4} title="Enviar y seguir el estado" imageAlt="Lista 'Mis adelantos' con las columnas Fecha, Monto, Mes de descuento, Tipo y Estado (los datos personales están difuminados).">
               <p>Al enviar, tu solicitud queda en <b>Pendiente RRHH</b>. En <b>Mis adelantos</b> seguís el avance: Pendiente RRHH → Pendiente Administración → <b>Aprobado</b> → <b>Transferido</b> → <b>Saldado</b>.</p>
-              <p>No podés tener dos adelantos vigentes a la vez: vas a poder pedir otro una vez que el actual se salde.</p>
+              <p>No podés tener dos adelantos vigentes a la vez: vas a poder pedir otro una vez que el actual se salde (mientras tanto, el botón de solicitar queda deshabilitado).</p>
             </ManualStep>
 
-            <ManualStep n={5} title="Qué pasa después" imageAlt="Ejemplo de email de confirmación / aprobación del adelanto.">
+            <ManualStep image="/manual/adelantos-portal/05-mail.png" n={5} title="Qué pasa después" imageAlt="Ejemplo del email de aprobación del adelanto, con el monto, el mes de descuento y el botón 'Ver mis adelantos'.">
               <p>Te llega un <b>email</b> en cada cambio importante (recibido, aprobado o rechazado con el motivo, transferido). Cuando se aprueba, Administración transfiere dentro de los 5 días hábiles.</p>
               <p>El adelanto se <b>descuenta de tu liquidación</b> del mes que corresponde. Ahí queda saldado.</p>
             </ManualStep>
