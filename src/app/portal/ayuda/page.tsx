@@ -111,11 +111,11 @@ export default async function PortalAyudaPage() {
               <p>En el menú del portal entrá a <b>Mensajes</b> (o tocá la <b>campanita</b> de notificaciones arriba). Ahí está todo lo que te enviamos, con los no leídos destacados.</p>
             </ManualStep>
 
-            <ManualStep n={2} title="Leer y confirmar" imageAlt="Un mensaje abierto con su contenido y, si corresponde, el botón de confirmar lectura.">
+            <ManualStep image="/manual/mensajes-portal/02-detalle.png" n={2} title="Leer y confirmar" imageAlt="Un mensaje abierto con la etiqueta 'Requiere confirmación' y el botón 'Confirmar lectura'.">
               <p>Tocá un mensaje para leerlo: se marca como <b>leído</b> automáticamente. Si el mensaje <b>requiere confirmación</b>, vas a ver un botón para <b>confirmar</b> que lo leíste (queda registrado).</p>
             </ManualStep>
 
-            <ManualStep n={3} title="Avisos por mail" imageAlt="Ejemplo del mail de aviso de un mensaje nuevo con un botón 'Ver en el portal'.">
+            <ManualStep image="/manual/mensajes-portal/03-mail.png" n={3} title="Avisos por mail" imageAlt="Ejemplo del mail de aviso de un mensaje nuevo con un botón 'Ver en el portal'.">
               <p>Algunos mensajes también te llegan por <b>mail</b>, con un botón <b>Ver en el portal</b> para entrar y leerlo completo. Si el mensaje está personalizado, el mail ya trae <b>tus datos</b>.</p>
             </ManualStep>
           </div>
