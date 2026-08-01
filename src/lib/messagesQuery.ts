@@ -37,8 +37,8 @@ export function parseMessageFilters(sp: URLSearchParams): MessageFilters {
     priority: oneOf(sp.get('priority'), ['info', 'warning', 'critical'] as const),
     status: oneOf(sp.get('status'), ['draft', 'published', 'archived'] as const),
     dateField: oneOf(sp.get('dateField'), ['published_at'] as const) ?? 'created_at',
-    from: fromRaw ? new Date(`${fromRaw}T00:00:00`).toISOString() : undefined,
-    to: toRaw ? new Date(`${toRaw}T23:59:59.999`).toISOString() : undefined,
+    from: fromRaw ? new Date(`${fromRaw}T00:00:00-03:00`).toISOString() : undefined,
+    to: toRaw ? new Date(`${toRaw}T23:59:59.999-03:00`).toISOString() : undefined,
     readState: oneOf(sp.get('readState'), ['con_no_leidos', 'todos_leidos'] as const) ?? 'todos',
     recipient: get('recipient'),
     limit: Math.min(Math.max(parseInt(sp.get('limit') ?? '50', 10) || 50, 1), 200),
@@ -48,7 +48,8 @@ export function parseMessageFilters(sp: URLSearchParams): MessageFilters {
 
 // Escapa comas y paréntesis que romperían la sintaxis de .or() de PostgREST.
 function sanitize(term: string): string {
-  return term.replace(/[,()]/g, ' ').trim();
+  // Quita separadores de .or() y comodines LIKE (% _) para tratarlos como literales.
+  return term.replace(/[,()%_]/g, ' ').trim();
 }
 
 // Aplica los filtros a nivel columna sobre un query de supabase.from('messages').
@@ -75,12 +76,14 @@ export function applyColumnFilters(query: any, f: MessageFilters) {
 async function idFilters(supabase: any, f: MessageFilters): Promise<string[] | null> {
   const sets: Set<string>[] = [];
   if (f.recipient) {
-    const { data } = await supabase.from('message_recipients').select('message_id').eq('user_id', f.recipient);
+    const { data, error } = await supabase.from('message_recipients').select('message_id').eq('user_id', f.recipient);
+    if (error) throw new Error(error.message);
     sets.push(new Set((data ?? []).map((r: any) => r.message_id as string)));
   }
   if (f.readState !== 'todos') {
     const col = f.readState === 'con_no_leidos' ? 'has_unread' : 'fully_read';
-    const { data } = await supabase.from('message_metrics').select('message_id').eq(col, true);
+    const { data, error } = await supabase.from('message_metrics').select('message_id').eq(col, true);
+    if (error) throw new Error(error.message);
     sets.push(new Set((data ?? []).map((r: any) => r.message_id as string)));
   }
   if (sets.length === 0) return null;
@@ -98,12 +101,14 @@ export async function queryMessages(
   if (ids !== null) query = query.in('id', ids.length ? ids : [NO_MATCH]);
 
   query = query.order('created_at', { ascending: false }).range(f.offset, f.offset + f.limit - 1);
-  const { data: messages, count } = await query;
+  const { data: messages, count, error } = await query;
+  if (error) throw new Error(error.message);
 
   const msgIds = (messages ?? []).map((m: any) => m.id);
   const metricsByMsg = new Map<string, any>();
   if (msgIds.length) {
-    const { data: metrics } = await supabase.from('message_metrics').select('*').in('message_id', msgIds);
+    const { data: metrics, error: mErr } = await supabase.from('message_metrics').select('*').in('message_id', msgIds);
+    if (mErr) throw new Error(mErr.message);
     for (const m of metrics ?? []) metricsByMsg.set(m.message_id, m);
   }
   const items = (messages ?? []).map((m: any) => {
@@ -124,6 +129,7 @@ export async function filteredMessageIds(supabase: any, f: MessageFilters, cap =
   const ids = await idFilters(supabase, f);
   if (ids !== null) query = query.in('id', ids.length ? ids : [NO_MATCH]);
   query = query.order('created_at', { ascending: false }).limit(cap);
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
   return (data ?? []).map((m: any) => m.id as string);
 }
