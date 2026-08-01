@@ -50,6 +50,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Firma inválida' }, { status: 401 });
   }
 
+  // Anti-replay: rechazar timestamps con más de 5 min de antigüedad.
+  const ts = parseInt(timestamp, 10);
+  if (!ts || Math.abs(Date.now() / 1000 - ts) > 300) {
+    return NextResponse.json({ error: 'Timestamp fuera de tolerancia' }, { status: 400 });
+  }
+
   let event: any;
   try {
     event = JSON.parse(body);
@@ -75,7 +81,12 @@ export async function POST(req: NextRequest) {
     payload: event,
   });
   if (evErr) {
-    return NextResponse.json({ ok: true, duplicate: true });
+    // Solo la violación de unique (evento ya procesado) es idempotencia real; otro error → reintentar (5xx).
+    if ((evErr as any).code === '23505') {
+      return NextResponse.json({ ok: true, duplicate: true });
+    }
+    console.error('[resend webhook] error registrando evento:', evErr);
+    return NextResponse.json({ error: 'DB error' }, { status: 500 });
   }
 
   // Actualizar el estado del/los recipient(s) con ese provider id (sin retroceder de estado).
@@ -84,7 +95,7 @@ export async function POST(req: NextRequest) {
     .select('id, email_status')
     .eq('email_provider_id', providerId);
   const nowIso = new Date().toISOString();
-  await Promise.all(
+  const updates = await Promise.all(
     (rows ?? [])
       .map((r: any) => {
         if ((RANK[status] ?? 0) < (RANK[r.email_status] ?? 0)) return null;
@@ -95,6 +106,10 @@ export async function POST(req: NextRequest) {
       })
       .filter(Boolean) as any[],
   );
+  if (updates.some((u: any) => u?.error)) {
+    console.error('[resend webhook] error actualizando recipients');
+    return NextResponse.json({ error: 'update failed' }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

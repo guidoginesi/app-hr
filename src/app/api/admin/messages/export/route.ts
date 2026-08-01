@@ -5,7 +5,9 @@ import { parseMessageFilters, queryMessages, filteredMessageIds } from '@/lib/me
 import { getEmailsForUserIds } from '@/lib/notificationService';
 
 function cell(v: unknown): string {
-  const s = v === null || v === undefined ? '' : String(v);
+  let s = v === null || v === undefined ? '' : String(v);
+  // Neutralizar inyección de fórmulas (Excel/Sheets) en celdas que empiezan con = + - @ tab o CR.
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 function toCsv(headers: string[], rows: unknown[][]): string {

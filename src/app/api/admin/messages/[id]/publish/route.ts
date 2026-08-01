@@ -65,7 +65,8 @@ export async function POST(
       }
     }
 
-    const userIds = await resolveAudienceUserIds(audience);
+    // Deduplicar: un user_id repetido abortaría el INSERT del lote (UNIQUE message_id,user_id).
+    const userIds = [...new Set(await resolveAudienceUserIds(audience))];
 
     if (userIds.length === 0) {
       return NextResponse.json(
@@ -74,38 +75,35 @@ export async function POST(
       );
     }
 
-    // Mark as published
-    const { error: updateError } = await supabase
-      .from('messages')
-      .update({
-        status: 'published',
-        published_at: new Date().toISOString(),
-      })
-      .eq('id', id);
-
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
-    }
-
-    // Insert recipients in batches
+    // Insert recipients in batches (upsert idempotente, tolera duplicados / re-publicación)
     let insertedCount = 0;
     for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
       const batch = userIds.slice(i, i + BATCH_SIZE);
-      const recipients = batch.map((userId) => ({
-        message_id: id,
-        user_id: userId,
-      }));
+      const recipients = batch.map((userId) => ({ message_id: id, user_id: userId }));
 
       const { error: recipientsError } = await supabase
         .from('message_recipients')
-        .insert(recipients)
-        .select();
+        .upsert(recipients, { onConflict: 'message_id,user_id', ignoreDuplicates: true });
 
       if (recipientsError) {
         console.error('[publish] Error inserting recipients batch:', recipientsError);
       } else {
         insertedCount += batch.length;
       }
+    }
+
+    if (insertedCount === 0) {
+      return NextResponse.json({ error: 'No se pudieron crear los destinatarios.' }, { status: 500 });
+    }
+
+    // Marcar como publicado (recién después de crear los destinatarios con éxito)
+    const { error: updateError } = await supabase
+      .from('messages')
+      .update({ status: 'published', published_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
     // Enviar por mail a los destinatarios si está habilitado (opt-in por mensaje)
@@ -184,8 +182,9 @@ export async function POST(
       }
     }
 
-    // Send to Google Chat if enabled
-    if (message.send_to_google_chat) {
+    // Send to Google Chat if enabled — se omite en mensajes con variables por-destinatario
+    // (un chat grupal no puede personalizar {{nombre}}/{{dni}} por persona).
+    if (message.send_to_google_chat && !hasTemplateTokens(message.title, message.body)) {
       try {
         const priorityEmoji = message.priority === 'critical' ? '🚨' : message.priority === 'warning' ? '⚠️' : 'ℹ️';
         const chatVars = buildRecipientVars(null, (message.metadata?.template_context ?? {}) as Record<string, string>);
