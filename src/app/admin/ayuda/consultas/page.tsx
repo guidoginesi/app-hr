@@ -40,6 +40,7 @@ export default async function AyudaConsultasPage() {
 
         <ManualStep image="/manual/consultas-admin/03-detalle.png" n={3} title="Responder" imageAlt="Detalle de una consulta con el hilo y el cuadro de respuesta.">
           <p>Entrá a la consulta y escribí la respuesta. Al enviarla, la consulta pasa a <b>Esperando al colaborador</b>, se registra el cumplimiento del objetivo y queda <b>asignada a vos</b> automáticamente.</p>
+          <p>Si con esa respuesta el tema queda cerrado, usá <b>Responder y marcar resuelta</b>: hace las dos cosas de una, sin tener que tocar después el selector de estado.</p>
           <p>Al colaborador le llega un aviso en el portal y por mail.</p>
         </ManualStep>
 
@@ -53,7 +54,8 @@ export default async function AyudaConsultasPage() {
         </ManualStep>
 
         <ManualStep image="/manual/consultas-admin/03-detalle.png" n={6} title="Estados y cierre" imageAlt="Selector de estado con las opciones En curso, Esperando al colaborador, Resuelta y Cerrada.">
-          <p>Cuando terminás, marcá la consulta como <b>Resuelta</b>. Si el colaborador no dice nada, <b>se cierra sola a los 3 días hábiles</b>. Después del cierre tiene <b>7 días</b> para reabrirla respondiendo en el hilo; pasado ese plazo, abre una nueva.</p>
+          <p>Arriba a la derecha tenés el <b>estado</b> de la consulta. Cuando terminás, marcala como <b>Resuelta</b> —o usá <b>Responder y marcar resuelta</b> directamente desde el cuadro de respuesta—. Si el colaborador no dice nada, <b>se cierra sola a los 3 días hábiles</b>.</p>
+          <p>Tanto en <b>Resuelta</b> como en <b>Cerrada</b> el colaborador puede <b>reabrirla</b> respondiendo en el hilo: desde el cierre tiene <b>7 días</b>, y pasado ese plazo abre una nueva.</p>
         </ManualStep>
 
         <ManualStep image="/manual/consultas-admin/07-reportes.png" n={7} title="Reportes" imageAlt="Pestaña Reportes con el volumen por categoría y el bloque de consultas recurrentes.">
