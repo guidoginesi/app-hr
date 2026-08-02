@@ -42,10 +42,24 @@ export async function POST(req: NextRequest, context: RouteContext) {
     if (!hasPdf(settlement)) {
       return NextResponse.json({ error: 'El recibo no tiene un archivo disponible.' }, { status: 400 });
     }
+    if (settlement.requires_acknowledgement === false) {
+      return NextResponse.json({ error: 'Este recibo no requiere confirmación.' }, { status: 400 });
+    }
 
     // La constancia queda atada a la versión del documento: si el recibo se
     // reemplaza, la anterior se archiva y hay que confirmar la nueva.
     const documentVersion = (settlement as any).payslip_version ?? 1;
+
+    // Si el cliente confirma una versión que ya no es la vigente, es porque el
+    // recibo se reemplazó mientras tenía la pantalla abierta.
+    const body = await req.json().catch(() => ({}));
+    const clientVersion = Number((body as any)?.payslip_version);
+    if (clientVersion && clientVersion !== documentVersion) {
+      return NextResponse.json(
+        { error: 'El recibo fue actualizado. Recargá la página para ver la versión nueva.', stale: true },
+        { status: 409 },
+      );
+    }
 
     const { data: existing } = await supabase
       .from('payroll_receipt_acknowledgements')
@@ -91,11 +105,18 @@ export async function POST(req: NextRequest, context: RouteContext) {
           .select('acknowledged_at')
           .eq('settlement_id', id)
           .eq('document_version', documentVersion)
+          .is('superseded_at', null)
           .maybeSingle();
+        if (!row) {
+          return NextResponse.json(
+            { error: 'La constancia fue archivada porque el recibo cambió. Recargá la página.', stale: true },
+            { status: 409 },
+          );
+        }
         return NextResponse.json({
           success: true,
           already_confirmed: true,
-          acknowledged_at: row?.acknowledged_at ?? null,
+          acknowledged_at: row.acknowledged_at,
         });
       }
       console.error('[acknowledge] insert error:', insertError);

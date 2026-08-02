@@ -60,7 +60,9 @@ export function ReceiptAcknowledgementSection({
 
   if (relDep.length === 0) return null;
 
-  const pct = publicados.length > 0 ? Math.round((confirmados.length / publicados.length) * 100) : 0;
+  // % sobre los que requieren acuse (los exentos no se pueden confirmar).
+  const conAcuse = confirmados.length + pendientes.length;
+  const pct = conAcuse > 0 ? Math.round((confirmados.length / conAcuse) * 100) : 0;
 
   const rows = publicados.filter((x) => {
     if (filter === 'recibido') return x.st === 'recibido';

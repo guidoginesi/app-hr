@@ -24,7 +24,7 @@ export default async function PortalRecibosPage() {
   const isLeader = auth.isLeader || await checkIsLeader(employeeId);
 
   // Fetch SENT settlements where contract_type_snapshot = RELACION_DEPENDENCIA
-  const { data: settlements } = await supabase
+  const { data: settlements, error: settlementsError } = await supabase
     .from('payroll_settlements_with_details')
     .select(
       '*, pdf_storage_path, pdf_filename, pdf_uploaded_at, pdf2_storage_path, pdf2_filename, pdf2_uploaded_at, requires_acknowledgement, acknowledged_at, payslip_version, payslip_replaced_at'
@@ -34,6 +34,12 @@ export default async function PortalRecibosPage() {
     .eq('contract_type_snapshot', 'RELACION_DEPENDENCIA')
     .order('period_year', { ascending: false })
     .order('period_month', { ascending: false });
+
+  // Si la consulta falla, no mostramos "no hay recibos" (que se leería como que
+  // no se publicó ninguno): dejamos rastro en el log del server.
+  if (settlementsError) {
+    console.error('[portal/recibos] error cargando recibos:', settlementsError);
+  }
 
   return (
     <PortalShell employee={auth.employee} isLeader={isLeader} active={"recibos" as any}>

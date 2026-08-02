@@ -122,14 +122,26 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    const { data: currentPayslip } = await supabase
-      .from('payroll_payslips')
-      .select('version')
-      .eq('settlement_id', id)
-      .maybeSingle();
-
-    const currentVersion = currentPayslip?.version ?? 1;
-    const newVersion = isReplacement ? currentVersion + 1 : currentVersion;
+    // La versión se reserva en la DB ANTES de subir: dos reemplazos concurrentes
+    // calculando el número en memoria terminarían pisando el mismo archivo.
+    let newVersion: number;
+    if (isReplacement) {
+      const { data: bumped, error: bumpError } = await supabase
+        .rpc('bump_payslip_version', { p_settlement_id: id })
+        .single();
+      if (bumpError || !bumped) {
+        console.error('Error reservando la versión del recibo:', bumpError);
+        return NextResponse.json({ error: 'No se pudo reservar la versión del recibo' }, { status: 500 });
+      }
+      newVersion = (bumped as any).version as number;
+    } else {
+      const { data: currentPayslip } = await supabase
+        .from('payroll_payslips')
+        .select('version')
+        .eq('settlement_id', id)
+        .maybeSingle();
+      newVersion = currentPayslip?.version ?? 1;
+    }
 
     const periodKey = periodData?.period_key || 'unknown';
     const storagePath = payslipStoragePath(settlement.employee_id, periodKey, slot, newVersion);
@@ -139,7 +151,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
       .from('payslips')
       .upload(storagePath, fileBuffer, {
         contentType: 'application/pdf',
-        upsert: true,
+        // En un reemplazo el path es nuevo: si ya existe, algo va mal y preferimos
+        // fallar antes que pisar un archivo que puede ser evidencia.
+        upsert: !isReplacement,
       });
 
     if (uploadError) {
@@ -171,11 +185,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
     if (isReplacement) {
       // La constancia anterior queda archivada (evidencia de qué archivo se había
       // confirmado) y la persona vuelve a estado pendiente.
-      await supabase
+      const { error: supersedeError } = await supabase
         .from('payroll_receipt_acknowledgements')
         .update({ superseded_at: new Date().toISOString() })
         .eq('settlement_id', id)
-        .is('superseded_at', null);
+        .is('superseded_at', null)
+        // Solo las constancias de versiones anteriores: si el colaborador
+        // confirmó la nueva en el ínterin, no se la archivamos.
+        .lt('document_version', newVersion);
+      if (supersedeError) {
+        console.error('[Payslip] no se pudo archivar la constancia previa:', supersedeError);
+      }
 
       await notifyPayslipReplaced(supabase, id, newVersion);
     }

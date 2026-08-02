@@ -87,10 +87,14 @@ export function RecibosAdminClient() {
       publicados: acc.publicados + p.publicados,
       confirmados: acc.confirmados + p.confirmados,
       pendientes: acc.pendientes + p.pendientes,
+      exentos: acc.exentos + p.exentos,
     }),
-    { publicados: 0, confirmados: 0, pendientes: 0 },
+    { publicados: 0, confirmados: 0, pendientes: 0, exentos: 0 },
   );
-  const pct = totals.publicados > 0 ? Math.round((totals.confirmados / totals.publicados) * 100) : 0;
+  // El % se calcula sobre los que SÍ requieren acuse: contar los exentos como
+  // denominador hundía el avance sin que HR pudiera hacer nada al respecto.
+  const conAcuse = totals.confirmados + totals.pendientes;
+  const pct = conAcuse > 0 ? Math.round((totals.confirmados / conAcuse) * 100) : 0;
 
   const exportCsv = () => {
     const qs = periodId ? `?period_id=${periodId}` : '';
@@ -203,8 +207,13 @@ export function RecibosAdminClient() {
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                   <div className="h-full rounded-full bg-success transition-all" style={{ width: `${percent}%` }} />
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">{percent as number}%</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {percent as number}% de los que requieren acuse
+                </p>
               </>
+            )}
+            {label === 'Publicados' && totals.exentos > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">{totals.exentos} sin acuse requerido</p>
             )}
           </div>
         ))}

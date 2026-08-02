@@ -26,14 +26,20 @@ export async function POST(_req: NextRequest, context: RouteContext) {
       });
     }
 
-    const { notified } = await sendReceiptReminders(supabase, pending, {
+    const res = await sendReceiptReminders(supabase, pending, {
       automated: false,
       sentBy: user.id,
     });
 
+    const detail = res.failed > 0 ? ` (${res.failed} sin canal disponible o con error de envío)` : '';
     return NextResponse.json({
-      notified_count: notified,
-      message: `Recordatorio enviado a ${notified} colaborador${notified !== 1 ? 'es' : ''} con recibo pendiente de confirmar`,
+      notified_count: res.notified,
+      emailed: res.emailed,
+      failed: res.failed,
+      message:
+        res.notified === 0
+          ? 'No se pudo enviar ningún recordatorio. Revisá la configuración de correo.'
+          : `Recordatorio enviado a ${res.notified} colaborador${res.notified !== 1 ? 'es' : ''}${detail}`,
     });
   } catch (error: any) {
     console.error('Error in POST /remind-pending:', error);
