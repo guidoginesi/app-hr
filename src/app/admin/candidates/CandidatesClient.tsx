@@ -217,7 +217,7 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 	return (
 		<>
 			<div className="space-y-6">
-				<div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+				<div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
 					{/* Filtros */}
 					<div className="border-b border-[var(--border)] px-6 py-4 space-y-4">
 						<div className="flex items-start justify-between gap-3">

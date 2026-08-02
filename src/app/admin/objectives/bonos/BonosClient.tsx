@@ -308,7 +308,7 @@ export function BonosClient({ bonusRows, corporateSummary, selectedYear, availab
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {/* Filters */}
         <div className="flex items-center gap-4 border-b border-[var(--border)] px-6 py-4">
           <input

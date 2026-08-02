@@ -473,7 +473,7 @@ export function ObjectivesDashboardClient({
       </div>
 
       {/* Employees Table */}
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-[var(--border)]">
             <thead className="bg-muted">

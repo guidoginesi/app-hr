@@ -151,7 +151,7 @@ function SettlementCard({ settlement }: { settlement: Settlement }) {
   const [invoicePath, setInvoicePath] = useState(settlement.invoice_storage_path);
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       {/* Header — always visible, clickable to expand/collapse */}
       <button
         type="button"

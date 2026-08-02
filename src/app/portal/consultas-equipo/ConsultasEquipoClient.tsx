@@ -84,7 +84,7 @@ export function ConsultasEquipoClient() {
           No hay consultas compartidas con vos.
         </div>
       ) : (
-        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
           <ul className="divide-y divide-[var(--border)]">
             {items.map((i) => (
               <li key={i.id}>
