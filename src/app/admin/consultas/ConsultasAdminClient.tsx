@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { INQUIRY_CATEGORIES, CATEGORY_LABELS, STATUS_LABELS_HR, type InquiryCategory, type InquiryStatus } from '@/lib/inquiries';
+import { ReportesPanel } from './ReportesPanel';
 
 type Item = {
   id: string;
@@ -38,6 +39,7 @@ export function ConsultasAdminClient() {
   const [q, setQ] = useState('');
   const [onlyOpen, setOnlyOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'bandeja' | 'reportes'>('bandeja');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +72,28 @@ export function ConsultasAdminClient() {
         description="Bandeja única de People. Las consultas de los colaboradores llegan acá."
       />
 
+      <div className="inline-flex rounded-lg border border-[var(--border)] p-0.5">
+        {([
+          ['bandeja', 'Bandeja'],
+          ['reportes', 'Reportes'],
+        ] as const).map(([val, label]) => (
+          <button
+            key={val}
+            type="button"
+            onClick={() => setTab(val)}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+              tab === val ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'reportes' && <ReportesPanel />}
+
+      {tab === 'bandeja' && (
+      <>
       <div className="grid grid-cols-4 gap-4">
         {[
           ['Abiertas', stats.abiertas],
@@ -181,6 +205,8 @@ export function ConsultasAdminClient() {
           </table>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }
