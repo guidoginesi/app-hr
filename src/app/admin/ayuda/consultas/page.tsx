@@ -29,34 +29,34 @@ export default async function AyudaConsultasPage() {
       </div>
 
       <div className="mt-8 space-y-10">
-        <ManualStep n={1} title="Dónde encontrarlo" imageAlt="Menú lateral con 'Consultas' en la sección Espacio de trabajo.">
+        <ManualStep image="/manual/consultas-admin/01-bandeja.png" n={1} title="Dónde encontrarlo" imageAlt="Menú lateral con 'Consultas' en la sección Espacio de trabajo.">
           <p>En el menú lateral, <b>Espacio de trabajo → Consultas</b>. Todas las consultas caen en una <b>única bandeja</b>: no hay ruteo automático por categoría.</p>
         </ManualStep>
 
-        <ManualStep n={2} title="Leer la bandeja" imageAlt="Tarjetas de Abiertas, Nuevas, Vencidas y Total, con los filtros debajo.">
+        <ManualStep image="/manual/consultas-admin/01-bandeja.png" n={2} title="Leer la bandeja" imageAlt="Tarjetas de Abiertas, Nuevas, Vencidas y Total, con los filtros debajo.">
           <p>Arriba ves <b>Abiertas</b>, <b>Nuevas</b>, <b>Vencidas</b> y el total. <b>Vencidas</b> son las que todavía no tienen primera respuesta y pasaron los 3 días hábiles — son las que hay que mirar primero.</p>
           <p>Podés filtrar por estado, categoría y buscar por asunto. Por defecto se muestran solo las abiertas.</p>
         </ManualStep>
 
-        <ManualStep n={3} title="Responder" imageAlt="Detalle de una consulta con el hilo y el cuadro de respuesta.">
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={3} title="Responder" imageAlt="Detalle de una consulta con el hilo y el cuadro de respuesta.">
           <p>Entrá a la consulta y escribí la respuesta. Al enviarla, la consulta pasa a <b>Esperando al colaborador</b>, se registra el cumplimiento del objetivo y queda <b>asignada a vos</b> automáticamente.</p>
           <p>Al colaborador le llega un aviso en el portal y por mail.</p>
         </ManualStep>
 
-        <ManualStep n={4} title="Notas internas" imageAlt="Casilla 'Nota interna' debajo del cuadro de respuesta, y una nota destacada en el hilo.">
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={4} title="Notas internas" imageAlt="Casilla 'Nota interna' debajo del cuadro de respuesta, y una nota destacada en el hilo.">
           <p>Si tildás <b>Nota interna</b>, lo que escribas queda en el hilo pero <b>el colaborador no lo ve</b> (se muestra con borde punteado). Sirve para coordinar entre ustedes sin sacar la conversación de la app.</p>
         </ManualStep>
 
-        <ManualStep n={5} title="Compartir con el líder" imageAlt="Bloque 'Compartir con el líder' con el botón Compartir.">
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={5} title="Compartir con el líder" imageAlt="Bloque 'Compartir con el líder' con el botón Compartir.">
           <p>Si necesitás la mirada del líder, tocá <b>Compartir</b>. Le da acceso <b>solo a esa consulta</b> — nunca a las del resto del equipo — y la ve en su portal, donde puede responder. <b>No ve las notas internas.</b></p>
           <p>Es reversible: <b>Dejar de compartir</b> le quita el acceso. Queda registrado quién compartió y cuándo.</p>
         </ManualStep>
 
-        <ManualStep n={6} title="Estados y cierre" imageAlt="Selector de estado con las opciones En curso, Esperando al colaborador, Resuelta y Cerrada.">
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={6} title="Estados y cierre" imageAlt="Selector de estado con las opciones En curso, Esperando al colaborador, Resuelta y Cerrada.">
           <p>Cuando terminás, marcá la consulta como <b>Resuelta</b>. Si el colaborador no dice nada, <b>se cierra sola a los 3 días hábiles</b>. Después del cierre tiene <b>7 días</b> para reabrirla respondiendo en el hilo; pasado ese plazo, abre una nueva.</p>
         </ManualStep>
 
-        <ManualStep n={7} title="Reportes" imageAlt="Pestaña Reportes con el volumen por categoría y el bloque de consultas recurrentes.">
+        <ManualStep image="/manual/consultas-admin/07-reportes.png" n={7} title="Reportes" imageAlt="Pestaña Reportes con el volumen por categoría y el bloque de consultas recurrentes.">
           <p>En la pestaña <b>Reportes</b> ves el volumen por categoría, el <b>tiempo de primera respuesta</b> (mediana y p90) y el cumplimiento del objetivo.</p>
           <p>Lo más útil es <b>Consultas recurrentes</b>: reabiertas, continuaciones y quién pregunta lo mismo tres o más veces. Cuando algo se repite, casi siempre es un problema de comunicación o de proceso, no una duda individual.</p>
         </ManualStep>
