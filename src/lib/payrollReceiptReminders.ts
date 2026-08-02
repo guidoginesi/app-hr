@@ -31,6 +31,8 @@ export type PendingReceipt = {
   period_month: number;
   period_type: PayrollPeriodType | null;
   sent_at: string | null;
+  payslip_version?: number | null;
+  payslip_replaced_at?: string | null;
 };
 
 /** Liquidaciones de relación de dependencia publicadas, que requieren acuse y no lo tienen. */
@@ -41,10 +43,14 @@ export async function findPendingReceipts(
   let query = supabase
     .from('payroll_settlements_with_details')
     .select(
-      'id, first_name, last_name, email_to, employee_email, employee_user_id, period_year, period_month, period_type, period_status, sent_at, status, requires_acknowledgement, acknowledged_at, pdf_storage_path, pdf2_storage_path',
+      'id, first_name, last_name, email_to, employee_email, employee_user_id, period_year, period_month, period_type, period_status, sent_at, status, requires_acknowledgement, acknowledged_at, pdf_storage_path, pdf2_storage_path, payslip_version, payslip_replaced_at',
     )
     .eq('contract_type_snapshot', 'RELACION_DEPENDENCIA')
-    .eq('status', 'SENT');
+    .eq('status', 'SENT')
+    // Se filtra en la base para no traer los 219 históricos ni chocar con el
+    // límite implícito de filas de PostgREST.
+    .eq('requires_acknowledgement', true)
+    .is('acknowledged_at', null);
 
   if (opts.periodId) query = query.eq('period_id', opts.periodId);
 
@@ -85,12 +91,15 @@ export async function sendReceiptReminders(
   supabase: any,
   pending: PendingReceipt[],
   opts: { automated: boolean; sentBy?: string | null },
-): Promise<{ notified: number }> {
-  if (pending.length === 0) return { notified: 0 };
+): Promise<{ notified: number; emailed: number; inApp: number; failed: number }> {
+  if (pending.length === 0) return { notified: 0, emailed: 0, inApp: 0, failed: 0 };
 
   const replyTo = getReplyTo();
   const emails: { to: string; subject: string; html: string; replyTo?: string }[] = [];
   const emailed: PendingReceipt[] = [];
+  const inAppOnly: PendingReceipt[] = [];
+  const notifPromises: Promise<unknown>[] = [];
+  const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
   for (const s of pending) {
     const to = (s.email_to || s.employee_email || '').trim();
@@ -98,6 +107,8 @@ export async function sendReceiptReminders(
       const { subject, html } = reminderEmail(s);
       emails.push({ to, subject, html, replyTo });
       emailed.push(s);
+    } else if (s.employee_user_id) {
+      inAppOnly.push(s);
     }
 
     if (s.employee_user_id) {
@@ -108,36 +119,69 @@ export async function sendReceiptReminders(
       });
       // dedupeKey por día: el dedupe de createSystemNotification es permanente,
       // sin la fecha el segundo recordatorio nunca se enviaría.
-      const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      createSystemNotification({
-        userIds: [s.employee_user_id],
-        title: `Confirmá la recepción de tu recibo — ${periodLabel}`,
-        body: `Tu recibo de ${periodLabel} está disponible y todavía no confirmaste que lo recibiste.`,
-        deepLink: '/portal/recibos',
-        dedupeKey: `payslip-reminder-${s.id}-${day}`,
-      }).catch((e) => console.error('[ReceiptReminders] in-app notif failed:', e));
+      notifPromises.push(
+        createSystemNotification({
+          userIds: [s.employee_user_id],
+          title: `Confirmá la recepción de tu recibo — ${periodLabel}`,
+          body: `Tu recibo de ${periodLabel} está disponible y todavía no confirmaste que lo recibiste.`,
+          deepLink: '/portal/recibos',
+          dedupeKey: `payslip-reminder-${s.id}-${day}`,
+        }).catch((e) => console.error('[ReceiptReminders] in-app notif failed:', e)),
+      );
     }
   }
 
+  // Esperar las notificaciones: en serverless, una promesa suelta puede morir con el handler.
+  await Promise.allSettled(notifPromises);
+
   let ids: (string | null)[] = [];
+  let emailOk = false;
   if (emails.length > 0) {
     const res = await sendBatchEmails(emails);
+    emailOk = res.success;
     ids = res.ids ?? [];
+    if (!emailOk) console.error('[ReceiptReminders] batch de mails falló:', res.error);
   }
 
-  const rows = emailed.map((s, i) => ({
-    settlement_id: s.id,
-    channel: 'email',
-    automated: opts.automated,
-    sent_by: opts.sentBy ?? null,
-    email_provider_id: ids[i] ?? null,
-  }));
+  // Solo se registra lo que efectivamente salió: si no, la cadencia se consume
+  // con envíos fantasma y el recibo queda sin recordatorios.
+  const rows = [
+    ...emailed
+      .map((s, i) => ({ s, providerId: emailOk ? ids[i] ?? null : null, ok: emailOk && Boolean(ids[i]) }))
+      .filter((r) => r.ok)
+      .map((r) => ({
+        settlement_id: r.s.id,
+        channel: 'email' as const,
+        automated: opts.automated,
+        sent_by: opts.sentBy ?? null,
+        email_provider_id: r.providerId,
+        document_version: r.s.payslip_version ?? 1,
+      })),
+    // El canal in-app también consume cadencia: si no, quien no tiene mail
+    // recibiría una notificación por día para siempre.
+    ...inAppOnly.map((s) => ({
+      settlement_id: s.id,
+      channel: 'in_app' as const,
+      automated: opts.automated,
+      sent_by: opts.sentBy ?? null,
+      email_provider_id: null,
+      document_version: s.payslip_version ?? 1,
+    })),
+  ];
+
   if (rows.length > 0) {
     const { error } = await supabase.from('payroll_receipt_reminders').insert(rows);
-    if (error) console.error('[ReceiptReminders] no se pudo registrar el recordatorio:', error);
+    // Si no se pudo registrar, propagamos: sin registro no hay tope de reenvíos.
+    if (error) throw new Error(`No se pudo registrar el recordatorio: ${error.message}`);
   }
 
-  return { notified: pending.length };
+  const emailedOk = rows.filter((r) => r.channel === 'email').length;
+  return {
+    notified: rows.length,
+    emailed: emailedOk,
+    inApp: inAppOnly.length,
+    failed: pending.length - rows.length,
+  };
 }
 
 /**
@@ -207,31 +251,38 @@ export async function runAutomaticReceiptReminders(): Promise<{ sent: number; sk
 
   const { data: previous } = await supabase
     .from('payroll_receipt_reminders')
-    .select('settlement_id, sent_at')
+    .select('settlement_id, sent_at, document_version')
     .in(
       'settlement_id',
       pending.map((p) => p.id),
     )
+    // Solo los automáticos: los recordatorios manuales de HR no deben consumir
+    // el cupo de la cadencia ni apagarla.
+    .eq('automated', true)
     .order('sent_at', { ascending: false });
 
-  const history = new Map<string, string[]>();
+  const history = new Map<string, { sent_at: string; document_version: number }[]>();
   for (const r of previous ?? []) {
     const list = history.get(r.settlement_id) ?? [];
-    list.push(r.sent_at);
+    list.push({ sent_at: r.sent_at, document_version: r.document_version ?? 1 });
     history.set(r.settlement_id, list);
   }
 
   const now = new Date();
   const due = pending.filter((s) => {
     if (!s.sent_at) return false;
-    const sent = history.get(s.id) ?? [];
+    const version = s.payslip_version ?? 1;
+    // Cada versión del documento arranca con su propio cupo.
+    const sent = (history.get(s.id) ?? []).filter((r) => r.document_version === version);
     if (sent.length >= MAX_REMINDERS) return false;
-    if (sent.length === 0) return daysBetween(s.sent_at, now) >= FIRST_AFTER_DAYS;
-    return daysBetween(sent[0], now) >= REPEAT_EVERY_DAYS;
+    // Si el recibo se reemplazó, la cuenta arranca desde el reemplazo.
+    const startFrom = s.payslip_replaced_at ?? s.sent_at;
+    if (sent.length === 0) return daysBetween(startFrom, now) >= FIRST_AFTER_DAYS;
+    return daysBetween(sent[0].sent_at, now) >= REPEAT_EVERY_DAYS;
   });
 
   if (due.length === 0) return { sent: 0, skipped: pending.length };
 
-  const { notified } = await sendReceiptReminders(supabase, due, { automated: true });
-  return { sent: notified, skipped: pending.length - due.length };
+  const res = await sendReceiptReminders(supabase, due, { automated: true });
+  return { sent: res.notified, skipped: pending.length - due.length };
 }

@@ -102,15 +102,25 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
     setConfirming(settlementId);
     setError(null);
     try {
+      const settlement = settlements.find((s) => s.id === settlementId);
       const res = await fetch(`/api/portal/payroll/settlements/${settlementId}/acknowledge`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payslip_version: settlement?.payslip_version ?? 1 }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || 'No se pudo registrar la recepción');
+        if (data.stale) window.location.reload();
         return;
       }
-      setAcks((prev) => ({ ...prev, [settlementId]: data.acknowledged_at ?? new Date().toISOString() }));
+      // Si el server no devolvió la fecha, recargamos en vez de inventarla:
+      // la constancia es evidencia y no puede mostrar una hora que no es la real.
+      if (!data.acknowledged_at) {
+        window.location.reload();
+        return;
+      }
+      setAcks((prev) => ({ ...prev, [settlementId]: data.acknowledged_at }));
     } catch {
       setError('No se pudo registrar la recepción');
     } finally {
