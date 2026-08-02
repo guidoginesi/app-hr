@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
+import { TabNav } from '@pow/ui/components/ui/tab-nav';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { INQUIRY_CATEGORIES, CATEGORY_LABELS, STATUS_LABELS_HR, type InquiryCategory, type InquiryStatus } from '@/lib/inquiries';
 import { ReportesPanel } from './ReportesPanel';
@@ -72,23 +74,15 @@ export function ConsultasAdminClient() {
         description="Bandeja única de People. Las consultas de los colaboradores llegan acá."
       />
 
-      <div className="inline-flex rounded-lg border border-[var(--border)] p-0.5">
-        {([
-          ['bandeja', 'Bandeja'],
-          ['reportes', 'Reportes'],
-        ] as const).map(([val, label]) => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => setTab(val)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === val ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabNav<'bandeja' | 'reportes'>
+        aria-label="Secciones de Consultas"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'bandeja', label: 'Bandeja' },
+          { value: 'reportes', label: 'Reportes' },
+        ]}
+      />
 
       {tab === 'reportes' && <ReportesPanel />}
 
@@ -103,7 +97,7 @@ export function ConsultasAdminClient() {
         ].map(([label, value]) => (
           <div key={label as string} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label as string}</p>
-            <p className={`mt-1 text-3xl font-bold ${label === 'Vencidas' && (value as number) > 0 ? 'text-[var(--red-600)]' : 'text-foreground'}`}>
+            <p className={`mt-1 text-2xl font-bold ${label === 'Vencidas' && (value as number) > 0 ? 'text-[var(--red-600)]' : 'text-foreground'}`}>
               {value as number}
             </p>
           </div>
@@ -140,7 +134,7 @@ export function ConsultasAdminClient() {
           options={[{ value: '', label: 'Categoría: todas' }, ...INQUIRY_CATEGORIES]}
         />
         <label className="flex cursor-pointer items-center gap-2 text-sm text-secondary-foreground">
-          <input type="checkbox" checked={onlyOpen} onChange={(e) => setOnlyOpen(e.target.checked)} />
+          <Checkbox checked={onlyOpen} onCheckedChange={(c) => setOnlyOpen(c === true)} />
           Solo abiertas
         </label>
       </div>

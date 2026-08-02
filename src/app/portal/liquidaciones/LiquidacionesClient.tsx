@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 
 type Settlement = {
@@ -118,15 +120,11 @@ function InvoiceSection({ settlement, onUploaded }: { settlement: Settlement; on
         </div>
         <div className="flex items-center gap-2">
           {invoicePath && (
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-secondary-foreground hover:bg-muted disabled:opacity-50"
-            >
-              {downloading ? 'Descargando...' : 'Ver factura'}
-            </button>
+            <Button variant="outline" size="sm" onClick={handleDownload} loading={downloading}>
+              Ver factura
+            </Button>
           )}
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--primary-hover)]">
+          <label className={`${buttonVariants({ variant: 'primary', size: 'sm' })} cursor-pointer gap-1.5`}>
             {uploading ? 'Subiendo...' : invoicePath ? 'Reemplazar' : 'Adjuntar factura'}
             <input
               ref={inputRef}
@@ -267,10 +265,7 @@ export function LiquidacionesClient({ settlements }: LiquidacionesClientProps) {
   if (settlements.length === 0) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mis Liquidaciones</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Detalle de tus liquidaciones mensuales</p>
-        </div>
+        <PageHeader title="Mis Liquidaciones" description="Detalle de tus liquidaciones mensuales" />
         <div className="rounded-xl border border-[var(--border)] bg-white px-6 py-12 text-center shadow-sm">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
             <svg className="h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -286,10 +281,7 @@ export function LiquidacionesClient({ settlements }: LiquidacionesClientProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Mis Liquidaciones</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Detalle de tus liquidaciones mensuales</p>
-      </div>
+      <PageHeader title="Mis Liquidaciones" description="Detalle de tus liquidaciones mensuales" />
 
       <div className="space-y-4">
         {settlements.map((settlement) => (

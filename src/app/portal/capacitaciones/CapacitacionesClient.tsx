@@ -6,6 +6,7 @@ import { Sheet, SheetTrigger, SheetContent } from '@pow/ui/components/ui/sheet';
 import { Input } from '@pow/ui/components/ui/input';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import type { TrainingBudget, TrainingRequestWithDetails, TrainingRequestStatus } from '@/types/training';
 import { TRAINING_STATUS_LABELS, TRAINING_STEPS, TRAINING_MODALITY_LABELS } from '@/lib/training';
 
@@ -145,55 +146,55 @@ export function CapacitacionesClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Fondo de Capacitaciones</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Solicitá tu capacitación y seguí el estado de tu reintegro.</p>
-        </div>
-        {/* Panel lateral: patrón de creación del DS (igual que Time Off). */}
-        <Sheet open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setError(null); }}>
-          <SheetTrigger className={buttonVariants({ variant: 'primary' })} disabled={!seniorityOk || available <= 0}>
-            Solicitar capacitación
-          </SheetTrigger>
-          <SheetContent
-            title="Nueva solicitud"
-            description="Contanos qué querés hacer y lo aprueban tu líder y People"
-            className="sm:max-w-xl"
-          >
-            <div className="space-y-5 px-1">
-              <div className="grid gap-4">
+      <PageHeader
+        title="Fondo de Capacitaciones"
+        description="Solicitá tu capacitación y seguí el estado de tu reintegro."
+        actions={
+          /* Panel lateral: patrón de creación del DS (igual que Time Off). */
+          <Sheet open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setError(null); }}>
+            <SheetTrigger className={buttonVariants({ variant: 'primary' })} disabled={!seniorityOk || available <= 0}>
+              Solicitar capacitación
+            </SheetTrigger>
+            <SheetContent
+              title="Nueva solicitud"
+              description="Contanos qué querés hacer y lo aprueban tu líder y People"
+              className="sm:max-w-xl"
+            >
+              <div className="space-y-5 px-1">
+                <div className="grid gap-4">
 
 
-            <Field label="Nombre del curso *"><Input value={form.course_name} onChange={(e) => set('course_name', e.target.value)} placeholder="Ej. React Avanzado" /></Field>
-            <Field label="Proveedor / institución"><Input value={form.provider} onChange={(e) => set('provider', e.target.value)} placeholder="Ej. Platzi" /></Field>
-            <Field label="Modalidad">
-              <SelectMenu ariaLabel="Modalidad" value={form.modality} onChange={(v) => set('modality', v)} options={[{ value: '', label: '—' }, { value: 'online', label: 'Online' }, { value: 'presencial', label: 'Presencial' }]} />
-            </Field>
-            <Field label="Carga horaria (hs)"><Input type="number" min={0} value={form.hours} onChange={(e) => set('hours', e.target.value)} /></Field>
-            <Field label="Fecha de inicio"><Input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} /></Field>
-            <Field label="Fecha de fin"><Input type="date" value={form.end_date} onChange={(e) => set('end_date', e.target.value)} /></Field>
-            <Field label="Costo *"><Input type="number" min={0} value={form.cost} onChange={(e) => set('cost', e.target.value)} placeholder="0" /></Field>
-            <Field label="Moneda">
-              <SelectMenu ariaLabel="Moneda" value={form.currency} onChange={(v) => set('currency', v)} options={[{ value: 'USD', label: 'USD' }, { value: 'ARS', label: 'ARS (se convierte a USD al aprobar)' }]} />
-            </Field>
-            <Field label="Link del curso"><Input value={form.link} onChange={(e) => set('link', e.target.value)} placeholder="https://…" /></Field>
-            <Field label="Relación con tu rol"><Input value={form.role_relation} onChange={(e) => set('role_relation', e.target.value)} /></Field>
-          </div>
-          <Field label="Objetivo / justificación"><Textarea rows={2} value={form.objective} onChange={(e) => set('objective', e.target.value)} /></Field>
-
-          {form.currency === 'USD' && cost > 0 && cost > available && (
-            <p className="text-sm text-[var(--red-600)]">El monto (USD {cost}) supera tu disponible ({money(available, 'USD')}).</p>
-          )}
-          {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
-
-          <div className="flex items-center gap-3">
-            <Button onClick={submit} disabled={!canSubmit} loading={submitting}>Enviar solicitud</Button>
-            <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
-          </div>
+              <Field label="Nombre del curso *"><Input value={form.course_name} onChange={(e) => set('course_name', e.target.value)} placeholder="Ej. React Avanzado" /></Field>
+              <Field label="Proveedor / institución"><Input value={form.provider} onChange={(e) => set('provider', e.target.value)} placeholder="Ej. Platzi" /></Field>
+              <Field label="Modalidad">
+                <SelectMenu ariaLabel="Modalidad" value={form.modality} onChange={(v) => set('modality', v)} options={[{ value: '', label: '—' }, { value: 'online', label: 'Online' }, { value: 'presencial', label: 'Presencial' }]} />
+              </Field>
+              <Field label="Carga horaria (hs)"><Input type="number" min={0} value={form.hours} onChange={(e) => set('hours', e.target.value)} /></Field>
+              <Field label="Fecha de inicio"><Input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} /></Field>
+              <Field label="Fecha de fin"><Input type="date" value={form.end_date} onChange={(e) => set('end_date', e.target.value)} /></Field>
+              <Field label="Costo *"><Input type="number" min={0} value={form.cost} onChange={(e) => set('cost', e.target.value)} placeholder="0" /></Field>
+              <Field label="Moneda">
+                <SelectMenu ariaLabel="Moneda" value={form.currency} onChange={(v) => set('currency', v)} options={[{ value: 'USD', label: 'USD' }, { value: 'ARS', label: 'ARS (se convierte a USD al aprobar)' }]} />
+              </Field>
+              <Field label="Link del curso"><Input value={form.link} onChange={(e) => set('link', e.target.value)} placeholder="https://…" /></Field>
+              <Field label="Relación con tu rol"><Input value={form.role_relation} onChange={(e) => set('role_relation', e.target.value)} /></Field>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+            <Field label="Objetivo / justificación"><Textarea rows={2} value={form.objective} onChange={(e) => set('objective', e.target.value)} /></Field>
+
+            {form.currency === 'USD' && cost > 0 && cost > available && (
+              <p className="text-sm text-[var(--red-600)]">El monto (USD {cost}) supera tu disponible ({money(available, 'USD')}).</p>
+            )}
+            {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
+
+            <div className="flex items-center gap-3">
+              <Button onClick={submit} disabled={!canSubmit} loading={submitting}>Enviar solicitud</Button>
+              <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
+            </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        }
+      />
 
       {/* Budget cards */}
       {budget && (

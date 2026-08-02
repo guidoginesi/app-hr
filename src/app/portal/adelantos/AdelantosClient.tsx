@@ -6,6 +6,7 @@ import { Sheet, SheetTrigger, SheetContent } from '@pow/ui/components/ui/sheet';
 import { Input } from '@pow/ui/components/ui/input';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { Switch } from '@pow/ui/components/ui/switch';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import type { AdvanceEvaluation, SalaryAdvanceWithDetails, SalaryAdvanceStatus } from '@/types/salaryAdvance';
 import { ADVANCE_STATUS_LABELS, ADVANCE_TYPE_LABELS } from '@/lib/salaryAdvances';
 
@@ -94,107 +95,104 @@ export function AdelantosClient() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Adelantos de sueldo</h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Solicitá un adelanto de tu sueldo. El equipo de People y Administración lo revisan antes de la transferencia.
-          </p>
-        </div>
-        {/* Panel lateral: patrón de creación del DS (igual que Time Off). */}
-        <Sheet open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setError(null); }}>
-          <SheetTrigger
-            className={buttonVariants({ variant: 'primary' })}
-            disabled={hasActiveAdvance}
-          >
-            Solicitar adelanto
-          </SheetTrigger>
-          <SheetContent
-            title="Nueva solicitud"
-            description="Pedí un adelanto de tu sueldo. Lo revisan People y Administración"
-            className="sm:max-w-xl"
-          >
-        <div className="space-y-5 px-1">
+      <PageHeader
+        title="Adelantos de sueldo"
+        description="Solicitá un adelanto de tu sueldo. El equipo de People y Administración lo revisan antes de la transferencia."
+        actions={
+          /* Panel lateral: patrón de creación del DS (igual que Time Off). */
+          <Sheet open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setError(null); }}>
+            <SheetTrigger
+              className={buttonVariants({ variant: 'primary' })}
+              disabled={hasActiveAdvance}
+            >
+              Solicitar adelanto
+            </SheetTrigger>
+            <SheetContent
+              title="Nueva solicitud"
+              description="Pedí un adelanto de tu sueldo. Lo revisan People y Administración"
+              className="sm:max-w-xl"
+            >
+          <div className="space-y-5 px-1">
 
-          <div className="grid gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Monto solicitado</label>
-              <Input
-                type="number"
-                min={0}
-                inputMode="numeric"
-                placeholder="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">¿Es una emergencia?</label>
-              <div className="flex items-center gap-2 h-9">
-                <Switch checked={emergency} onCheckedChange={setEmergency} aria-label="Emergencia" />
-                <span className="text-sm text-muted-foreground">
-                  {emergency ? 'Sí — se tratará como extraordinaria' : 'No'}
-                </span>
+            <div className="grid gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Monto solicitado</label>
+                <Input
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">¿Es una emergencia?</label>
+                <div className="flex items-center gap-2 h-9">
+                  <Switch checked={emergency} onCheckedChange={setEmergency} aria-label="Emergencia" />
+                  <span className="text-sm text-muted-foreground">
+                    {emergency ? 'Sí — se tratará como extraordinaria' : 'No'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {reasonRequired && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Motivo {reasonRequired && <span className="text-[var(--red-600)]">*</span>}
-              </label>
-              <Textarea
-                rows={3}
-                placeholder="Contanos el motivo de la solicitud"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-            </div>
-          )}
+            {reasonRequired && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Motivo {reasonRequired && <span className="text-[var(--red-600)]">*</span>}
+                </label>
+                <Textarea
+                  rows={3}
+                  placeholder="Contanos el motivo de la solicitud"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </div>
+            )}
 
-          {/* Validación en vivo */}
-          {preview && (
-            <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                Requisitos
-              </p>
-              <ul className="space-y-1.5">
-                {preview.rules.map((r) => (
-                  <li key={r.n} className="flex items-center gap-2 text-sm">
-                    {r.ok === true && <span className="text-[var(--green-600)]">✓</span>}
-                    {r.ok === false && <span className="text-[var(--red-600)]">✗</span>}
-                    {r.ok === null && <span className="text-muted-foreground">•</span>}
-                    <span className={r.ok === false ? 'text-foreground' : 'text-muted-foreground'}>
-                      {r.label}
-                      {r.mode === 'manual' && r.detail ? ` — ${r.detail}` : ''}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {preview.classification !== 'standard' && (
-                <p className="mt-3 text-xs text-[var(--amber-600)]">
-                  Tu solicitud sería {preview.classification === 'extraordinary' ? 'extraordinaria' : 'una excepción'}: requiere un motivo. La revisan People y Administración.
+            {/* Validación en vivo */}
+            {preview && (
+              <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                  Requisitos
                 </p>
-              )}
+                <ul className="space-y-1.5">
+                  {preview.rules.map((r) => (
+                    <li key={r.n} className="flex items-center gap-2 text-sm">
+                      {r.ok === true && <span className="text-[var(--green-600)]">✓</span>}
+                      {r.ok === false && <span className="text-[var(--red-600)]">✗</span>}
+                      {r.ok === null && <span className="text-muted-foreground">•</span>}
+                      <span className={r.ok === false ? 'text-foreground' : 'text-muted-foreground'}>
+                        {r.label}
+                        {r.mode === 'manual' && r.detail ? ` — ${r.detail}` : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {preview.classification !== 'standard' && (
+                  <p className="mt-3 text-xs text-[var(--amber-600)]">
+                    Tu solicitud sería {preview.classification === 'extraordinary' ? 'extraordinaria' : 'una excepción'}: requiere un motivo. La revisan People y Administración.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
+
+            <div className="flex items-center gap-3">
+              <Button onClick={submit} disabled={!canSubmit} loading={submitting}>
+                Enviar solicitud
+              </Button>
+              <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>
+                Cancelar
+              </Button>
             </div>
-          )}
-
-          {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
-
-          <div className="flex items-center gap-3">
-            <Button onClick={submit} disabled={!canSubmit} loading={submitting}>
-              Enviar solicitud
-            </Button>
-            <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>
-              Cancelar
-            </Button>
           </div>
-        </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+            </SheetContent>
+          </Sheet>
+        }
+      />
 
       {hasActiveAdvance && (
         <div className="rounded-xl border border-[var(--border)] bg-warning-subtle px-5 py-3 text-sm text-[var(--amber-600)]">

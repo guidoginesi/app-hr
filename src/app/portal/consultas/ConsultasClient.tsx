@@ -7,6 +7,7 @@ import { Sheet, SheetTrigger, SheetContent } from '@pow/ui/components/ui/sheet';
 import { Input } from '@pow/ui/components/ui/input';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import {
   INQUIRY_CATEGORIES,
   CATEGORY_LABELS,
@@ -98,66 +99,64 @@ export function ConsultasClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Consultas</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Hacé tus consultas al equipo de People y seguí el estado de cada una.
-          </p>
-        </div>
-        {/* Panel lateral: mismo patrón de creación que Time Off y Certificados. */}
-        <Sheet
-          open={showForm}
-          onOpenChange={(o) => {
-            setShowForm(o);
-            if (o) setSuccess(null);
-            else setError(null);
-          }}
-        >
-          <SheetTrigger className={buttonVariants({ variant: 'primary' })}>Nueva consulta</SheetTrigger>
-          <SheetContent
-            title="Nueva consulta"
-            description="Contanos tu duda y el equipo de People te responde por acá"
-            className="sm:max-w-xl"
+      <PageHeader
+        title="Consultas"
+        description="Hacé tus consultas al equipo de People y seguí el estado de cada una."
+        actions={
+          /* Panel lateral: mismo patrón de creación que Time Off y Certificados. */
+          <Sheet
+            open={showForm}
+            onOpenChange={(o) => {
+              setShowForm(o);
+              if (o) setSuccess(null);
+              else setError(null);
+            }}
           >
-            {/* px-1: aire para que el ring de foco no se corte contra el overflow del Sheet */}
-            <div className="space-y-4 px-1">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Categoría *</label>
-                <SelectMenu
-                  ariaLabel="Categoría"
-                  className="w-full"
-                  value={category}
-                  onChange={setCategory}
-                  options={[{ value: '', label: 'Elegí una categoría…' }, ...INQUIRY_CATEGORIES]}
-                />
+            <SheetTrigger className={buttonVariants({ variant: 'primary' })}>Nueva consulta</SheetTrigger>
+            <SheetContent
+              title="Nueva consulta"
+              description="Contanos tu duda y el equipo de People te responde por acá"
+              className="sm:max-w-xl"
+            >
+              {/* px-1: aire para que el ring de foco no se corte contra el overflow del Sheet */}
+              <div className="space-y-4 px-1">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Categoría *</label>
+                  <SelectMenu
+                    ariaLabel="Categoría"
+                    className="w-full"
+                    value={category}
+                    onChange={setCategory}
+                    options={[{ value: '', label: 'Elegí una categoría…' }, ...INQUIRY_CATEGORIES]}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Asunto *</label>
+                  <Input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Ej. Diferencia en mi recibo de junio"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Tu consulta *</label>
+                  <Textarea
+                    rows={6}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Contanos con el mayor detalle posible…"
+                  />
+                </div>
+                {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
+                <div className="flex items-center gap-3 pt-1">
+                  <Button onClick={submit} loading={saving}>Enviar consulta</Button>
+                  <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Asunto *</label>
-                <Input
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Ej. Diferencia en mi recibo de junio"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Tu consulta *</label>
-                <Textarea
-                  rows={6}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Contanos con el mayor detalle posible…"
-                />
-              </div>
-              {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
-              <div className="flex items-center gap-3 pt-1">
-                <Button onClick={submit} loading={saving}>Enviar consulta</Button>
-                <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+            </SheetContent>
+          </Sheet>
+        }
+      />
 
       {success && (
         <div className="rounded-lg border border-success/20 bg-success-subtle px-4 py-3 text-sm text-[var(--green-700)]">

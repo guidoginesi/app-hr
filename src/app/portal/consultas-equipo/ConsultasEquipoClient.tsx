@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@pow/ui/components/ui/button';
 import { Textarea } from '@pow/ui/components/ui/textarea';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { CATEGORY_LABELS, STATUS_LABELS_HR, type InquiryCategory, type InquiryStatus } from '@/lib/inquiries';
 
 type Item = {
@@ -71,12 +72,10 @@ export function ConsultasEquipoClient() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Consultas de mi equipo</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Consultas que People compartió con vos para que aportes tu mirada. Solo ves las que te compartieron.
-        </p>
-      </div>
+      <PageHeader
+        title="Consultas de mi equipo"
+        description="Consultas que People compartió con vos para que aportes tu mirada. Solo ves las que te compartieron."
+      />
 
       {loading ? (
         <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
