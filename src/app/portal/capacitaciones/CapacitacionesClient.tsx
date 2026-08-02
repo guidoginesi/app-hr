@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@pow/ui/components/ui/button';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
+import { Sheet, SheetTrigger, SheetContent } from '@pow/ui/components/ui/sheet';
 import { Input } from '@pow/ui/components/ui/input';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
@@ -149,38 +150,20 @@ export function CapacitacionesClient() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Fondo de Capacitaciones</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Solicitá tu capacitación y seguí el estado de tu reintegro.</p>
         </div>
-        {!showForm && <Button onClick={() => setShowForm(true)} disabled={!seniorityOk || available <= 0}>Solicitar capacitación</Button>}
-      </div>
+        {/* Panel lateral: patrón de creación del DS (igual que Time Off). */}
+        <Sheet open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setError(null); }}>
+          <SheetTrigger className={buttonVariants({ variant: 'primary' })} disabled={!seniorityOk || available <= 0}>
+            Solicitar capacitación
+          </SheetTrigger>
+          <SheetContent
+            title="Nueva solicitud"
+            description="Contanos qué querés hacer y lo aprueban tu líder y People"
+            className="sm:max-w-xl"
+          >
+            <div className="space-y-5 px-1">
+              <div className="grid gap-4">
 
-      {/* Budget cards */}
-      {budget && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
-            <div className="text-2xl font-bold text-foreground nums-tabular">{money(budget.total_usd, 'USD')}</div>
-            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Budget anual</div>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
-            <div className="text-2xl font-bold text-foreground nums-tabular">{money(budget.committed_usd + budget.consumed_usd, 'USD')}</div>
-            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Consumido / comprometido</div>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
-            <div className="text-2xl font-bold text-[var(--brand-strong)] nums-tabular">{money(budget.available_usd, 'USD')}</div>
-            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Disponible</div>
-          </div>
-        </div>
-      )}
 
-      {!seniorityOk && !showForm && (
-        <div className="rounded-xl border border-[var(--border)] bg-warning-subtle px-5 py-3 text-sm text-[var(--amber-600)]">
-          Vas a poder solicitar capacitaciones cuando cumplas 6 meses de antigüedad.
-        </div>
-      )}
-
-      {/* Form */}
-      {showForm && (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm space-y-5">
-          <h2 className="text-base font-semibold text-foreground">Nueva solicitud</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nombre del curso *"><Input value={form.course_name} onChange={(e) => set('course_name', e.target.value)} placeholder="Ej. React Avanzado" /></Field>
             <Field label="Proveedor / institución"><Input value={form.provider} onChange={(e) => set('provider', e.target.value)} placeholder="Ej. Platzi" /></Field>
             <Field label="Modalidad">
@@ -207,6 +190,32 @@ export function CapacitacionesClient() {
             <Button onClick={submit} disabled={!canSubmit} loading={submitting}>Enviar solicitud</Button>
             <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
           </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Budget cards */}
+      {budget && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <div className="text-2xl font-bold text-foreground nums-tabular">{money(budget.total_usd, 'USD')}</div>
+            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Budget anual</div>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <div className="text-2xl font-bold text-foreground nums-tabular">{money(budget.committed_usd + budget.consumed_usd, 'USD')}</div>
+            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Consumido / comprometido</div>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <div className="text-2xl font-bold text-[var(--brand-strong)] nums-tabular">{money(budget.available_usd, 'USD')}</div>
+            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Disponible</div>
+          </div>
+        </div>
+      )}
+
+      {!seniorityOk && (
+        <div className="rounded-xl border border-[var(--border)] bg-warning-subtle px-5 py-3 text-sm text-[var(--amber-600)]">
+          Vas a poder solicitar capacitaciones cuando cumplas 6 meses de antigüedad.
         </div>
       )}
 

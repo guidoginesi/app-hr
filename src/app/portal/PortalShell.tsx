@@ -3,6 +3,25 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useTransition, useState, useRef, useEffect } from 'react';
+import {
+  LayoutDashboard,
+  ClipboardCheck,
+  Target,
+  GraduationCap,
+  CalendarDays,
+  Banknote,
+  Wallet,
+  FileText,
+  Award,
+  ScrollText,
+  MessageSquare,
+  MessagesSquare,
+  DoorOpen,
+  UserPlus,
+  Users,
+  BookOpen,
+} from 'lucide-react';
+import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -46,35 +65,41 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
 
   const isRelDep = employee.employment_type === 'dependency';
 
-  const navGroups: { label: string; items: { key: PortalShellProps['active']; label: string; href: string }[] }[] = [
+  // Misma segmentación que el admin: Desempeño / Gestión / Espacio de trabajo /
+  // Equipo / Sistema, con el Dashboard suelto arriba.
+  const on = (key: PortalShellProps['active']) => active === key;
+
+  const navGroups: NavGroup[] = [
     {
-      label: 'General',
+      items: [{ label: 'Dashboard', href: '/portal', icon: LayoutDashboard, active: on('dashboard') }],
+    },
+    {
+      label: 'Desempeño',
       items: [
-        { key: 'dashboard', label: 'Dashboard', href: '/portal' },
-        { key: 'ayuda', label: 'Ayuda', href: '/portal/ayuda' },
+        { label: 'Evaluaciones', href: '/portal/evaluaciones', icon: ClipboardCheck, active: on('evaluaciones') },
+        { label: 'Objetivos', href: '/portal/objetivos', icon: Target, active: on('objetivos') },
+        { label: 'Entrenamiento IA', href: '/portal/entrenamiento-ia', icon: GraduationCap, active: on('entrenamiento-ia') },
       ],
     },
     {
-      label: 'Mi trabajo',
+      label: 'Gestión',
       items: [
-        { key: 'time-off', label: 'Time Off', href: '/portal/time-off' },
-        { key: 'adelantos', label: 'Adelantos', href: '/portal/adelantos' },
-        { key: 'evaluaciones', label: 'Evaluaciones', href: '/portal/evaluaciones' },
-        { key: 'objetivos', label: 'Objetivos', href: '/portal/objetivos' },
-        { key: 'entrenamiento-ia', label: 'Entrenamiento IA', href: '/portal/entrenamiento-ia' },
-        ...(!isRelDep ? [{ key: 'liquidaciones' as const, label: 'Liquidaciones', href: '/portal/liquidaciones' }] : []),
-        { key: 'certificates', label: 'Certificados', href: '/portal/certificates' },
-        { key: 'messages', label: 'Mensajes', href: '/portal/messages' },
+        { label: 'Time Off', href: '/portal/time-off', icon: CalendarDays, active: on('time-off') },
+        { label: 'Adelantos', href: '/portal/adelantos', icon: Banknote, active: on('adelantos') },
+        ...(isRelDep
+          ? [{ label: 'Recibos de sueldo', href: '/portal/recibos', icon: FileText, active: on('recibos') }]
+          : [{ label: 'Liquidaciones', href: '/portal/liquidaciones', icon: Wallet, active: on('liquidaciones') }]),
+        { label: 'Capacitaciones', href: '/portal/capacitaciones', icon: Award, active: on('capacitaciones') },
+        { label: 'Certificados', href: '/portal/certificates', icon: ScrollText, active: on('certificates') },
       ],
     },
     {
-      label: 'Recursos',
+      label: 'Espacio de trabajo',
       items: [
-        { key: 'capacitaciones', label: 'Capacitaciones', href: '/portal/capacitaciones' },
-        { key: 'room-booking', label: 'Reserva de Salas', href: '/portal/room-booking' },
-        ...(isRelDep ? [{ key: 'recibos' as const, label: 'Recibos de sueldo', href: '/portal/recibos' }] : []),
-        { key: 'consultas', label: 'Consultas', href: '/portal/consultas' },
-        { key: 'referidos', label: 'Referidos', href: '/portal/referidos' },
+        { label: 'Mensajes', href: '/portal/messages', icon: MessageSquare, active: on('messages') },
+        { label: 'Consultas', href: '/portal/consultas', icon: MessagesSquare, active: on('consultas') },
+        { label: 'Reserva de Salas', href: '/portal/room-booking', icon: DoorOpen, active: on('room-booking') },
+        { label: 'Referidos', href: '/portal/referidos', icon: UserPlus, active: on('referidos') },
       ],
     },
     ...(isLeader
@@ -82,21 +107,30 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
           {
             label: 'Equipo',
             items: [
-              { key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' },
-              { key: 'consultas-equipo' as const, label: 'Consultas de mi equipo', href: '/portal/consultas-equipo' },
+              { label: 'Mi Equipo', href: '/portal/team', icon: Users, active: on('team') },
+              {
+                label: 'Consultas de mi equipo',
+                href: '/portal/consultas-equipo',
+                icon: MessagesSquare,
+                active: on('consultas-equipo'),
+              },
             ],
           },
         ]
       : []),
+    {
+      label: 'Sistema',
+      items: [{ label: 'Ayuda', href: '/portal/ayuda', icon: BookOpen, active: on('ayuda') }],
+    },
   ];
 
   return (
     <div className="flex min-h-screen bg-muted text-foreground">
-      {/* Sidebar */}
-      <aside className="flex w-52 flex-shrink-0 flex-col border-r border-[var(--border)] bg-white">
-        {/* Logo / header */}
-        <div className="px-5 py-5">
-          <div className="flex items-center gap-2.5">
+      {/* Sidebar: mismo componente y misma segmentación que el admin */}
+      <NavSidebar
+        groups={navGroups}
+        header={
+          <Link href="/portal" className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm">
               <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -106,41 +140,10 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
               <p className="text-sm font-semibold leading-none text-foreground">Portal</p>
               <p className="mt-0.5 text-[10px] text-muted-foreground">Empleados</p>
             </div>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-3">
-          {navGroups.map((group) => (
-            <div key={group.label}>
-              <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {group.label}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const isActive = active === item.key;
-                  return (
-                    <Link
-                      key={item.key}
-                      href={item.href}
-                      className={`flex items-center rounded-md px-2.5 py-1.5 text-sm transition-colors ${
-                        isActive
-                          ? 'bg-accent font-medium text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }`}
-                    >
-                      {isActive && <span className="mr-2 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />}
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        {/* Pie del sidebar: usuario + notificaciones (patrón app-adm) */}
-        <div className="mt-auto space-y-1 border-t border-[var(--border)] p-2">
+          </Link>
+        }
+        footer={
+        <div className="space-y-1">
           <NotificationBell direction="up" label="Notificaciones" />
           <div className="relative min-w-0" ref={dropdownRef}>
               <button
@@ -218,7 +221,8 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
               )}
             </div>
           </div>
-        </aside>
+        }
+      />
 
       {/* Main content (sin barra superior, patrón app-adm) */}
       <main className="min-w-0 flex-1 bg-muted">
