@@ -25,6 +25,12 @@ const MANUALS = [
     desc: 'Estado por período (publicados, confirmados y pendientes), recordatorios manuales y automáticos, export de constancias y recibos corregidos.',
   },
   {
+    href: '/admin/ayuda/consultas',
+    emoji: '💬',
+    title: 'Consultas',
+    desc: 'Bandeja única de People: responder, notas internas, compartir con el líder, estados y cierre, reportes y recurrentes.',
+  },
+  {
     href: '/admin/ayuda/mensajes',
     emoji: '📣',
     title: 'Mensajes',
