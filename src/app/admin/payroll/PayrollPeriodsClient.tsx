@@ -199,7 +199,7 @@ export function PayrollPeriodsClient() {
         </SheetContent>
       </Sheet>
 
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-6 py-4">
           <div>
             <h2 className="text-base font-semibold text-foreground">Periodos de liquidación</h2>

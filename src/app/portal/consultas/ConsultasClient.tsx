@@ -172,7 +172,7 @@ export function ConsultasClient() {
         — quizás ya esté respondida.
       </div>
 
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {loading ? (
           <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
         ) : items.length === 0 ? (

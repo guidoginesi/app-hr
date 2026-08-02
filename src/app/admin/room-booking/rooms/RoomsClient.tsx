@@ -153,7 +153,7 @@ export function RoomsClient() {
         <Button onClick={openCreate}>Nueva sala</Button>
       </div>
 
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {loading ? (
           <div className="px-6 py-5">
             <SkeletonRows rows={5} />

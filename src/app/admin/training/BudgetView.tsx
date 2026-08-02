@@ -335,7 +335,7 @@ export function BudgetView() {
       </div>
 
       {/* Por persona */}
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">Por persona</h2>
           <div className="flex items-center gap-2">

@@ -630,7 +630,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
       )}
 
       {/* Settlements Table */}
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {filteredSettlements.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <p className="text-sm font-medium text-muted-foreground">No hay liquidaciones para mostrar</p>
