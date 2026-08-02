@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@pow/ui/components/ui/button';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
+import { Sheet, SheetTrigger, SheetContent } from '@pow/ui/components/ui/sheet';
 import { Input } from '@pow/ui/components/ui/input';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { Switch } from '@pow/ui/components/ui/switch';
@@ -101,25 +102,22 @@ export function AdelantosClient() {
             Solicitá un adelanto de tu sueldo. El equipo de People y Administración lo revisan antes de la transferencia.
           </p>
         </div>
-        {!showForm && (
-          <Button onClick={() => setShowForm(true)} disabled={hasActiveAdvance}>
+        {/* Panel lateral: patrón de creación del DS (igual que Time Off). */}
+        <Sheet open={showForm} onOpenChange={(o) => { setShowForm(o); if (!o) setError(null); }}>
+          <SheetTrigger
+            className={buttonVariants({ variant: 'primary' })}
+            disabled={hasActiveAdvance}
+          >
             Solicitar adelanto
-          </Button>
-        )}
-      </div>
+          </SheetTrigger>
+          <SheetContent
+            title="Nueva solicitud"
+            description="Pedí un adelanto de tu sueldo. Lo revisan People y Administración"
+            className="sm:max-w-xl"
+          >
+        <div className="space-y-5 px-1">
 
-      {hasActiveAdvance && !showForm && (
-        <div className="rounded-xl border border-[var(--border)] bg-warning-subtle px-5 py-3 text-sm text-[var(--amber-600)]">
-          Ya tenés un adelanto vigente. Vas a poder solicitar otro una vez que se salde.
-        </div>
-      )}
-
-      {/* Form */}
-      {showForm && (
-        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm p-6 space-y-5">
-          <h2 className="text-base font-semibold text-foreground">Nueva solicitud</h2>
-
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Monto solicitado</label>
               <Input
@@ -193,6 +191,14 @@ export function AdelantosClient() {
               Cancelar
             </Button>
           </div>
+        </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {hasActiveAdvance && (
+        <div className="rounded-xl border border-[var(--border)] bg-warning-subtle px-5 py-3 text-sm text-[var(--amber-600)]">
+          Ya tenés un adelanto vigente. Vas a poder solicitar otro una vez que se salde.
         </div>
       )}
 
