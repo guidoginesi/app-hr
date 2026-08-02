@@ -134,6 +134,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
           preheader: `Tu recibo de sueldo de ${periodLabel} ya está disponible.`,
           intro: `Hola ${employeeName}, tu recibo de sueldo de ${periodLabel} ya está disponible. Podés descargarlo desde el portal.`,
           cta: { label: 'Descargar recibo', url: `${portalUrl}/portal/recibos` },
+          outro:
+            'Cuando lo descargues, marcá la casilla "Recibido" en el portal para dejar constancia de la recepción. No implica conformidad con lo liquidado.',
         });
       }
 
