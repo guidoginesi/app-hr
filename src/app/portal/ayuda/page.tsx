@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { PortalShell } from '../PortalShell';
 import { ManualStep } from '@/components/manual/ManualStep';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +13,7 @@ export default async function PortalAyudaPage() {
   return (
     <PortalShell employee={auth.employee} isLeader={auth.isLeader} active="ayuda">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Ayuda</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Cómo usar las funcionalidades del portal.</p>
-        </div>
+        <PageHeader title="Ayuda" description="Cómo usar las funcionalidades del portal." />
 
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm p-6">
           <h2 className="text-lg font-semibold text-foreground">Adelantos de sueldo</h2>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@pow/ui/components/ui/button';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { OFFBOARDING_QUESTIONS, type OffboardingQuestion } from '@/config/offboardingQuestions';
 
 type OffboardingClientProps = {
@@ -64,12 +66,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
   if (!employee.offboardingEnabled) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Encuesta de Salida</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tu encuesta de salida no está disponible
-          </p>
-        </div>
+        <PageHeader title="Encuesta de Salida" description="Tu encuesta de salida no está disponible" />
 
         <div className="rounded-xl border border-[var(--border)] bg-white p-8 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
@@ -92,12 +89,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
     const submittedDate = offboardingResponse?.submitted_at || employee.offboardingCompletedAt;
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Encuesta de Salida</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {employee.firstName}, gracias por completar la encuesta
-          </p>
-        </div>
+        <PageHeader title="Encuesta de Salida" description={`${employee.firstName}, gracias por completar la encuesta`} />
 
         <div className="rounded-xl border border-brand bg-success-subtle p-8 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
@@ -137,12 +129,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
   // Show the survey form
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Encuesta de Salida</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {employee.firstName}, nos gustaría conocer tu experiencia en la empresa
-        </p>
-      </div>
+      <PageHeader title="Encuesta de Salida" description={`${employee.firstName}, nos gustaría conocer tu experiencia en la empresa`} />
 
       <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4">
         <div className="flex gap-3">
@@ -181,13 +168,9 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
         </div>
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary hover:shadow-md disabled:opacity-50"
-          >
-            {isSubmitting ? 'Enviando...' : 'Enviar encuesta'}
-          </button>
+          <Button type="submit" size="lg" loading={isSubmitting}>
+            Enviar encuesta
+          </Button>
         </div>
       </form>
     </div>
