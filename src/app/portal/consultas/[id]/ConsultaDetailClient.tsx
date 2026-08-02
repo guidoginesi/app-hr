@@ -92,6 +92,9 @@ export function ConsultaDetailClient({ inquiryId }: { inquiryId: string }) {
   if (!inquiry) return <div className="py-16 text-center text-sm text-muted-foreground">{error ?? 'No encontrada'}</div>;
 
   const cerradaSinReapertura = inquiry.status === 'cerrada' && !canReopen;
+  // La API reabre tanto desde 'cerrada' como desde 'resuelta'; el botón decía
+  // "Enviar" en resuelta y no se entendía que respondiendo se reabría.
+  const reabrible = inquiry.status === 'cerrada' || inquiry.status === 'resuelta';
 
   return (
     <div className="space-y-6">
@@ -146,15 +149,21 @@ export function ConsultaDetailClient({ inquiryId }: { inquiryId: string }) {
         </div>
       ) : (
         <div className="space-y-3 rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+          {reabrible && (
+            <p className="text-sm text-secondary-foreground">
+              People marcó esta consulta como <b>{STATUS_LABELS_EMPLOYEE[inquiry.status].toLowerCase()}</b>. Si el
+              tema no quedó resuelto, escribí acá y se reabre.
+            </p>
+          )}
           <Textarea
             rows={3}
             value={reply}
             onChange={(e) => setReply(e.target.value)}
-            placeholder={inquiry.status === 'cerrada' ? 'Escribí para reabrir la consulta…' : 'Escribí tu respuesta…'}
+            placeholder={reabrible ? 'Contanos qué quedó pendiente…' : 'Escribí tu respuesta…'}
           />
           {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
           <Button onClick={send} loading={sending} disabled={!reply.trim()}>
-            {inquiry.status === 'cerrada' ? 'Reabrir consulta' : 'Enviar'}
+            {reabrible ? 'Reabrir consulta' : 'Enviar'}
           </Button>
         </div>
       )}

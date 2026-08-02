@@ -10,7 +10,7 @@ import { CATEGORY_LABELS, type InquiryCategory, type InquiryStatus } from '@/lib
 type Ctx = { params: Promise<{ id: string }> };
 
 const ActionSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('reply'), body: z.string().min(1) }),
+  z.object({ action: z.literal('reply'), body: z.string().min(1), resolve: z.boolean().optional() }),
   z.object({ action: z.literal('internal_note'), body: z.string().min(1) }),
   z.object({ action: z.literal('set_status'), status: z.enum(['en_curso', 'esperando_colaborador', 'resuelta', 'cerrada']) }),
   z.object({ action: z.literal('assign_to_me') }),
@@ -83,14 +83,22 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       body: a.body.trim(),
     });
 
+    // "Responder y marcar resuelta" es un solo paso: antes había que responder y
+    // después cambiar el estado a mano, y quedaban consultas resueltas sin marcar.
+    const nextStatus = a.resolve ? 'resuelta' : 'esperando_colaborador';
+
     const update: Record<string, unknown> = {
-      status: 'esperando_colaborador',
+      status: nextStatus,
       last_activity_at: nowIso,
       updated_at: nowIso,
     };
     // El SLA se cumple con la PRIMERA respuesta de HR.
     if (!inquiry.first_hr_response_at) update.first_hr_response_at = nowIso;
     if (!inquiry.assigned_to) update.assigned_to = user.id;
+    if (a.resolve) {
+      update.resolved_at = nowIso;
+      update.resolved_by = user.id;
+    }
     await supabase.from('employee_inquiries').update(update).eq('id', id);
 
     await supabase.from('inquiry_events').insert({
@@ -98,7 +106,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       actor_user_id: user.id,
       event_type: 'hr_reply',
       from_status: from,
-      to_status: 'esperando_colaborador',
+      to_status: nextStatus,
     });
 
     // Aviso al colaborador (in-app + mail)
@@ -107,8 +115,10 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       notifs.push(
         createSystemNotification({
           userIds: [inquiry.user_id],
-          title: 'Te respondimos tu consulta',
-          body: `People respondió en "${inquiry.subject}".`,
+          title: a.resolve ? 'Resolvimos tu consulta' : 'Te respondimos tu consulta',
+          body: a.resolve
+            ? `People respondió y marcó "${inquiry.subject}" como resuelta. Si te quedó algo, respondé y se reabre.`
+            : `People respondió en "${inquiry.subject}".`,
           deepLink: '/portal/consultas',
           dedupeKey: `inquiry-hr-reply-${id}-${Date.now()}`,
         }),
@@ -118,13 +128,18 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       notifs.push(
         sendSimpleEmail({
           to: inquiry.employee_email,
-          subject: `Respondimos tu consulta: ${inquiry.subject}`,
+          subject: a.resolve
+            ? `Resolvimos tu consulta: ${inquiry.subject}`
+            : `Respondimos tu consulta: ${inquiry.subject}`,
           replyTo: getReplyTo(),
           html: renderEmail({
-            title: 'Te respondimos tu consulta',
+            title: a.resolve ? 'Resolvimos tu consulta' : 'Te respondimos tu consulta',
             contextLabel: 'People · Consultas',
-            intro: `Hola ${inquiry.first_name ?? ''}, respondimos tu consulta "${inquiry.subject}" (${CATEGORY_LABELS[inquiry.category as InquiryCategory]}). Entrá al portal para leer la respuesta y seguir la conversación.`,
+            intro: a.resolve
+              ? `Hola ${inquiry.first_name ?? ''}, respondimos tu consulta "${inquiry.subject}" (${CATEGORY_LABELS[inquiry.category as InquiryCategory]}) y la marcamos como resuelta.`
+              : `Hola ${inquiry.first_name ?? ''}, respondimos tu consulta "${inquiry.subject}" (${CATEGORY_LABELS[inquiry.category as InquiryCategory]}). Entrá al portal para leer la respuesta y seguir la conversación.`,
             cta: { label: 'Ver la consulta', url: `${getAppUrl()}/portal/consultas` },
+            outro: a.resolve ? 'Si el tema no quedó cerrado, respondé desde el portal y la consulta se reabre.' : undefined,
           }),
         }),
       );
