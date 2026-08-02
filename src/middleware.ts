@@ -130,9 +130,10 @@ export async function middleware(request: NextRequest) {
 
     if (!isAdmin) {
       if (isAdministracion) {
-        // Perfil Administración: solo el módulo de Adelantos. El resto del
-        // admin lo redirige a esa pantalla.
-        if (!pathname.startsWith('/admin/salary-advances')) {
+        // Perfil Administración: Adelantos + la vista de recepción de recibos
+        // (solo estado, sin montos). El resto del admin lo redirige.
+        const allowed = ['/admin/salary-advances', '/admin/recibos'];
+        if (!allowed.some((p) => pathname.startsWith(p))) {
           return NextResponse.redirect(new URL('/admin/salary-advances', request.url));
         }
       } else {

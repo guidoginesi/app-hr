@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requirePayrollReceiptsViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { findPendingReceipts, sendReceiptReminders } from '@/lib/payrollReceiptReminders';
 
@@ -9,10 +9,11 @@ type RouteContext = { params: Promise<{ id: string }> };
 // Recordatorio manual a quienes todavía no confirmaron la recepción de su recibo.
 export async function POST(_req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin, user } = await requireAdmin();
-    if (!isAdmin || !user) {
+    const auth = await requirePayrollReceiptsViewer();
+    if (!auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const user = auth.user;
 
     const { id } = await context.params;
     const supabase = getSupabaseServer();
