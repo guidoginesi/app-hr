@@ -16,6 +16,7 @@ import {
   Award,
   DoorOpen,
   MessageSquare,
+  MessagesSquare,
   Settings,
   BookOpen,
   FileCheck,
@@ -76,6 +77,7 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
       items: [
         { label: 'Reserva de Salas', href: '/admin/room-booking', icon: DoorOpen, active: match('/admin/room-booking') },
         { label: 'Mensajes', href: '/admin/messages', icon: MessageSquare, active: match('/admin/messages') },
+        { label: 'Consultas', href: '/admin/consultas', icon: MessagesSquare, active: match('/admin/consultas') },
       ],
     },
     {
