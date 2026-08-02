@@ -6,6 +6,7 @@ import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
+import { runInquiryAutomations } from '@/lib/inquiryAutomations';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -100,6 +101,7 @@ export async function GET(req: NextRequest) {
     preLeaveReminders: [] as string[],
     approvalDigests: { sent: [] as string[], errors: [] as string[] },
     receiptReminders: { sent: 0, skipped: 0 },
+    inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
     errors: [] as string[],
   };
 
@@ -359,6 +361,13 @@ export async function GET(req: NextRequest) {
     results.receiptReminders = await runAutomaticReceiptReminders();
   } catch (e: any) {
     results.errors.push(`Receipt reminders: ${e.message}`);
+  }
+
+  // ── CONSULTAS: auto-cierre + digest a People ───────────────────
+  try {
+    results.inquiries = await runInquiryAutomations();
+  } catch (e: any) {
+    results.errors.push(`Inquiry automations: ${e.message}`);
   }
 
   return NextResponse.json({
