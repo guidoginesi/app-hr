@@ -21,6 +21,8 @@ type Settlement = {
   pdf2_uploaded_at: string | null;
   requires_acknowledgement?: boolean | null;
   acknowledged_at?: string | null;
+  payslip_version?: number | null;
+  payslip_replaced_at?: string | null;
 };
 
 type RecibosClientProps = {
@@ -213,6 +215,13 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
                       {settlement.pdf_uploaded_at && (
                         <p className="text-xs text-muted-foreground">
                           Subido el {new Date(settlement.pdf_uploaded_at).toLocaleDateString('es-AR')}
+                        </p>
+                      )}
+                      {settlement.payslip_replaced_at && !acknowledgedAt(settlement) && (
+                        <p className="mt-0.5 text-xs font-medium text-[var(--amber-600)]">
+                          Este recibo fue actualizado el{' '}
+                          {new Date(settlement.payslip_replaced_at).toLocaleDateString('es-AR')} — descargalo y volvé a
+                          confirmar la recepción.
                         </p>
                       )}
                     </div>

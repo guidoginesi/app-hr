@@ -7,6 +7,7 @@ import {
   payslipStoragePath,
   type PayslipSlot,
 } from '@/lib/payrollPayslips';
+import { notifyPayslipReplaced } from '@/lib/payrollReceiptReminders';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -101,13 +102,37 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
+    const reason = ((formData.get('reason') as string | null) ?? '').trim();
 
     if (!file) {
       return NextResponse.json({ error: 'No se proporcionó un archivo' }, { status: 400 });
     }
 
+    // Reemplazo de un recibo YA PUBLICADO: exige motivo, genera una versión nueva
+    // (sin pisar el archivo confirmado) e invalida la constancia previa.
+    const isReplacement = settlement.status === 'SENT';
+    if (isReplacement && !reason) {
+      return NextResponse.json(
+        {
+          error:
+            'Este recibo ya fue publicado. Indicá el motivo del reemplazo: se generará una versión nueva y el colaborador deberá volver a confirmar la recepción.',
+          requires_reason: true,
+        },
+        { status: 400 },
+      );
+    }
+
+    const { data: currentPayslip } = await supabase
+      .from('payroll_payslips')
+      .select('version')
+      .eq('settlement_id', id)
+      .maybeSingle();
+
+    const currentVersion = currentPayslip?.version ?? 1;
+    const newVersion = isReplacement ? currentVersion + 1 : currentVersion;
+
     const periodKey = periodData?.period_key || 'unknown';
-    const storagePath = payslipStoragePath(settlement.employee_id, periodKey, slot);
+    const storagePath = payslipStoragePath(settlement.employee_id, periodKey, slot, newVersion);
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
     const { error: uploadError } = await supabase.storage
@@ -129,6 +154,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
         [slotFields.filenameKey]: file.name,
         [slotFields.uploadedAtKey]: new Date().toISOString(),
         [slotFields.uploadedByKey]: user.id,
+        version: newVersion,
+        ...(isReplacement
+          ? { replaced_at: new Date().toISOString(), replaced_by: user.id, replaced_reason: reason }
+          : {}),
       })
       .eq('settlement_id', id)
       .select()
@@ -137,6 +166,18 @@ export async function POST(req: NextRequest, context: RouteContext) {
     if (updateError) {
       console.error('Error updating payslip record:', updateError);
       return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    if (isReplacement) {
+      // La constancia anterior queda archivada (evidencia de qué archivo se había
+      // confirmado) y la persona vuelve a estado pendiente.
+      await supabase
+        .from('payroll_receipt_acknowledgements')
+        .update({ superseded_at: new Date().toISOString() })
+        .eq('settlement_id', id)
+        .is('superseded_at', null);
+
+      await notifyPayslipReplaced(supabase, id, newVersion);
     }
 
     await syncSettlementStatusAfterPayslipChange(supabase, id);

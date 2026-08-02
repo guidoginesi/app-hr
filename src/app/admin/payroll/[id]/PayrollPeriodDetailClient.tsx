@@ -268,10 +268,27 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
 
   const handleUploadPdf = async (settlementId: string, file: File, slot: PayslipSlot) => {
     const uploadKey = `${settlementId}-${slot}`;
+    // Reemplazo de un recibo ya publicado: pedimos el motivo antes de subir.
+    // Genera una versión nueva e invalida la constancia previa del colaborador.
+    const target = settlements.find((s) => s.id === settlementId);
+    let reason = '';
+    if (target?.status === 'SENT') {
+      const input = window.prompt(
+        'Este recibo ya fue publicado. Se va a generar una versión nueva y el colaborador deberá volver a confirmar la recepción.\n\nMotivo del reemplazo:',
+      );
+      if (input === null) return; // cancelado
+      reason = input.trim();
+      if (!reason) {
+        setMessage({ type: 'error', text: 'Indicá el motivo del reemplazo.' });
+        return;
+      }
+    }
+
     setUploadingRows((prev) => ({ ...prev, [uploadKey]: true }));
     try {
       const formData = new FormData();
       formData.append('file', file);
+      if (reason) formData.append('reason', reason);
 
       const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip?slot=${slot}`, {
         method: 'POST',
