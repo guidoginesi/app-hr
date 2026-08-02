@@ -19,6 +19,12 @@ const MANUALS = [
     desc: 'Solicitud, aprobación (líder → HR), cargas de factura/certificado, pagos con MEP y reintegro por liquidación, y vista de budget.',
   },
   {
+    href: '/admin/ayuda/recibos',
+    emoji: '🧾',
+    title: 'Recepción de recibos',
+    desc: 'Estado por período (publicados, confirmados y pendientes), recordatorios manuales y automáticos, export de constancias y recibos corregidos.',
+  },
+  {
     href: '/admin/ayuda/mensajes',
     emoji: '📣',
     title: 'Mensajes',
