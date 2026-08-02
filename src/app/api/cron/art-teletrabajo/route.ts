@@ -12,8 +12,13 @@ import { addDaysToDateString, getArgentinaDateString } from '@/lib/artTeletrabaj
 
 function authorizeCron(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  // Falla cerrado: sin secreto configurado el endpoint queda expuesto a internet
+  // (y estos crons mandan mails), así que preferimos no ejecutar.
+  if (!cronSecret) {
+    console.error('[cron] CRON_SECRET no está configurado: se rechaza la ejecución.');
+    return false;
+  }
   return authHeader === `Bearer ${cronSecret}`;
 }
 

@@ -70,10 +70,17 @@ async function createInternalMessage(
 }
 
 export async function GET(req: NextRequest) {
-  // Allow Vercel cron or manual trigger with secret
+  // Solo Vercel Cron (manda el Bearer automáticamente cuando existe CRON_SECRET)
+  // o un disparo manual con el secreto.
   const authHeader = req.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  // Falla cerrado: sin secreto configurado el endpoint queda abierto a internet
+  // y este cron manda mails (cumpleaños, digests, recordatorios de recibos).
+  if (!cronSecret) {
+    console.error('[cron] CRON_SECRET no está configurado: se rechaza la ejecución.');
+    return NextResponse.json({ error: 'Cron no configurado' }, { status: 503 });
+  }
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
