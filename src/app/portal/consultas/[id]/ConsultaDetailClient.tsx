@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@pow/ui/components/ui/button';
 import { Textarea } from '@pow/ui/components/ui/textarea';
+import { AttachmentPanel } from '@/components/inquiries/AttachmentPanel';
 import {
   CATEGORY_LABELS,
   STATUS_LABELS_EMPLOYEE,
@@ -136,6 +137,8 @@ export function ConsultaDetailClient({ inquiryId }: { inquiryId: string }) {
           );
         })}
       </div>
+
+      <AttachmentPanel inquiryId={inquiryId} canUpload={!cerradaSinReapertura} />
 
       {cerradaSinReapertura ? (
         <div className="rounded-xl border border-[var(--border)] bg-muted px-5 py-4 text-sm text-muted-foreground">
