@@ -30,7 +30,7 @@ export default async function PortalAyudaPage() {
           </div>
 
           <div className="mt-8 space-y-10">
-            <ManualStep image="/manual/adelantos-portal/01-inicio.png" n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Adelantos' resaltado en 'Mi trabajo' y el botón 'Solicitar adelanto'.">
+            <ManualStep image="/manual/adelantos-portal/01-inicio.png" n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Adelantos' resaltado en Gestión y el botón 'Solicitar adelanto'.">
               <p>En el menú del portal, entrá a <b>Adelantos</b>. Ahí solicitás y ves el estado de tus adelantos.</p>
             </ManualStep>
 
@@ -39,7 +39,7 @@ export default async function PortalAyudaPage() {
             </ManualStep>
 
             <ManualStep image="/manual/adelantos-portal/02-form.png" n={3} title="Mirá los requisitos" imageAlt="Panel 'Requisitos' con las reglas: antigüedad, fecha límite, monto, sin adelanto vigente, máximo por año, etc.">
-              <p>Debajo del formulario ves los <b>requisitos</b> (antigüedad, fecha, sin adelanto vigente, etc.) con un ✓ si los cumplís. Si te falta alguno, la solicitud igual avanza como <b>excepción</b> pero te pide un <b>motivo</b>.</p>
+              <p>En el mismo panel, debajo de los campos, ves los <b>requisitos</b> (antigüedad, fecha, sin adelanto vigente, etc.) con un ✓ si los cumplís. Si te falta alguno, la solicitud igual avanza como <b>excepción</b> pero te pide un <b>motivo</b>.</p>
               <p>Dos cosas las revisa el equipo a mano: que el monto no supere el 50% de tu neto, y que no haya una renuncia comunicada.</p>
             </ManualStep>
 
@@ -68,7 +68,7 @@ export default async function PortalAyudaPage() {
           </div>
 
           <div className="mt-8 space-y-10">
-            <ManualStep image="/manual/capacitaciones-portal/01-budget.png" n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Capacitaciones' resaltado en Recursos.">
+            <ManualStep image="/manual/capacitaciones-portal/01-budget.png" n={1} title="Dónde pedirlo" imageAlt="Menú del portal con 'Capacitaciones' resaltado en Gestión.">
               <p>En el menú del portal, entrá a <b>Capacitaciones</b>. Ahí ves tu budget y solicitás.</p>
             </ManualStep>
 
@@ -108,7 +108,7 @@ export default async function PortalAyudaPage() {
           </div>
 
           <div className="mt-8 space-y-10">
-            <ManualStep image="/manual/consultas-portal/01-lista.png" n={1} title="Dónde hacerla" imageAlt="Menú del portal con 'Consultas' resaltado en Recursos y el botón 'Nueva consulta'.">
+            <ManualStep image="/manual/consultas-portal/01-lista.png" n={1} title="Dónde hacerla" imageAlt="Menú del portal con 'Consultas' resaltado en Espacio de trabajo y el botón 'Nueva consulta'.">
               <p>En el menú del portal, entrá a <b>Consultas</b> y tocá <b>Nueva consulta</b>. Antes de escribir, fijate en la sección de <b>Ayuda</b>: quizás lo que buscás ya esté respondido.</p>
             </ManualStep>
 
