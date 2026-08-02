@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@pow/ui/components/ui/button';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
+import { Sheet, SheetTrigger, SheetContent } from '@pow/ui/components/ui/sheet';
 import { Input } from '@pow/ui/components/ui/input';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
@@ -104,7 +105,58 @@ export function ConsultasClient() {
             Hacé tus consultas al equipo de People y seguí el estado de cada una.
           </p>
         </div>
-        {!showForm && <Button onClick={() => { setShowForm(true); setSuccess(null); }}>Nueva consulta</Button>}
+        {/* Panel lateral: mismo patrón de creación que Time Off y Certificados. */}
+        <Sheet
+          open={showForm}
+          onOpenChange={(o) => {
+            setShowForm(o);
+            if (o) setSuccess(null);
+            else setError(null);
+          }}
+        >
+          <SheetTrigger className={buttonVariants({ variant: 'primary' })}>Nueva consulta</SheetTrigger>
+          <SheetContent
+            title="Nueva consulta"
+            description="Contanos tu duda y el equipo de People te responde por acá"
+            className="sm:max-w-xl"
+          >
+            {/* px-1: aire para que el ring de foco no se corte contra el overflow del Sheet */}
+            <div className="space-y-4 px-1">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Categoría *</label>
+                <SelectMenu
+                  ariaLabel="Categoría"
+                  className="w-full"
+                  value={category}
+                  onChange={setCategory}
+                  options={[{ value: '', label: 'Elegí una categoría…' }, ...INQUIRY_CATEGORIES]}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Asunto *</label>
+                <Input
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Ej. Diferencia en mi recibo de junio"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Tu consulta *</label>
+                <Textarea
+                  rows={6}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Contanos con el mayor detalle posible…"
+                />
+              </div>
+              {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
+              <div className="flex items-center gap-3 pt-1">
+                <Button onClick={submit} loading={saving}>Enviar consulta</Button>
+                <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {success && (
@@ -120,36 +172,6 @@ export function ConsultasClient() {
         </Link>{' '}
         — quizás ya esté respondida.
       </div>
-
-      {showForm && (
-        <div className="space-y-4 rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-foreground">Nueva consulta</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Categoría *</label>
-              <SelectMenu
-                ariaLabel="Categoría"
-                value={category}
-                onChange={setCategory}
-                options={[{ value: '', label: 'Elegí una categoría…' }, ...INQUIRY_CATEGORIES]}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Asunto *</label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ej. Diferencia en mi recibo de junio" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Tu consulta *</label>
-            <Textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Contanos con el mayor detalle posible…" />
-          </div>
-          {error && <p className="text-sm text-[var(--red-600)]">{error}</p>}
-          <div className="flex items-center gap-3">
-            <Button onClick={submit} loading={saving}>Enviar consulta</Button>
-            <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>Cancelar</Button>
-          </div>
-        </div>
-      )}
 
       <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
         {loading ? (
