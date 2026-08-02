@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { Button } from '@pow/ui/components/ui/button';
+import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
 import { payslipHasAnyPdf, type PayslipSlot } from '@/lib/payrollPayslips';
+import { formatAcknowledgedAt } from '@/lib/payrollReceipts';
 
 type Settlement = {
   id: string;
@@ -17,6 +19,8 @@ type Settlement = {
   pdf2_storage_path: string | null;
   pdf2_filename: string | null;
   pdf2_uploaded_at: string | null;
+  requires_acknowledgement?: boolean | null;
+  acknowledged_at?: string | null;
 };
 
 type RecibosClientProps = {
@@ -44,9 +48,73 @@ function DownloadButton({
   );
 }
 
+function AcknowledgeControl({
+  settlementId,
+  acknowledgedAt,
+  busy,
+  onConfirm,
+}: {
+  settlementId: string;
+  acknowledgedAt: string | null;
+  busy: boolean;
+  onConfirm: () => void;
+}) {
+  const done = Boolean(acknowledgedAt);
+  return (
+    <div className="flex items-start gap-2">
+      <Checkbox
+        id={`ack-${settlementId}`}
+        checked={done}
+        disabled={done || busy}
+        onCheckedChange={(c) => {
+          if (c === true && !done && !busy) onConfirm();
+        }}
+        aria-label="Confirmo que recibí el recibo"
+      />
+      <div className="leading-tight">
+        <span className={`block text-sm font-medium ${done ? 'text-foreground' : 'text-secondary-foreground'}`}>
+          Recibido
+        </span>
+        <span className="block text-xs text-muted-foreground">
+          {done
+            ? `Confirmaste la recepción el ${formatAcknowledgedAt(acknowledgedAt as string)}`
+            : busy
+              ? 'Registrando…'
+              : 'Confirmo que recibí el recibo'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function RecibosClient({ settlements }: RecibosClientProps) {
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Constancias confirmadas en esta sesión, además de las que ya vinieron del server.
+  const [acks, setAcks] = useState<Record<string, string>>({});
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const acknowledgedAt = (s: Settlement): string | null => acks[s.id] ?? s.acknowledged_at ?? null;
+
+  const handleAcknowledge = async (settlementId: string) => {
+    setConfirming(settlementId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/portal/payroll/settlements/${settlementId}/acknowledge`, {
+        method: 'POST',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || 'No se pudo registrar la recepción');
+        return;
+      }
+      setAcks((prev) => ({ ...prev, [settlementId]: data.acknowledged_at ?? new Date().toISOString() }));
+    } catch {
+      setError('No se pudo registrar la recepción');
+    } finally {
+      setConfirming(null);
+    }
+  };
 
   const handleDownload = async (settlementId: string, slot: PayslipSlot, filename: string) => {
     const downloadKey = `${settlementId}-${slot}`;
@@ -149,7 +217,15 @@ export function RecibosClient({ settlements }: RecibosClientProps) {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-4">
+                    {settlement.requires_acknowledgement !== false && (
+                      <AcknowledgeControl
+                        settlementId={settlement.id}
+                        acknowledgedAt={acknowledgedAt(settlement)}
+                        busy={confirming === settlement.id}
+                        onConfirm={() => handleAcknowledge(settlement.id)}
+                      />
+                    )}
                     {slots.map((slot) => {
                       const filename =
                         slot === 1

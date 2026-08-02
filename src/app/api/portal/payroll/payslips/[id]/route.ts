@@ -19,13 +19,18 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
     const { data: settlement, error: settlementError } = await supabase
       .from('payroll_settlements_with_details')
-      .select('id, employee_id, contract_type_snapshot')
+      .select('id, employee_id, contract_type_snapshot, status')
       .eq('id', id)
       .eq('employee_id', auth.employee.id)
       .single();
 
     if (settlementError || !settlement) {
       return NextResponse.json({ error: 'Liquidación no encontrada' }, { status: 404 });
+    }
+
+    // Solo recibos publicados: sin esto, un recibo en borrador es descargable con solo conocer el UUID.
+    if (settlement.status !== 'SENT') {
+      return NextResponse.json({ error: 'El recibo todavía no fue publicado' }, { status: 404 });
     }
 
     if (settlement.contract_type_snapshot !== 'RELACION_DEPENDENCIA') {
@@ -57,7 +62,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
       console.error('Error downloading payslip:', downloadError);
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('payslips')
-        .createSignedUrl(storagePath, 3600);
+        .createSignedUrl(storagePath, 300);
       if (signedUrlError || !signedUrlData?.signedUrl) {
         return NextResponse.json({ error: 'Error al obtener el recibo' }, { status: 500 });
       }
