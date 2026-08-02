@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Settings,
   BookOpen,
+  FileCheck,
 } from 'lucide-react';
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
@@ -66,6 +67,7 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
         { label: 'Time Off', href: '/admin/time-off', icon: CalendarDays, active: match('/admin/time-off') },
         { label: 'Liquidaciones', href: '/admin/payroll', icon: Wallet, active: match('/admin/payroll') },
         { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
+        { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
         { label: 'Capacitaciones', href: '/admin/training', icon: Award, active: match('/admin/training') },
       ],
     },
@@ -91,6 +93,7 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
           label: 'Gestión',
           items: [
             { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
+            { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
           ],
         },
       ]

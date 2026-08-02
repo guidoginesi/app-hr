@@ -149,6 +149,15 @@ export async function requireAdvanceApprover(): Promise<AuthResult | null> {
 }
 
 /**
+ * Require access to the receipt-acknowledgement views (/admin/recibos).
+ * Admin completo o perfil Administración: SOLO lectura del estado de recepción,
+ * export y recordatorios. No da acceso a montos ni a la gestión de liquidaciones.
+ */
+export async function requirePayrollReceiptsViewer(): Promise<AuthResult | null> {
+  return requireRole(['admin', 'administracion']);
+}
+
+/**
  * Require leader role (for team management)
  */
 export async function requireLeader(): Promise<AuthResult | null> {
