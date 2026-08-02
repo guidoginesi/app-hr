@@ -5,6 +5,7 @@ import { sendTimeOffEmail } from '@/lib/emailService';
 import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { sendApprovalDigests } from '@/lib/approvalDigest';
+import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -91,6 +92,7 @@ export async function GET(req: NextRequest) {
     anniversaries: [] as string[],
     preLeaveReminders: [] as string[],
     approvalDigests: { sent: [] as string[], errors: [] as string[] },
+    receiptReminders: { sent: 0, skipped: 0 },
     errors: [] as string[],
   };
 
@@ -343,6 +345,13 @@ export async function GET(req: NextRequest) {
     results.approvalDigests = await sendApprovalDigests();
   } catch (e: any) {
     results.errors.push(`Approval digests: ${e.message}`);
+  }
+
+  // ── RECORDATORIOS DE RECEPCIÓN DE RECIBOS ──────────────────────
+  try {
+    results.receiptReminders = await runAutomaticReceiptReminders();
+  } catch (e: any) {
+    results.errors.push(`Receipt reminders: ${e.message}`);
   }
 
   return NextResponse.json({

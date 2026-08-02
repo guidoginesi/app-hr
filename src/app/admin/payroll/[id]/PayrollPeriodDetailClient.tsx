@@ -10,6 +10,7 @@ import {
 import { payslipHasBothPdfs, type PayslipSlot } from '@/lib/payrollPayslips';
 import { Button } from '@pow/ui/components/ui/button';
 import { SkeletonRows } from '@pow/ui/components/ui/skeleton';
+import { ReceiptAcknowledgementSection } from './ReceiptAcknowledgementSection';
 
 async function openPayslipPdf(settlementId: string, slot: PayslipSlot = 1): Promise<void> {
   const res = await fetch(`/api/admin/payroll/settlements/${settlementId}/payslip?slot=${slot}`);
@@ -65,6 +66,11 @@ type Settlement = {
   invoice_filename: string | null;
   invoice_uploaded_at: string | null;
   email_to: string | null;
+  employee_email?: string | null;
+  employee_user_id?: string | null;
+  sent_at?: string | null;
+  requires_acknowledgement?: boolean | null;
+  acknowledged_at?: string | null;
 };
 
 const currencyFormatter = new Intl.NumberFormat('es-AR', {
@@ -98,6 +104,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [claimingInvoices, setClaimingInvoices] = useState(false);
+  const [remindingReceipts, setRemindingReceipts] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Settlement; direction: 'asc' | 'desc' } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -388,6 +395,26 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
     }
   };
 
+  const handleRemindPending = async () => {
+    setRemindingReceipts(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/payroll/periods/${periodId}/remind-pending`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message || 'Recordatorios enviados' });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Error al enviar recordatorios' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Error al enviar recordatorios' });
+    } finally {
+      setRemindingReceipts(false);
+    }
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -533,6 +560,13 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
           </button>
         </div>
       )}
+
+      {/* Recepción de recibos (relación de dependencia) */}
+      <ReceiptAcknowledgementSection
+        settlements={settlements}
+        onRemind={handleRemindPending}
+        reminding={remindingReceipts}
+      />
 
       {/* Filter Tabs */}
       <div className="flex gap-1 rounded-lg bg-secondary p-1">

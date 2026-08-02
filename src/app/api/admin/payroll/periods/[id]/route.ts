@@ -67,6 +67,12 @@ export async function GET(req: NextRequest, context: RouteContext) {
       invoice_filename: s.invoice_filename ?? null,
       invoice_uploaded_at: s.invoice_uploaded_at ?? null,
       email_to: s.email_to ?? null,
+      employee_email: s.employee_email ?? null,
+      employee_user_id: s.employee_user_id ?? null,
+      sent_at: s.sent_at ?? null,
+      // Recepción del recibo
+      requires_acknowledgement: s.requires_acknowledgement ?? true,
+      acknowledged_at: s.acknowledged_at ?? null,
     }));
 
     return NextResponse.json({ period, settlements });
