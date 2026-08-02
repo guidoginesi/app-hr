@@ -61,8 +61,22 @@ export default async function AyudaCapacitacionesPage() {
           <p>El líder o HR pueden <b>rechazar</b> con un <b>motivo obligatorio</b>; el colaborador recibe el aviso con la explicación.</p>
         </ManualStep>
 
-        <ManualStep image="/manual/capacitaciones-admin/09-budget.png" n={9} title="Vista de Budget" imageAlt="Vista 'Budget' con las cards global (total/comprometido/consumido/disponible) y las tablas por área y por persona.">
-          <p>En el toggle <b>Budget</b> ves el consumo del programa: cards globales, y el detalle <b>por área</b> y <b>por persona</b> (total, comprometido, consumido y disponible en USD). Útil para el seguimiento anual.</p>
+        <ManualStep image="/manual/capacitaciones-admin/09-budget.png" n={9} title="Vista de Budget" imageAlt="Vista 'Budget' con el selector de año, el default anual, las cards global (total/comprometido/consumido/disponible) y las tablas por área y por persona.">
+          <p>En el toggle <b>Budget</b> ves el consumo del programa: cards globales, y el detalle <b>por área</b> y <b>por persona</b> (total, comprometido, consumido y disponible en USD). Arriba elegís el <b>año</b>: cada año tiene su propio budget.</p>
+        </ManualStep>
+
+        <ManualStep image="/manual/capacitaciones-admin/10-budget-default.png" n={10} title="Cambiar el budget de todos" imageAlt="Campo 'Budget por persona (default)' con su botón Guardar, arriba de la vista de Budget.">
+          <p>El campo <b>Budget por persona (default)</b> es el monto que le corresponde a todo el mundo. Cambiarlo aplica de inmediato a quienes no tengan un budget propio, y <b>no pisa</b> los budgets individuales que ya hayas asignado.</p>
+        </ManualStep>
+
+        <ManualStep image="/manual/capacitaciones-admin/11-budget-persona.png" n={11} title="Ajustar el budget de una persona" imageAlt="Tabla 'Por persona' con el monto de una fila convertido en campo editable y los botones Guardar y Cancelar.">
+          <p>En la tabla <b>Por persona</b>, hacé clic sobre el <b>monto</b> de la fila y escribí el nuevo. Enter guarda, Escape cancela. La fila queda marcada como <b>propio</b> para distinguirla de las que siguen el default.</p>
+          <p>Si el nuevo monto queda por <b>debajo de lo que la persona ya comprometió o gastó</b>, te avisa: su disponible pasa a cero, pero lo ya aprobado no se revierte.</p>
+        </ManualStep>
+
+        <ManualStep image="/manual/capacitaciones-admin/12-budget-masivo.png" n={12} title="Asignar budget a varias personas" imageAlt="Varias filas tildadas y la barra de acciones con el monto, 'Asignar a N' y 'Volver al default'.">
+          <p>Tildá las personas que quieras y aparece la barra de acciones: escribí un monto y <b>Asignar a N</b>, o <b>Volver al default</b> para quitarles el budget propio.</p>
+          <p>Para un área entera, filtrá por <b>área</b> y usá el tilde del encabezado para seleccionarlas todas. Al cambiar de área la selección se limpia, para que no asignes sin querer a gente que dejaste de ver.</p>
         </ManualStep>
       </div>
     </AyudaLayout>
