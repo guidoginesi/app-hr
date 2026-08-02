@@ -15,18 +15,23 @@ async function getEffectiveBudget(
   employeeId: string,
   year: number,
 ): Promise<number> {
-  const { data: override } = await supabase
+  // Los errores se propagan a propósito: si esta consulta falla en silencio, la
+  // persona con budget propio cae al default y ve un saldo que no es el suyo.
+  const { data: override, error: overrideError } = await supabase
     .from('training_budget_overrides')
     .select('amount_usd')
     .eq('employee_id', employeeId)
     .eq('year', year)
     .maybeSingle();
+  if (overrideError) throw new Error(overrideError.message);
   if (override) return Number(override.amount_usd);
-  const { data: config } = await supabase
+
+  const { data: config, error: configError } = await supabase
     .from('training_budget_config')
     .select('default_amount_usd')
     .eq('year', year)
     .maybeSingle();
+  if (configError) throw new Error(configError.message);
   return config ? Number(config.default_amount_usd) : 500;
 }
 

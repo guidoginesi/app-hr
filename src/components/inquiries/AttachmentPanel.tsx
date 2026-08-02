@@ -93,8 +93,13 @@ export function AttachmentPanel({
         </ul>
       )}
 
+      {/* Neutro en reposo: adjuntar es opcional y en naranja competía con las
+          acciones reales de la pantalla. El acento queda para el hover. */}
       {canUpload && (
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--brand)] bg-accent px-4 py-4 text-center transition-colors hover:bg-[var(--orange-100)]">
+        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border)] bg-muted px-4 py-2.5 text-center transition-colors hover:border-[var(--brand)] hover:bg-accent">
+          <svg className="h-4 w-4 shrink-0 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+          </svg>
           <span className="text-sm font-medium text-foreground">{busy ? 'Subiendo…' : 'Adjuntar un archivo'}</span>
           <span className="text-xs text-muted-foreground">PDF, JPG o PNG · máx. 4 MB</span>
           <input

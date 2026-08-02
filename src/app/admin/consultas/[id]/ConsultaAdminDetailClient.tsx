@@ -6,6 +6,7 @@ import { Button } from '@pow/ui/components/ui/button';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { AttachmentPanel } from '@/components/inquiries/AttachmentPanel';
 import { CATEGORY_LABELS, STATUS_LABELS_HR, type InquiryCategory, type InquiryStatus } from '@/lib/inquiries';
 
@@ -90,48 +91,42 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
   if (loading) return <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>;
   if (!inquiry) return <div className="py-16 text-center text-sm text-muted-foreground">Consulta no encontrada</div>;
 
-  const send = async () => {
+  const send = async (resolve = false) => {
     if (!body.trim()) return;
     const ok = await act(
-      internal ? { action: 'internal_note', body } : { action: 'reply', body },
-      internal ? 'Nota interna guardada' : 'Respuesta enviada',
+      internal ? { action: 'internal_note', body } : { action: 'reply', body, resolve },
+      internal ? 'Nota interna guardada' : resolve ? 'Respuesta enviada y consulta resuelta' : 'Respuesta enviada',
     );
     if (ok) setBody('');
   };
 
+  const yaCerrada = inquiry.status === 'resuelta' || inquiry.status === 'cerrada';
+
   return (
     <div className="space-y-6">
-      <Link href="/admin/consultas" className="text-sm text-muted-foreground hover:text-foreground">
-        ← Volver a consultas
-      </Link>
-
       {msg && (
         <div className={`rounded-lg px-4 py-3 text-sm ${msg.type === 'ok' ? 'bg-success-subtle text-[var(--green-700)]' : 'bg-danger-subtle text-[var(--red-600)]'}`}>
           {msg.text}
         </div>
       )}
 
-      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">{inquiry.subject}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {inquiry.employee_name}
-              {inquiry.job_title ? ` · ${inquiry.job_title}` : ''} · {CATEGORY_LABELS[inquiry.category]} ·{' '}
-              {new Date(inquiry.created_at).toLocaleDateString('es-AR')}
-            </p>
-            {inquiry.sla_overdue && (
-              <p className="mt-2 text-xs font-semibold text-[var(--red-600)]">
-                Sin primera respuesta — objetivo vencido
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
+      <PageHeader
+        breadcrumb={[{ label: 'Consultas', href: '/admin/consultas' }, { label: inquiry.subject }]}
+        title={inquiry.subject}
+        description={`${inquiry.employee_name}${inquiry.job_title ? ` · ${inquiry.job_title}` : ''} · ${CATEGORY_LABELS[inquiry.category]} · ${new Date(inquiry.created_at).toLocaleDateString('es-AR')}`}
+        actions={
+          <div className="flex flex-col items-end gap-1">
+            <span className="type-label text-muted-foreground">Estado</span>
             <SelectMenu
-              ariaLabel="Estado"
+              ariaLabel="Estado de la consulta"
+              className="w-52"
               value={inquiry.status}
               onChange={(v) => act({ action: 'set_status', status: v }, 'Estado actualizado')}
+              // 'nueva' va como opción deshabilitada: sin ella el value no matchea
+              // ninguna opción en una consulta recién creada y el selector mostraba
+              // "Seleccioná…" en vez del estado real.
               options={[
+                { value: 'nueva', label: STATUS_LABELS_HR.nueva, disabled: true },
                 { value: 'en_curso', label: STATUS_LABELS_HR.en_curso },
                 { value: 'esperando_colaborador', label: STATUS_LABELS_HR.esperando_colaborador },
                 { value: 'resuelta', label: STATUS_LABELS_HR.resuelta },
@@ -139,33 +134,39 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
               ]}
             />
           </div>
-        </div>
+        }
+      />
 
-        {/* Compartir con el líder: permiso por consulta, reversible. */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-muted px-4 py-3">
-          <div>
-            <p className="text-sm font-medium text-secondary-foreground">Compartir con el líder</p>
-            <p className="text-xs text-muted-foreground">
-              {inquiry.manager_id
-                ? 'Le da acceso solo a esta consulta. Ve el hilo pero no las notas internas.'
-                : 'El colaborador no tiene un líder asignado.'}
-            </p>
-          </div>
-          <Button
-            variant={sharedWithLeader ? 'outline' : 'primary'}
-            size="sm"
-            loading={busy}
-            disabled={!inquiry.manager_id}
-            onClick={() =>
-              act(
-                { action: sharedWithLeader ? 'unshare_leader' : 'share_leader' },
-                sharedWithLeader ? 'Se quitó el acceso del líder' : 'Consulta compartida con el líder',
-              )
-            }
-          >
-            {sharedWithLeader ? 'Dejar de compartir' : 'Compartir'}
-          </Button>
+      {inquiry.sla_overdue && (
+        <div className="rounded-xl border border-[var(--border)] bg-danger-subtle px-5 py-3 text-sm font-medium text-[var(--red-600)]">
+          Sin primera respuesta — objetivo vencido
         </div>
+      )}
+
+      {/* Compartir con el líder: permiso por consulta, reversible. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-4 shadow-sm">
+        <div>
+          <p className="text-sm font-medium text-secondary-foreground">Compartir con el líder</p>
+          <p className="text-xs text-muted-foreground">
+            {inquiry.manager_id
+              ? 'Le da acceso solo a esta consulta. Ve el hilo pero no las notas internas.'
+              : 'El colaborador no tiene un líder asignado.'}
+          </p>
+        </div>
+        <Button
+          variant={sharedWithLeader ? 'outline' : 'primary'}
+          size="sm"
+          loading={busy}
+          disabled={!inquiry.manager_id}
+          onClick={() =>
+            act(
+              { action: sharedWithLeader ? 'unshare_leader' : 'share_leader' },
+              sharedWithLeader ? 'Se quitó el acceso del líder' : 'Consulta compartida con el líder',
+            )
+          }
+        >
+          {sharedWithLeader ? 'Dejar de compartir' : 'Compartir'}
+        </Button>
       </div>
 
       <div className="space-y-3">
@@ -200,14 +201,27 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
           placeholder={internal ? 'Nota interna (el colaborador no la ve)…' : 'Escribí la respuesta al colaborador…'}
         />
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={send} loading={busy} disabled={!body.trim()}>
+          <Button onClick={() => send(false)} loading={busy} disabled={!body.trim()}>
             {internal ? 'Guardar nota interna' : 'Responder'}
           </Button>
+          {/* Un solo paso: antes había que responder y después cambiar el estado
+              a mano, y quedaban consultas ya resueltas sin marcar. */}
+          {!internal && !yaCerrada && (
+            <Button variant="outline" onClick={() => send(true)} loading={busy} disabled={!body.trim()}>
+              Responder y marcar resuelta
+            </Button>
+          )}
           <label className="flex cursor-pointer items-center gap-2 text-sm text-secondary-foreground">
             <Checkbox checked={internal} onCheckedChange={(c) => setInternal(c === true)} />
             Nota interna (no la ve el colaborador)
           </label>
         </div>
+        {!internal && !yaCerrada && (
+          <p className="text-xs text-muted-foreground">
+            Al marcarla resuelta el colaborador recibe el aviso y la consulta se cierra sola a los 3 días hábiles.
+            Si responde antes, se reabre.
+          </p>
+        )}
       </div>
     </div>
   );
