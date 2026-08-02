@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const { data: settlement, error } = await supabase
       .from('payroll_settlements_with_details')
       .select(
-        'id, employee_id, status, contract_type_snapshot, requires_acknowledgement, pdf_storage_path, pdf2_storage_path, pdf_uploaded_at',
+        'id, employee_id, status, contract_type_snapshot, requires_acknowledgement, pdf_storage_path, pdf2_storage_path, pdf_uploaded_at, payslip_version',
       )
       .eq('id', id)
       .eq('employee_id', employeeId)
@@ -43,8 +43,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'El recibo no tiene un archivo disponible.' }, { status: 400 });
     }
 
-    // Versionado real llega en la fase de "recibo corregido"; por ahora siempre v1.
-    const documentVersion = 1;
+    // La constancia queda atada a la versión del documento: si el recibo se
+    // reemplaza, la anterior se archiva y hay que confirmar la nueva.
+    const documentVersion = (settlement as any).payslip_version ?? 1;
 
     const { data: existing } = await supabase
       .from('payroll_receipt_acknowledgements')

@@ -141,6 +141,63 @@ export async function sendReceiptReminders(
 }
 
 /**
+ * Avisa al colaborador que su recibo fue reemplazado por una versión nueva y que
+ * tiene que volver a confirmar la recepción.
+ */
+export async function notifyPayslipReplaced(
+  supabase: any,
+  settlementId: string,
+  newVersion: number,
+): Promise<void> {
+  const { data: s } = await supabase
+    .from('payroll_settlements_with_details')
+    .select(
+      'id, first_name, email_to, employee_email, employee_user_id, period_year, period_month, period_type, status',
+    )
+    .eq('id', settlementId)
+    .single();
+
+  if (!s || s.status !== 'SENT') return;
+
+  const periodLabel = formatPayrollPeriodLabelFromKey({
+    year: s.period_year,
+    month: s.period_month,
+    period_type: s.period_type ?? 'MONTHLY',
+  });
+  const name = `${s.first_name ?? ''}`.trim() || 'equipo';
+  const to = (s.email_to || s.employee_email || '').trim();
+
+  if (to) {
+    await sendBatchEmails([
+      {
+        to,
+        subject: `Tu recibo de ${periodLabel} fue actualizado`,
+        replyTo: getReplyTo(),
+        html: renderEmail({
+          title: 'Tu recibo fue actualizado',
+          contextLabel: 'People · Recibos',
+          badge: { tone: 'warning', label: 'Nueva versión' },
+          preheader: `Se publicó una versión corregida de tu recibo de ${periodLabel}.`,
+          intro: `Hola ${name}, se publicó una versión corregida de tu recibo de sueldo de ${periodLabel}. Descargala desde el portal y volvé a marcar "Recibido".`,
+          cta: { label: 'Ver mi recibo', url: `${getAppUrl()}/portal/recibos` },
+          outro: 'La confirmación anterior quedó archivada como constancia de la versión previa.',
+        }),
+      },
+    ]).catch((e) => console.error('[PayslipReplaced] email failed:', e));
+  }
+
+  if (s.employee_user_id) {
+    createSystemNotification({
+      userIds: [s.employee_user_id],
+      title: `Tu recibo de ${periodLabel} fue actualizado`,
+      body: 'Se publicó una versión corregida. Descargala y volvé a confirmar la recepción.',
+      deepLink: '/portal/recibos',
+      dedupeKey: `payslip-replaced-${settlementId}-v${newVersion}`,
+    }).catch((e) => console.error('[PayslipReplaced] in-app notif failed:', e));
+  }
+}
+
+/**
  * Corrida automática (cron diario): aplica la cadencia y envía sólo a quien toca.
  */
 export async function runAutomaticReceiptReminders(): Promise<{ sent: number; skipped: number }> {

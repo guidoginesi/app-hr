@@ -27,7 +27,7 @@ export default async function PortalRecibosPage() {
   const { data: settlements } = await supabase
     .from('payroll_settlements_with_details')
     .select(
-      '*, pdf_storage_path, pdf_filename, pdf_uploaded_at, pdf2_storage_path, pdf2_filename, pdf2_uploaded_at, requires_acknowledgement, acknowledged_at'
+      '*, pdf_storage_path, pdf_filename, pdf_uploaded_at, pdf2_storage_path, pdf2_filename, pdf2_uploaded_at, requires_acknowledgement, acknowledged_at, payslip_version, payslip_replaced_at'
     )
     .eq('employee_id', employeeId)
     .eq('status', 'SENT')
