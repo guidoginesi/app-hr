@@ -71,7 +71,7 @@ export function ReceiptAcknowledgementSection({
   });
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-6 py-4">
         <div>
           <h3 className="text-sm font-semibold text-foreground">Recepción de recibos</h3>

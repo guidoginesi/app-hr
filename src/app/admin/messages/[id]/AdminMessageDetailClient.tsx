@@ -169,7 +169,7 @@ export function AdminMessageDetailClient({
       </div>
 
       {/* Recipients table */}
-      <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <h3 className="text-sm font-semibold text-foreground">Destinatarios</h3>
           <TabNav<Filter>

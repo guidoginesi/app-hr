@@ -243,7 +243,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
           </div>
         )}
 
-        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {/* Filters */}
           <div className="border-b border-[var(--border)] px-6 py-4 space-y-4">
             <div className="flex items-start justify-between gap-3">

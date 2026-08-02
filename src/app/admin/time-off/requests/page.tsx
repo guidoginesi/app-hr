@@ -557,7 +557,7 @@ export default function TimeOffRequestsPage() {
             </div>
 
         {/* Table */}
-        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
@@ -793,7 +793,7 @@ export default function TimeOffRequestsPage() {
             </div>
 
             {/* Bonus adjustments table */}
-            <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
@@ -983,7 +983,7 @@ export default function TimeOffRequestsPage() {
             </div>
 
             {/* Table */}
-            <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
                 <p className="text-sm text-muted-foreground">
                   {novLoading ? 'Cargando...' : `${novedades.length} novedad${novedades.length !== 1 ? 'es' : ''} — ${MONTH_NAMES[novMonth - 1]} ${novYear}`}

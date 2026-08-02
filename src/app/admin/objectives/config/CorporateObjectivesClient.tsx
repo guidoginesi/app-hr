@@ -216,7 +216,7 @@ export function CorporateObjectivesClient({ initialObjectives, currentYear }: Co
       ) : (
         <div className="space-y-6">
           {sortedYears.map(year => (
-            <div key={year} className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
+            <div key={year} className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
               <div className="border-b border-[var(--border)] bg-muted px-6 py-3">
                 <h2 className="text-base font-semibold text-foreground tabular-nums">{year}</h2>
               </div>
