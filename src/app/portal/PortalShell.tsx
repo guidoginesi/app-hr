@@ -11,7 +11,7 @@ type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'capacitaciones' | 'liquidaciones' | 'recibos' | 'messages' | 'consultas' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia' | 'ayuda';
+  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'capacitaciones' | 'liquidaciones' | 'recibos' | 'messages' | 'consultas' | 'consultas-equipo' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia' | 'ayuda';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -77,7 +77,17 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
         { key: 'referidos', label: 'Referidos', href: '/portal/referidos' },
       ],
     },
-    ...(isLeader ? [{ label: 'Equipo', items: [{ key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' }] }] : []),
+    ...(isLeader
+      ? [
+          {
+            label: 'Equipo',
+            items: [
+              { key: 'team' as const, label: 'Mi Equipo', href: '/portal/team' },
+              { key: 'consultas-equipo' as const, label: 'Consultas de mi equipo', href: '/portal/consultas-equipo' },
+            ],
+          },
+        ]
+      : []),
   ];
 
   return (
