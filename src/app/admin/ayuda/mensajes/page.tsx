@@ -62,6 +62,7 @@ export default async function AyudaMensajesPage() {
           <p>La programación es <b>por día, no por hora</b>: sale en el mismo envío de la mañana en que ya salen los cumpleaños, el resumen de aprobaciones y los recordatorios de recibos.</p>
           <p>En la lista se ve como <b>Programado</b> con la fecha. Desde ahí podés <b>Publicar ahora</b> sin esperar, o <b>Cancelar envío</b> para que vuelva a ser un borrador común.</p>
           <p>Si llegada la fecha el envío no se puede hacer —por ejemplo si perdiste el permiso de envío masivo—, el mensaje no sale, queda como borrador y te llega un aviso con el motivo.</p>
+          <p>Y si cambia algo del contenido, <b>Editar</b> te abre el borrador con todo cargado: texto, audiencia, canales y la fecha. No hace falta cancelar y volver a escribirlo.</p>
         </ManualStep>
 
         <ManualStep image="/manual/mensajes-admin/01-lista.png" n={7} title="Buscar, filtrar y exportar" imageAlt="Barra con buscador, filtro de origen (Todos/Manuales/Automáticos), prioridad, estado, rango de fechas, estado de lectura, 'Recibido por' y botón Exportar CSV.">

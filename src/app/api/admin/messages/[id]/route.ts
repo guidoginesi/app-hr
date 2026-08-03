@@ -1,8 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { z } from 'zod';
+import { audienceRequiresMassSend, actorCanMassSend } from '@/lib/messagePublish';
 
 // GET /api/admin/messages/[id] - Get message detail with full recipient list
+const AudienceSchema = z.union([
+  z.object({ all: z.literal(true) }),
+  z.object({ roles: z.array(z.string()).min(1) }),
+  z.object({ test: z.literal(true) }),
+  z.object({ employment_type: z.enum(['monotributista', 'dependency']) }),
+  z.object({ department_id: z.string().uuid() }),
+  z.object({ manager_id: z.string().uuid() }),
+  z.object({ user_ids: z.array(z.string().uuid()).min(1) }),
+]);
+
+const EditMessageSchema = z.object({
+  title: z.string().trim().min(1, 'El título es obligatorio.').optional(),
+  body: z.string().min(1, 'El cuerpo es obligatorio.').optional(),
+  priority: z.enum(['info', 'warning', 'critical']).optional(),
+  require_confirmation: z.boolean().optional(),
+  send_email: z.boolean().optional(),
+  send_to_google_chat: z.boolean().optional(),
+  expires_at: z.string().datetime().nullable().optional(),
+  audience: AudienceSchema.optional(),
+  scheduled_for: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.').nullable().optional(),
+});
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -134,6 +158,49 @@ export async function PATCH(
         return NextResponse.json({ error: 'Solo se puede programar un borrador.' }, { status: 400 });
       }
       update.scheduled_for = value;
+    }
+
+    // Edición del contenido de un borrador. La task de vacaciones lo pedía
+    // explícito: si cambia la información entre que se programa y la fecha de
+    // envío, había que cancelar y recrear.
+    if ('edit' in body) {
+      const parsed = EditMessageSchema.safeParse(body.edit);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: parsed.error.issues.map((e) => e.message).join(', ') },
+          { status: 400 },
+        );
+      }
+
+      const { data: actual, error: readError } = await supabase
+        .from('messages')
+        .select('status')
+        .eq('id', id)
+        .single();
+      if (readError || !actual) return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+      if (actual.status !== 'draft') {
+        return NextResponse.json({ error: 'Solo se puede editar un borrador.' }, { status: 400 });
+      }
+
+      const e = parsed.data;
+      // Mismo gate que al publicar: sin esto, editar la audiencia de un borrador
+      // sería la forma de ampliarla más allá del propio permiso.
+      if (e.audience && audienceRequiresMassSend(e.audience) && !(await actorCanMassSend(user.id))) {
+        return NextResponse.json(
+          { error: 'No tenés permiso de envío masivo para esa audiencia.' },
+          { status: 403 },
+        );
+      }
+
+      if (e.title !== undefined) update.title = e.title;
+      if (e.body !== undefined) update.body = e.body;
+      if (e.priority !== undefined) update.priority = e.priority;
+      if (e.require_confirmation !== undefined) update.require_confirmation = e.require_confirmation;
+      if (e.send_email !== undefined) update.send_email = e.send_email;
+      if (e.send_to_google_chat !== undefined) update.send_to_google_chat = e.send_to_google_chat;
+      if (e.expires_at !== undefined) update.expires_at = e.expires_at;
+      if (e.audience !== undefined) update.audience = e.audience;
+      if (e.scheduled_for !== undefined) update.scheduled_for = e.scheduled_for;
     }
 
     if (Object.keys(update).length === 0) {
