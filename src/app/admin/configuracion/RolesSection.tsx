@@ -24,10 +24,11 @@ type UserRow = {
   is_employee: boolean;
   is_leader: boolean;
   roles: string[];
+  legacy_admin: boolean;
   granted_by_email: Record<string, string | null>;
 };
 
-type Pending = { user: UserRow; role: ManageableRole };
+type Pending = { user: UserRow; role: ManageableRole; action: 'grant' | 'revoke' };
 
 const toneClass: Record<'danger' | 'warning' | 'neutral', string> = {
   danger: 'bg-danger-subtle text-[var(--red-600)]',
@@ -38,11 +39,16 @@ const toneClass: Record<'danger' | 'warning' | 'neutral', string> = {
 export function RolesSection() {
   const [rows, setRows] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [confirm, setConfirm] = useState<Pending | null>(null);
+  // El error del diálogo va aparte: el banner de la página queda detrás del
+  // overlay, así que un revoke fallido no se veía por ningún lado.
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  // Clave `${user_id}:${role}` de la celda en vuelo, en vez de un flag global
+  // que deshabilitaba los checkboxes de todas las filas.
+  const [pending, setPending] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,8 +71,9 @@ export function RolesSection() {
   }, [load]);
 
   const send = async (action: 'grant' | 'revoke', user: UserRow, role: ManageableRole) => {
-    setSaving(true);
+    setPending(`${user.user_id}:${role}`);
     setError(null);
+    setDialogError(null);
     setNotice(null);
     try {
       const res = await fetch('/api/admin/roles', {
@@ -76,10 +83,20 @@ export function RolesSection() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? 'No se pudo aplicar el cambio.');
+        const msg = data.error ?? 'No se pudo aplicar el cambio.';
+        // Si el diálogo está abierto, el error va adentro; si no, al banner.
+        if (confirm) setDialogError(msg);
+        else setError(msg);
         return;
       }
-      setRows(data.rows ?? []);
+      // No se reemplaza la lista entera: el server la reordena y la fila que
+      // acabás de tocar salta de lugar, dejando bajo el cursor el checkbox de
+      // otra persona. Se aplica el cambio sólo en la fila afectada.
+      if (data.rows) {
+        const fresh = (data.rows as UserRow[]).find((r) => r.user_id === user.user_id);
+        setRows((prev) => prev.map((r) => (fresh && r.user_id === fresh.user_id ? fresh : r)));
+      }
+      if (data.warning) setError(data.warning);
       const quien = user.employee_name ?? user.email ?? 'la cuenta';
       setNotice(
         `${ROLE_INFO[role].label} ${action === 'grant' ? 'otorgado a' : 'quitado a'} ${quien}. ` +
@@ -87,18 +104,24 @@ export function RolesSection() {
       );
       setConfirm(null);
     } catch {
-      setError('No se pudo aplicar el cambio.');
+      const msg = 'No se pudo aplicar el cambio.';
+      if (confirm) setDialogError(msg);
+      else setError(msg);
     } finally {
-      setSaving(false);
+      setPending(null);
     }
   };
 
   const toggle = (user: UserRow, role: ManageableRole, next: boolean) => {
-    if (next) return send('grant', user, role);
-    // Quitar acceso a sueldos o a adelantos se confirma; sacar el envío masivo
-    // es reversible sin consecuencias, así que va directo.
-    if ((ELEVATED_ROLES as string[]).includes(role)) return setConfirm({ user, role });
-    return send('revoke', user, role);
+    const action = next ? 'grant' : 'revoke';
+    // Se confirma en las DOS direcciones para los roles elevados: dar acceso a
+    // todos los sueldos no puede ser más fácil que quitarlo. El envío masivo va
+    // directo porque es reversible y sin consecuencias.
+    if ((ELEVATED_ROLES as string[]).includes(role)) {
+      setDialogError(null);
+      return setConfirm({ user, role, action });
+    }
+    return send(action, user, role);
   };
 
   const q = search.trim().toLowerCase();
@@ -139,7 +162,7 @@ export function RolesSection() {
         </div>
 
         {error && (
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-danger-subtle px-5 py-3 text-sm text-[var(--red-600)]">
+          <div role="alert" className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-danger-subtle px-5 py-3 text-sm text-[var(--red-600)]">
             <span>{error}</span>
             <button type="button" aria-label="Cerrar el aviso" className="shrink-0 font-medium" onClick={() => setError(null)}>
               ✕
@@ -147,7 +170,7 @@ export function RolesSection() {
           </div>
         )}
         {notice && (
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-success-subtle px-5 py-3 text-sm text-[var(--green-700)]">
+          <div role="status" aria-live="polite" className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-success-subtle px-5 py-3 text-sm text-[var(--green-700)]">
             <span>{notice}</span>
             <button type="button" aria-label="Cerrar el aviso" className="shrink-0 font-medium" onClick={() => setNotice(null)}>
               ✕
@@ -205,18 +228,28 @@ export function RolesSection() {
                               {DERIVED_ROLE_INFO.leader.label}
                             </span>
                           )}
-                          {!u.is_employee && !u.is_leader && <span className="text-xs text-muted-foreground">—</span>}
+                          {u.legacy_admin && (
+                            <span
+                              title="Es admin por la tabla legada `admins`. Al quitarle el rol se borra de las dos fuentes."
+                              className="rounded-full bg-warning-subtle px-2 py-0.5 text-xs text-[var(--amber-600)]"
+                            >
+                              Admin heredado
+                            </span>
+                          )}
+                          {!u.is_employee && !u.is_leader && !u.legacy_admin && (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </div>
                       </td>
                       {MANAGEABLE_ROLES.map((role) => {
-                        const has = u.roles.includes(role);
+                        const has = u.roles.includes(role) || (role === 'admin' && u.legacy_admin);
                         const autor = u.granted_by_email[role];
                         return (
                           <td key={role} className="px-6 py-3 text-center">
                             <Checkbox
                               aria-label={`${ROLE_INFO[role].label} para ${u.employee_name ?? u.email ?? 'la cuenta'}`}
                               checked={has}
-                              disabled={saving}
+                              disabled={pending !== null}
                               onCheckedChange={(c) => toggle(u, role, c === true)}
                             />
                             {has && autor && (
@@ -232,7 +265,19 @@ export function RolesSection() {
                   {visible.length === 0 && (
                     <tr>
                       <td colSpan={2 + MANAGEABLE_ROLES.length} className="py-12 text-center text-sm text-muted-foreground">
-                        {q ? 'Ninguna cuenta coincide con la búsqueda.' : 'No hay cuentas con acceso.'}
+                        {/* Sin esto, una carga fallida afirmaba "no hay cuentas
+                            con acceso", que en una pantalla de permisos es una
+                            mentira peligrosa. */}
+                        {error ? (
+                          <span className="inline-flex items-center gap-3">
+                            No se pudieron cargar los accesos.
+                            <Button size="sm" variant="outline" onClick={load}>Reintentar</Button>
+                          </span>
+                        ) : q ? (
+                          'Ninguna cuenta coincide con la búsqueda.'
+                        ) : (
+                          'No hay cuentas con acceso.'
+                        )}
                       </td>
                     </tr>
                   )}
@@ -246,26 +291,37 @@ export function RolesSection() {
       <Dialog
         open={confirm !== null}
         onClose={() => setConfirm(null)}
-        title={confirm ? `Quitar ${ROLE_INFO[confirm.role].label}` : ''}
+        title={confirm ? `${confirm.action === 'grant' ? 'Dar' : 'Quitar'} ${ROLE_INFO[confirm.role].label}` : ''}
         size="md"
       >
         {confirm && (
           <div className="space-y-4">
             <p className="text-sm text-secondary-foreground">
-              <b>{confirm.user.employee_name ?? confirm.user.email}</b> va a perder: {ROLE_INFO[confirm.role].grants}
+              <b>{confirm.user.employee_name ?? confirm.user.email}</b>{' '}
+              {confirm.action === 'grant' ? 'va a poder' : 'va a perder'}: {ROLE_INFO[confirm.role].grants}
             </p>
+            {confirm.action === 'revoke' && confirm.user.legacy_admin && (
+              <p className="text-sm text-secondary-foreground">
+                Es <b>admin heredado</b>: se va a borrar también de la tabla <code>admins</code>, que es la que leen el
+                middleware, 12 rutas del panel y las políticas de liquidaciones.
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               Si tiene la sesión abierta, el cambio puede tardar hasta <b>{ROLE_CACHE_MINUTES} minutos</b> en aplicarse.
-              Para cortar el acceso en el momento hay que además cerrarle la sesión desde Supabase.
             </p>
+            {dialogError && (
+              <p role="alert" className="rounded-lg bg-danger-subtle px-4 py-3 text-sm text-[var(--red-600)]">
+                {dialogError}
+              </p>
+            )}
             <div className="flex items-center justify-end gap-2">
               <Button variant="ghost" onClick={() => setConfirm(null)}>Cancelar</Button>
               <Button
-                variant="destructive"
-                loading={saving}
-                onClick={() => send('revoke', confirm.user, confirm.role)}
+                variant={confirm.action === 'grant' ? 'primary' : 'destructive'}
+                loading={pending !== null}
+                onClick={() => send(confirm.action, confirm.user, confirm.role)}
               >
-                Quitar el rol
+                {confirm.action === 'grant' ? `Dar ${ROLE_INFO[confirm.role].label}` : 'Quitar el rol'}
               </Button>
             </div>
           </div>

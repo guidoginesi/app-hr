@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { MANAGEABLE_ROLES, type ManageableRole, canRevoke } from '@/lib/roles';
@@ -24,49 +24,77 @@ type UserRow = {
   is_employee: boolean;
   is_leader: boolean;
   roles: string[];
+  /** Admin por la tabla legada `admins`, tenga o no fila en `user_roles`. */
+  legacy_admin: boolean;
   granted_by_email: Record<string, string | null>;
 };
 
 /**
- * Arma la lista de cuentas con login: sus roles otorgados, los derivados y
- * quién otorgó cada uno. Se necesita el admin API de auth porque hay cuentas
- * (admin, administracion) que no son empleados y sólo existen en auth.users.
+ * listUsers devuelve UNA página. Sin paginar, con más de 1000 cuentas habría
+ * admins invisibles e imposibles de revocar desde la pantalla — y en una
+ * pantalla de permisos una lista parcial es peor que un error.
  */
+async function listAllAuthUsers(supabaseAdmin: SupabaseClient) {
+  const users: { id: string; email?: string | null }[] = [];
+  const perPage = 1000;
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+    if (error) return { users: [], error };
+    const batch = data?.users ?? [];
+    users.push(...batch);
+    if (batch.length < perPage) return { users, error: null };
+  }
+  return { users, error: null };
+}
+
+/** `granted_by` la agrega migration-roles-trazabilidad.sql; sin ella se lee igual. */
+async function selectUserRoles(supabase: SupabaseClient) {
+  const withAuthor = await supabase.from('user_roles').select('user_id, role, granted_by');
+  if (!withAuthor.error) return withAuthor;
+
+  const missing = withAuthor.error.code === '42703' || /granted_by/i.test(withAuthor.error.message);
+  if (!missing) return withAuthor;
+  return supabase.from('user_roles').select('user_id, role');
+}
+
 async function buildUsersView() {
   const supabase = getSupabaseServer();
   const supabaseAdmin = getSupabaseAdmin();
 
-  const [authRes, rolesRes, employeesRes, deptsRes] = await Promise.all([
-    supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
-    supabase.from('user_roles').select('user_id, role, granted_by'),
+  const [authRes, rolesRes, employeesRes, deptsRes, legacyRes] = await Promise.all([
+    listAllAuthUsers(supabaseAdmin),
+    selectUserRoles(supabase),
     supabase.from('employees').select('id, user_id, first_name, last_name, job_title, department_id, manager_id, status'),
     supabase.from('departments').select('id, name'),
+    // Segunda fuente de admin: sin leerla, la pantalla mostraría el checkbox
+    // vacío para alguien que sí es admin y diría que revocó cuando no revocó.
+    supabase.from('admins').select('user_id'),
   ]);
 
-  // Igual criterio que en el resto del módulo: un error de lectura no se puede
-  // confundir con "no hay filas", porque acá eso mostraría a todos sin roles.
   if (authRes.error) throw new Error(authRes.error.message);
-  for (const r of [rolesRes, employeesRes, deptsRes]) {
+  for (const r of [rolesRes, employeesRes, deptsRes, legacyRes]) {
     if (r.error) throw new Error(r.error.message);
   }
 
-  const authUsers = authRes.data?.users ?? [];
-  const roleRows = rolesRes.data ?? [];
+  const authUsers = authRes.users;
+  const roleRows = (rolesRes.data ?? []) as { user_id: string; role: string; granted_by?: string | null }[];
   const employees = employeesRes.data ?? [];
   const depts = new Map<string, string>((deptsRes.data ?? []).map((d) => [d.id as string, d.name as string]));
+  const legacyAdmins = new Set((legacyRes.data ?? []).map((a) => a.user_id as string));
 
   const emailByUserId = new Map<string, string | null>(authUsers.map((u) => [u.id, u.email ?? null]));
   const empByUserId = new Map<string, (typeof employees)[number]>();
   for (const e of employees) if (e.user_id) empByUserId.set(e.user_id as string, e);
 
-  // `leader` se deriva de tener reportes directos, igual que checkIsLeader.
-  const managerIds = new Set(employees.filter((e) => e.status === 'active').map((e) => e.manager_id).filter(Boolean) as string[]);
+  // Mismo criterio que checkIsLeader en checkAuth.ts: NO filtra por status del
+  // reporte. Filtrarlo escondería el badge de alguien que sí pasa el gate.
+  const managerIds = new Set(employees.map((e) => e.manager_id).filter(Boolean) as string[]);
 
   const rolesByUser = new Map<string, { role: string; granted_by: string | null }[]>();
   for (const r of roleRows) {
-    const list = rolesByUser.get(r.user_id as string) ?? [];
-    list.push({ role: r.role as string, granted_by: (r as { granted_by?: string | null }).granted_by ?? null });
-    rolesByUser.set(r.user_id as string, list);
+    const list = rolesByUser.get(r.user_id) ?? [];
+    list.push({ role: r.role, granted_by: r.granted_by ?? null });
+    rolesByUser.set(r.user_id, list);
   }
 
   const rows: UserRow[] = authUsers.map((u) => {
@@ -81,23 +109,25 @@ async function buildUsersView() {
       employee_name: emp ? `${emp.first_name ?? ''} ${emp.last_name ?? ''}`.trim() : null,
       job_title: (emp?.job_title as string) ?? null,
       department: emp?.department_id ? depts.get(emp.department_id as string) ?? null : null,
-      is_employee: Boolean(emp && emp.status === 'active'),
+      // Igual que checkAuth: `roles.includes('employee') || !!employee`, sin
+      // filtrar status. Filtrarlo diría "sin acceso" de alguien que sí entra.
+      is_employee: mine.some((r) => r.role === 'employee') || Boolean(emp),
       is_leader: Boolean(emp && managerIds.has(emp.id as string)),
       roles: mine.map((r) => r.role),
+      legacy_admin: legacyAdmins.has(u.id),
       granted_by_email: grantedBy,
     };
   });
 
-  // Primero quien tiene roles otorgados, después el resto por nombre.
-  const weight = (r: UserRow) => (r.roles.some((x) => (MANAGEABLE_ROLES as string[]).includes(x)) ? 0 : 1);
+  const weight = (r: UserRow) =>
+    r.legacy_admin || r.roles.some((x) => (MANAGEABLE_ROLES as string[]).includes(x)) ? 0 : 1;
   rows.sort((a, b) => {
     const w = weight(a) - weight(b);
     if (w !== 0) return w;
     return (a.employee_name ?? a.email ?? '').localeCompare(b.employee_name ?? b.email ?? '');
   });
 
-  const totalAdmins = rows.filter((r) => r.roles.includes('admin')).length;
-  return { rows, totalAdmins };
+  return { rows, totalAdmins: rows.filter((r) => r.roles.includes('admin') || r.legacy_admin).length };
 }
 
 // GET /api/admin/roles
@@ -114,16 +144,31 @@ export async function GET() {
 
 const bodySchema = z.object({
   action: z.enum(['grant', 'revoke']),
-  user_id: z.string().uuid('Identificador de usuario inválido.'),
+  // Normalizado: la baranda de auto-revocación compara strings y el mismo UUID
+  // en mayúsculas pasaba el uuid() de zod, esquivando la comparación.
+  user_id: z.string().uuid('Identificador de usuario inválido.').transform((v) => v.toLowerCase()),
   role: z.enum(['admin', 'administracion', 'mass_sender']),
 });
 
 /**
- * POST /api/admin/roles — otorga o revoca uno de los roles gestionables.
- *
- * Sólo `admin`. Se rechazan los roles derivados (`employee`, `leader`) por el
- * enum de zod: otorgarlos no haría nada porque salen de los datos.
+ * Devuelve la vista recalculada, pero NUNCA convierte un fallo del recálculo en
+ * un error de la mutación: la escritura ya se aplicó, así que responder 500
+ * haría que la pantalla diga "no se guardó" sobre algo que sí se guardó.
  */
+async function respondAfterWrite(extra: Record<string, unknown>) {
+  try {
+    return NextResponse.json({ ...(await buildUsersView()), ...extra });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error inesperado';
+    console.error('[Roles] la escritura se aplicó pero falló el recálculo:', message);
+    return NextResponse.json({
+      ...extra,
+      stale: true,
+      warning: 'El cambio se guardó, pero no se pudo refrescar la lista. Recargá la página.',
+    });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { isAdmin, user } = await requireAdmin();
@@ -136,8 +181,6 @@ export async function POST(req: NextRequest) {
     const { action, user_id: targetUserId, role } = parsed.data;
     const supabase = getSupabaseServer();
 
-    // El usuario destino tiene que existir en auth: si no, se crearía una fila
-    // de rol huérfana que nadie puede usar ni ver.
     const { data: target, error: targetError } = await getSupabaseAdmin().auth.admin.getUserById(targetUserId);
     if (targetError || !target?.user) {
       return NextResponse.json({ error: 'La cuenta no existe.' }, { status: 400 });
@@ -146,21 +189,20 @@ export async function POST(req: NextRequest) {
     if (action === 'grant') {
       const inserted = await insertRole(supabase, targetUserId, role, user.id);
       if (inserted.error) return NextResponse.json({ error: inserted.error }, { status: 500 });
-      return NextResponse.json({ ...(await buildUsersView()), applied: 'grant' });
+      return respondAfterWrite({ applied: 'grant' });
     }
 
     // ── revoke ──
-    const { count, error: countError } = await supabase
-      .from('user_roles')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('role', 'admin');
-    if (countError) return NextResponse.json({ error: countError.message }, { status: 500 });
+    // El conteo es la UNIÓN de las dos fuentes: contando sólo user_roles, la
+    // baranda del último admin contaría mal.
+    const before = await countAdmins(supabase);
+    if (before.error) return NextResponse.json({ error: before.error }, { status: 500 });
 
     const guard = canRevoke({
       role,
       targetUserId,
-      actorUserId: user.id,
-      totalAdmins: count ?? 0,
+      actorUserId: user.id.toLowerCase(),
+      totalAdmins: before.total,
     });
     if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: 400 });
 
@@ -171,40 +213,63 @@ export async function POST(req: NextRequest) {
       .eq('role', role);
     if (delError) return NextResponse.json({ error: delError.message }, { status: 500 });
 
-    // Red de seguridad para la carrera del conteo: dos revocaciones simultáneas
-    // pueden ver ambas "quedan 2 admins" y borrar las dos. PostgREST no da
-    // transacción, así que se vuelve a contar y, si quedó en cero, se repone.
     if (role === 'admin') {
-      const { count: after, error: afterError } = await supabase
-        .from('user_roles')
-        .select('user_id', { count: 'exact', head: true })
-        .eq('role', 'admin');
-      if (!afterError && (after ?? 0) === 0) {
-        await supabase
+      // Quitar admin sólo de user_roles no revoca nada: el middleware, las 12
+      // rutas de checkAdmin.ts y las policies RLS de payroll leen `admins`.
+      const { error: legacyError } = await supabase.from('admins').delete().eq('user_id', targetUserId);
+      if (legacyError) {
+        return NextResponse.json(
+          {
+            error:
+              'Se quitó el rol pero no se pudo borrar de la tabla admins, así que la persona sigue teniendo acceso: ' +
+              legacyError.message,
+          },
+          { status: 500 },
+        );
+      }
+
+      // Compensación de la carrera del conteo: PostgREST no da transacción, así
+      // que se recuenta y, si quedó en cero, se repone el rol.
+      const after = await countAdmins(supabase);
+      if (after.error || after.total === 0) {
+        const restore = await supabase
           .from('user_roles')
           .upsert({ user_id: targetUserId, role: 'admin' }, { onConflict: 'user_id,role' });
         return NextResponse.json(
-          { error: 'Otro admin se quitó el rol al mismo tiempo. Se restauró para no dejar el panel sin acceso.' },
+          {
+            error: restore.error
+              ? `El panel quedó sin admins y la restauración falló: ${restore.error.message}. Hay que reponer el rol por base de datos.`
+              : 'Otro admin se quitó el rol al mismo tiempo. Se restauró el rol para no dejar el panel sin acceso.',
+          },
           { status: 409 },
         );
       }
     }
 
-    return NextResponse.json({ ...(await buildUsersView()), applied: 'revoke' });
+    return respondAfterWrite({ applied: 'revoke' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error inesperado';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
-/**
- * Inserta el rol registrando quién lo otorgó. `granted_by` la agrega
- * migration-roles-trazabilidad.sql; mientras no esté aplicada se reintenta sin
- * ella, para que la feature funcione igual y se empiece a registrar sola en
- * cuanto la columna exista.
- */
+/** Cuenta admins uniendo `user_roles` y la tabla legada `admins`. */
+async function countAdmins(supabase: SupabaseClient): Promise<{ total: number; error: string | null }> {
+  const [roles, legacy] = await Promise.all([
+    supabase.from('user_roles').select('user_id').eq('role', 'admin'),
+    supabase.from('admins').select('user_id'),
+  ]);
+  if (roles.error) return { total: 0, error: roles.error.message };
+  if (legacy.error) return { total: 0, error: legacy.error.message };
+
+  const ids = new Set<string>();
+  for (const r of roles.data ?? []) ids.add(r.user_id as string);
+  for (const a of legacy.data ?? []) ids.add(a.user_id as string);
+  return { total: ids.size, error: null };
+}
+
 async function insertRole(
-  supabase: ReturnType<typeof getSupabaseServer>,
+  supabase: SupabaseClient,
   userId: string,
   role: ManageableRole,
   actorId: string,
@@ -215,7 +280,9 @@ async function insertRole(
   if (!withAuthor.error) return { error: null };
 
   const missingColumn =
-    withAuthor.error.code === 'PGRST204' || /granted_by/i.test(withAuthor.error.message);
+    withAuthor.error.code === 'PGRST204' ||
+    withAuthor.error.code === '42703' ||
+    /granted_by/i.test(withAuthor.error.message);
   if (!missingColumn) return { error: withAuthor.error.message };
 
   console.warn('[Roles] granted_by no existe todavía; se otorga sin registrar el autor.');

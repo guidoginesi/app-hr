@@ -39,8 +39,10 @@ export const ROLE_INFO: Record<ManageableRole, RoleInfo> = {
   mass_sender: {
     label: 'Envío masivo',
     grants:
-      'Publica mensajes a audiencias amplias: toda la empresa, por rol o por tipo de contrato.',
-    limits: 'Sin este permiso igual puede mandar mensajes, pero sólo a personas elegidas una por una.',
+      'Sumado a Admin completo, permite publicar mensajes a audiencias amplias: toda la empresa, por rol o por tipo de contrato.',
+    // La ruta de publicar arranca con requireAdmin, así que este permiso solo no
+    // habilita nada: sin admin la persona no llega ni a la pantalla de mensajes.
+    limits: 'Por sí solo no da acceso a nada: hace falta también Admin completo.',
     tone: 'neutral',
   },
 };
