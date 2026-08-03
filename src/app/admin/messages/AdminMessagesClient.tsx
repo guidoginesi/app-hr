@@ -22,6 +22,7 @@ type Message = {
   created_at: string;
   published_at: string | null;
   expires_at: string | null;
+  scheduled_for: string | null;
   audience: Record<string, unknown> | null;
   created_by: string | null;
   metadata: Record<string, unknown> | null;
@@ -81,6 +82,7 @@ type CreateForm = {
   periodo: string;
   send_to_google_chat: boolean;
   send_email: boolean;
+  scheduled_for: string;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -96,6 +98,7 @@ const DEFAULT_FORM: CreateForm = {
   periodo: '',
   send_to_google_chat: false,
   send_email: false,
+  scheduled_for: '',
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -278,6 +281,10 @@ export function AdminMessagesClient({
   const [form, setForm] = useState<CreateForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState<string | null>(null);
+  const [unscheduling, setUnscheduling] = useState<string | null>(null);
+  // id del borrador en edición: null = el formulario está creando uno nuevo.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -302,6 +309,59 @@ export function AdminMessagesClient({
     if (a === 'lider') return { manager_id: form.manager_id };
     if (a === 'individual') return { user_ids: form.user_ids };
     return { all: true };
+  };
+
+  /** Inverso de audiencePayload: de la audiencia guardada al valor del form. */
+  const audienceToForm = (a: Record<string, unknown> | null): Partial<CreateForm> => {
+    if (!a) return { audience: 'all' };
+    if (a.all) return { audience: 'all' };
+    if (a.test) return { audience: 'test' };
+    if (Array.isArray(a.roles)) {
+      const roles = a.roles as string[];
+      if (roles.includes('leader')) return { audience: 'leaders' };
+      if (roles.includes('employee')) return { audience: 'employees' };
+    }
+    if (a.employment_type === 'monotributista') return { audience: 'monotributista' };
+    if (a.employment_type === 'dependency') return { audience: 'dependency' };
+    if (a.department_id) return { audience: 'area', department_id: a.department_id as string };
+    if (a.manager_id) return { audience: 'lider', manager_id: a.manager_id as string };
+    if (Array.isArray(a.user_ids)) return { audience: 'individual', user_ids: a.user_ids as string[] };
+    return { audience: 'all' };
+  };
+
+  const handleEdit = async (msgId: string) => {
+    setLoadingEdit(msgId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/messages/${msgId}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'No se pudo abrir el mensaje.');
+        return;
+      }
+      const m = data.message ?? data;
+      const ctx = (m.metadata?.template_context ?? {}) as Record<string, string>;
+      setForm({
+        ...DEFAULT_FORM,
+        title: m.title ?? '',
+        body: m.body ?? '',
+        priority: m.priority ?? 'info',
+        require_confirmation: Boolean(m.require_confirmation),
+        // datetime-local no acepta el sufijo Z ni los segundos.
+        expires_at: m.expires_at ? String(m.expires_at).slice(0, 16) : '',
+        send_to_google_chat: Boolean(m.send_to_google_chat),
+        send_email: Boolean(m.send_email),
+        scheduled_for: m.scheduled_for ?? '',
+        periodo: ctx.periodo ?? '',
+        ...audienceToForm(m.audience ?? null),
+      });
+      setEditingId(msgId);
+      setShowCreate(true);
+    } catch {
+      setError('Error de red');
+    } finally {
+      setLoadingEdit(null);
+    }
   };
 
   const deptById = new Map(departments.map((d) => [d.id, d.name]));
@@ -369,10 +429,48 @@ export function AdminMessagesClient({
         require_confirmation: form.require_confirmation,
         send_to_google_chat: form.send_to_google_chat,
         send_email: form.send_email,
+        scheduled_for: form.scheduled_for || null,
         audience: audiencePayload(form.audience),
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
       if (form.periodo.trim()) payload.template_context = { periodo: form.periodo.trim() };
+
+      // Editando: PATCH sobre el borrador. Creando: POST. El resto del
+      // formulario y sus validaciones son los mismos.
+      if (editingId) {
+        const editRes = await fetch(`/api/admin/messages/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            edit: {
+              title: payload.title,
+              body: payload.body,
+              priority: payload.priority,
+              require_confirmation: payload.require_confirmation,
+              send_email: payload.send_email,
+              send_to_google_chat: payload.send_to_google_chat,
+              expires_at: (payload.expires_at as string) ?? null,
+              audience: payload.audience,
+              scheduled_for: payload.scheduled_for,
+            },
+          }),
+        });
+        const editData = await editRes.json();
+        if (!editRes.ok) {
+          setError(editData.error ?? 'No se pudo guardar el borrador.');
+          return;
+        }
+        setSuccess(
+          form.scheduled_for
+            ? `Borrador actualizado. Se publica solo el ${fechaCorta(form.scheduled_for)} a la mañana.`
+            : 'Borrador actualizado.',
+        );
+        setShowCreate(false);
+        setEditingId(null);
+        setForm(DEFAULT_FORM);
+        setRefreshKey((k) => k + 1);
+        return;
+      }
 
       const res = await fetch('/api/admin/messages', {
         method: 'POST',
@@ -397,6 +495,8 @@ export function AdminMessagesClient({
           return;
         }
         setSuccess(`Mensaje publicado para ${pubData.recipients_created ?? 0} usuarios.`);
+      } else if (form.scheduled_for) {
+        setSuccess(`Programado: se publica solo el ${fechaCorta(form.scheduled_for)} a la mañana.`);
       } else {
         setSuccess('Borrador guardado.');
       }
@@ -408,6 +508,36 @@ export function AdminMessagesClient({
       setError('Error de red');
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** Muestra la fecha programada sin pasar por Date: un 'YYYY-MM-DD' parseado
+      como Date se interpreta en UTC y en Argentina se ve un día menos. */
+  const fechaCorta = (iso: string) => {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y.slice(2)}`;
+  };
+
+  const handleUnschedule = async (msgId: string) => {
+    setUnscheduling(msgId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/messages/${msgId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduled_for: null }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'No se pudo cancelar el envío programado.');
+        return;
+      }
+      setSuccess('Envío programado cancelado. El mensaje queda como borrador.');
+      setRefreshKey((k) => k + 1);
+    } catch {
+      setError('Error de red');
+    } finally {
+      setUnscheduling(null);
     }
   };
 
@@ -566,7 +696,7 @@ export function AdminMessagesClient({
                   </button>
                 ))}
               </div>
-              <Button className="ml-auto" onClick={() => { setShowCreate(true); setError(null); setSuccess(null); }}>
+              <Button className="ml-auto" onClick={() => { setEditingId(null); setForm(DEFAULT_FORM); setShowCreate(true); setError(null); setSuccess(null); }}>
                 Nuevo mensaje
               </Button>
             </div>
@@ -661,11 +791,11 @@ export function AdminMessagesClient({
           </div>
 
           {/* Create sheet */}
-          <Sheet open={showCreate} onOpenChange={(o) => { if (!o) setShowCreate(false); }}>
-            <SheetContent side="right" flush title="Nuevo mensaje" className="max-w-2xl">
+          <Sheet open={showCreate} onOpenChange={(o) => { if (!o) { setShowCreate(false); setEditingId(null); } }}>
+            <SheetContent side="right" flush title={editingId ? 'Editar borrador' : 'Nuevo mensaje'} className="max-w-2xl">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-                <h2 className="type-title">Nuevo mensaje</h2>
+                <h2 className="type-title">{editingId ? 'Editar borrador' : 'Nuevo mensaje'}</h2>
                 <SheetClose
                   aria-label="Cerrar"
                   className="-mr-1.5 grid h-8 w-8 place-items-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -834,6 +964,26 @@ export function AdminMessagesClient({
                   </div>
                 )}
 
+                {/* Programar el envío. Por día y no por hora: sale en el lote de
+                    la mañana, junto con los cumpleaños y el digest. */}
+                <div>
+                  <label htmlFor="scheduled_for" className="mb-1 block text-xs font-medium text-secondary-foreground">
+                    Programar el envío (opcional)
+                  </label>
+                  <input
+                    id="scheduled_for"
+                    type="date"
+                    value={form.scheduled_for}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setForm({ ...form, scheduled_for: e.target.value })}
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Si elegís una fecha, el mensaje queda como borrador y se publica solo esa mañana. Si la dejás
+                    vacía, se guarda como borrador y lo publicás vos cuando quieras.
+                  </p>
+                </div>
+
                 {/* Expires at */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-secondary-foreground">Expira el (opcional)</label>
@@ -899,15 +1049,23 @@ export function AdminMessagesClient({
 
               {/* Footer */}
               <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] p-4">
-                <Button variant="ghost" onClick={() => setShowCreate(false)} disabled={saving}>
+                <Button variant="ghost" onClick={() => { setShowCreate(false); setEditingId(null); }} disabled={saving}>
                   Cancelar
                 </Button>
-                <Button variant="outline" onClick={() => handleCreate(false)} disabled={saving}>
-                  Guardar borrador
-                </Button>
-                <Button onClick={() => handleCreate(true)} loading={saving}>
-                  Publicar ahora
-                </Button>
+                {editingId ? (
+                  <Button onClick={() => handleCreate(false)} loading={saving}>
+                    Guardar cambios
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={() => handleCreate(false)} disabled={saving}>
+                      Guardar borrador
+                    </Button>
+                    <Button onClick={() => handleCreate(true)} loading={saving}>
+                      Publicar ahora
+                    </Button>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -935,7 +1093,7 @@ export function AdminMessagesClient({
                   Limpiar filtros
                 </button>
               ) : (
-                <Button className="mt-4" onClick={() => setShowCreate(true)}>
+                <Button className="mt-4" onClick={() => { setEditingId(null); setForm(DEFAULT_FORM); setShowCreate(true); }}>
                   Nuevo mensaje
                 </Button>
               )}
@@ -972,9 +1130,20 @@ export function AdminMessagesClient({
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[msg.status]}`}>
-                          {msg.status === 'draft' ? 'Borrador' : msg.status === 'published' ? 'Publicado' : 'Archivado'}
-                        </span>
+                        {/* Un borrador programado no es un borrador suelto: sin
+                            distinguirlos, la lista no dice que va a salir solo. */}
+                        {msg.status === 'draft' && msg.scheduled_for ? (
+                          <span
+                            className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-[var(--brand-strong)]"
+                            title={`Se publica solo el ${fechaCorta(msg.scheduled_for)} a la mañana`}
+                          >
+                            Programado · {fechaCorta(msg.scheduled_for)}
+                          </span>
+                        ) : (
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[msg.status]}`}>
+                            {msg.status === 'draft' ? 'Borrador' : msg.status === 'published' ? 'Publicado' : 'Archivado'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-4 text-xs text-muted-foreground">{labelForAudience(msg.audience)}</td>
                       <td className="px-4 py-4 text-center text-sm font-semibold text-secondary-foreground">{msg.recipients_total}</td>
@@ -1019,7 +1188,27 @@ export function AdminMessagesClient({
                               onClick={() => handlePublish(msg.id)}
                               loading={publishing === msg.id}
                             >
-                              Publicar
+                              {msg.scheduled_for ? 'Publicar ahora' : 'Publicar'}
+                            </Button>
+                          )}
+                          {msg.status === 'draft' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              loading={loadingEdit === msg.id}
+                              onClick={() => handleEdit(msg.id)}
+                            >
+                              Editar
+                            </Button>
+                          )}
+                          {msg.status === 'draft' && msg.scheduled_for && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              loading={unscheduling === msg.id}
+                              onClick={() => handleUnschedule(msg.id)}
+                            >
+                              Cancelar envío
                             </Button>
                           )}
                         </div>

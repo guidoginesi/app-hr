@@ -57,12 +57,20 @@ export default async function AyudaMensajesPage() {
           <p><b>Publicar ahora</b> lo envía y crea los destinatarios; <b>Guardar borrador</b> lo deja para después (lo publicás desde la lista cuando quieras).</p>
         </ManualStep>
 
-        <ManualStep image="/manual/mensajes-admin/01-lista.png" n={6} title="Buscar, filtrar y exportar" imageAlt="Barra con buscador, filtro de origen (Todos/Manuales/Automáticos), prioridad, estado, rango de fechas, estado de lectura, 'Recibido por' y botón Exportar CSV.">
+        <ManualStep image="/manual/mensajes-admin/02-compose.png" n={6} title="Programar el envío" imageAlt="Campo 'Programar el envío (opcional)' con un selector de fecha, arriba de 'Expira el'.">
+          <p>En <b>Programar el envío</b> elegís una <b>fecha</b> y el mensaje se publica solo esa mañana, sin que tengas que entrar. Queda como borrador hasta entonces, así que lo podés seguir editando.</p>
+          <p>La programación es <b>por día, no por hora</b>: sale en el mismo envío de la mañana en que ya salen los cumpleaños, el resumen de aprobaciones y los recordatorios de recibos.</p>
+          <p>En la lista se ve como <b>Programado</b> con la fecha. Desde ahí podés <b>Publicar ahora</b> sin esperar, o <b>Cancelar envío</b> para que vuelva a ser un borrador común.</p>
+          <p>Si llegada la fecha el envío no se puede hacer —por ejemplo si perdiste el permiso de envío masivo—, el mensaje no sale, queda como borrador y te llega un aviso con el motivo.</p>
+          <p>Y si cambia algo del contenido, <b>Editar</b> te abre el borrador con todo cargado: texto, audiencia, canales y la fecha. No hace falta cancelar y volver a escribirlo.</p>
+        </ManualStep>
+
+        <ManualStep image="/manual/mensajes-admin/01-lista.png" n={7} title="Buscar, filtrar y exportar" imageAlt="Barra con buscador, filtro de origen (Todos/Manuales/Automáticos), prioridad, estado, rango de fechas, estado de lectura, 'Recibido por' y botón Exportar CSV.">
           <p>Sobre el listado podés <b>buscar por palabra clave</b> y <b>filtrar</b> por <b>origen</b> (manual vs. automático del sistema), prioridad, estado, <b>rango de fechas</b>, <b>estado de lectura</b> y <b>destinatario</b> (recibido por…).</p>
           <p>Con <b>Exportar CSV</b> bajás el resultado filtrado: un <b>resumen por mensaje</b> o el <b>detalle por destinatario</b> (para auditar quién leyó/confirmó).</p>
         </ManualStep>
 
-        <ManualStep image="/manual/mensajes-admin/03-detalle.png" n={7} title="Seguir lectura y entrega" imageAlt="Detalle del mensaje: métricas de enviados/leídos/confirmados y tabla de destinatarios con estado de mail (Entregado), leído y confirmado.">
+        <ManualStep image="/manual/mensajes-admin/03-detalle.png" n={8} title="Seguir lectura y entrega" imageAlt="Detalle del mensaje: métricas de enviados/leídos/confirmados y tabla de destinatarios con estado de mail (Entregado), leído y confirmado.">
           <p>Entrá a <b>Ver detalle</b> de un mensaje para ver las métricas (<b>enviados / leídos / confirmados</b>) y la tabla de destinatarios. Ahí ves, por persona, el <b>estado del mail</b> (<b>enviado / entregado / rebotado / spam</b>), si lo <b>leyó</b> y si <b>confirmó</b> (cuando el mensaje lo pide).</p>
         </ManualStep>
       </div>

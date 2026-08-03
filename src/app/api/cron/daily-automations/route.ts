@@ -7,6 +7,7 @@ import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
 import { runInquiryAutomations } from '@/lib/inquiryAutomations';
+import { publishScheduledMessages } from '@/lib/scheduledMessages';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -102,6 +103,7 @@ export async function GET(req: NextRequest) {
     approvalDigests: { sent: [] as string[], errors: [] as string[] },
     receiptReminders: { sent: 0, skipped: 0 },
     inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
+    scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
     errors: [] as string[],
   };
 
@@ -368,6 +370,16 @@ export async function GET(req: NextRequest) {
     results.inquiries = await runInquiryAutomations();
   } catch (e: any) {
     results.errors.push(`Inquiry automations: ${e.message}`);
+  }
+
+  // ── MENSAJES PROGRAMADOS ───────────────────────────────────────
+  // Va último a propósito: publicar un mensaje dispara mails a toda la audiencia,
+  // así que si algo falla antes conviene que los automatismos internos ya hayan
+  // corrido en vez de quedar tapados por un error del fan-out.
+  try {
+    results.scheduledMessages = await publishScheduledMessages();
+  } catch (e: any) {
+    results.errors.push(`Scheduled messages: ${e.message}`);
   }
 
   return NextResponse.json({

@@ -10,6 +10,9 @@ const CreateMessageSchema = z.object({
   priority: z.enum(['info', 'warning', 'critical']).default('info'),
   require_confirmation: z.boolean().default(false),
   expires_at: z.string().datetime().optional().nullable(),
+  // Programación por DÍA (ver db/migration-messages-programados.sql): el envío
+  // sale en el lote de la mañana, así que no se pide hora.
+  scheduled_for: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.').optional().nullable(),
   send_to_google_chat: z.boolean().default(false),
   send_email: z.boolean().default(false),
   template_context: z.record(z.string(), z.string()).optional(),
@@ -74,6 +77,7 @@ export async function POST(req: NextRequest) {
         priority: parsed.data.priority,
         require_confirmation: parsed.data.require_confirmation,
         expires_at: parsed.data.expires_at ?? null,
+        scheduled_for: parsed.data.scheduled_for ?? null,
         send_to_google_chat: parsed.data.send_to_google_chat,
         send_email: parsed.data.send_email,
         audience: parsed.data.audience,
