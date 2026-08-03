@@ -71,7 +71,7 @@ export function AttachmentPanel({
 
   return (
     <div className="space-y-2 rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-secondary-foreground">Archivos adjuntos</p>
+      <h2 className="text-base font-semibold text-foreground">Archivos adjuntos</h2>
 
       {items.length > 0 && (
         <ul className="space-y-1">

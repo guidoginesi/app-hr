@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@pow/ui/components/ui/button';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
+import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { AttachmentPanel } from '@/components/inquiries/AttachmentPanel';
 import {
@@ -98,28 +99,28 @@ export function ConsultaDetailClient({ inquiryId }: { inquiryId: string }) {
 
   return (
     <div className="space-y-6">
-      <Link href="/portal/consultas" className="text-sm text-muted-foreground hover:text-foreground">
-        ← Volver a consultas
-      </Link>
+      {/* Mismo patrón que Resultados de Evaluación: PageHeader con el "Volver"
+          dentro de actions, en vez de un h1 a mano dentro de una card. */}
+      <PageHeader
+        title={inquiry.subject}
+        description={`${CATEGORY_LABELS[inquiry.category]} · abierta el ${new Date(inquiry.created_at).toLocaleDateString('es-AR')}`}
+        actions={
+          <>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusPill[inquiry.status]}`}>
+              {STATUS_LABELS_EMPLOYEE[inquiry.status]}
+            </span>
+            <Link href="/portal/consultas" className={buttonVariants({ variant: 'outline' })}>
+              Volver
+            </Link>
+          </>
+        }
+      />
 
-      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">{inquiry.subject}</h1>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {CATEGORY_LABELS[inquiry.category]} · abierta el {new Date(inquiry.created_at).toLocaleDateString('es-AR')}
-            </p>
-          </div>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusPill[inquiry.status]}`}>
-            {STATUS_LABELS_EMPLOYEE[inquiry.status]}
-          </span>
+      {!inquiry.first_hr_response_at && inquiry.first_response_due_at && inquiry.status !== 'cerrada' && (
+        <div className="rounded-xl border border-[var(--border)] bg-white px-5 py-3 text-sm text-muted-foreground shadow-sm">
+          Te respondemos antes del <b className="text-foreground">{formatDueDate(inquiry.first_response_due_at)}</b>.
         </div>
-        {!inquiry.first_hr_response_at && inquiry.first_response_due_at && inquiry.status !== 'cerrada' && (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Te respondemos antes del <b>{formatDueDate(inquiry.first_response_due_at)}</b>.
-          </p>
-        )}
-      </div>
+      )}
 
       <div className="space-y-3">
         {messages.map((m) => {

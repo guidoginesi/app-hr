@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@pow/ui/components/ui/button';
+import { Button, buttonVariants } from '@pow/ui/components/ui/button';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
@@ -111,28 +111,34 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
       )}
 
       <PageHeader
-        breadcrumb={[{ label: 'Consultas', href: '/admin/consultas' }, { label: inquiry.subject }]}
         title={inquiry.subject}
         description={`${inquiry.employee_name}${inquiry.job_title ? ` · ${inquiry.job_title}` : ''} · ${CATEGORY_LABELS[inquiry.category]} · ${new Date(inquiry.created_at).toLocaleDateString('es-AR')}`}
         actions={
-          <div className="flex flex-col items-end gap-1">
-            <span className="type-label text-muted-foreground">Estado</span>
-            <SelectMenu
-              ariaLabel="Estado de la consulta"
-              className="w-52"
-              value={inquiry.status}
-              onChange={(v) => act({ action: 'set_status', status: v }, 'Estado actualizado')}
-              // 'nueva' va como opción deshabilitada: sin ella el value no matchea
-              // ninguna opción en una consulta recién creada y el selector mostraba
-              // "Seleccioná…" en vez del estado real.
-              options={[
-                { value: 'nueva', label: STATUS_LABELS_HR.nueva, disabled: true },
-                { value: 'en_curso', label: STATUS_LABELS_HR.en_curso },
-                { value: 'esperando_colaborador', label: STATUS_LABELS_HR.esperando_colaborador },
-                { value: 'resuelta', label: STATUS_LABELS_HR.resuelta },
-                { value: 'cerrada', label: STATUS_LABELS_HR.cerrada },
-              ]}
-            />
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <span className="type-label text-muted-foreground">Estado</span>
+              <SelectMenu
+                ariaLabel="Estado de la consulta"
+                // w-60: "Esperando al colaborador" es la etiqueta más larga y con
+                // w-52 se cortaba justo el dato que hay que leer de un vistazo.
+                className="w-60"
+                value={inquiry.status}
+                onChange={(v) => act({ action: 'set_status', status: v }, 'Estado actualizado')}
+                // 'nueva' va como opción deshabilitada: sin ella el value no matchea
+                // ninguna opción en una consulta recién creada y el selector mostraba
+                // "Seleccioná…" en vez del estado real.
+                options={[
+                  { value: 'nueva', label: STATUS_LABELS_HR.nueva, disabled: true },
+                  { value: 'en_curso', label: STATUS_LABELS_HR.en_curso },
+                  { value: 'esperando_colaborador', label: STATUS_LABELS_HR.esperando_colaborador },
+                  { value: 'resuelta', label: STATUS_LABELS_HR.resuelta },
+                  { value: 'cerrada', label: STATUS_LABELS_HR.cerrada },
+                ]}
+              />
+            </div>
+            <Link href="/admin/consultas" className={buttonVariants({ variant: 'outline' })}>
+              Volver
+            </Link>
           </div>
         }
       />
@@ -146,7 +152,7 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
       {/* Compartir con el líder: permiso por consulta, reversible. */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-white px-5 py-4 shadow-sm">
         <div>
-          <p className="text-sm font-medium text-secondary-foreground">Compartir con el líder</p>
+          <h3 className="text-sm font-semibold text-foreground">Compartir con el líder</h3>
           <p className="text-xs text-muted-foreground">
             {inquiry.manager_id
               ? 'Le da acceso solo a esta consulta. Ve el hilo pero no las notas internas.'
