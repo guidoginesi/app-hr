@@ -24,6 +24,7 @@ import {
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
+import { ShellSwitch } from '@/components/ShellSwitch';
 
 type AdminShellProps = {
   children: ReactNode;
@@ -113,6 +114,9 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
         }
         footer={
           <div className="space-y-1">
+            {/* Cruce al portal: la misma persona usa los dos lados desde que
+                People tiene rol admin sobre su cuenta de empleado. */}
+            <ShellSwitch to="portal" />
             <NotificationBell direction="up" label="Notificaciones" detailBasePath="/admin/messages" />
             <AdminProfileDropdown direction="up" fullWidth />
           </div>

@@ -25,6 +25,7 @@ import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
 import { NotificationBell } from '@/components/NotificationBell';
+import { ShellSwitch } from '@/components/ShellSwitch';
 
 type PortalShellProps = {
   children: ReactNode;
@@ -144,6 +145,8 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
         }
         footer={
         <div className="space-y-1">
+          {/* Sólo aparece para admin y Administración; ShellSwitch lo resuelve. */}
+          <ShellSwitch to="admin" />
           <NotificationBell direction="up" label="Notificaciones" />
           <div className="relative min-w-0" ref={dropdownRef}>
               <button
