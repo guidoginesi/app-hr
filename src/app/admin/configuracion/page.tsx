@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@pow/ui/components/ui/card';
 import { buttonVariants } from '@pow/ui/components/ui/button';
 import { ConfigLayout } from './ConfigLayout';
+import { RolesSection } from './RolesSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,8 @@ export default async function AdminConfiguracionPage() {
 
   return (
     <ConfigLayout>
+      <RolesSection />
+
       <Card>
         <CardHeader>
           <CardTitle>Estructura organizacional</CardTitle>
