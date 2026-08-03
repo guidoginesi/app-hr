@@ -104,14 +104,45 @@ export async function PATCH(
     const body = await req.json();
     const supabase = getSupabaseServer();
 
-    const allowed = ['archived'];
-    if (!allowed.includes(body.status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    // Dos operaciones distintas sobre el mismo PATCH: archivar, o cambiar/cancelar
+    // la fecha programada. Se distinguen por qué campo viene en el body.
+    const update: Record<string, unknown> = {};
+
+    if ('status' in body) {
+      if (body.status !== 'archived') {
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      }
+      update.status = 'archived';
+      // Archivar un borrador programado también cancela la programación: si no,
+      // el cron lo publicaría igual y reviviría un mensaje archivado.
+      update.scheduled_for = null;
+    }
+
+    if ('scheduled_for' in body) {
+      const value = body.scheduled_for;
+      if (value !== null && !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+        return NextResponse.json({ error: 'Fecha inválida.' }, { status: 400 });
+      }
+      // Sólo tiene sentido programar un borrador: lo ya publicado no se reenvía.
+      const { data: actual, error: readError } = await supabase
+        .from('messages')
+        .select('status')
+        .eq('id', id)
+        .single();
+      if (readError || !actual) return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+      if (actual.status !== 'draft') {
+        return NextResponse.json({ error: 'Solo se puede programar un borrador.' }, { status: 400 });
+      }
+      update.scheduled_for = value;
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 });
     }
 
     const { data, error } = await supabase
       .from('messages')
-      .update({ status: body.status })
+      .update(update)
       .eq('id', id)
       .select()
       .single();

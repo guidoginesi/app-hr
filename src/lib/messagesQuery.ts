@@ -19,7 +19,7 @@ export type MessageFilters = {
 };
 
 const LIST_SELECT =
-  'id, type, title, priority, require_confirmation, status, created_at, published_at, expires_at, audience, created_by, metadata';
+  'id, type, title, priority, require_confirmation, status, created_at, published_at, expires_at, scheduled_for, audience, created_by, metadata';
 
 const NO_MATCH = '00000000-0000-0000-0000-000000000000';
 

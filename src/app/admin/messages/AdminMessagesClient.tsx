@@ -22,6 +22,7 @@ type Message = {
   created_at: string;
   published_at: string | null;
   expires_at: string | null;
+  scheduled_for: string | null;
   audience: Record<string, unknown> | null;
   created_by: string | null;
   metadata: Record<string, unknown> | null;
@@ -81,6 +82,7 @@ type CreateForm = {
   periodo: string;
   send_to_google_chat: boolean;
   send_email: boolean;
+  scheduled_for: string;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -96,6 +98,7 @@ const DEFAULT_FORM: CreateForm = {
   periodo: '',
   send_to_google_chat: false,
   send_email: false,
+  scheduled_for: '',
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -278,6 +281,7 @@ export function AdminMessagesClient({
   const [form, setForm] = useState<CreateForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState<string | null>(null);
+  const [unscheduling, setUnscheduling] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -369,6 +373,7 @@ export function AdminMessagesClient({
         require_confirmation: form.require_confirmation,
         send_to_google_chat: form.send_to_google_chat,
         send_email: form.send_email,
+        scheduled_for: form.scheduled_for || null,
         audience: audiencePayload(form.audience),
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
@@ -397,6 +402,8 @@ export function AdminMessagesClient({
           return;
         }
         setSuccess(`Mensaje publicado para ${pubData.recipients_created ?? 0} usuarios.`);
+      } else if (form.scheduled_for) {
+        setSuccess(`Programado: se publica solo el ${fechaCorta(form.scheduled_for)} a la mañana.`);
       } else {
         setSuccess('Borrador guardado.');
       }
@@ -408,6 +415,36 @@ export function AdminMessagesClient({
       setError('Error de red');
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** Muestra la fecha programada sin pasar por Date: un 'YYYY-MM-DD' parseado
+      como Date se interpreta en UTC y en Argentina se ve un día menos. */
+  const fechaCorta = (iso: string) => {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y.slice(2)}`;
+  };
+
+  const handleUnschedule = async (msgId: string) => {
+    setUnscheduling(msgId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/messages/${msgId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduled_for: null }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'No se pudo cancelar el envío programado.');
+        return;
+      }
+      setSuccess('Envío programado cancelado. El mensaje queda como borrador.');
+      setRefreshKey((k) => k + 1);
+    } catch {
+      setError('Error de red');
+    } finally {
+      setUnscheduling(null);
     }
   };
 
@@ -834,6 +871,26 @@ export function AdminMessagesClient({
                   </div>
                 )}
 
+                {/* Programar el envío. Por día y no por hora: sale en el lote de
+                    la mañana, junto con los cumpleaños y el digest. */}
+                <div>
+                  <label htmlFor="scheduled_for" className="mb-1 block text-xs font-medium text-secondary-foreground">
+                    Programar el envío (opcional)
+                  </label>
+                  <input
+                    id="scheduled_for"
+                    type="date"
+                    value={form.scheduled_for}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setForm({ ...form, scheduled_for: e.target.value })}
+                    className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Si elegís una fecha, el mensaje queda como borrador y se publica solo esa mañana. Si la dejás
+                    vacía, se guarda como borrador y lo publicás vos cuando quieras.
+                  </p>
+                </div>
+
                 {/* Expires at */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-secondary-foreground">Expira el (opcional)</label>
@@ -972,9 +1029,20 @@ export function AdminMessagesClient({
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[msg.status]}`}>
-                          {msg.status === 'draft' ? 'Borrador' : msg.status === 'published' ? 'Publicado' : 'Archivado'}
-                        </span>
+                        {/* Un borrador programado no es un borrador suelto: sin
+                            distinguirlos, la lista no dice que va a salir solo. */}
+                        {msg.status === 'draft' && msg.scheduled_for ? (
+                          <span
+                            className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-[var(--brand-strong)]"
+                            title={`Se publica solo el ${fechaCorta(msg.scheduled_for)} a la mañana`}
+                          >
+                            Programado · {fechaCorta(msg.scheduled_for)}
+                          </span>
+                        ) : (
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[msg.status]}`}>
+                            {msg.status === 'draft' ? 'Borrador' : msg.status === 'published' ? 'Publicado' : 'Archivado'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-4 text-xs text-muted-foreground">{labelForAudience(msg.audience)}</td>
                       <td className="px-4 py-4 text-center text-sm font-semibold text-secondary-foreground">{msg.recipients_total}</td>
@@ -1019,7 +1087,17 @@ export function AdminMessagesClient({
                               onClick={() => handlePublish(msg.id)}
                               loading={publishing === msg.id}
                             >
-                              Publicar
+                              {msg.scheduled_for ? 'Publicar ahora' : 'Publicar'}
+                            </Button>
+                          )}
+                          {msg.status === 'draft' && msg.scheduled_for && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              loading={unscheduling === msg.id}
+                              onClick={() => handleUnschedule(msg.id)}
+                            >
+                              Cancelar envío
                             </Button>
                           )}
                         </div>
