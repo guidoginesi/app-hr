@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderEmail, renderPlainTemplate, type DetailRow } from '@/lib/email/layout';
+import { blockInProduction } from '@/lib/devOnly';
 
 /**
  * QA visual de emails — renderiza cada mail del sistema con datos de ejemplo.
@@ -170,6 +171,10 @@ function build(): Record<string, { label: string; html: string }> {
 }
 
 export async function GET(req: NextRequest) {
+  // Sólo datos de ejemplo, pero igual expone el diseño interno de los mails.
+  const blocked = blockInProduction();
+  if (blocked) return blocked;
+
   const previews = build();
   const key = new URL(req.url).searchParams.get('key');
 

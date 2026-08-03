@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
+import { blockInProduction } from '@/lib/devOnly';
 
 function replaceVariables(text: string, vars: Record<string, string>): string {
   let result = text;
@@ -12,9 +13,13 @@ function replaceVariables(text: string, vars: Record<string, string>): string {
   return result;
 }
 
-// POST /api/admin/messages/test-automation
-// Dev-only endpoint: bypasses session auth, uses service role key
+// POST /api/dev/test-automation
+// Endpoint de desarrollo: no pide sesión a propósito, usa la service role key y
+// manda un mail REAL leyendo la ficha del empleado. Por eso queda cerrado en
+// producción, donde el middleware no lo cubre (sólo matchea /admin y /portal).
 export async function POST(req: NextRequest) {
+  const blocked = blockInProduction();
+  if (blocked) return blocked;
 
   const { employee_id, template_key } = await req.json();
   if (!employee_id || !template_key) {
