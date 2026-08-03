@@ -119,7 +119,9 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
             <span className="type-label text-muted-foreground">Estado</span>
             <SelectMenu
               ariaLabel="Estado de la consulta"
-              className="w-52"
+              // w-60: "Esperando al colaborador" es la etiqueta más larga y con
+              // w-52 se cortaba justo el dato que hay que leer de un vistazo.
+              className="w-60"
               value={inquiry.status}
               onChange={(v) => act({ action: 'set_status', status: v }, 'Estado actualizado')}
               // 'nueva' va como opción deshabilitada: sin ella el value no matchea
