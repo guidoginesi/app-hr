@@ -50,7 +50,19 @@ export async function GET(req: NextRequest) {
       .eq('user_id', user.id)
       .or(`expires_at.is.null,expires_at.gt.${now}`, { referencedTable: 'messages' })
       .eq('messages.status', 'published')
-      .order('read_at', { ascending: true, nullsFirst: true })
+      // Orden cronológico, lo más nuevo primero — el mismo que usa la página
+      // "ver todas" (src/app/portal/messages/page.tsx).
+      //
+      // Antes el criterio PRINCIPAL era `read_at asc nullsFirst`, con la
+      // intención de mostrar las no leídas arriba. El problema es que para las
+      // ya leídas ese orden manda, y ordena por read_at ASCENDENTE: las leídas
+      // hace más tiempo primero. Combinado con el limit de la campanita, la
+      // ventana quedaba "no leídas + las leídas más viejas", así que alguien con
+      // muchas notificaciones leídas veía en la campanita cosas de meses atrás y
+      // ninguna reciente, mientras "ver todas" las mostraba bien.
+      //
+      // La prioridad de las no leídas no se pierde: NotificationBell ya las
+      // flota arriba en el cliente, sobre lo que recibe.
       .order('delivered_at', { ascending: false })
       .order('published_at', { ascending: false, referencedTable: 'messages' })
       .range(offset, offset + limit - 1);
