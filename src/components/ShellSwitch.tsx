@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeftRight } from 'lucide-react';
 
-type Access = { canAdmin: boolean; canPortal: boolean };
+export type Access = { canAdmin: boolean; canPortal: boolean; canReimburse: boolean };
 
 /**
  * Link para pasar del panel de administración al portal y al revés.
@@ -18,7 +18,11 @@ type Access = { canAdmin: boolean; canPortal: boolean };
  * a /api/me/access en vez de asumirlo — el shell es un componente de cliente y no
  * puede resolver roles por sí mismo.
  */
-export function ShellSwitch({ to }: { to: 'admin' | 'portal' }) {
+/**
+ * Una sola consulta a /api/me/access, reusada por el cruce de shells y por los
+ * ítems de menú que dependen de un permiso.
+ */
+export function useAccess(): Access | null {
   const [access, setAccess] = useState<Access | null>(null);
 
   useEffect(() => {
@@ -36,6 +40,11 @@ export function ShellSwitch({ to }: { to: 'admin' | 'portal' }) {
     };
   }, []);
 
+  return access;
+}
+
+export function ShellSwitch({ to }: { to: 'admin' | 'portal' }) {
+  const access = useAccess();
   const allowed = to === 'admin' ? access?.canAdmin : access?.canPortal;
   if (!allowed) return null;
 

@@ -20,18 +20,19 @@ import {
   UserPlus,
   Users,
   BookOpen,
+  Receipt,
 } from 'lucide-react';
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
 import { NotificationBell } from '@/components/NotificationBell';
-import { ShellSwitch } from '@/components/ShellSwitch';
+import { ShellSwitch, useAccess } from '@/components/ShellSwitch';
 
 type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
-  active: 'dashboard' | 'profile' | 'team' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'capacitaciones' | 'liquidaciones' | 'recibos' | 'messages' | 'consultas' | 'consultas-equipo' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia' | 'ayuda';
+  active: 'dashboard' | 'profile' | 'team' | 'reintegros' | 'reintegros-equipo' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'capacitaciones' | 'liquidaciones' | 'recibos' | 'messages' | 'consultas' | 'consultas-equipo' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia' | 'ayuda';
 };
 
 export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
@@ -69,6 +70,9 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
   // Misma segmentación que el admin: Desempeño / Gestión / Espacio de trabajo /
   // Equipo / Sistema, con el Dashboard suelto arriba.
   const on = (key: PortalShellProps['active']) => active === key;
+  // Reintegros no es para todo el equipo: el ítem aparece sólo si la persona está
+  // habilitada. Lo resuelve el server, no el cliente.
+  const access = useAccess();
 
   const navGroups: NavGroup[] = [
     {
@@ -92,6 +96,9 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
           : [{ label: 'Liquidaciones', href: '/portal/liquidaciones', icon: Wallet, active: on('liquidaciones') }]),
         { label: 'Capacitaciones', href: '/portal/capacitaciones', icon: Award, active: on('capacitaciones') },
         { label: 'Certificados', href: '/portal/certificates', icon: ScrollText, active: on('certificates') },
+        ...(access?.canReimburse
+          ? [{ label: 'Reintegros', href: '/portal/reintegros', icon: Receipt, active: on('reintegros') }]
+          : []),
       ],
     },
     {
@@ -115,6 +122,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
                 icon: MessagesSquare,
                 active: on('consultas-equipo'),
               },
+              { label: 'Reintegros del equipo', href: '/portal/team/reintegros', icon: Receipt, active: on('reintegros-equipo') },
             ],
           },
         ]

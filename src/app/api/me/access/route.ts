@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthResult } from '@/lib/checkAuth';
+import { hasReimbursementAccess } from '@/lib/reimbursementAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,9 +15,15 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const auth = await getAuthResult();
-    if (!auth.user) return NextResponse.json({ canAdmin: false, canPortal: false });
+    if (!auth.user) return NextResponse.json({ canAdmin: false, canPortal: false, canReimburse: false });
+
+    // El ítem de Reintegros no es para todo el equipo: se muestra sólo a quien
+    // está en la lista de habilitados. La API igual revalida, porque esconder el
+    // menú no es una barrera.
+    const canReimburse = auth.employee ? await hasReimbursementAccess(auth.employee.id) : false;
 
     return NextResponse.json({
+      canReimburse,
       // Mismo criterio que el middleware para /admin: admin completo o el perfil
       // Administración, que entra a un subconjunto de rutas.
       canAdmin: auth.isAdmin || auth.isAdministracion,
@@ -26,6 +33,6 @@ export async function GET() {
     });
   } catch {
     // Ante la duda, no ofrecer el cambio de shell.
-    return NextResponse.json({ canAdmin: false, canPortal: false });
+    return NextResponse.json({ canAdmin: false, canPortal: false, canReimburse: false });
   }
 }

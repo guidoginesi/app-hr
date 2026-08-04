@@ -81,6 +81,13 @@ export type Reimbursement = {
   paid_at: string | null;
   payment_receipt_path: string | null;
 
+  /** Snapshot de las reglas evaluadas al solicitar, y el motivo si hizo falta. */
+  validations: {
+    rules?: { label: string; ok: boolean; detail?: string }[];
+    reason?: string | null;
+    evaluated_on?: string;
+  } | null;
+
   created_at: string;
   updated_at: string;
 };
