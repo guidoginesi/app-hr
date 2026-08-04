@@ -30,14 +30,24 @@ export default async function Page() {
       </div>
 
       <div className="mt-8 space-y-8">
-        <ManualStep n={1} title="Cargar el gasto" imageAlt="Formulario de nuevo reintegro con los campos del gasto y el comprobante.">
+        <ManualStep
+          n={1}
+          title="Cargar el gasto"
+          image="/manual/reintegros-portal/02-form.png"
+          imageAlt="Formulario de nuevo reintegro con los campos del gasto, los datos del comprobante y el archivo."
+        >
           <p>En <b>Reintegros → Nuevo reintegro</b> completás la <b>fecha</b> del gasto, el <b>motivo</b> (viáticos, movilidad, comidas de trabajo, insumos, suscripciones…), una <b>descripción</b> corta de qué fue y el <b>monto</b> con su moneda.</p>
           <p>Después van los datos del comprobante: <b>tipo</b> (factura A, B, C, ticket…), <b>número</b> y el <b>CUIT</b> de quien te lo emitió.</p>
           <p>El <b>archivo del comprobante es obligatorio</b> — PDF o foto, hasta 10 MB. Sin comprobante no se puede enviar, porque es lo que Administración tiene que validar. Una foto legible del ticket alcanza.</p>
         </ManualStep>
 
-        <ManualStep n={2} title="Si el gasto está fuera de lo habitual" imageAlt="Aviso en el formulario pidiendo explicar el motivo, con el campo de texto.">
-          <p>El formulario te avisa si el gasto es de hace <b>más de 60 días</b>, si pusiste una fecha futura o si el monto es alto (más de ARS 300.000 o USD 300). En esos casos te pide <b>explicar por qué</b> en un campo de texto.</p>
+        <ManualStep
+          n={2}
+          title="Si el gasto está fuera de lo habitual"
+          image="/manual/reintegros-portal/03-fuera-de-plazo.png"
+          imageAlt="Bloque 'Revisá antes de enviar' marcando el gasto de hace 124 días y el monto sobre el tope, con el campo Motivo debajo."
+        >
+          <p>El formulario te avisa si el gasto es de hace <b>más de 60 días</b>, si pusiste una fecha futura o si el monto es alto (más de ARS 300.000 o USD 300). Te lo muestra en el bloque <b>Revisá antes de enviar</b>, con un <b>!</b> en lo que no cumple, y aparece el campo <b>Motivo</b> para que expliques por qué.</p>
           <p><b>No es un rechazo</b>: podés enviarlo igual, sólo tenés que contar el contexto. Esa explicación la ven tu líder y Administración junto con la solicitud, así no tienen que preguntártelo por otro canal.</p>
         </ManualStep>
 
@@ -60,6 +70,11 @@ export default async function Page() {
           <p>Podés <b>cancelar</b> un reintegro tuyo mientras esté esperando a tu líder o recién aprobado. Una vez que Administración lo validó ya está imputado a un período de pago y no se puede cancelar solo: escribile a People por Consultas.</p>
           <p>Si te lo <b>rechazan</b>, el motivo es obligatorio y lo vas a ver en el mail y en la pantalla. Si el rechazo fue por algo corregible —faltaba el comprobante, estaba ilegible, el número no coincidía— podés <b>cargarlo de nuevo</b> con el dato corregido.</p>
         </ManualStep>
+
+        <p className="text-sm text-muted-foreground">
+          Los pasos 3 a 6 dicen &quot;captura pendiente&quot;: esas pantallas sólo existen cuando hay un reintegro en
+          curso. Se agregan con el primero real.
+        </p>
       </div>
     </PortalAyudaLayout>
   );
