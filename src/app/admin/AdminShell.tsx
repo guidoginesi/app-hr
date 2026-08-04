@@ -18,6 +18,7 @@ import {
   MessageSquare,
   MessagesSquare,
   Settings,
+  Receipt,
   BookOpen,
   FileCheck,
 } from 'lucide-react';
@@ -71,6 +72,7 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
         { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
         { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
         { label: 'Capacitaciones', href: '/admin/training', icon: Award, active: match('/admin/training') },
+        { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros') },
       ],
     },
     {
@@ -97,6 +99,8 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
           items: [
             { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
             { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
+            // Administración valida los reintegros, así que entra a esta ruta.
+            { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros') },
           ],
         },
       ]

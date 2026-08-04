@@ -132,7 +132,7 @@ export async function middleware(request: NextRequest) {
       if (isAdministracion) {
         // Perfil Administración: Adelantos + la vista de recepción de recibos
         // (solo estado, sin montos). El resto del admin lo redirige.
-        const allowed = ['/admin/salary-advances', '/admin/recibos'];
+        const allowed = ['/admin/salary-advances', '/admin/recibos', '/admin/reintegros'];
         if (!allowed.some((p) => pathname.startsWith(p))) {
           return NextResponse.redirect(new URL('/admin/salary-advances', request.url));
         }
