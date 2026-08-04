@@ -118,12 +118,15 @@ export function todayInArgentina(now: Date = new Date()): string {
  * Se calcula una sola vez, al agendar el pago, y se persiste: si se recalculara
  * en cada lectura, la fecha que vio el solicitante cambiaría sola al pasar el 20.
  */
-export function resolvePaymentPeriod(validatedOn: string): {
+export function resolvePaymentPeriod(scheduledOn: string): {
   pay_year: number;
   pay_month: number;
   estimated_payment_date: string;
 } {
-  const [y, m, d] = validatedOn.split('-').map(Number);
+  // El corte se mide sobre el día en que se AGENDA el pago, que es el único
+  // momento en que se llama a esto. El nombre anterior (`validatedOn`) sugería la
+  // fecha de validación y hacía leer mal la regla.
+  const [y, m, d] = scheduledOn.split('-').map(Number);
   let year = y;
   let month = m;
   if (d > CUTOFF_DAY) {

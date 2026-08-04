@@ -101,6 +101,8 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
             { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
             // Administración valida los reintegros, así que entra a esta ruta.
             { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros') },
+            // El índice de Ayuda le muestra sólo los manuales de sus módulos.
+            { label: 'Ayuda', href: '/admin/ayuda', icon: BookOpen, active: match('/admin/ayuda') },
           ],
         },
       ]

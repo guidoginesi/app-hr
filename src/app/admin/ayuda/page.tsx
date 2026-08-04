@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { requireAdmin } from '@/lib/checkAuth';
+import { getAuthResult } from '@/lib/checkAuth';
 import { AyudaLayout } from './AyudaLayout';
 
 export const dynamic = 'force-dynamic';
@@ -36,16 +36,30 @@ const MANUALS = [
     title: 'Mensajes',
     desc: 'Redactar y segmentar comunicaciones (por área/líder/personas), plantillas con variables, envío por mail/Chat, filtros + export, y seguimiento de lectura y entrega.',
   },
+  {
+    href: '/admin/ayuda/reintegros',
+    emoji: '🧮',
+    title: 'Reintegros de gastos',
+    desc: 'Habilitados y motivos, aprobación del líder, validación de comprobante e imputación, monto parcial y tipo de cambio, agenda de pago y comprobante de pago.',
+    /** Administración valida y paga reintegros, así que también lee este manual. */
+    administracion: true,
+  },
 ];
 
 export default async function AyudaPage() {
-  const { isAdmin } = await requireAdmin();
-  if (!isAdmin) redirect('/admin/login');
+  const auth = await getAuthResult();
+  if (!auth.isAdmin && !auth.isAdministracion) redirect('/admin/login');
+
+  // Administración sólo ve los manuales de los módulos a los que entra.
+  const visible = auth.isAdmin ? MANUALS : MANUALS.filter((m) => m.administracion);
 
   return (
-    <AyudaLayout description="Manuales paso a paso de las funcionalidades de la plataforma">
+    <AyudaLayout
+      description="Manuales paso a paso de las funcionalidades de la plataforma"
+      advancesOnly={!auth.isAdmin && auth.isAdministracion}
+    >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {MANUALS.map((m) => (
+        {visible.map((m) => (
           <Link
             key={m.href}
             href={m.href}
