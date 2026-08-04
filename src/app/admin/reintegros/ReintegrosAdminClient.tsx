@@ -8,7 +8,6 @@ import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { TabNav } from '@pow/ui/components/ui/tab-nav';
 import {
-  CATEGORY_LABELS,
   PAYMENT_METHOD_LABELS,
   RECEIPT_TYPE_LABELS,
   STATUS_LABELS_ADMIN,
@@ -53,7 +52,7 @@ const ars = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: boolean }) {
-  const [tab, setTab] = useState<'cola' | 'acceso'>('cola');
+  const [tab, setTab] = useState<'cola' | 'acceso' | 'motivos'>('cola');
   const [items, setItems] = useState<Row[]>([]);
   const [totales, setTotales] = useState<Totales | null>(null);
   const [filtro, setFiltro] = useState('abiertos');
@@ -155,13 +154,18 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
 
   return (
     <div className="space-y-6">
-      <TabNav<'cola' | 'acceso'>
+      <TabNav<'cola' | 'acceso' | 'motivos'>
         aria-label="Secciones de Reintegros"
         value={tab}
         onChange={setTab}
         options={[
           { value: 'cola', label: 'Cola' },
-          ...(canManageAccess ? [{ value: 'acceso' as const, label: 'Habilitados' }] : []),
+          ...(canManageAccess
+            ? [
+                { value: 'acceso' as const, label: 'Habilitados' },
+                { value: 'motivos' as const, label: 'Motivos' },
+              ]
+            : []),
         ]}
       />
 
@@ -178,7 +182,9 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
         </div>
       )}
 
-      {tab === 'acceso' ? (
+      {tab === 'motivos' ? (
+        <MotivosPanel onNotice={setNotice} onError={setError} />
+      ) : tab === 'acceso' ? (
         <AccesoPanel onNotice={setNotice} onError={setError} />
       ) : (
         <>
@@ -232,7 +238,7 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
                       <div className="min-w-0">
                         <p className="font-medium text-foreground">{r.concept}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          {r.employee_name} · {CATEGORY_LABELS[r.category]} · {fecha(r.expense_date)}
+                          {r.employee_name} · {r.reason_label_snapshot ?? r.reason_name ?? '—'} · {fecha(r.expense_date)}
                           {r.project_label_snapshot ? ` · ${r.project_label_snapshot}` : ''}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -280,9 +286,9 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
 
                     {openId === r.id && (
                       <div className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-muted p-4">
-                        {r.validations?.reason && (
+                        {r.validations?.justification && (
                           <p className="text-sm text-secondary-foreground">
-                            <b>Motivo del solicitante:</b> {r.validations.reason}
+                            <b>Motivo del solicitante:</b> {r.validations.justification}
                           </p>
                         )}
                         {r.leader_comment && (
@@ -723,6 +729,124 @@ function Timeline({ id }: { id: string }) {
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+/**
+ * Motivos configurables. Un motivo no se borra: se desactiva. Borrarlo dejaría
+ * los reintegros históricos sin motivo y el reporte mentiría hacia atrás.
+ */
+function MotivosPanel({ onNotice, onError }: { onNotice: (s: string) => void; onError: (s: string) => void }) {
+  const [reasons, setReasons] = useState<{ id: string; name: string; active: boolean; used: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [nuevo, setNuevo] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/reintegros/motivos');
+      const data = await res.json();
+      if (res.ok) setReasons(data.reasons ?? []);
+      else onError(data.error ?? 'No se pudieron cargar los motivos.');
+    } finally {
+      setLoading(false);
+    }
+  }, [onError]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const post = async (body: Record<string, unknown>, ok: string) => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/reintegros/motivos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? 'No se pudo guardar.');
+        return;
+      }
+      setReasons(data.reasons ?? []);
+      setNuevo('');
+      onNotice(ok);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="border-b border-[var(--border)] px-6 py-4">
+        <h2 className="text-base font-semibold text-foreground">Motivos de gasto</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Son los que elige el colaborador al cargar un gasto. Un motivo que ya se usó no se puede borrar: se
+          desactiva, así deja de ofrecerse pero los reintegros viejos siguen mostrándolo.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] px-6 py-3">
+        <Input
+          aria-label="Nombre del motivo nuevo"
+          placeholder="Nuevo motivo…"
+          className="max-w-xs"
+          value={nuevo}
+          onChange={(e) => setNuevo(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && nuevo.trim().length >= 2 && !saving) {
+              post({ action: 'create', name: nuevo.trim() }, 'Motivo agregado.');
+            }
+          }}
+        />
+        <Button
+          size="sm"
+          loading={saving}
+          disabled={nuevo.trim().length < 2}
+          onClick={() => post({ action: 'create', name: nuevo.trim() }, 'Motivo agregado.')}
+        >
+          Agregar
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border)] border-t-transparent" />
+        </div>
+      ) : (
+        <ul className="divide-y divide-[var(--border)]">
+          {reasons.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-3">
+              <div>
+                <p className={`font-medium ${r.active ? 'text-foreground' : 'text-muted-foreground line-through'}`}>
+                  {r.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {r.used === 0 ? 'Sin usar' : `Usado en ${r.used} reintegro${r.used === 1 ? '' : 's'}`}
+                </p>
+              </div>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-secondary-foreground">
+                <Checkbox
+                  aria-label={`Ofrecer ${r.name} en el formulario`}
+                  checked={r.active}
+                  disabled={saving}
+                  onCheckedChange={(c) =>
+                    post(
+                      { action: 'toggle', id: r.id, active: c === true },
+                      c === true ? 'Motivo activado.' : 'Motivo desactivado: deja de ofrecerse.',
+                    )
+                  }
+                />
+                Se ofrece
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

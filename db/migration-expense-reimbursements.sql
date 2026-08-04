@@ -22,6 +22,11 @@
 -- · Relación de dependencia se paga por transferencia: su recibo es un PDF
 --   externo, así que no se puede computar por liquidación.
 -- · Sin líder cargado, la solicitud va a la cola de People.
+-- · El MOTIVO del gasto es configurable (tabla expense_reasons), no un enum en el
+--   código: People agrega o retira motivos sin un deploy. Se siembra con seis. Un
+--   motivo nunca se borra, se desactiva, porque borrarlo dejaría los reintegros
+--   históricos sin motivo. Ver db/migration-expense-reasons.sql.
+-- · La DESCRIPCIÓN del gasto es un campo libre aparte (`concept`).
 
 -- ── Enums ────────────────────────────────────────────────────────────────────
 do $$ begin
@@ -32,14 +37,6 @@ exception when duplicate_object then null; end $$;
 
 do $$ begin
   create type reimbursement_currency as enum ('ARS', 'USD');
-exception when duplicate_object then null; end $$;
-
--- Enum y no tabla: son seis y cambian una vez por año. `alter type ... add value`
--- es un one-liner; una tabla sumaría un CRUD para mantener.
-do $$ begin
-  create type reimbursement_category as enum (
-    'viaticos', 'movilidad', 'comidas', 'insumos', 'suscripciones', 'otros'
-  );
 exception when duplicate_object then null; end $$;
 
 do $$ begin

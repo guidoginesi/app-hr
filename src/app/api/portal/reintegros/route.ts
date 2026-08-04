@@ -8,7 +8,6 @@ import { renderEmail, getAppUrl, getReplyTo } from '@/lib/email/layout';
 import { hasReimbursementAccess, logEvent, actorDisplayName } from '@/lib/reimbursementAccess';
 import {
   ALLOWED_MIMES,
-  CATEGORY_LABELS,
   MAX_FILE_BYTES,
   evaluateRequest,
   money,
@@ -29,19 +28,26 @@ export async function GET() {
     if (!enabled) return NextResponse.json({ enabled: false, items: [], projects: [] });
 
     const supabase = getSupabaseServer();
-    const [items, projects] = await Promise.all([
+    const [items, projects, reasons] = await Promise.all([
       supabase
         .from('expense_reimbursements_with_details')
         .select('*')
         .eq('employee_id', auth.employee.id)
         .order('created_at', { ascending: false }),
       supabase.from('expense_projects').select('id, name, client_name').eq('active', true).order('name'),
+      supabase.from('expense_reasons').select('id, name').eq('active', true).order('sort_order'),
     ]);
 
     if (items.error) return NextResponse.json({ error: items.error.message }, { status: 500 });
     if (projects.error) return NextResponse.json({ error: projects.error.message }, { status: 500 });
+    if (reasons.error) return NextResponse.json({ error: reasons.error.message }, { status: 500 });
 
-    return NextResponse.json({ enabled: true, items: items.data ?? [], projects: projects.data ?? [] });
+    return NextResponse.json({
+      enabled: true,
+      items: items.data ?? [],
+      projects: projects.data ?? [],
+      reasons: reasons.data ?? [],
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error inesperado';
     return NextResponse.json({ error: message }, { status: 500 });
@@ -50,8 +56,8 @@ export async function GET() {
 
 const CreateSchema = z.object({
   expense_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha del gasto inválida.'),
-  category: z.enum(['viaticos', 'movilidad', 'comidas', 'insumos', 'suscripciones', 'otros']),
-  concept: z.string().trim().min(3, 'Contá brevemente qué gasto fue.').max(500),
+  reason_id: z.string().uuid('Elegí un motivo.'),
+  concept: z.string().trim().min(3, 'Escribí una descripción del gasto.').max(500),
   amount: z.number().positive('El monto tiene que ser mayor a 0.').max(100_000_000),
   currency: z.enum(['ARS', 'USD']),
   project_id: z.string().uuid().nullable().optional(),
@@ -63,7 +69,8 @@ const CreateSchema = z.object({
     .regex(/^[0-9]{11}$/, 'El CUIT tiene que tener 11 dígitos, sin guiones.')
     .optional()
     .nullable(),
-  reason: z.string().trim().max(500).optional().nullable(),
+  /** Explicación cuando una regla de fecha o monto no se cumple. */
+  justification: z.string().trim().max(500).optional().nullable(),
 });
 
 /**
@@ -114,7 +121,7 @@ export async function POST(req: NextRequest) {
       today,
     });
     // Las reglas no bloquean, pero si alguna falla el motivo es obligatorio.
-    if (evaluation.requiresReason && !d.reason) {
+    if (evaluation.requiresReason && !d.justification) {
       return NextResponse.json(
         { error: 'Contanos el motivo: la fecha o el monto salen de lo habitual.' },
         { status: 400 },
@@ -122,6 +129,17 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabaseServer();
+
+    // El motivo se resuelve ahora para guardar su nombre: si se renombra o se
+    // retira, el reintegro histórico sigue diciendo con qué motivo se pidió.
+    const { data: reason } = await supabase
+      .from('expense_reasons')
+      .select('name, active')
+      .eq('id', d.reason_id)
+      .maybeSingle();
+    if (!reason || !reason.active) {
+      return NextResponse.json({ error: 'El motivo elegido no está disponible.' }, { status: 400 });
+    }
 
     // El proyecto se resuelve ahora para guardar el label: si después se renombra
     // o se desactiva, el reporte histórico sigue diciendo a qué se imputó.
@@ -146,7 +164,8 @@ export async function POST(req: NextRequest) {
         employee_id: auth.employee.id,
         leader_id: auth.employee.manager_id ?? null,
         expense_date: d.expense_date,
-        category: d.category,
+        reason_id: d.reason_id,
+        reason_label_snapshot: reason.name as string,
         concept: d.concept,
         amount: d.amount,
         currency: d.currency,
@@ -159,7 +178,7 @@ export async function POST(req: NextRequest) {
         receipt_filename: file.name,
         receipt_size: file.size,
         receipt_mime: file.type,
-        validations: { rules: evaluation.rules, reason: d.reason ?? null, evaluated_on: today },
+        validations: { rules: evaluation.rules, justification: d.justification ?? null, evaluated_on: today },
       })
       .select('id')
       .single();
@@ -198,7 +217,7 @@ export async function POST(req: NextRequest) {
       toStatus: 'requested',
       actorUserId: auth.user.id,
       actorName,
-      note: d.reason || null,
+      note: d.justification || null,
     });
 
     await notifyApprover({
@@ -208,7 +227,7 @@ export async function POST(req: NextRequest) {
       concept: d.concept,
       amount: d.amount,
       currency: d.currency,
-      category: d.category,
+      reason: reason.name as string,
     });
 
     return NextResponse.json({ success: true, id: created.id });
@@ -230,11 +249,11 @@ async function notifyApprover(input: {
   concept: string;
   amount: number;
   currency: string;
-  category: string;
+  reason: string;
 }) {
   const supabase = getSupabaseServer();
   const importe = money(input.amount, input.currency);
-  const categoria = CATEGORY_LABELS[input.category as keyof typeof CATEGORY_LABELS] ?? input.category;
+  const motivo = input.reason;
 
   let userIds: string[] = [];
   let emails: string[] = [];
@@ -260,7 +279,7 @@ async function notifyApprover(input: {
       ? createSystemNotification({
           userIds,
           title: 'Un reintegro espera tu aprobación',
-          body: `${input.employeeName} pidió el reintegro de ${importe} (${categoria}).`,
+          body: `${input.employeeName} pidió el reintegro de ${importe} (${motivo}).`,
           deepLink: '/portal/team/reintegros',
           dedupeKey: `reintegro-nuevo-${input.reimbursementId}`,
         })
@@ -276,7 +295,7 @@ async function notifyApprover(input: {
           intro: `${input.employeeName} pidió el reintegro de un gasto y necesita tu aprobación.`,
           details: [
             { label: 'Concepto', value: input.concept },
-            { label: 'Categoría', value: categoria },
+            { label: 'Motivo', value: motivo },
             { label: 'Monto', value: importe },
           ],
           cta: { label: 'Ver el reintegro', url },

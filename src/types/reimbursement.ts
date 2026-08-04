@@ -12,13 +12,13 @@ export type ReimbursementStatus =
 
 export type ReimbursementCurrency = 'ARS' | 'USD';
 
-export type ReimbursementCategory =
-  | 'viaticos'
-  | 'movilidad'
-  | 'comidas'
-  | 'insumos'
-  | 'suscripciones'
-  | 'otros';
+/** Motivo del gasto. Configurable desde el admin, no una lista fija en el código. */
+export type ExpenseReason = {
+  id: string;
+  name: string;
+  active: boolean;
+  sort_order: number;
+};
 
 export type ReimbursementReceiptType =
   | 'factura_a'
@@ -43,7 +43,10 @@ export type Reimbursement = {
   leader_id: string | null;
 
   expense_date: string;
-  category: ReimbursementCategory;
+  reason_id: string | null;
+  /** Nombre del motivo al momento de pedirlo: sobrevive a que se renombre o se retire. */
+  reason_label_snapshot: string | null;
+  /** Descripción libre de qué se gastó. */
   concept: string;
   amount: number;
   currency: ReimbursementCurrency;
@@ -84,7 +87,7 @@ export type Reimbursement = {
   /** Snapshot de las reglas evaluadas al solicitar, y el motivo si hizo falta. */
   validations: {
     rules?: { label: string; ok: boolean; detail?: string }[];
-    reason?: string | null;
+    justification?: string | null;
     evaluated_on?: string;
   } | null;
 
@@ -102,6 +105,7 @@ export type ReimbursementWithDetails = Reimbursement & {
   leader_name: string | null;
   project_name: string | null;
   project_client: string | null;
+  reason_name: string | null;
 };
 
 export type ReimbursementEvent = {

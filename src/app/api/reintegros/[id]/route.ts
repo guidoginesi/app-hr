@@ -7,7 +7,6 @@ import { sendSimpleEmail } from '@/lib/emailService';
 import { renderEmail, getAppUrl, getReplyTo } from '@/lib/email/layout';
 import { actorDisplayName, logEvent, resolveActor } from '@/lib/reimbursementAccess';
 import {
-  CATEGORY_LABELS,
   STATUS_LABELS_EMPLOYEE,
   TRANSITIONS,
   canDo,
@@ -213,7 +212,7 @@ async function notifyTransition(input: {
   const r = input.reimbursement;
   const url = `${getAppUrl()}/portal/reintegros`;
   const importe = money(Number(r.amount), String(r.currency));
-  const categoria = CATEGORY_LABELS[r.category as keyof typeof CATEGORY_LABELS] ?? String(r.category);
+  const motivo = String(r.reason_label_snapshot ?? r.reason_name ?? '—');
 
   const paraElColaborador: Record<string, { title: string; intro: string }> = {
     approve_leader: {
@@ -264,7 +263,7 @@ async function notifyTransition(input: {
           intro: msg.intro,
           details: [
             { label: 'Concepto', value: String(r.concept) },
-            { label: 'Categoría', value: categoria },
+            { label: 'Motivo', value: motivo },
             { label: 'Monto solicitado', value: importe },
             ...(r.estimated_payment_date
               ? [{ label: 'Pago estimado', value: String(r.estimated_payment_date) }]

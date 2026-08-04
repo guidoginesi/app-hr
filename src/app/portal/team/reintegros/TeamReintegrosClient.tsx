@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@pow/ui/components/ui/button';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
-import { CATEGORY_LABELS, STATUS_LABELS_EMPLOYEE, money } from '@/lib/reimbursements';
+import { STATUS_LABELS_EMPLOYEE, money } from '@/lib/reimbursements';
 import type { ReimbursementStatus, ReimbursementWithDetails } from '@/types/reimbursement';
 
 const fecha = (iso: string) => {
@@ -119,9 +119,9 @@ export function TeamReintegrosClient() {
 
                 {openId === r.id ? (
                   <div className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-muted p-4">
-                    {r.validations?.reason && (
+                    {r.validations?.justification && (
                       <p className="text-sm text-secondary-foreground">
-                        <b>Motivo que dejó:</b> {r.validations.reason}
+                        <b>Motivo que dejó:</b> {r.validations.justification}
                       </p>
                     )}
                     <Textarea
@@ -187,7 +187,7 @@ export function TeamReintegrosClient() {
         <div className="min-w-0">
           <p className="font-medium text-foreground">{r.concept}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {r.employee_name} · {CATEGORY_LABELS[r.category]} · {fecha(r.expense_date)}
+            {r.employee_name} · {r.reason_label_snapshot ?? r.reason_name ?? '—'} · {fecha(r.expense_date)}
             {r.project_label_snapshot ? ` · ${r.project_label_snapshot}` : ''}
           </p>
           <button

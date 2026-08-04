@@ -8,8 +8,6 @@ import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import {
-  CATEGORIES,
-  CATEGORY_LABELS,
   RECEIPT_TYPES,
   STATUS_LABELS_EMPLOYEE,
   STEPS,
@@ -18,7 +16,7 @@ import {
   payableAmount,
   todayInArgentina,
 } from '@/lib/reimbursements';
-import type { ExpenseProject, ReimbursementStatus, ReimbursementWithDetails } from '@/types/reimbursement';
+import type { ExpenseProject, ExpenseReason, ReimbursementStatus, ReimbursementWithDetails } from '@/types/reimbursement';
 
 const statusPill: Record<ReimbursementStatus, string> = {
   requested: 'bg-accent text-[var(--brand-strong)]',
@@ -39,7 +37,7 @@ const fecha = (iso: string) => {
 
 const DEFAULT_FORM = {
   expense_date: '',
-  category: 'viaticos',
+  reason_id: '',
   concept: '',
   amount: '',
   currency: 'ARS',
@@ -47,12 +45,13 @@ const DEFAULT_FORM = {
   receipt_type: 'factura_b',
   receipt_number: '',
   supplier_cuit: '',
-  reason: '',
+  justification: '',
 };
 
 export function ReintegrosClient({ enabled }: { enabled: boolean }) {
   const [items, setItems] = useState<ReimbursementWithDetails[]>([]);
   const [projects, setProjects] = useState<ExpenseProject[]>([]);
+  const [reasons, setReasons] = useState<ExpenseReason[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...DEFAULT_FORM });
@@ -69,6 +68,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
       if (res.ok) {
         setItems(data.items ?? []);
         setProjects(data.projects ?? []);
+        setReasons(data.reasons ?? []);
       } else setError(data.error ?? 'No se pudieron cargar tus reintegros.');
     } catch {
       setError('No se pudieron cargar tus reintegros.');
@@ -97,10 +97,11 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
 
   const canSubmit =
     Boolean(file) &&
+    form.reason_id &&
     form.expense_date &&
     form.concept.trim().length >= 3 &&
     amountNum > 0 &&
-    (!reasonRequired || form.reason.trim().length > 0) &&
+    (!reasonRequired || form.justification.trim().length > 0) &&
     !saving;
 
   const submit = async () => {
@@ -114,7 +115,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
         'data',
         JSON.stringify({
           expense_date: form.expense_date,
-          category: form.category,
+          reason_id: form.reason_id,
           concept: form.concept.trim(),
           amount: amountNum,
           currency: form.currency,
@@ -122,7 +123,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
           receipt_type: form.receipt_type,
           receipt_number: form.receipt_number.trim() || null,
           supplier_cuit: form.supplier_cuit.trim() || null,
-          reason: form.reason.trim() || null,
+          justification: form.justification.trim() || null,
         }),
       );
       const res = await fetch('/api/portal/reintegros', { method: 'POST', body: fd });
@@ -203,21 +204,25 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Categoría *</label>
+                    <label className="text-xs font-medium text-muted-foreground">Motivo *</label>
                     <SelectMenu
-                      ariaLabel="Categoría"
+                      ariaLabel="Motivo del gasto"
                       className="w-full"
-                      value={form.category}
-                      onChange={(v) => setForm({ ...form, category: v })}
-                      options={CATEGORIES}
+                      value={form.reason_id}
+                      onChange={(v) => setForm({ ...form, reason_id: v })}
+                      options={[
+                        { value: '', label: 'Elegí un motivo…' },
+                        ...reasons.map((r) => ({ value: r.id, label: r.name })),
+                      ]}
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Concepto *</label>
-                  <Input
-                    placeholder="Ej. Taxi a reunión con cliente"
+                  <label className="text-xs font-medium text-muted-foreground">Descripción *</label>
+                  <Textarea
+                    rows={2}
+                    placeholder="Ej. Taxi de la oficina a la reunión con Acme y vuelta"
                     value={form.concept}
                     onChange={(e) => setForm({ ...form, concept: e.target.value })}
                   />
@@ -350,8 +355,8 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                     <Textarea
                       rows={3}
                       placeholder="Por qué el gasto sale de lo habitual"
-                      value={form.reason}
-                      onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                      value={form.justification}
+                      onChange={(e) => setForm({ ...form, justification: e.target.value })}
                     />
                   </div>
                 )}
@@ -406,7 +411,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                     <div className="min-w-0">
                       <p className="font-medium text-foreground">{r.concept}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {CATEGORY_LABELS[r.category]} · {fecha(r.expense_date)}
+                        {r.reason_label_snapshot ?? r.reason_name ?? '—'} · {fecha(r.expense_date)}
                         {r.project_label_snapshot ? ` · ${r.project_label_snapshot}` : ''}
                       </p>
                     </div>

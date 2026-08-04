@@ -4,7 +4,6 @@
 // portal, la cola del líder y el panel de Administración no puedan discrepar.
 
 import type {
-  ReimbursementCategory,
   ReimbursementCurrency,
   ReimbursementPaymentMethod,
   ReimbursementReceiptType,
@@ -13,18 +12,9 @@ import type {
 
 // ── Labels ───────────────────────────────────────────────────────────────────
 
-export const CATEGORY_LABELS: Record<ReimbursementCategory, string> = {
-  viaticos: 'Viáticos',
-  movilidad: 'Movilidad',
-  comidas: 'Comidas de trabajo',
-  insumos: 'Insumos',
-  suscripciones: 'Suscripciones',
-  otros: 'Otros',
-};
-
-export const CATEGORIES: { value: ReimbursementCategory; label: string }[] = (
-  Object.keys(CATEGORY_LABELS) as ReimbursementCategory[]
-).map((value) => ({ value, label: CATEGORY_LABELS[value] }));
+// Los motivos ya NO viven acá: son configurables en la tabla expense_reasons, para
+// que People pueda agregar o retirar uno sin un deploy. El label que se muestra en
+// un reintegro viejo sale de reason_label_snapshot.
 
 export const RECEIPT_TYPE_LABELS: Record<ReimbursementReceiptType, string> = {
   factura_a: 'Factura A',
