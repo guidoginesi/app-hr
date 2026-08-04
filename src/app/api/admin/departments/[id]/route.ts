@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdateDepartmentSchema = z.object({
   name: z.string().min(1).optional(),
-  legal_entity_id: z.string().uuid().optional().nullable(),
+  legal_entity_id: dbId().optional().nullable(),
   is_active: z.boolean().optional(),
 });
 

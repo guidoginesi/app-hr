@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
@@ -27,9 +28,9 @@ const CreateEmployeeSchema = z.object({
   emergency_contact_last_name: z.string().optional().nullable(),
   emergency_contact_address: z.string().optional().nullable(),
   emergency_contact_phone: z.string().optional().nullable(),
-  legal_entity_id: z.string().uuid().optional().nullable(),
-  department_id: z.string().uuid().optional().nullable(),
-  manager_id: z.string().uuid().optional().nullable(),
+  legal_entity_id: dbId().optional().nullable(),
+  department_id: dbId().optional().nullable(),
+  manager_id: dbId().optional().nullable(),
   job_title: z.string().optional().nullable(),
   seniority_level: z.string().optional().nullable(),
   status: z.enum(['active', 'inactive', 'terminated']).default('active'),

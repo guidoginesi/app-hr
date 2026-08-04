@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
@@ -21,7 +22,7 @@ const CreateObjectiveSchema = z.object({
   periodicity: z.enum(['annual', 'semestral', 'trimestral']).optional().default('annual'),
   weight_pct: z.number().int().min(0).max(100).optional().default(50),
   // For sub-objectives
-  parent_objective_id: z.string().uuid().optional(),
+  parent_objective_id: dbId().optional(),
   sub_objective_number: z.number().int().min(1).max(4).optional(),
 });
 

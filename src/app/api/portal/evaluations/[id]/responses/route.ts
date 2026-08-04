@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const SaveResponseSchema = z.object({
-  item_id: z.string().uuid(),
+  item_id: dbId(),
   score: z.number().int().min(1).max(10).optional().nullable(),
   explanation: z.string().optional().nullable(),
 });

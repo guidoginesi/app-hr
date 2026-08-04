@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const CreateItemSchema = z.object({
-  dimension_id: z.string().uuid(),
+  dimension_id: dbId(),
   statement: z.string().min(1, 'La afirmación es requerida'),
   order_index: z.number().int().optional().default(0),
   is_active: z.boolean().optional().default(true),

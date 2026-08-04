@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireLeader } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 type RouteContext = { params: Promise<{ memberId: string }> };
 
 const RecategorizationSchema = z.object({
-  evaluation_id: z.string().uuid().optional().nullable(),
-  period_id: z.string().uuid().optional().nullable(),
+  evaluation_id: dbId().optional().nullable(),
+  period_id: dbId().optional().nullable(),
   level_recategorization: z.enum(['approved', 'not_approved']),
   position_recategorization: z.enum(['approved', 'not_approved']),
   recommended_level: z.string().optional().nullable(),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
@@ -146,7 +147,7 @@ const bodySchema = z.object({
   action: z.enum(['grant', 'revoke']),
   // Normalizado: la baranda de auto-revocación compara strings y el mismo UUID
   // en mayúsculas pasaba el uuid() de zod, esquivando la comparación.
-  user_id: z.string().uuid('Identificador de usuario inválido.').transform((v) => v.toLowerCase()),
+  user_id: dbId('Identificador de usuario inválido.').transform((v) => v.toLowerCase()),
   role: z.enum(['admin', 'administracion', 'mass_sender']),
 });
 

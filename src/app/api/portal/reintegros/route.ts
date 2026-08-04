@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { createSystemNotification, getRoleEmails } from '@/lib/notificationService';
@@ -56,11 +57,11 @@ export async function GET() {
 
 const CreateSchema = z.object({
   expense_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha del gasto inválida.'),
-  reason_id: z.string().uuid('Elegí un motivo.'),
+  reason_id: dbId('Elegí un motivo.'),
   concept: z.string().trim().min(3, 'Escribí una descripción del gasto.').max(500),
   amount: z.number().positive('El monto tiene que ser mayor a 0.').max(100_000_000),
   currency: z.enum(['ARS', 'USD']),
-  project_id: z.string().uuid().nullable().optional(),
+  project_id: dbId().nullable().optional(),
   receipt_type: z.enum(['factura_a', 'factura_b', 'factura_c', 'ticket', 'recibo', 'otro']),
   receipt_number: z.string().trim().max(60).optional().nullable(),
   supplier_cuit: z
