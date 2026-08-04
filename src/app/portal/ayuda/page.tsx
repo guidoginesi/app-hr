@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { requirePortalAccess } from '@/lib/checkAuth';
+import { hasReimbursementAccess } from '@/lib/reimbursementAccess';
 import { PortalAyudaLayout } from './PortalAyudaLayout';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,14 @@ const MANUALS = [
     title: 'Mensajes',
     desc: 'Dónde ver los avisos de la empresa, cuáles te piden confirmación y cuáles te llegan también por mail.',
   },
+  {
+    href: '/portal/ayuda/reintegros',
+    emoji: '🧮',
+    title: 'Reintegros de gastos',
+    desc: 'Cómo pedir que te devuelvan un gasto que pusiste de tu bolsillo, qué comprobante hace falta y cuándo se paga.',
+    /** Sólo quien tiene el módulo habilitado: al resto no le sirve de nada. */
+    onlyReimbursement: true,
+  },
 ];
 
 export default async function PortalAyudaPage() {
@@ -45,7 +54,10 @@ export default async function PortalAyudaPage() {
   if (!auth || !auth.employee) redirect('/portal/login');
 
   const isRelDep = auth.employee.employment_type === 'dependency';
-  const visible = MANUALS.filter((m) => !m.onlyDependency || isRelDep);
+  const puedeReintegros = await hasReimbursementAccess(auth.employee.id);
+  const visible = MANUALS.filter(
+    (m) => (!m.onlyDependency || isRelDep) && (!m.onlyReimbursement || puedeReintegros),
+  );
 
   return (
     <PortalAyudaLayout
