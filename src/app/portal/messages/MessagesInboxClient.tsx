@@ -96,7 +96,7 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
   return (
     <div className="space-y-6">
       {/* Header */}
-      <PageHeader title="Mensajes" description="Tu centro de notificaciones y anuncios" />
+      <PageHeader title="Comunicaciones" description="Tu centro de notificaciones y anuncios" />
 
       {/* Filters */}
       <div className="flex gap-2">

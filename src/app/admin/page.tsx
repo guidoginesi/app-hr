@@ -140,7 +140,7 @@ export default async function AdminHome() {
     },
     {
       id: 'messages',
-      name: 'Mensajes',
+      name: 'Comunicaciones',
       description: 'Anuncios y comunicaciones masivas a empleados',
       href: '/admin/messages',
       icon: (

@@ -20,8 +20,8 @@ export function MessagesLayout({
     <AdminShell active="messages">
       <div className="space-y-6">
         <PageHeader
-          title="Mensajes"
-          description="Anuncios y comunicaciones a empleados"
+          title="Comunicaciones"
+          description="Anuncios y avisos que People le envía al equipo, con seguimiento de lectura y entrega"
           actions={actions}
         />
         {showTabs && active && <MessagesTabs active={active} />}

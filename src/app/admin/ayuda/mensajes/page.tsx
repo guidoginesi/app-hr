@@ -12,7 +12,7 @@ export default async function AyudaMensajesPage() {
 
   return (
     <AyudaLayout
-      title="Manual · Mensajes"
+      title="Manual · Comunicaciones"
       description="Cómo redactar, segmentar y enviar comunicaciones — y seguir lectura y entrega."
     >
       <div className="mb-2">
@@ -30,8 +30,8 @@ export default async function AyudaMensajesPage() {
       </div>
 
       <div className="mt-8 space-y-10">
-        <ManualStep image="/manual/mensajes-admin/01-lista.png" n={1} title="Dónde encontrarlo" imageAlt="Menú lateral con 'Mensajes' resaltado en 'Espacio de trabajo', y el listado de mensajes.">
-          <p>En el menú lateral, dentro de <b>Espacio de trabajo → Mensajes</b>. Ahí ves todos los anuncios enviados, con su estado, audiencia y métricas de lectura.</p>
+        <ManualStep image="/manual/mensajes-admin/01-lista.png" n={1} title="Dónde encontrarlo" imageAlt="Menú lateral con 'Comunicaciones' resaltado en 'Espacio de trabajo', y el listado de mensajes.">
+          <p>En el menú lateral, dentro de <b>Espacio de trabajo → Comunicaciones</b>. Ahí ves todos los anuncios enviados, con su estado, audiencia y métricas de lectura.</p>
         </ManualStep>
 
         <ManualStep image="/manual/mensajes-admin/02-compose.png" n={2} title="Redactar un mensaje" imageAlt="Panel 'Nuevo mensaje' con los campos Título y Cuerpo (editor de texto).">

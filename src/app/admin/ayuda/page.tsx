@@ -33,7 +33,7 @@ const MANUALS = [
   {
     href: '/admin/ayuda/mensajes',
     emoji: '📣',
-    title: 'Mensajes',
+    title: 'Comunicaciones',
     desc: 'Redactar y segmentar comunicaciones (por área/líder/personas), plantillas con variables, envío por mail/Chat, filtros + export, y seguimiento de lectura y entrega.',
   },
   {

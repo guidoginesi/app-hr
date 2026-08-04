@@ -53,7 +53,7 @@ export default async function PortalDashboardPage() {
     .limit(4);
   const requests = (recentRequests || []) as LeaveRequestWithDetails[];
 
-  // Mensajes sin leer
+  // Comunicaciones sin leer
   let unreadMessages = 0;
   try {
     const supabaseAuth = await getSupabaseAuthServer();
@@ -99,7 +99,7 @@ export default async function PortalDashboardPage() {
           href: '/portal/time-off/team',
         }
       : { label: 'Trabajo Remoto', value: `${remoteAvail}`, sub: 'semanas disponibles', href: '/portal/time-off' },
-    { label: 'Mensajes sin leer', value: `${unreadMessages}`, sub: unreadMessages === 1 ? 'mensaje' : 'mensajes', href: '/portal/messages' },
+    { label: 'Comunicaciones sin leer', value: `${unreadMessages}`, sub: unreadMessages === 1 ? 'mensaje' : 'mensajes', href: '/portal/messages' },
   ];
 
   const cards: { href: string; title: string; desc: string; icon: string }[] = [

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { TabNav } from '@pow/ui/components/ui/tab-nav';
 
 const TABS = [
-  { value: 'mensajes', label: 'Mensajes', href: '/admin/messages' },
+  { value: 'mensajes', label: 'Comunicaciones', href: '/admin/messages' },
   { value: 'configuracion', label: 'Configuración', href: '/admin/messages/config' },
 ] as const;
 
@@ -14,7 +14,7 @@ export function MessagesTabs({ active }: { active: MessagesTab }) {
   const router = useRouter();
   return (
     <TabNav<MessagesTab>
-      aria-label="Secciones de Mensajes"
+      aria-label="Secciones de Comunicaciones"
       value={active}
       onChange={(v) => {
         const tab = TABS.find((t) => t.value === v);

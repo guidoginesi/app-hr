@@ -129,7 +129,7 @@ export async function publishMessage(messageId: string, actorUserId: string): Pr
               replyTo,
               html: renderEmail({
                 title,
-                contextLabel: 'Pow · Mensajes',
+                contextLabel: 'Pow · Comunicaciones',
                 bodyHtml: renderTemplate(message.body, vars, true),
                 cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
               }),
@@ -140,7 +140,7 @@ export async function publishMessage(messageId: string, actorUserId: string): Pr
           const previewText = preview.length >= 200 ? `${preview.trimEnd()}…` : preview;
           const html = renderEmail({
             title: message.title,
-            contextLabel: 'Pow · Mensajes',
+            contextLabel: 'Pow · Comunicaciones',
             preheader: previewText || 'Tenés un mensaje nuevo en el portal',
             intro: previewText || 'Tenés un mensaje nuevo esperándote en el portal.',
             cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
