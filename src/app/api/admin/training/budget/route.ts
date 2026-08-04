@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { computeBudget } from '@/lib/training';
@@ -131,14 +132,14 @@ const bodySchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('set_override'),
     year: yearSchema,
-    employee_ids: z.array(z.string().uuid('Identificador inválido.')).min(1, 'Elegí al menos una persona.').max(500, 'Máximo 500 personas por vez.'),
+    employee_ids: z.array(dbId('Identificador inválido.')).min(1, 'Elegí al menos una persona.').max(500, 'Máximo 500 personas por vez.'),
     amount_usd: amountSchema,
     note: z.string().trim().max(280, 'La nota no puede superar 280 caracteres.').optional(),
   }),
   z.object({
     action: z.literal('clear_override'),
     year: yearSchema,
-    employee_ids: z.array(z.string().uuid('Identificador inválido.')).min(1, 'Elegí al menos una persona.').max(500, 'Máximo 500 personas por vez.'),
+    employee_ids: z.array(dbId('Identificador inválido.')).min(1, 'Elegí al menos una persona.').max(500, 'Máximo 500 personas por vez.'),
   }),
   z.object({
     action: z.literal('set_default'),

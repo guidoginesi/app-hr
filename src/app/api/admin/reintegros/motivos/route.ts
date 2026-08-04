@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
@@ -48,8 +49,8 @@ const BodySchema = z.discriminatedUnion('action', [
     action: z.literal('create'),
     name: z.string().trim().min(2, 'El motivo necesita un nombre.').max(60),
   }),
-  z.object({ action: z.literal('toggle'), id: z.string().uuid(), active: z.boolean() }),
-  z.object({ action: z.literal('rename'), id: z.string().uuid(), name: z.string().trim().min(2).max(60) }),
+  z.object({ action: z.literal('toggle'), id: dbId(), active: z.boolean() }),
+  z.object({ action: z.literal('rename'), id: dbId(), name: z.string().trim().min(2).max(60) }),
 ]);
 
 export async function POST(req: NextRequest) {

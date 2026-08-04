@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const CreateDimensionSchema = z.object({
-  period_id: z.string().uuid(),
+  period_id: dbId(),
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().optional(),
   order_index: z.number().int().optional().default(0),

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { audienceRequiresMassSend, actorCanMassSend } from '@/lib/messagePublish';
 
 // GET /api/admin/messages/[id] - Get message detail with full recipient list
@@ -10,9 +11,9 @@ const AudienceSchema = z.union([
   z.object({ roles: z.array(z.string()).min(1) }),
   z.object({ test: z.literal(true) }),
   z.object({ employment_type: z.enum(['monotributista', 'dependency']) }),
-  z.object({ department_id: z.string().uuid() }),
-  z.object({ manager_id: z.string().uuid() }),
-  z.object({ user_ids: z.array(z.string().uuid()).min(1) }),
+  z.object({ department_id: dbId() }),
+  z.object({ manager_id: dbId() }),
+  z.object({ user_ids: z.array(dbId()).min(1) }),
 ]);
 
 const EditMessageSchema = z.object({

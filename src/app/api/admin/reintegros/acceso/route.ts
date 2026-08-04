@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
@@ -72,7 +73,7 @@ export async function GET() {
 
 const BodySchema = z.object({
   action: z.enum(['grant', 'revoke']),
-  employee_ids: z.array(z.string().uuid()).min(1, 'Elegí al menos una persona.').max(500),
+  employee_ids: z.array(dbId()).min(1, 'Elegí al menos una persona.').max(500),
   note: z.string().trim().max(280).optional(),
 });
 
