@@ -104,7 +104,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
     {
       label: 'Espacio de trabajo',
       items: [
-        { label: 'Mensajes', href: '/portal/messages', icon: MessageSquare, active: on('messages') },
+        { label: 'Comunicaciones', href: '/portal/messages', icon: MessageSquare, active: on('messages') },
         { label: 'Consultas', href: '/portal/consultas', icon: MessagesSquare, active: on('consultas') },
         { label: 'Reserva de Salas', href: '/portal/room-booking', icon: DoorOpen, active: on('room-booking') },
         { label: 'Referidos', href: '/portal/referidos', icon: UserPlus, active: on('referidos') },

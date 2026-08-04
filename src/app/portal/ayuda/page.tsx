@@ -36,7 +36,7 @@ const MANUALS = [
   {
     href: '/portal/ayuda/mensajes',
     emoji: '📣',
-    title: 'Mensajes',
+    title: 'Comunicaciones',
     desc: 'Dónde ver los avisos de la empresa, cuáles te piden confirmación y cuáles te llegan también por mail.',
   },
   {
