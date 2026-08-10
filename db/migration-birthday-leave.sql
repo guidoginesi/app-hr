@@ -42,11 +42,13 @@ Lo cargás desde el Portal, en Time Off → Nueva solicitud, eligiendo el tipo "
 
 Podés tomarlo entre el {{ventanaDesde}} y el {{ventanaHasta}}. Si no lo usás en esa ventana, se pierde.
 
+Todas las reglas (qué pasa si cae fin de semana, si estás de licencia, y cómo se aprueba) están acá: {{linkInstructivo}}
+
 ¡Cualquier consulta estoy a disposición!
 Un abrazo,
 Equipo de People',
   'Aviso automático al colaborador cuando se le acredita el día de cumpleaños',
-  '["firstName", "ventanaDesde", "ventanaHasta"]'::jsonb,
+  '["firstName", "ventanaDesde", "ventanaHasta", "linkInstructivo"]'::jsonb,
   true
 )
 ON CONFLICT (template_key) DO UPDATE SET

@@ -12,7 +12,7 @@
 
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendSimpleEmail } from '@/lib/emailService';
-import { renderPlainTemplate } from '@/lib/email/layout';
+import { renderPlainTemplate, getAppUrl } from '@/lib/email/layout';
 import { createSystemNotification } from '@/lib/notificationService';
 import {
   BIRTHDAY_LEAVE_CODE,
@@ -173,6 +173,9 @@ export async function runBirthdayLeaveAutomation(): Promise<{
               firstName,
               ventanaDesde: formatearFecha(ventana.start),
               ventanaHasta: formatearFecha(ventana.end),
+              // Va como variable y no fija en la plantilla: si cambia el dominio,
+              // el link no queda apuntando a un lugar viejo desde la base.
+              linkInstructivo: `${getAppUrl()}/portal/ayuda/dia-cumpleanos`,
             };
             const reemplazar = (t: string) =>
               Object.entries(vars).reduce((acc, [k, v]) => acc.replaceAll(`{{${k}}}`, v), t);
@@ -193,7 +196,7 @@ export async function runBirthdayLeaveAutomation(): Promise<{
           await createSystemNotification({
             userIds: [emp.user_id as string],
             title: '🎂 Tenés tu día de cumpleaños disponible',
-            body: `Podés tomarlo entre el ${formatearFecha(ventana.start)} y el ${formatearFecha(ventana.end)}. Se carga desde Time Off, con el tipo "Día de cumpleaños".`,
+            body: `Podés tomarlo entre el ${formatearFecha(ventana.start)} y el ${formatearFecha(ventana.end)}. Se carga desde Time Off con el tipo "Día de cumpleaños"; las reglas están en Ayuda → Día de cumpleaños.`,
             priority: 'info',
             deepLink: '/portal/time-off/new',
             dedupeKey: `birthday_leave:${emp.id}:${year}`,
