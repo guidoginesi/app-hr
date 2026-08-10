@@ -113,6 +113,12 @@ export function calculateEntitledDays(
     case 'remote_work':
       return calculateRemoteWorkWeeks(hireDate, year);
 
+    // El día de cumpleaños lo acredita y lo vence el cron, no este cálculo: sólo
+    // está disponible dentro de su ventana. Devolver 1 acá haría que el saldo
+    // mostrara un día disponible todo el año que no se puede tomar.
+    case 'birthday':
+      return 0;
+
     default:
       return 0;
   }

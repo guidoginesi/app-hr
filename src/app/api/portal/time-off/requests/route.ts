@@ -6,6 +6,7 @@ import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType } from '@/lib/leaveTypes';
 import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline } from '@/lib/leaveCertificates';
+import { BIRTHDAY_LEAVE_CODE, birthdayWindow, isWithinBirthdayWindow } from '@/lib/birthdayLeave';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,6 +29,32 @@ async function withRetry<T>(
     }
   }
   throw lastError;
+}
+
+/** Días del año en que la persona ya está ausente por una licencia vigente. */
+async function busyDaysForEmployee(
+  supabase: ReturnType<typeof getSupabaseServer>,
+  employeeId: string,
+  year: number,
+): Promise<Set<string>> {
+  const { data } = await supabase
+    .from('leave_requests')
+    .select('start_date, end_date')
+    .eq('employee_id', employeeId)
+    .in('status', ['approved', 'pending_hr', 'pending_leader'])
+    .gte('end_date', `${year}-01-01`)
+    .lte('start_date', `${year}-12-31`);
+
+  const set = new Set<string>();
+  for (const r of data ?? []) {
+    const d = new Date(`${r.start_date}T00:00:00Z`);
+    const fin = new Date(`${r.end_date}T00:00:00Z`);
+    while (d <= fin) {
+      set.add(d.toISOString().slice(0, 10));
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+  }
+  return set;
 }
 
 // Parse date string as local date to avoid timezone issues
@@ -171,6 +198,42 @@ export async function POST(req: NextRequest) {
         { error: `${leaveType.name} requiere adjuntar un comprobante` },
         { status: 400 }
       );
+    }
+
+    // El día de cumpleaños sólo se puede tomar dentro de su ventana: del día del
+    // cumple (o el próximo hábil disponible) hasta 7 días corridos después.
+    if (leaveType.code === BIRTHDAY_LEAVE_CODE) {
+      if (!auth.employee.birth_date) {
+        return NextResponse.json(
+          { error: 'No tenés fecha de nacimiento cargada. Escribinos por Consultas para completarla.' },
+          { status: 400 },
+        );
+      }
+      if (parsed.data.days_requested > 1) {
+        return NextResponse.json({ error: 'El día de cumpleaños es un solo día.' }, { status: 400 });
+      }
+
+      const ventana = birthdayWindow({
+        birthDate: auth.employee.birth_date,
+        year: Number(parsed.data.start_date.slice(0, 4)),
+        // Se excluye la propia solicitud que se está creando: todavía no existe.
+        busyDays: await busyDaysForEmployee(supabase, auth.employee.id, Number(parsed.data.start_date.slice(0, 4))),
+      });
+
+      if (
+        !isWithinBirthdayWindow(parsed.data.start_date, ventana) ||
+        !isWithinBirthdayWindow(parsed.data.end_date, ventana)
+      ) {
+        return NextResponse.json(
+          {
+            error: `El día de cumpleaños se toma entre el ${ventana.start.split('-').reverse().join('/')} y el ${ventana.end
+              .split('-')
+              .reverse()
+              .join('/')}.`,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     // Validate remote work weeks
