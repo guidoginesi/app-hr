@@ -28,6 +28,12 @@ const MANUALS = [
     onlyDependency: true,
   },
   {
+    href: '/portal/ayuda/licencia-enfermedad',
+    emoji: '🤒',
+    title: 'Licencia por enfermedad',
+    desc: 'Cómo avisar que estás de licencia, qué ve tu líder y cómo subir el certificado médico.',
+  },
+  {
     href: '/portal/ayuda/consultas',
     emoji: '💬',
     title: 'Consultas',

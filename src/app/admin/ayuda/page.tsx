@@ -25,6 +25,12 @@ const MANUALS = [
     desc: 'Estado por período (publicados, confirmados y pendientes), recordatorios manuales y automáticos, export de constancias y recibos corregidos.',
   },
   {
+    href: '/admin/ayuda/licencia-enfermedad',
+    emoji: '🤒',
+    title: 'Licencia por enfermedad',
+    desc: 'Circuito sin aprobación, aviso al líder sin datos de salud, certificado médico con plazo, y el KPI de ausentismo (tasa, frecuencia, duración, ranking).',
+  },
+  {
     href: '/admin/ayuda/consultas',
     emoji: '💬',
     title: 'Consultas',
