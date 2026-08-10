@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@pow/ui/components/ui/button';
 import type { LeaveRequestWithDetails } from '@/types/time-off';
 import { sickCertStatus, SICK_CERT_STATUS_LABELS, type SickCertStatus } from '@/lib/sickLeave';
@@ -30,6 +31,11 @@ export function SickCertificateControl({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  // Sin onChange (páginas server, como el inicio de Time Off) se refresca la
+  // ruta: si no, se sube el archivo y el chip sigue diciendo "pendiente".
+  const refrescar = onChange ?? (() => router.refresh());
 
   const status = sickCertStatus({
     certificateUploadedAt: request.certificate_uploaded_at,
@@ -65,7 +71,7 @@ export function SickCertificateControl({
       fd.append('file', file);
       const res = await fetch(basePath, { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) onChange?.();
+      if (res.ok) refrescar();
       else setError(data.error ?? 'No se pudo subir.');
     } catch {
       setError('No se pudo subir.');

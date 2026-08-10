@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { requireAdmin } from '@/lib/checkAuth';
 import { AyudaLayout } from '../AyudaLayout';
 import { ManualStep } from '@/components/manual/ManualStep';
@@ -16,7 +15,6 @@ export default async function AyudaAdelantosPage() {
       description="Cómo gestionar las solicitudes de adelanto: de la solicitud del colaborador al descuento en la liquidación."
     >
       <div className="mb-2">
-        <Link href="/admin/ayuda" className="text-sm text-[var(--brand-strong)] hover:underline">← Volver a Ayuda</Link>
       </div>
 
       {/* Resumen del flujo */}

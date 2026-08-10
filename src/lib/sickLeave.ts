@@ -18,11 +18,32 @@ export const SICK_CERT_DEADLINE_BUSINESS_DAYS = 3;
 
 export type SickCertStatus = 'presentado' | 'pendiente' | 'vencido';
 
+/** Fecha (YYYY-MM-DD) en la que vence el plazo para presentar el certificado. */
+export function sickCertDeadline(startDate: string): string {
+  const [y, m, d] = startDate.split('-').map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d));
+  return addBusinessDays(start, SICK_CERT_DEADLINE_BUSINESS_DAYS).toISOString().slice(0, 10);
+}
+
+/** El día como se lo vive en Argentina, no en UTC ni en la zona del navegador. */
+export function argentinaDay(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
 /**
  * Estado del certificado de una licencia por enfermedad, derivado —no se
  * persiste un estado aparte que pueda quedar desincronizado—. `vencido` es
  * `pendiente` pasado el plazo: no invalida la licencia, la marca para
  * seguimiento de HR (el criterio es apoyo, no sanción).
+ *
+ * La comparación es por DÍA de calendario, no por timestamp: el día del
+ * vencimiento cuenta entero. Comparando fechas con hora, a las 00:01 de ese día
+ * ya figuraba vencido y se perdía la última jornada de plazo.
  */
 export function sickCertStatus(input: {
   certificateUploadedAt: string | null;
@@ -30,12 +51,7 @@ export function sickCertStatus(input: {
   now?: Date;
 }): SickCertStatus {
   if (input.certificateUploadedAt) return 'presentado';
-
-  const [y, m, d] = input.startDate.split('-').map(Number);
-  const start = new Date(Date.UTC(y, m - 1, d));
-  const deadline = addBusinessDays(start, SICK_CERT_DEADLINE_BUSINESS_DAYS);
-  const now = input.now ?? new Date();
-  return now > deadline ? 'vencido' : 'pendiente';
+  return argentinaDay(input.now) > sickCertDeadline(input.startDate) ? 'vencido' : 'pendiente';
 }
 
 export const SICK_CERT_STATUS_LABELS: Record<SickCertStatus, string> = {

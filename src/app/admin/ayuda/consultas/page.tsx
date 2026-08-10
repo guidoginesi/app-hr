@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { requireAdmin } from '@/lib/checkAuth';
 import { AyudaLayout } from '../AyudaLayout';
 import { ManualStep } from '@/components/manual/ManualStep';
@@ -16,7 +15,6 @@ export default async function AyudaConsultasPage() {
       description="Cómo atender las consultas que hacen los colaboradores desde el portal."
     >
       <div className="mb-2">
-        <Link href="/admin/ayuda" className="text-sm text-[var(--brand-strong)] hover:underline">← Volver a Ayuda</Link>
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-muted p-5">
