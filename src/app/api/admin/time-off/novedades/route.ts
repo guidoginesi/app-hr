@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     const { data: leaveTypes } = await supabase
       .from('leave_types')
       .select('code, name')
-      .order('name');
+      .order('sort_order').order('name');
 
     return NextResponse.json({
       novedades: data ?? [],
