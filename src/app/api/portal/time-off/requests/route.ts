@@ -5,7 +5,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType } from '@/lib/leaveTypes';
-import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
+import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline } from '@/lib/leaveCertificates';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -365,17 +365,37 @@ export async function POST(req: NextRequest) {
     // Email + in-app to employee: request submitted
     const employeeEmail = auth.employee.work_email || auth.employee.personal_email;
     if (employeeEmail) {
+      // La plantilla genérica habla de "solicitud", de revisión del líder y de
+      // avisar "cuando esté aprobada". En una licencia auto-registrada nada de
+      // eso pasa, así que va una plantilla propia con lo que sí ocurre: quedó
+      // vigente, se avisó al líder, y falta el certificado con su fecha límite.
+      const certRule = leaveCertRule(leaveType.code);
+      const vencimiento =
+        selfRegistered && certRule
+          ? leaveCertDeadline({
+              leaveTypeCode: leaveType.code,
+              startDate: parsed.data.start_date,
+              endDate: parsed.data.end_date,
+            })
+          : null;
+
       sendTimeOffEmail({
-        templateKey: 'time_off_request_submitted',
+        templateKey: selfRegistered ? 'time_off_sick_registered' : 'time_off_request_submitted',
         to: employeeEmail,
-        variables: emailVariables,
+        variables: vencimiento
+          ? {
+              ...emailVariables,
+              fecha_vencimiento: formatDate(vencimiento),
+              plazo_certificado: String(certRule!.businessDays),
+            }
+          : emailVariables,
         leaveRequestId: data.id,
       }).catch((err) => console.error('Error sending request submitted email:', err));
     }
     // In-app notification to the employee who submitted
     if (auth.user?.id) {
       const submittedBody = selfRegistered
-        ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Acordate de subir el certificado médico dentro de los 3 días hábiles.`
+        ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Acordate de subir el certificado médico dentro de los ${leaveCertRule(leaveType.code)?.businessDays ?? 3} días hábiles.`
         : hrOnlyApproval
           ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
           : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`;

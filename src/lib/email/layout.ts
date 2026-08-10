@@ -269,6 +269,20 @@ const KEY_CONFIG: Record<string, KeyConfig> = {
     cta: { label: 'Revisar solicitud', path: '/portal/team' },
     footerNote: 'Recibís este mail como líder asignado en el portal de Pow.',
   },
+  // Enfermedad: no se aprueba, se registra. Por eso badge propio y CTA al
+  // historial, que es donde se sube el certificado.
+  time_off_sick_registered: {
+    context: 'People · Licencias',
+    badge: { tone: 'success', label: 'Registrada' },
+    cta: { label: 'Subir el certificado', path: '/portal/time-off/requests' },
+  },
+  time_off_sick_leader_notification: {
+    context: 'People · Licencias',
+    // "Aviso", no "pendiente": al líder no se le pide que apruebe nada.
+    badge: { tone: 'neutral', label: 'Aviso de ausencia' },
+    cta: { label: 'Ver mi equipo', path: '/portal/team' },
+    footerNote: 'Recibís este mail como líder asignado en el portal de Pow.',
+  },
   time_off_hr_notification: {
     context: 'People · Aprobaciones',
     badge: { tone: 'warning', label: 'Pendiente aprobación HR' },
