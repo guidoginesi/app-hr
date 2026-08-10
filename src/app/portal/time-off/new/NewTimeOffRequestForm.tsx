@@ -9,6 +9,7 @@ import type { LeaveType, LeaveBalanceWithDetails } from '@/types/time-off';
 import { MondayDatePicker } from '@/components/MondayDatePicker';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
+import { SICK_CERT_DEADLINE_BUSINESS_DAYS } from '@/lib/sickLeave';
 
 // Parse date string as local date to avoid timezone issues
 function parseLocalDate(dateStr: string): Date {
@@ -30,6 +31,9 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
   const [vacationWeeks, setVacationWeeks] = useState<number>(1);
   const [notes, setNotes] = useState('');
   
+  // Certificado médico: se puede adjuntar acá si ya lo tenés, o después.
+  const [certificado, setCertificado] = useState<File | null>(null);
+
   // Remote work specific fields
   const [remoteDestino, setRemoteDestino] = useState('');
   const [remoteDomicilio, setRemoteDomicilio] = useState('');
@@ -206,6 +210,7 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
     setStartDate('');
     setEndDate('');
     setVacationWeeks(1);
+    setCertificado(null);
     // Reset remote work fields
     setRemoteDestino('');
     setRemoteDomicilio('');
@@ -312,6 +317,28 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
       });
 
       if (res.ok) {
+        // El certificado va en un segundo paso, contra el endpoint que ya
+        // existe. Si falla, la licencia YA quedó registrada: no se pierde nada,
+        // sólo queda "Certificado pendiente" y se sube desde el historial.
+        if (certificado) {
+          const created = await res.json().catch(() => null);
+          if (created?.id) {
+            const fd = new FormData();
+            fd.append('file', certificado);
+            const up = await fetch(`/api/portal/time-off/requests/${created.id}/certificate`, {
+              method: 'POST',
+              body: fd,
+            });
+            if (!up.ok) {
+              const upData = await up.json().catch(() => ({}));
+              setError(
+                `La licencia quedó registrada, pero el certificado no se pudo subir (${upData.error ?? 'error'}). Podés subirlo desde el historial.`,
+              );
+              setSubmitting(false);
+              return;
+            }
+          }
+        }
         if (onSuccess) onSuccess();
         else router.push('/portal/time-off');
       } else {
@@ -464,8 +491,9 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                     <p className="text-sm text-foreground">
                       No necesita aprobación: queda registrada al enviarla y se le{' '}
                       <strong>avisa a tu líder</strong> para organizar la cobertura (sin ver el motivo).
-                      Después vas a tener que <strong>subir el certificado médico</strong> desde{' '}
-                      <em>Mis licencias</em>, dentro de los <strong>3 días hábiles</strong>.
+                      El <strong>certificado médico es obligatorio</strong>: adjuntalo acá si ya lo tenés,
+                      o subilo después desde <em>Historial de solicitudes</em>, dentro de los{' '}
+                      <strong>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</strong>.
                     </p>
                   </div>
                 )}
@@ -560,6 +588,25 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Certificado médico — opcional en este momento, obligatorio dentro del plazo */}
+            {isSickType() && (
+              <div>
+                <label className="block text-sm font-medium text-secondary-foreground">
+                  Certificado médico <span className="font-normal text-muted-foreground">(si ya lo tenés)</span>
+                </label>
+                <input
+                  type="file"
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                  onChange={(e) => setCertificado(e.target.files?.[0] ?? null)}
+                  className="mt-1 block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-secondary-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  PDF, JPG, PNG o WEBP · máx. 10 MB. Si todavía no lo tenés, enviá igual y subilo después: te vamos a
+                  recordar si se pasa el plazo.
+                </p>
               </div>
             )}
 

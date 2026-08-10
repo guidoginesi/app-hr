@@ -52,10 +52,11 @@ export default async function AyudaLicenciaEnfermedadPage() {
           title="El certificado médico"
           imageAlt="Fila de la licencia en el admin con el chip del estado del certificado y el botón Ver."
         >
-          <p>El certificado es <b>obligatorio</b>, pero se carga <b>después</b> del registro: la persona avisa el día que se enferma y el papel llega más tarde. El plazo es de <b>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</b> desde el inicio.</p>
+          <p>El certificado es <b>obligatorio</b>, y la persona puede adjuntarlo <b>al cargar la licencia</b> —si ya lo tiene, por ejemplo de una teleconsulta— o <b>después</b>. No se exige en el momento del alta a propósito: si lo exigiéramos, nadie podría registrar la ausencia el día que falta, y el aviso de cobertura al líder llegaría tarde. El plazo es de <b>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</b> desde el inicio.</p>
           <p>En <b>Time Off → Solicitudes</b>, cada licencia por enfermedad muestra el estado del certificado:</p>
           <p><b>Certificado pendiente</b> (todavía dentro del plazo) · <b>Certificado vencido</b> (se pasó el plazo y no lo subió) · <b>Certificado presentado</b> (ya está, con el botón <b>Ver</b> para abrirlo).</p>
           <p>El estado se <b>calcula solo</b> a partir del archivo y la fecha de inicio; no hay que marcar nada a mano. Un <b>vencido no anula</b> la licencia: la marca para que la reclames. El criterio es acompañar, no sancionar.</p>
+          <p>El reclamo tampoco depende de que alguien lo note: al vencer el plazo, el <b>cron diario</b> le manda un <b>recordatorio automático</b> a la persona, por mail y por la campanita. Sale <b>una sola vez</b> por licencia.</p>
           <p>El archivo se abre con un enlace que <b>caduca a los 2 minutos</b>, y quien lo sube es siempre la propia persona: vos lo consultás, no lo cargás.</p>
         </ManualStep>
 

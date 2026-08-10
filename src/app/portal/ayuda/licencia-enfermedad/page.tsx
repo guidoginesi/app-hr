@@ -21,8 +21,8 @@ export default async function Page() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">En resumen</p>
         <p className="mt-2 text-sm text-foreground">
           La cargás vos desde el portal y <b>queda registrada al instante</b>: no espera la aprobación de nadie. A tu
-          líder le llega un aviso de que vas a estar ausente, <b>sin el motivo ni el certificado</b>. Después subís el
-          certificado médico, que es obligatorio.
+          líder le llega un aviso de que vas a estar ausente, <b>sin el motivo ni el certificado</b>. El certificado
+          médico es obligatorio: lo adjuntás al cargarla si ya lo tenés, o lo subís después.
         </p>
       </div>
 
@@ -52,9 +52,11 @@ export default async function Page() {
           title="Subir el certificado médico"
           imageAlt="Fila de la licencia con el chip 'Certificado pendiente' y el botón 'Subir certificado'."
         >
-          <p>El certificado es <b>obligatorio</b>. Se sube <b>después</b> de cargar la licencia, porque lo normal es que avises primero y consigas el papel después.</p>
-          <p>Andá a <b>Time Off → Historial de solicitudes</b>. En la fila de la licencia vas a ver el chip <b>Certificado pendiente</b> y el botón <b>Subir certificado</b>. Aceptamos <b>PDF, JPG, PNG o WEBP</b>, hasta <b>10 MB</b>: una foto legible del certificado alcanza.</p>
-          <p>Tenés <b>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</b> desde el inicio de la licencia. Pasado ese plazo el chip pasa a <b>Certificado vencido</b> — no se anula la licencia, pero queda marcada para que People te lo pida.</p>
+          <p>El certificado es <b>obligatorio</b>, y hay dos momentos para cargarlo:</p>
+          <p><b>Al cargar la licencia</b>, si ya lo tenés a mano —por ejemplo si hiciste teleconsulta y te lo mandaron en el momento—: el formulario tiene el campo <b>Certificado médico</b> y lo adjuntás ahí mismo.</p>
+          <p><b>Después</b>, si el papel todavía no llegó. Enviá la licencia igual: lo importante es que quede registrada el día que faltás, para que tu líder pueda cubrir. En <b>Time Off</b> —o en <b>Historial de solicitudes</b>— vas a ver el chip <b>Certificado pendiente</b> y el botón <b>Subir certificado</b>.</p>
+          <p>Aceptamos <b>PDF, JPG, PNG o WEBP</b>, hasta <b>10 MB</b>: una foto legible alcanza.</p>
+          <p>Tenés <b>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</b> desde el inicio de la licencia. Si se pasa el plazo, el chip queda en <b>Certificado vencido</b> y te llega un <b>recordatorio automático</b>. No se anula la licencia: sólo queda marcada hasta que lo subas.</p>
           <p>Si te equivocaste de archivo, el botón pasa a decir <b>Reemplazar</b> y podés subir otro.</p>
         </ManualStep>
 
