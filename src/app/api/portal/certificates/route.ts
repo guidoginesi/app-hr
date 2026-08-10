@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
-const CERTIFICATE_TYPES = ['exam', 'medical', 'travel_assistance'] as const;
+// 'medical' quedó fuera de los tipos que se pueden CARGAR: el certificado médico
+// va adjunto a la licencia por enfermedad, no suelto en el legajo. Los que ya se
+// subieron con ese tipo se siguen listando y descargando normalmente; sólo no se
+// aceptan nuevos, y por eso la validación de alta no lo incluye.
+const CERTIFICATE_TYPES = ['exam', 'travel_assistance'] as const;
 type CertificateType = (typeof CERTIFICATE_TYPES)[number];
 
 // GET /api/portal/certificates — list own certificates

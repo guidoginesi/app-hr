@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
@@ -71,12 +72,20 @@ export function CertificateUploadForm({
           placeholder="Seleccioná un tipo"
           ariaLabel="Tipo de certificado"
           className="w-full"
+          // 'medical' ya no se ofrece: el certificado médico se sube dentro de la
+          // licencia por enfermedad, no suelto. Suelto no queda asociado a nada,
+          // no alimenta el "presentó certificado" del KPI y duplica el lugar
+          // donde buscarlo. Los que ya se cargaron así se siguen viendo.
           options={[
             { value: 'exam', label: 'Certificado de exámen' },
-            { value: 'medical', label: 'Certificado médico' },
             { value: 'travel_assistance', label: 'Comprobante asistencia al viajero' },
           ]}
         />
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          ¿Buscás subir un <b className="font-medium text-foreground">certificado médico</b>? Va adjunto a la licencia,
+          en <Link href="/portal/time-off/requests" className="text-[var(--brand-strong)] hover:underline">Time Off →
+          Historial de solicitudes</Link>.
+        </p>
       </div>
 
       {/* Archivo */}
