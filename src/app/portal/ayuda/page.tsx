@@ -12,6 +12,12 @@ type PortalManual = ManualCard & { onlyDependency?: boolean; onlyReimbursement?:
 
 const MANUALS: PortalManual[] = [
   {
+    href: '/portal/ayuda/licencia-estudio',
+    title: 'Licencia por estudio',
+    desc: 'Cuántos días tenés para rendir, cómo pedirlos y cómo acreditar el examen con el certificado.',
+    updated: '2026-08-10',
+  },
+  {
     href: '/portal/ayuda/licencia-enfermedad',
     title: 'Licencia por enfermedad',
     desc: 'Cómo avisar que estás de licencia, qué ve tu líder y cómo subir el certificado médico.',

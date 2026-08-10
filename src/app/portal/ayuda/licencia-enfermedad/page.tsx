@@ -59,6 +59,7 @@ export default async function Page() {
           <p><b>Al cargar la licencia</b>, si ya lo tenés a mano —por ejemplo si hiciste teleconsulta y te lo mandaron en el momento—: el formulario tiene el campo <b>Certificado médico</b> y lo adjuntás ahí mismo.</p>
           <p><b>Después</b>, si el papel todavía no llegó. Enviá la licencia igual: lo importante es que quede registrada el día que faltás, para que tu líder pueda cubrir. En <b>Time Off</b> —o en <b>Historial de solicitudes</b>— vas a ver el chip <b>Certificado pendiente</b> y el botón <b>Subir certificado</b>.</p>
           <p>Aceptamos <b>PDF, JPG, PNG o WEBP</b>, hasta <b>10 MB</b>: una foto legible alcanza.</p>
+          <p>Si antes lo subías desde <b>Certificados</b>, ahí ya no está la opción: ahora va adjunto a la licencia, para que quede asociado a los días que reportaste. Los que hayas subido antes siguen estando.</p>
           <p>Tenés <b>{leaveCertRule('sick')?.businessDays} días hábiles</b> desde el inicio de la licencia. Si se pasa el plazo, el chip queda en <b>Certificado vencido</b> y te llega un <b>recordatorio automático</b>. No se anula la licencia: sólo queda marcada hasta que lo subas.</p>
           <p>Si te equivocaste de archivo, el botón pasa a decir <b>Reemplazar</b> y podés subir otro.</p>
         </ManualStep>
