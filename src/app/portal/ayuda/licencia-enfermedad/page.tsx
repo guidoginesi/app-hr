@@ -66,6 +66,7 @@ export default async function Page() {
         <ManualStep
           n={4}
           title="Quién ve qué"
+          image="/manual/licencia-enfermedad-portal/04-presentado.png"
           imageAlt="Chip 'Certificado presentado' en la fila de la licencia."
         >
           <p>Una vez cargado, el chip pasa a <b>Certificado presentado</b> y podés volver a verlo cuando quieras con el botón <b>Ver</b>.</p>
