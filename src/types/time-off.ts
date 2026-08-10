@@ -1,6 +1,6 @@
 // Time-Off module types
 
-export type LeaveTypeCode = 'vacation' | 'pow_days' | 'study' | 'remote_work' | 'remote_work_trip';
+export type LeaveTypeCode = 'vacation' | 'pow_days' | 'study' | 'remote_work' | 'remote_work_trip' | 'sick';
 
 // Two-level approval workflow statuses
 export type LeaveRequestStatus = 
@@ -73,6 +73,10 @@ export interface LeaveRequest {
   status: LeaveRequestStatus;
   notes: string | null;
   attachment_url: string | null;
+  // Medical certificate (sick leave only) — uploaded after registration
+  certificate_path: string | null;
+  certificate_uploaded_at: string | null;
+  certificate_uploaded_by: string | null;
   // Legacy fields - kept for backward compatibility
   approved_by: string | null;
   approved_at: string | null;
