@@ -1,52 +1,56 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { getAuthResult } from '@/lib/checkAuth';
 import { AyudaLayout } from './AyudaLayout';
+import { ManualIndex, type ManualCard } from '@/components/manual/ManualIndex';
 
 export const dynamic = 'force-dynamic';
 
-const MANUALS = [
+// `updated` es la fecha real de la última actualización del manual: ordena la
+// lista y decide el distintivo "Nuevo". Al tocar un manual, actualizarla acá.
+type AdminManual = ManualCard & { administracion?: boolean };
+
+const MANUALS: AdminManual[] = [
+  {
+    href: '/admin/ayuda/licencia-enfermedad',
+    title: 'Licencia por enfermedad',
+    desc: 'Circuito sin aprobación, aviso al líder sin datos de salud, certificado médico con plazo, y el KPI de ausentismo (tasa, frecuencia, duración, ranking).',
+    updated: '2026-08-10',
+  },
   {
     href: '/admin/ayuda/adelantos',
-    emoji: '💸',
     title: 'Adelantos de sueldo',
     desc: 'Solicitud, validación automática, aprobación (RRHH → Administración), transferencia y descuento en la liquidación.',
+    updated: '2026-07-30',
   },
   {
     href: '/admin/ayuda/capacitaciones',
-    emoji: '🎓',
     title: 'Fondo de Capacitaciones',
     desc: 'Solicitud, aprobación (líder → HR), cargas de factura/certificado, pagos con MEP y reintegro por liquidación, y vista de budget.',
+    updated: '2026-08-02',
   },
   {
     href: '/admin/ayuda/recibos',
-    emoji: '🧾',
     title: 'Recepción de recibos',
     desc: 'Estado por período (publicados, confirmados y pendientes), recordatorios manuales y automáticos, export de constancias y recibos corregidos.',
-  },
-  {
-    href: '/admin/ayuda/licencia-enfermedad',
-    emoji: '🤒',
-    title: 'Licencia por enfermedad',
-    desc: 'Circuito sin aprobación, aviso al líder sin datos de salud, certificado médico con plazo, y el KPI de ausentismo (tasa, frecuencia, duración, ranking).',
+    updated: '2026-08-01',
   },
   {
     href: '/admin/ayuda/consultas',
-    emoji: '💬',
     title: 'Consultas',
     desc: 'Bandeja única de People: responder, notas internas, compartir con el líder, estados y cierre, reportes y recurrentes.',
+    updated: '2026-08-02',
   },
   {
     href: '/admin/ayuda/mensajes',
-    emoji: '📣',
     title: 'Comunicaciones',
     desc: 'Redactar y segmentar comunicaciones (por área/líder/personas), plantillas con variables, envío por mail/Chat, filtros + export, y seguimiento de lectura y entrega.',
+    updated: '2026-08-04',
   },
   {
     href: '/admin/ayuda/reintegros',
-    emoji: '🧮',
     title: 'Reintegros de gastos',
     desc: 'Habilitados y motivos, aprobación del líder, validación de comprobante e imputación, monto parcial y tipo de cambio, agenda de pago y comprobante de pago.',
+    updated: '2026-08-04',
     /** Administración valida y paga reintegros, así que también lee este manual. */
     administracion: true,
   },
@@ -61,22 +65,11 @@ export default async function AyudaPage() {
 
   return (
     <AyudaLayout
-      description="Manuales paso a paso de las funcionalidades de la plataforma"
+      description="Cómo funciona cada módulo de la plataforma, paso a paso."
       advancesOnly={!auth.isAdmin && auth.isAdministracion}
+      showBack={false}
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {visible.map((m) => (
-          <Link
-            key={m.href}
-            href={m.href}
-            className="group rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm transition-colors hover:border-[var(--gray-300)]"
-          >
-            <div className="text-2xl">{m.emoji}</div>
-            <h3 className="mt-3 text-base font-semibold text-foreground group-hover:text-[var(--brand-strong)]">{m.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{m.desc}</p>
-          </Link>
-        ))}
-      </div>
+      <ManualIndex manuals={visible} />
     </AyudaLayout>
   );
 }

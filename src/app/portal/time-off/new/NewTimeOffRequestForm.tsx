@@ -363,8 +363,11 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                   className="mt-1 w-full"
                   options={leaveTypes.filter(isTypeSelectable).map((type) => ({
                     value: type.id,
+                    // Los tipos sin cupo van sólo con su nombre: no hay saldo que
+                    // mostrar, y aclarar "Ilimitada" invitaba a leerlo como un
+                    // beneficio en vez de como una licencia que se justifica.
                     label: isUnlimitedLeaveType(type.code)
-                      ? `${type.name} - Ilimitada`
+                      ? type.name
                       : `${type.name} - Disponible: ${getAvailableDays(type.id)} ${type.count_type === 'weeks' ? 'semanas' : 'días'}`,
                   }))}
                 />

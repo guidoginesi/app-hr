@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { requireAdmin } from '@/lib/checkAuth';
 import { AyudaLayout } from '../AyudaLayout';
 import { ManualStep } from '@/components/manual/ManualStep';
@@ -17,7 +16,6 @@ export default async function AyudaLicenciaEnfermedadPage() {
       description="El circuito sin aprobación, el certificado médico y el KPI de ausentismo"
     >
       <div className="space-y-8">
-        <Link href="/admin/ayuda" className="text-sm text-[var(--brand-strong)] hover:underline">← Volver a Ayuda</Link>
 
         <div className="rounded-xl border border-[var(--border)] bg-muted p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">El circuito, en una línea</p>

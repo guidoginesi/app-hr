@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { PortalShell } from '../PortalShell';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { buttonVariants } from '@pow/ui/components/ui/button';
+import { ManualToc } from '@/components/manual/ManualToc';
 import type { Employee } from '@/types/employee';
 
 /**
@@ -43,7 +44,14 @@ export function PortalAyudaLayout({
             ) : undefined
           }
         />
-        {children}
+        {showBack ? (
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="min-w-0">{children}</div>
+            <ManualToc />
+          </div>
+        ) : (
+          children
+        )}
       </div>
     </PortalShell>
   );

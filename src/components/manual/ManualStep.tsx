@@ -3,6 +3,9 @@ import { ReactNode } from 'react';
 /**
  * Un paso de manual: número + título + descripción + captura.
  * Si `image` no está seteada, muestra un placeholder "Captura pendiente".
+ *
+ * El `id` y el `data-manual-step` los usa ManualToc para armar el índice
+ * lateral leyendo el DOM: así cada manual no tiene que repetir sus títulos.
  */
 export function ManualStep({
   n,
@@ -18,7 +21,7 @@ export function ManualStep({
   children: ReactNode;
 }) {
   return (
-    <section className="scroll-mt-6">
+    <section id={`paso-${n}`} data-manual-step={n} data-manual-title={title} className="scroll-mt-24">
       <div className="flex items-start gap-4">
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground nums-tabular">
           {n}
