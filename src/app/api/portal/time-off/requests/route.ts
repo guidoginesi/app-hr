@@ -5,6 +5,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType } from '@/lib/leaveTypes';
+import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -156,8 +157,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate study leave requires attachment
-    if (leaveType.requires_attachment && !parsed.data.attachment_url) {
+    // Los tipos que se acreditan con certificado (enfermedad, estudio) NO exigen
+    // el adjunto al crear: se sube después, con su plazo y su recordatorio. Este
+    // chequeo es el que dejó a la licencia por estudio sin poder enviarse — el
+    // formulario nunca mandó attachment_url — hasta que alguien apagó
+    // requires_attachment en la base y con eso se perdió la exigencia.
+    if (
+      leaveType.requires_attachment &&
+      !requiresLeaveCertificate(leaveType.code) &&
+      !parsed.data.attachment_url
+    ) {
       return NextResponse.json(
         { error: `${leaveType.name} requiere adjuntar un comprobante` },
         { status: 400 }

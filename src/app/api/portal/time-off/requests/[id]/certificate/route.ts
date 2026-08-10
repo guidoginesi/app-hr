@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { SICK_LEAVE_CODE } from '@/lib/sickLeave';
+import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,8 +70,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     const lt = leave.leave_types as unknown as { code: string } | { code: string }[] | null;
     const code = Array.isArray(lt) ? lt[0]?.code : lt?.code;
-    if (code !== SICK_LEAVE_CODE) {
-      return NextResponse.json({ error: 'El certificado sólo aplica a licencias por enfermedad.' }, { status: 400 });
+    if (!requiresLeaveCertificate(code)) {
+      return NextResponse.json(
+        { error: 'Este tipo de licencia no se acredita con un certificado.' },
+        { status: 400 },
+      );
     }
     if (leave.status === 'cancelled' || leave.status === 'rejected' || leave.status === 'rejected_hr') {
       return NextResponse.json({ error: 'La licencia no está activa.' }, { status: 400 });

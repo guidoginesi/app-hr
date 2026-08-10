@@ -7,7 +7,8 @@ import type { LeaveRequestWithDetails, LeaveRequestStatus } from '@/types/time-o
 import { CANCELLABLE_STATUSES } from '@/types/time-off';
 import { Button, buttonVariants } from '@pow/ui/components/ui/button';
 import { LeaveRequestRow } from '@/components/time-off/LeaveRequestRow';
-import { SickCertificateControl } from '@/components/time-off/SickCertificateControl';
+import { LeaveCertificateControl } from '@/components/time-off/LeaveCertificateControl';
+import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 import { StatusFilterChips, type ChipValue } from '@/components/time-off/StatusFilterChips';
 import { countByBucket, getBucket, BUCKET_LABELS, type StatusBucket } from '@/components/time-off/statusBuckets';
 
@@ -109,8 +110,8 @@ export default function TimeOffRequestsHistoryPage() {
                       key={request.id}
                       request={request}
                       actions={
-                        request.leave_type_code === 'sick' && request.status === 'approved' ? (
-                          <SickCertificateControl request={request} mode="owner" onChange={fetchRequests} />
+                        requiresLeaveCertificate(request.leave_type_code) && request.status === 'approved' ? (
+                          <LeaveCertificateControl request={request} mode="owner" onChange={fetchRequests} />
                         ) : canCancel(request.status as LeaveRequestStatus) ? (
                           <Button
                             size="sm"

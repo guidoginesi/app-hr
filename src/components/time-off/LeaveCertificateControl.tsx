@@ -4,22 +4,24 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@pow/ui/components/ui/button';
 import type { LeaveRequestWithDetails } from '@/types/time-off';
-import { sickCertStatus, SICK_CERT_STATUS_LABELS, type SickCertStatus } from '@/lib/sickLeave';
+import { leaveCertStatus, LEAVE_CERT_STATUS_LABELS, type LeaveCertStatus } from '@/lib/leaveCertificates';
 
-const CHIP: Record<SickCertStatus, string> = {
+const CHIP: Record<LeaveCertStatus, string> = {
   presentado: 'bg-success-subtle text-[var(--green-700)]',
   pendiente: 'bg-warning-subtle text-[var(--amber-600)]',
   vencido: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
 /**
- * Estado del certificado médico + acciones, para licencias por enfermedad.
+ * Estado del certificado adjunto a una licencia + acciones. Sirve para los tipos
+ * que se acreditan con un comprobante (enfermedad y estudio); para el resto
+ * devuelve null y no renderiza nada.
  *
  * mode='owner' (portal): el colaborador sube o reemplaza su certificado y puede verlo.
  * mode='admin' (HR): sólo ve el certificado; no lo sube.
  * El líder no usa este componente — no ve el certificado.
  */
-export function SickCertificateControl({
+export function LeaveCertificateControl({
   request,
   mode,
   onChange,
@@ -37,9 +39,11 @@ export function SickCertificateControl({
   // ruta: si no, se sube el archivo y el chip sigue diciendo "pendiente".
   const refrescar = onChange ?? (() => router.refresh());
 
-  const status = sickCertStatus({
+  const status = leaveCertStatus({
+    leaveTypeCode: request.leave_type_code,
     certificateUploadedAt: request.certificate_uploaded_at,
     startDate: request.start_date,
+    endDate: request.end_date,
   });
   const hasCert = Boolean(request.certificate_uploaded_at);
 
@@ -80,11 +84,14 @@ export function SickCertificateControl({
     }
   }
 
+  // Los tipos que no se acreditan con comprobante no muestran nada.
+  if (!status) return null;
+
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CHIP[status]}`}>
-          {SICK_CERT_STATUS_LABELS[status]}
+          {LEAVE_CERT_STATUS_LABELS[status]}
         </span>
         {hasCert && (
           <Button size="sm" variant="outline" loading={busy} onClick={view}>

@@ -72,18 +72,16 @@ export function CertificateUploadForm({
           placeholder="Seleccioná un tipo"
           ariaLabel="Tipo de certificado"
           className="w-full"
-          // 'medical' ya no se ofrece: el certificado médico se sube dentro de la
-          // licencia por enfermedad, no suelto. Suelto no queda asociado a nada,
-          // no alimenta el "presentó certificado" del KPI y duplica el lugar
-          // donde buscarlo. Los que ya se cargaron así se siguen viendo.
-          options={[
-            { value: 'exam', label: 'Certificado de exámen' },
-            { value: 'travel_assistance', label: 'Comprobante asistencia al viajero' },
-          ]}
+          // Ni 'medical' ni 'exam' se ofrecen acá: los dos acreditan una licencia
+          // y van ADJUNTOS a ella. Sueltos no quedan asociados a nada, no
+          // alimentan el "presentó certificado" y duplican dónde buscarlos. Los
+          // que ya se cargaron así se siguen viendo.
+          options={[{ value: 'travel_assistance', label: 'Comprobante asistencia al viajero' }]}
         />
         <p className="mt-1.5 text-xs text-muted-foreground">
-          ¿Buscás subir un <b className="font-medium text-foreground">certificado médico</b>? Va adjunto a la licencia,
-          en <Link href="/portal/time-off/requests" className="text-[var(--brand-strong)] hover:underline">Time Off →
+          ¿Buscás subir un <b className="font-medium text-foreground">certificado médico</b> o el{' '}
+          <b className="font-medium text-foreground">certificado de un examen</b>? Van adjuntos a la licencia, en{' '}
+          <Link href="/portal/time-off/requests" className="text-[var(--brand-strong)] hover:underline">Time Off →
           Historial de solicitudes</Link>.
         </p>
       </div>
@@ -134,7 +132,7 @@ export function CertificateUploadForm({
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           rows={3}
-          placeholder="Ej: Certificado del exámen del 15/03, materia Cálculo II…"
+          placeholder="Ej: Cobertura para el viaje a Chile del 12/03…"
           className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>

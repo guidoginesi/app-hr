@@ -7,7 +7,8 @@ import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { TabNav } from '@pow/ui/components/ui/tab-nav';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
-import { SickCertificateControl } from '@/components/time-off/SickCertificateControl';
+import { LeaveCertificateControl } from '@/components/time-off/LeaveCertificateControl';
+import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 
 const MONTH_NAMES = [
@@ -696,8 +697,8 @@ export default function TimeOffRequestsPage() {
                       )}
                       {request.status === 'approved' && (
                         <div className="flex flex-col gap-2">
-                          {request.leave_type_code === 'sick' && (
-                            <SickCertificateControl request={request} mode="admin" />
+                          {requiresLeaveCertificate(request.leave_type_code) && (
+                            <LeaveCertificateControl request={request} mode="admin" />
                           )}
                           <div className="text-xs text-muted-foreground">
                             {/* .trim(): la vista arma estos nombres con concat(), y

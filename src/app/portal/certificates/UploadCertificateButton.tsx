@@ -23,7 +23,7 @@ export function UploadCertificateButton({
       <SheetTrigger className={buttonVariants({ variant })}>{label}</SheetTrigger>
       <SheetContent
         title="Cargar certificado"
-        description="Subí certificados médicos, de exámen o comprobantes de viaje"
+        description="Subí tus comprobantes de asistencia al viajero"
         className="sm:max-w-xl"
       >
         {/* px-1: aire para que el ring de foco de los inputs no se corte contra el overflow del Sheet */}
