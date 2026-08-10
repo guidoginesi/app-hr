@@ -285,6 +285,21 @@ export async function DELETE(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // El certificado vive en Storage, que no tiene FK ni cascada: si no se borra
+    // acá, el archivo queda huérfano para siempre y sin fila que lo referencie.
+    // Va DESPUÉS del delete y sin frenar la respuesta: la fila ya no existe, y
+    // un archivo que sobra es menos grave que un 500 sobre un borrado aplicado.
+    if (request.certificate_path) {
+      const { error: storageError } = await supabase.storage
+        .from('certificates')
+        .remove([request.certificate_path as string]);
+      if (storageError) {
+        console.error(
+          `[TimeOff] licencia ${id} borrada pero su certificado quedó en Storage (${request.certificate_path}): ${storageError.message}`,
+        );
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error in DELETE /api/admin/time-off/requests/[id]:', error);
