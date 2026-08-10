@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { AyudaLayout } from '../AyudaLayout';
 import { ManualStep } from '@/components/manual/ManualStep';
-import { SICK_CERT_DEADLINE_BUSINESS_DAYS } from '@/lib/sickLeave';
+import { leaveCertRule } from '@/lib/leaveCertificates';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,7 @@ export default async function AyudaLicenciaEnfermedadPage() {
           <p className="mt-2 text-sm text-foreground">
             El colaborador <b>registra</b> la licencia y queda vigente en el acto —<b>no la aprueba nadie</b>— → al{' '}
             <b>líder</b> se le avisa para que cubra la operación, sin motivo ni certificado → el colaborador sube el{' '}
-            <b>certificado médico</b> dentro de {SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles → el <b>KPI</b> se
+            <b>certificado médico</b> dentro de {leaveCertRule('sick')?.businessDays} días hábiles → el <b>KPI</b> se
             alimenta solo de ese registro.
           </p>
         </div>
@@ -54,7 +54,7 @@ export default async function AyudaLicenciaEnfermedadPage() {
           image="/manual/licencia-enfermedad-admin/03-certificado.png"
           imageAlt="Fila de la licencia en el admin con el chip del estado del certificado y el botón Ver."
         >
-          <p>El certificado es <b>obligatorio</b>, y la persona puede adjuntarlo <b>al cargar la licencia</b> —si ya lo tiene, por ejemplo de una teleconsulta— o <b>después</b>. No se exige en el momento del alta a propósito: si lo exigiéramos, nadie podría registrar la ausencia el día que falta, y el aviso de cobertura al líder llegaría tarde. El plazo es de <b>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</b> desde el inicio.</p>
+          <p>El certificado es <b>obligatorio</b>, y la persona puede adjuntarlo <b>al cargar la licencia</b> —si ya lo tiene, por ejemplo de una teleconsulta— o <b>después</b>. No se exige en el momento del alta a propósito: si lo exigiéramos, nadie podría registrar la ausencia el día que falta, y el aviso de cobertura al líder llegaría tarde. El plazo es de <b>{leaveCertRule('sick')?.businessDays} días hábiles</b> desde el inicio.</p>
           <p>En <b>Time Off → Solicitudes</b>, cada licencia por enfermedad muestra el estado del certificado:</p>
           <p><b>Certificado pendiente</b> (todavía dentro del plazo) · <b>Certificado vencido</b> (se pasó el plazo y no lo subió) · <b>Certificado presentado</b> (ya está, con el botón <b>Ver</b> para abrirlo).</p>
           <p>El estado se <b>calcula solo</b> a partir del archivo y la fecha de inicio; no hay que marcar nada a mano. Un <b>vencido no anula</b> la licencia: la marca para que la reclames. El criterio es acompañar, no sancionar.</p>

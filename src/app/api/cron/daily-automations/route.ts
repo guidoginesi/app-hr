@@ -7,7 +7,7 @@ import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
 import { runInquiryAutomations } from '@/lib/inquiryAutomations';
-import { runSickCertificateReminders } from '@/lib/sickCertificateReminders';
+import { runLeaveCertificateReminders } from '@/lib/leaveCertificateReminders';
 import { publishScheduledMessages } from '@/lib/scheduledMessages';
 import { Resend } from 'resend';
 
@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
     approvalDigests: { sent: [] as string[], errors: [] as string[] },
     receiptReminders: { sent: 0, skipped: 0 },
     inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
-    sickCertificates: { enviados: 0, errores: [] as string[] },
+    leaveCertificates: { enviados: 0, errores: [] as string[] },
     scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
     errors: [] as string[],
   };
@@ -374,11 +374,11 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Inquiry automations: ${e.message}`);
   }
 
-  // ── CERTIFICADOS MÉDICOS VENCIDOS ──────────────────────────────
+  // ── CERTIFICADOS DE LICENCIA VENCIDOS (médico y de examen) ─────
   try {
-    results.sickCertificates = await runSickCertificateReminders();
+    results.leaveCertificates = await runLeaveCertificateReminders();
   } catch (e: any) {
-    results.errors.push(`Sick certificate reminders: ${e.message}`);
+    results.errors.push(`Leave certificate reminders: ${e.message}`);
   }
 
   // ── MENSAJES PROGRAMADOS ───────────────────────────────────────

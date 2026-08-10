@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { isBusinessDay } from '@/lib/businessDays';
 import { computeSickKpi, type SickLeaveRow, type KpiEmployee } from '@/lib/sickKpi';
-import { SICK_LEAVE_CODE } from '@/lib/sickLeave';
+import { SICK_LEAVE_CODE } from '@/lib/leaveCertificates';
 
 export const dynamic = 'force-dynamic';
 

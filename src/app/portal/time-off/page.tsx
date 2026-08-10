@@ -8,7 +8,8 @@ import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { NewRequestButton } from './NewRequestButton';
 import { UploadCertificateButton } from '../certificates/UploadCertificateButton';
 import { LeaveRequestRow } from '@/components/time-off/LeaveRequestRow';
-import { SickCertificateControl } from '@/components/time-off/SickCertificateControl';
+import { LeaveCertificateControl } from '@/components/time-off/LeaveCertificateControl';
+import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 
 export const dynamic = 'force-dynamic';
 
@@ -288,8 +289,8 @@ export default async function TimeOffPortalPage() {
                   // El certificado también se sube desde acá: si sólo estuviera
                   // en el historial, habría que saber entrar a "Ver todas".
                   actions={
-                    request.leave_type_code === 'sick' && request.status === 'approved' ? (
-                      <SickCertificateControl request={request} mode="owner" />
+                    requiresLeaveCertificate(request.leave_type_code) && request.status === 'approved' ? (
+                      <LeaveCertificateControl request={request} mode="owner" />
                     ) : undefined
                   }
                 />

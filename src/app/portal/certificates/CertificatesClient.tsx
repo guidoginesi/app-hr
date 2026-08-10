@@ -62,7 +62,7 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
     <div className="space-y-6">
       <PageHeader
         title="Certificados"
-        description="Cargá tus certificados médicos, de exámen o comprobantes de viaje"
+        description="Tus comprobantes de asistencia al viajero, y el histórico de certificados"
         actions={
           <Button onClick={() => setOpen(true)}>
             <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -143,7 +143,7 @@ export function CertificatesClient({ initialCertificates }: CertificatesClientPr
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           title="Cargar certificado"
-          description="Subí certificados médicos, de exámen o comprobantes de viaje"
+          description="Subí tus comprobantes de asistencia al viajero"
           className="sm:max-w-xl"
         >
           <div className="px-1">
