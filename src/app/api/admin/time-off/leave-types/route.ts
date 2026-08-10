@@ -25,6 +25,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('leave_types')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('name', { ascending: true });
 
     if (error) {
