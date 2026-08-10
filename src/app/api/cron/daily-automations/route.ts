@@ -8,6 +8,7 @@ import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
 import { runInquiryAutomations } from '@/lib/inquiryAutomations';
 import { runLeaveCertificateReminders } from '@/lib/leaveCertificateReminders';
+import { runBirthdayLeaveAutomation } from '@/lib/birthdayLeaveAutomation';
 import { publishScheduledMessages } from '@/lib/scheduledMessages';
 import { Resend } from 'resend';
 
@@ -105,6 +106,7 @@ export async function GET(req: NextRequest) {
     receiptReminders: { sent: 0, skipped: 0 },
     inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
     leaveCertificates: { enviados: 0, errores: [] as string[] },
+    birthdayLeave: { acreditados: [] as string[], vencidos: [] as string[], errores: [] as string[] },
     scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
     errors: [] as string[],
   };
@@ -379,6 +381,13 @@ export async function GET(req: NextRequest) {
     results.leaveCertificates = await runLeaveCertificateReminders();
   } catch (e: any) {
     results.errors.push(`Leave certificate reminders: ${e.message}`);
+  }
+
+  // ── DÍA DE CUMPLEAÑOS: acreditación y vencimiento ──────────────
+  try {
+    results.birthdayLeave = await runBirthdayLeaveAutomation();
+  } catch (e: any) {
+    results.errors.push(`Birthday leave: ${e.message}`);
   }
 
   // ── MENSAJES PROGRAMADOS ───────────────────────────────────────

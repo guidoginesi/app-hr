@@ -12,6 +12,12 @@ type PortalManual = ManualCard & { onlyDependency?: boolean; onlyReimbursement?:
 
 const MANUALS: PortalManual[] = [
   {
+    href: '/portal/ayuda/dia-cumpleanos',
+    title: 'Día de cumpleaños',
+    desc: 'Tenés un día libre por tu cumpleaños: cuándo se acredita, entre qué fechas podés tomarlo y qué pasa si no lo usás.',
+    updated: '2026-08-10',
+  },
+  {
     href: '/portal/ayuda/licencia-estudio',
     title: 'Licencia por estudio',
     desc: 'Cuántos días tenés para rendir, cómo pedirlos y cómo acreditar el examen con el certificado.',

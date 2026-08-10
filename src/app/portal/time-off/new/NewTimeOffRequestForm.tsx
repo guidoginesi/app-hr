@@ -492,6 +492,15 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                     </p>
                   </div>
                 )}
+                {leaveTypes.find((x) => x.id === selectedType)?.code === 'birthday' && (
+                  <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                    <p className="text-sm text-foreground">
+                      Es <strong>un solo día</strong> y se toma <strong>desde el día de tu cumpleaños y hasta 7 días
+                      después</strong>. Si tu cumple cae un fin de semana o estás de licencia, la ventana arranca el
+                      próximo día hábil. Pasada esa fecha, el día se pierde.
+                    </p>
+                  </div>
+                )}
                 {isSickType() && (
                   <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
                     <p className="text-sm text-foreground">
