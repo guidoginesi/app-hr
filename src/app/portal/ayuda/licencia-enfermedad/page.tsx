@@ -30,6 +30,7 @@ export default async function Page() {
         <ManualStep
           n={1}
           title="Cargar la licencia"
+          image="/manual/licencia-enfermedad-portal/01-form.png"
           imageAlt="Formulario de nueva solicitud con el tipo Licencia por enfermedad elegido."
         >
           <p>Entrá a <b>Time Off → Nueva solicitud</b> y elegí <b>Licencia por enfermedad</b> en el tipo. Vas a ver que figura como <b>Ilimitada</b>: no descuenta días de ningún saldo, así que no te “gastás” vacaciones ni Días Pow.</p>
@@ -40,6 +41,7 @@ export default async function Page() {
         <ManualStep
           n={2}
           title="Qué pasa cuando la enviás"
+          image="/manual/licencia-enfermedad-portal/02-registrada.png"
           imageAlt="Licencia por enfermedad en el historial con el estado Registrada."
         >
           <p>Queda en estado <b>Registrada</b>. No hay aprobación del líder ni de People: por eso, a diferencia de las vacaciones, no vas a ver los tildes de <i>Líder</i> y <i>HR</i> — no hay nada esperando.</p>
@@ -50,6 +52,7 @@ export default async function Page() {
         <ManualStep
           n={3}
           title="Subir el certificado médico"
+          image="/manual/licencia-enfermedad-portal/02-registrada.png"
           imageAlt="Fila de la licencia con el chip 'Certificado pendiente' y el botón 'Subir certificado'."
         >
           <p>El certificado es <b>obligatorio</b>, y hay dos momentos para cargarlo:</p>
@@ -63,6 +66,7 @@ export default async function Page() {
         <ManualStep
           n={4}
           title="Quién ve qué"
+          image="/manual/licencia-enfermedad-portal/04-presentado.png"
           imageAlt="Chip 'Certificado presentado' en la fila de la licencia."
         >
           <p>Una vez cargado, el chip pasa a <b>Certificado presentado</b> y podés volver a verlo cuando quieras con el botón <b>Ver</b>.</p>

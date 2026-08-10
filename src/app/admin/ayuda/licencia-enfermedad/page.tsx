@@ -30,6 +30,7 @@ export default async function AyudaLicenciaEnfermedadPage() {
         <ManualStep
           n={1}
           title="Por qué no hay aprobación"
+          image="/manual/licencia-enfermedad-admin/01-solicitudes.png"
           imageAlt="Licencia por enfermedad en el listado de solicitudes, en estado Registrada."
         >
           <p>A diferencia del resto de las licencias, la de enfermedad <b>no pasa por el circuito líder → HR</b>. El colaborador la reporta y queda vigente. Es un tercer circuito, distinto del de dos niveles y del de “directo a HR”.</p>
@@ -50,6 +51,7 @@ export default async function AyudaLicenciaEnfermedadPage() {
         <ManualStep
           n={3}
           title="El certificado médico"
+          image="/manual/licencia-enfermedad-admin/03-certificado.png"
           imageAlt="Fila de la licencia en el admin con el chip del estado del certificado y el botón Ver."
         >
           <p>El certificado es <b>obligatorio</b>, y la persona puede adjuntarlo <b>al cargar la licencia</b> —si ya lo tiene, por ejemplo de una teleconsulta— o <b>después</b>. No se exige en el momento del alta a propósito: si lo exigiéramos, nadie podría registrar la ausencia el día que falta, y el aviso de cobertura al líder llegaría tarde. El plazo es de <b>{SICK_CERT_DEADLINE_BUSINESS_DAYS} días hábiles</b> desde el inicio.</p>
@@ -63,6 +65,7 @@ export default async function AyudaLicenciaEnfermedadPage() {
         <ManualStep
           n={4}
           title="El KPI de ausentismo"
+          image="/manual/licencia-enfermedad-admin/04-kpi.png"
           imageAlt="Pestaña Ausentismo con los cinco indicadores, estacionalidad, por área y ranking."
         >
           <p>Está en <b>Time Off → Ausentismo</b> y se alimenta solo de las licencias registradas. Es una pestaña <b>sólo para People</b>.</p>

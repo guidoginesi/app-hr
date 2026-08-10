@@ -700,8 +700,12 @@ export default function TimeOffRequestsPage() {
                             <SickCertificateControl request={request} mode="admin" />
                           )}
                           <div className="text-xs text-muted-foreground">
-                            {request.hr_approver_name && <p>HR: {request.hr_approver_name}</p>}
-                            {request.leader_name && <p>Líder: {request.leader_name}</p>}
+                            {/* .trim(): la vista arma estos nombres con concat(), y
+                                concat() en Postgres ignora los NULL y devuelve " "
+                                en vez de NULL. Sin el trim, una licencia sin
+                                aprobador mostraba "HR:" y "Líder:" en blanco. */}
+                            {request.hr_approver_name?.trim() && <p>HR: {request.hr_approver_name}</p>}
+                            {request.leader_name?.trim() && <p>Líder: {request.leader_name}</p>}
                           </div>
                           <a
                             href={buildGCalUrl(request)}
