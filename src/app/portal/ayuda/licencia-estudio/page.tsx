@@ -42,8 +42,8 @@ export default async function Page() {
           title="Cuántos días tenés"
           imageAlt="Selector de tipo de licencia mostrando el saldo disponible de días de estudio."
         >
-          <p>Son <b>10 días por año calendario</b>, y se usan de a <b>2 días corridos por examen</b>.</p>
-          <p>Se cuentan <b>corridos</b>, no hábiles: si pedís de viernes a lunes son 4 días aunque el fin de semana no trabajes. Pedí sólo los que vas a usar.</p>
+          <p>Son <b>10 días hábiles por año calendario</b>, y se usan de a <b>2 días hábiles por examen</b>.</p>
+          <p>Se cuentan <b>hábiles</b>: los fines de semana no te consumen cupo. Si pedís de viernes a lunes, te descuentan 2 días, no 4.</p>
           <p>El saldo lo ves en el mismo selector al elegir el tipo, y no se acumula de un año al otro.</p>
         </ManualStep>
 
@@ -52,7 +52,7 @@ export default async function Page() {
           title="Pedir los días"
           imageAlt="Formulario de nueva solicitud con Licencia por Estudio elegida y el campo del certificado."
         >
-          <p>Entrá a <b>Time Off → Nueva solicitud</b>, elegí <b>Licencia por Estudio</b> y poné las fechas. No requiere anticipación mínima, pero avisá con tiempo para que tu equipo pueda organizarse.</p>
+          <p>Entrá a <b>Time Off → Nueva solicitud</b>, elegí <b>Licencia por Estudio</b> y poné las fechas. Pedila con al menos <b>7 días de anticipación</b>: el formulario no te deja enviarla con menos.</p>
           <p>Si ya tenés el certificado del examen, podés <b>adjuntarlo ahí mismo</b>. Lo normal es que todavía no lo tengas —el certificado lo dan cuando rendís—, así que enviá igual y lo subís después.</p>
         </ManualStep>
 
