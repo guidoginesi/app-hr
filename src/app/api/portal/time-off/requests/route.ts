@@ -4,7 +4,7 @@ import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
-import { isUnlimitedLeaveType, isHrOnlyApprovalType } from '@/lib/leaveTypes';
+import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType } from '@/lib/leaveTypes';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -135,7 +135,11 @@ export async function POST(req: NextRequest) {
       (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (daysUntilStart < leaveType.advance_notice_days) {
+    // La licencia por enfermedad se reporta con el inicio casi siempre ya
+    // ocurrido (te enfermás y avisás), así que se exime de la anticipación: si
+    // no, un inicio en el pasado quedaría bloqueado.
+    const selfRegistered = isSelfRegisteredType(leaveType.code);
+    if (!selfRegistered && daysUntilStart < leaveType.advance_notice_days) {
       return NextResponse.json(
         {
           error: `Debes solicitar ${leaveType.name} con al menos ${leaveType.advance_notice_days} días de anticipación`,
@@ -243,20 +247,28 @@ export async function POST(req: NextRequest) {
       .eq('id', auth.employee.id)
       .single();
 
-    if (!hrOnlyApproval && !employee?.manager_id) {
+    // El líder es obligatorio sólo cuando hace falta que alguien apruebe. La
+    // licencia por enfermedad no se aprueba, así que no lo exige: alguien sin
+    // líder cargado igual puede reportar que está enfermo (sólo no se notifica).
+    if (!hrOnlyApproval && !selfRegistered && !employee?.manager_id) {
       return NextResponse.json(
         { error: 'No tienes un líder asignado. Contacta a HR para configurar tu manager.' },
         { status: 400 }
       );
     }
 
-    // Create the request — HR-only types skip leader and go straight to pending_hr
+    // Create the request:
+    //  - self-registered (enfermedad): queda 'approved' (vigente) sin aprobador;
+    //    el líder se guarda para notificarlo y para la vista de cobertura.
+    //  - HR-only: salta al líder y va directo a 'pending_hr'.
+    //  - resto: circuito de dos niveles desde 'pending_leader'.
+    const initialStatus = selfRegistered ? 'approved' : hrOnlyApproval ? 'pending_hr' : 'pending_leader';
     const { data, error } = await supabase
       .from('leave_requests')
       .insert({
         employee_id: auth.employee.id,
-        status: hrOnlyApproval ? 'pending_hr' : 'pending_leader',
-        leader_id: hrOnlyApproval ? null : employee!.manager_id,
+        status: initialStatus,
+        leader_id: hrOnlyApproval ? null : employee?.manager_id ?? null,
         ...parsed.data,
       })
       .select()
@@ -353,12 +365,15 @@ export async function POST(req: NextRequest) {
     }
     // In-app notification to the employee who submitted
     if (auth.user?.id) {
+      const submittedBody = selfRegistered
+        ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Acordate de subir el certificado médico dentro de los 3 días hábiles.`
+        : hrOnlyApproval
+          ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
+          : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`;
       createSystemNotification({
         userIds: [auth.user.id],
-        title: 'Solicitud de licencia enviada',
-        body: hrOnlyApproval
-          ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
-          : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`,
+        title: selfRegistered ? 'Licencia por enfermedad registrada' : 'Solicitud de licencia enviada',
+        body: submittedBody,
         priority: 'info',
         deepLink: '/portal/time-off',
         metadata: { entity_type: 'leave_request', entity_id: data.id },
@@ -366,7 +381,48 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error('Error creating employee submission in-app notification:', err));
     }
 
-    if (hrOnlyApproval) {
+    if (selfRegistered) {
+      // Licencia por enfermedad: al líder se lo NOTIFICA para que organice la
+      // cobertura. Ve la ausencia y los días, nunca el motivo ni el certificado.
+      if (employee?.manager_id) {
+        const managerResult = await withRetry(async () =>
+          supabase
+            .from('employees')
+            .select('first_name, personal_email, work_email, user_id')
+            .eq('id', employee.manager_id)
+            .single()
+        ).catch(() => ({ data: null as null }));
+        const manager = managerResult?.data ?? null;
+
+        if (manager) {
+          const managerEmail = manager.work_email || manager.personal_email;
+          if (managerEmail) {
+            sendTimeOffEmail({
+              templateKey: 'time_off_sick_leader_notification',
+              to: managerEmail,
+              variables: {
+                nombre_lider: manager.first_name,
+                nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
+                ...emailVariables,
+              },
+              leaveRequestId: data.id,
+            }).catch((err) => console.error('Error sending sick-leave leader notification email:', err));
+          }
+
+          if (manager.user_id) {
+            createSystemNotification({
+              userIds: [manager.user_id],
+              title: 'Licencia por enfermedad en tu equipo',
+              body: `${auth.employee.first_name} ${auth.employee.last_name} está de licencia por enfermedad del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} (${parsed.data.days_requested} día(s)).`,
+              priority: 'info',
+              deepLink: '/portal/team',
+              metadata: { entity_type: 'leave_request', entity_id: data.id },
+              dedupeKey: `leave_request:${data.id}:sick_leader_notified`,
+            }).catch((err) => console.error('Error creating sick-leave leader in-app notification:', err));
+          }
+        }
+      }
+    } else if (hrOnlyApproval) {
       // Notify HR directly — no leader step
       const { data: admins } = await supabase.from('admins').select('user_id').limit(5);
 

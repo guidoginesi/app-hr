@@ -135,6 +135,12 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
     return isRemoteWorkType() || isRemoteWorkTripType();
   }
 
+  // Licencia por enfermedad: sin aprobación, se notifica al líder, certificado después.
+  function isSickType(): boolean {
+    const type = leaveTypes.find((t) => t.id === selectedType);
+    return type?.code === 'sick';
+  }
+
   // Check if selected type requires week-based selection (Monday to Sunday)
   function isWeekBasedType(): boolean {
     return isVacationType() || isRemoteWorkType();
@@ -447,6 +453,16 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                       <strong>días sueltos o viajes</strong> (no semanas completas).
                       Es una notificación obligatoria para ART y seguro. La solicitud va{' '}
                       <strong>directamente a HR</strong> para su revisión (sin aprobación del líder).
+                    </p>
+                  </div>
+                )}
+                {isSickType() && (
+                  <div className="rounded-lg border border-[var(--border)] bg-muted p-4">
+                    <p className="text-sm text-foreground">
+                      No necesita aprobación: queda registrada al enviarla y se le{' '}
+                      <strong>avisa a tu líder</strong> para organizar la cobertura (sin ver el motivo).
+                      Después vas a tener que <strong>subir el certificado médico</strong> desde{' '}
+                      <em>Mis licencias</em>, dentro de los <strong>3 días hábiles</strong>.
                     </p>
                   </div>
                 )}

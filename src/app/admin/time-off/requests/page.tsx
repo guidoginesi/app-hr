@@ -7,6 +7,7 @@ import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { TabNav } from '@pow/ui/components/ui/tab-nav';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
+import { SickCertificateControl } from '@/components/time-off/SickCertificateControl';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 
 const MONTH_NAMES = [
@@ -695,6 +696,9 @@ export default function TimeOffRequestsPage() {
                       )}
                       {request.status === 'approved' && (
                         <div className="flex flex-col gap-2">
+                          {request.leave_type_code === 'sick' && (
+                            <SickCertificateControl request={request} mode="admin" />
+                          )}
                           <div className="text-xs text-muted-foreground">
                             {request.hr_approver_name && <p>HR: {request.hr_approver_name}</p>}
                             {request.leader_name && <p>Líder: {request.leader_name}</p>}

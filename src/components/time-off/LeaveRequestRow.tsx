@@ -94,8 +94,11 @@ export function LeaveRequestRow({
   actions?: ReactNode;
 }) {
   const status = request.status as LeaveRequestStatus;
+  const isSick = request.leave_type_code === 'sick';
   const colors = LEAVE_STATUS_COLORS[status] || LEAVE_STATUS_COLORS.pending;
-  const label = LEAVE_STATUS_LABELS[status] || status;
+  // La licencia por enfermedad no se aprueba: cuando está 'approved' quiere decir
+  // "vigente". Mostrar "Aprobada" sugeriría que alguien la aprobó, cosa que no pasa.
+  const label = isSick && status === 'approved' ? 'Registrada' : LEAVE_STATUS_LABELS[status] || status;
   const unit =
     request.count_type === 'weeks'
       ? `semana${request.days_requested > 1 ? 's' : ''}`
@@ -143,7 +146,7 @@ export function LeaveRequestRow({
         </p>
       </div>
 
-      {showTrail && !actions && <ApprovalTrail request={request} leaderLabel={leaderLabel} />}
+      {showTrail && !actions && !isSick && <ApprovalTrail request={request} leaderLabel={leaderLabel} />}
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </li>
   );
