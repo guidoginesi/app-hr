@@ -8,6 +8,7 @@ const TABS = [
   { value: 'requests', label: 'Solicitudes', href: '/admin/time-off/requests' },
   { value: 'balances', label: 'Balances', href: '/admin/time-off/balances' },
   { value: 'novedades', label: 'Novedades', href: '/admin/time-off/novedades' },
+  { value: 'ausentismo', label: 'Ausentismo', href: '/admin/time-off/ausentismo' },
   { value: 'certificates', label: 'Certificados', href: '/admin/time-off/certificates' },
   { value: 'settings', label: 'Configuración', href: '/admin/time-off/settings' },
 ] as const;
