@@ -60,6 +60,12 @@ export default async function AyudaLicenciaEnfermedadPage() {
           <p>El estado se <b>calcula solo</b> a partir del archivo y la fecha de inicio; no hay que marcar nada a mano. Un <b>vencido no anula</b> la licencia: la marca para que la reclames. El criterio es acompañar, no sancionar.</p>
           <p>El reclamo tampoco depende de que alguien lo note: al vencer el plazo, el <b>cron diario</b> le manda un <b>recordatorio automático</b> a la persona, por mail y por la campanita. Sale <b>una sola vez</b> por licencia.</p>
           <p>El archivo se abre con un enlace que <b>caduca a los 2 minutos</b>, y quien lo sube es siempre la propia persona: vos lo consultás, no lo cargás.</p>
+          <p className="rounded-lg border border-[var(--border)] bg-muted p-3">
+            <b>La licencia por estudio usa este mismo mecanismo</b>, con los mismos tres estados y el mismo
+            recordatorio, pero el plazo corre desde el <b>fin</b> de la licencia y no desde el inicio: el certificado
+            acredita que la persona rindió, así que recién existe después del examen. Son{' '}
+            <b>{leaveCertRule('study')?.businessDays} días hábiles</b> desde que termina.
+          </p>
         </ManualStep>
 
         <ManualStep
