@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { JobMessages } from "./JobMessages";
+import { TalentPoolSection } from "./TalentPoolSection";
+import { getActiveAreas } from "@/lib/talentPoolServer";
 
 // Revalidate every 60 seconds - jobs don't change that frequently
 export const revalidate = 60;
@@ -35,6 +37,16 @@ export default async function JobsPage() {
     console.error('Error in jobs page:', err);
     jobs = [];
   }
+
+  // Si las áreas fallan, el formulario del banco no se muestra pero el listado
+  // de búsquedas sigue en pie: es lo importante de esta página.
+  let areas: string[] = [];
+  try {
+    areas = (await getActiveAreas()).map((a) => a.name);
+  } catch (err) {
+    console.error('Error fetching talent pool areas:', err);
+  }
+
   return (
     <div className="min-h-screen bg-muted font-sans text-foreground">
       <header className="border-b border-[var(--border)] bg-white shadow-sm">
@@ -105,6 +117,8 @@ export default async function JobsPage() {
             ))}
           </ul>
         )}
+
+        {areas.length > 0 && <TalentPoolSection areas={areas} />}
       </main>
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Stage, StageStatus, StageLabels, StageStatusLabels } from '@/types/funnel';
 import { useDebounce } from '@/lib/useDebounce';
+import { TALENT_POOL_SOURCE, TALENT_POOL_SOURCE_LABEL } from '@/lib/talentPool';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
@@ -45,6 +46,7 @@ type Application = {
 	stage_history?: StageHistory[];
 	recruiter_rating?: number | null;
 	referral_id?: string | null;
+	source?: string | null;
 };
 
 type Candidate = {
@@ -350,6 +352,16 @@ export function CandidatesClient({ candidates, jobs }: CandidatesClientProps) {
 													<span className="text-xs text-muted-foreground">·</span>
 													<span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
 														Referido
+													</span>
+												</>
+											)}
+
+											{/* De dónde salió el perfil: no se postuló, lo trajimos del banco */}
+											{application.source === TALENT_POOL_SOURCE && (
+												<>
+													<span className="text-xs text-muted-foreground">·</span>
+													<span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+														Origen: {TALENT_POOL_SOURCE_LABEL}
 													</span>
 												</>
 											)}

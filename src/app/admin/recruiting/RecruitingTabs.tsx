@@ -7,6 +7,7 @@ const TABS = [
   { value: 'dashboard', label: 'Dashboard', href: '/admin/recruiting' },
   { value: 'busquedas', label: 'Búsquedas', href: '/admin/recruiting/jobs' },
   { value: 'candidatos', label: 'Candidatos', href: '/admin/recruiting/candidates' },
+  { value: 'banco', label: 'Banco de Talentos', href: '/admin/recruiting/banco' },
   { value: 'configuracion', label: 'Configuración', href: '/admin/recruiting/config' },
 ] as const;
 

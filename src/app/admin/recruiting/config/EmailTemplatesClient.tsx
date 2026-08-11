@@ -24,6 +24,7 @@ const TEMPLATE_NAMES: Record<string, string> = {
   'candidate_rejected_salary': 'Email Candidato Descartado (Sueldo)',
   'interview_coordination': 'Email Coordinación Entrevista',
   'interview_leader': 'Email Entrevista con Líder',
+  'talent_pool_confirmation': 'Email Confirmación Banco de Talentos',
 };
 
 // Templates de time-off se gestionan en /admin/time-off/settings
