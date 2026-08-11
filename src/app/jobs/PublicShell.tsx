@@ -29,7 +29,7 @@ export function PublicShell({
       <header className="border-b border-[var(--border)] bg-card">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4 sm:px-8">
           <Link href="/jobs" aria-label="Pow — búsquedas abiertas" className="flex items-center">
-            <Image src="/Logo-Pow.svg" alt="Pow" width={120} height={40} priority className="h-auto" />
+            <Image src="/Logo-Pow.svg" alt="Pow" width={160} height={53} priority className="h-auto" />
           </Link>
           {back && (
             <Link href={back.href} className={buttonVariants({ variant: 'outline' })}>
