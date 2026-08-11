@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Alert } from '@pow/ui/components/ui/alert';
 import { Button } from '@pow/ui/components/ui/button';
 import { Input } from '@pow/ui/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@pow/ui/components/ui/popover';
 import { Select } from '@pow/ui/components/ui/select';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import {
@@ -17,11 +16,14 @@ import {
 } from '@/lib/talentPool';
 
 /**
- * Selector de áreas: desplegable que admite varias.
+ * Selector de áreas.
  *
- * El DS tiene Select y Combobox, pero los dos son de una sola opción, y acá se
- * puede elegir más de un área. Se arma con los mismos primitivos que el
- * Combobox del DS (Popover) para que se vea y se comporte igual que el resto.
+ * Es el Select del DS, el mismo control que "Nivel de experiencia": se elige de
+ * a una y el área se suma abajo. Así admite varias sin inventar un desplegable
+ * propio, que era lo que se sentía ajeno al resto del formulario.
+ *
+ * El área elegida sale de la lista: no tiene sentido ofrecer algo que la
+ * persona ya sumó.
  */
 function AreasSelect({
   areas,
@@ -32,68 +34,33 @@ function AreasSelect({
   selected: string[];
   onToggle: (area: string, checked: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
-
-  const resumen =
-    selected.length === 0
-      ? 'Elegí una o más áreas'
-      : selected.length <= 2
-        ? selected.join(', ')
-        : `${selected.length} áreas elegidas`;
+  const disponibles = areas.filter((a) => !selected.includes(a));
+  const sinOpciones = disponibles.length === 0;
 
   return (
-    <div className="space-y-1.5">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Áreas de interés"
-            className={`inline-flex h-9 w-full items-center justify-between gap-2 rounded-[var(--radius)] border border-input bg-card px-3 text-sm transition-colors hover:border-[var(--gray-300)] focus:outline-none focus:ring-2 focus:ring-ring ${
-              selected.length === 0 ? 'text-muted-foreground' : 'text-foreground'
-            }`}
-          >
-            <span className="truncate">{resumen}</span>
-            <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-1" align="start">
-          <ul className="max-h-64 overflow-y-auto">
-            {areas.map((area) => {
-              const checked = selected.includes(area);
-              return (
-                <li key={area}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={checked}
-                    // El desplegable NO se cierra al elegir: se pueden marcar
-                    // varias sin tener que abrirlo de nuevo cada vez.
-                    onClick={() => onToggle(area, !checked)}
-                    className="flex w-full items-center justify-between gap-2 rounded-[calc(var(--radius)-2px)] px-2.5 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
-                  >
-                    {area}
-                    {checked && <Check className="h-4 w-4 shrink-0 text-brand" strokeWidth={3} />}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </PopoverContent>
-      </Popover>
+    <div className="space-y-2">
+      <Select
+        aria-label="Áreas de interés"
+        // Vuelve siempre al placeholder: el select es para SUMAR, lo elegido
+        // se ve en los chips de abajo.
+        value=""
+        disabled={sinOpciones}
+        onChange={(e) => {
+          if (e.target.value) onToggle(e.target.value, true);
+        }}
+        placeholder={sinOpciones ? 'Ya elegiste todas' : 'Agregá un área'}
+        options={disponibles.map((a) => ({ value: a, label: a }))}
+      />
 
-      {/* Lo elegido queda visible con el desplegable cerrado, y se puede sacar
-          desde acá sin volver a abrirlo. */}
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1">
+        <div className="flex flex-wrap gap-1.5">
           {selected.map((area) => (
             <button
               key={area}
               type="button"
               onClick={() => onToggle(area, false)}
               aria-label={`Quitar ${area}`}
-              className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-muted py-0.5 pl-2.5 pr-1.5 text-xs text-secondary-foreground transition-colors hover:bg-secondary"
+              className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-muted py-1 pl-2.5 pr-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary"
             >
               {area}
               <X className="h-3 w-3" aria-hidden />
