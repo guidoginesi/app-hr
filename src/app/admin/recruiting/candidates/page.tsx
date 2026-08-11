@@ -23,6 +23,7 @@ type Application = {
   stage_history?: any[];
   recruiter_rating?: number | null;
   referral_id?: string | null;
+  source?: string | null;
 };
 
 type Candidate = {
@@ -60,7 +61,7 @@ export default async function RecruitingCandidatesPage() {
   // Obtener todas las aplicaciones con información de IA y funnel
   const { data: applications } = await supabase
     .from('applications')
-    .select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason,recruiter_rating,referral_id')
+    .select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason,recruiter_rating,referral_id,source')
     .order('created_at', { ascending: false });
 
   // Obtener el historial de etapas para todas las aplicaciones
@@ -128,6 +129,7 @@ export default async function RecruitingCandidatesPage() {
           stage_history: stageHistory,
           recruiter_rating: app.recruiter_rating,
           referral_id: app.referral_id ?? null,
+          source: app.source ?? null,
         };
       });
 

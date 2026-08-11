@@ -322,6 +322,10 @@ const KEY_CONFIG: Record<string, KeyConfig> = {
     context: 'Pow · Talento',
     badge: { tone: 'success', label: 'Buenas noticias' },
   },
+  talent_pool_confirmation: {
+    context: 'Pow · Talento',
+    badge: { tone: 'success', label: 'Estás en nuestro radar' },
+  },
   candidate_rejected: { context: 'Pow · Talento' },
   candidate_rejected_location: { context: 'Pow · Talento' },
   candidate_rejected_salary: { context: 'Pow · Talento' },

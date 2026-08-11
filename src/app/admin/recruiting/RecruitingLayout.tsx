@@ -3,7 +3,7 @@ import { AdminShell } from '@/app/admin/AdminShell';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { RecruitingTabs } from './RecruitingTabs';
 
-type RecruitingTab = 'dashboard' | 'busquedas' | 'candidatos' | 'configuracion';
+type RecruitingTab = 'dashboard' | 'busquedas' | 'candidatos' | 'banco' | 'configuracion';
 
 export function RecruitingLayout({
   active,
