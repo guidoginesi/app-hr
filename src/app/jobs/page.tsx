@@ -92,11 +92,12 @@ export default async function JobsPage() {
                   )}
                 </div>
               </div>
-              {/* Naranja: es la acción que queremos que hagan. El botón del
-                  Banco de Talentos queda en tinta, un escalón más abajo. */}
+              {/* Tinta, como toda acción principal de la app. La jerarquía
+                  contra el Banco de Talentos la da el outline de aquel, no el
+                  color: el naranja acá nunca rellena un botón. */}
               <Link
                 href={`/jobs/${job.id}`}
-                className={buttonVariants({ variant: 'brand', className: 'shrink-0' })}
+                className={buttonVariants({ className: 'shrink-0' })}
               >
                 Ver oferta
               </Link>

@@ -186,7 +186,7 @@ export function ApplyForm({ jobId }: ApplyFormProps) {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
-        <Button type="submit" variant="brand" loading={isPending} className="w-full sm:w-auto">
+        <Button type="submit" loading={isPending} className="w-full sm:w-auto">
           Enviar postulación
         </Button>
       </div>

@@ -236,7 +236,6 @@ export function TalentPoolForm({ areas }: { areas: string[] }) {
         <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
         <Button
           type="submit"
-          variant="brand"
           loading={sending || isPending}
           className="w-full sm:w-auto"
         >

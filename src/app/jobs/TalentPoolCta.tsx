@@ -20,9 +20,13 @@ export function TalentPoolCta() {
           Dejanos tus datos y te tenemos en cuenta para las próximas búsquedas.
         </p>
       </div>
-      {/* En tinta y no en naranja: postularse a una búsqueda abierta es lo que
-          queremos que hagan, el banco es la alternativa. */}
-      <Link href="/jobs/banco-de-talentos" className={buttonVariants({ className: 'shrink-0' })}>
+      {/* Outline: postularse a una búsqueda abierta es lo que queremos que
+          hagan, el banco es la alternativa. Así marca la app la jerarquía entre
+          dos acciones, y no con el color. */}
+      <Link
+        href="/jobs/banco-de-talentos"
+        className={buttonVariants({ variant: 'outline', className: 'shrink-0' })}
+      >
         Dejar mis datos
       </Link>
     </Card>
