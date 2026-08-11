@@ -2,32 +2,34 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { Alert } from '@pow/ui/components/ui/alert';
+import { Button } from '@pow/ui/components/ui/button';
+import { Input } from '@pow/ui/components/ui/input';
+import { Select } from '@pow/ui/components/ui/select';
 
 interface ApplyFormProps {
   jobId: string;
   jobTitle: string;
 }
 
-export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
+/** Estilo del input de archivo: no hay componente de DS para file. */
+const fileInputClass =
+  'w-full rounded-[var(--radius)] border border-input bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-[var(--gray-300)] file:mr-3 file:rounded-[var(--radius)] file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring';
+
+export function ApplyForm({ jobId }: ApplyFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [salaryDisplay, setSalaryDisplay] = useState<string>('');
-  
+
   // Formatear expectativa salarial mientras escribe
   function handleSalaryChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    // Remover todo excepto números
-    const onlyNumbers = value.replace(/\D/g, '');
-    
+    const onlyNumbers = e.target.value.replace(/\D/g, '');
     if (onlyNumbers === '') {
       setSalaryDisplay('');
       return;
     }
-    
-    // Formatear con separadores de miles
-    const formatted = new Intl.NumberFormat('es-AR').format(parseInt(onlyNumbers));
-    setSalaryDisplay(formatted);
+    setSalaryDisplay(new Intl.NumberFormat('es-AR').format(parseInt(onlyNumbers)));
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -35,13 +37,13 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    
+
     // Asegurarse de enviar solo números para salary
     const salaryValue = salaryDisplay.replace(/\D/g, '');
     if (salaryValue) {
       formData.set('salaryExpectation', salaryValue);
     }
-    
+
     try {
       const response = await fetch('/api/candidates', {
         method: 'POST',
@@ -69,166 +71,121 @@ export function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
       startTransition(() => {
         router.push('/jobs?submitted=1');
       });
-    } catch (err) {
+    } catch {
       setError('Error al enviar la aplicación. Por favor intenta nuevamente.');
     }
   }
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
+    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
       <form onSubmit={handleSubmit} className="space-y-8">
         <input type="hidden" name="jobId" value={jobId} />
 
-      {/* My information */}
-      <section>
-        <h2 className="mb-2 text-xl font-bold text-foreground">Mi información</h2>
-        <p className="mb-6 text-sm text-muted-foreground">Completá la información a continuación</p>
-
-        <div className="space-y-4">
+        <section className="space-y-4">
           <div>
-            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
-              Nombre completo *
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              placeholder="Nombre completo"
-              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-            />
+            <h2 className="text-base font-semibold text-foreground">Mi información</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Completá la información a continuación.
+            </p>
           </div>
 
-          <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-              Dirección de email *
-            </label>
-            <input
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input id="name" name="name" label="Nombre completo" required placeholder="Nombre y apellido" />
+            <Input
               id="email"
               name="email"
               type="email"
+              label="Dirección de email"
               required
-              placeholder="Tu dirección de email"
-              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              placeholder="tu@mail.com"
             />
-          </div>
 
-          <div>
-            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
-              Número de teléfono *
-            </label>
-            <div className="flex gap-2">
-              <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-white px-3 py-2.5">
-                <span className="text-sm text-muted-foreground">🇦🇷</span>
-                <span className="text-sm font-medium text-foreground">Argentina</span>
+            <div className="space-y-1.5">
+              <label htmlFor="phone" className="block text-sm font-medium text-secondary-foreground">
+                Número de teléfono
+                <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
+              </label>
+              <div className="flex gap-2">
+                <span className="inline-flex h-9 shrink-0 items-center rounded-[var(--radius)] border border-input bg-muted px-3 text-sm text-muted-foreground">
+                  🇦🇷 +54
+                </span>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  placeholder="11 5555 5555"
+                  className="h-9 w-full rounded-[var(--radius)] border border-input bg-card px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground hover:border-[var(--gray-300)] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                />
               </div>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                placeholder="+54"
-                className="flex-1 rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-              />
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="provincia" className="mb-1.5 block text-sm font-medium text-foreground">
-              Provincia *
-            </label>
-            <select
+            <Select
               id="provincia"
               name="provincia"
+              label="Provincia"
               required
-              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-            >
-              <option value="">Seleccionar provincia</option>
-              <option value="CABA">CABA</option>
-              <option value="GBA">GBA</option>
-              <option value="OTRA">Otra</option>
-            </select>
+              defaultValue=""
+              placeholder="Seleccionar provincia"
+              options={[
+                { value: 'CABA', label: 'CABA' },
+                { value: 'GBA', label: 'GBA' },
+                { value: 'OTRA', label: 'Otra' },
+              ]}
+            />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Questions */}
-      <section>
-        <h2 className="mb-2 text-xl font-bold text-foreground">Información adicional</h2>
-        <p className="mb-6 text-sm text-muted-foreground">Completá la información adicional</p>
-
-        <div className="space-y-4">
+        <section className="space-y-4">
           <div>
-            <label htmlFor="linkedinUrl" className="mb-1.5 block text-sm font-medium text-foreground">
-              Perfil de LinkedIn (URL)
-            </label>
-            <input
+            <h2 className="text-base font-semibold text-foreground">Información adicional</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">Opcional, pero nos ayuda a conocerte.</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
               id="linkedinUrl"
               name="linkedinUrl"
               type="url"
+              label="Perfil de LinkedIn"
               placeholder="https://linkedin.com/in/tuperfil"
-              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            <Input
+              id="salaryExpectation"
+              name="salaryExpectation"
+              label="Expectativa salarial mensual neta"
+              value={salaryDisplay}
+              onChange={handleSalaryChange}
+              placeholder="Ej: 1.500.000"
+              inputMode="numeric"
             />
           </div>
+        </section>
+
+        <section className="space-y-1.5">
+          <label htmlFor="resume" className="block text-sm font-medium text-secondary-foreground">
+            CV / Currículum
+            <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="resume"
+            name="resume"
+            type="file"
+            required
+            accept=".pdf,.doc,.docx,.txt"
+            className={fileInputClass}
+          />
+        </section>
+
+        {error && <Alert variant="danger">{error}</Alert>}
+
+        <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
+          <Button type="submit" size="lg" loading={isPending} className="w-full sm:w-auto">
+            Enviar postulación
+          </Button>
         </div>
-      </section>
-
-      {/* Salary Expectation */}
-      <section>
-        <label htmlFor="salaryExpectation" className="mb-1.5 block text-sm font-medium text-foreground">
-          ¿Cuál es tu expectativa salarial mensual neta (mano)?
-        </label>
-        <input
-          id="salaryExpectation"
-          name="salaryExpectation"
-          type="text"
-          value={salaryDisplay}
-          onChange={handleSalaryChange}
-          placeholder="Ej: 1.500.000"
-          className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-      </section>
-
-      {/* CV Upload */}
-      <section>
-        <label htmlFor="resume" className="mb-1.5 block text-sm font-medium text-foreground">
-          CV / Currículum *
-        </label>
-        <input
-          id="resume"
-          name="resume"
-          type="file"
-          required
-          accept=".pdf,.doc,.docx,.txt"
-          className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground file:mr-4 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground hover:file:bg-secondary focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-        />
-      </section>
-
-      {error && (
-        <div className="rounded-lg border border-danger/20 bg-danger-subtle p-4">
-          <p className="text-sm font-medium text-[var(--red-600)]">{error}</p>
-        </div>
-      )}
-
-      <div className="text-xs text-muted-foreground">
-        Todos los campos marcados con * son obligatorios.
-      </div>
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full rounded-lg bg-black px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isPending && (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          )}
-          {isPending ? 'Enviando...' : 'Enviar'}
-        </button>
       </form>
     </div>
   );
 }
-

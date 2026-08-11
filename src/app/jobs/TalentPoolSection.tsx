@@ -1,6 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Check } from 'lucide-react';
+import { Alert } from '@pow/ui/components/ui/alert';
+import { Button } from '@pow/ui/components/ui/button';
+import { Input } from '@pow/ui/components/ui/input';
+import { Select } from '@pow/ui/components/ui/select';
+import { Textarea } from '@pow/ui/components/ui/textarea';
 import {
   MAX_MESSAGE_LENGTH,
   MAX_NAME_LENGTH,
@@ -14,16 +20,45 @@ import {
  * Va desplegable dentro del listado y no en una página aparte: quien llega y no
  * encuentra una búsqueda que le sirva se va del sitio, y un clic más es un clic
  * donde se pierde.
- *
- * El estilo sigue al del portal público (blanco, borde suave, botón negro), que
- * es anterior al design system de la app. Mezclar los dos acá se vería peor que
- * ser consistente con lo que el candidato ya está mirando.
  */
 
-const inputClass =
-  'w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black';
-
-const labelClass = 'mb-1.5 block text-sm font-medium text-foreground';
+/**
+ * Chip de área. Es toda la tarjeta la que actúa de checkbox, y no un cuadradito
+ * metido adentro de un `<label>`: el Checkbox del DS renderiza un `<button>`, y
+ * un label no le reenvía el clic, así que de toda la tarjeta respondían sólo
+ * 16px. El cuadradito de acá es decorativo; el control accesible es el botón.
+ */
+function AreaChip({
+  area,
+  checked,
+  onToggle,
+}: {
+  area: string;
+  checked: boolean;
+  onToggle: (area: string, checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={() => onToggle(area, !checked)}
+      className={`flex items-center gap-2 rounded-[var(--radius)] border px-3 py-2 text-left text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        checked ? 'border-primary bg-muted' : 'border-input hover:bg-muted'
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`grid h-4 w-4 shrink-0 place-items-center rounded-[calc(var(--radius)-3px)] border transition-colors ${
+          checked ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-card'
+        }`}
+      >
+        {checked && <Check className="h-3 w-3" strokeWidth={3} />}
+      </span>
+      {area}
+    </button>
+  );
+}
 
 export function TalentPoolSection({ areas }: { areas: string[] }) {
   const [open, setOpen] = useState(false);
@@ -31,13 +66,20 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
+  // Los checkboxes del DS son de Radix y no emiten un campo de formulario:
+  // las áreas se mandan a mano al armar el FormData.
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+
+  function toggleArea(area: string, checked: boolean) {
+    setSelectedAreas((prev) => (checked ? [...prev, area] : prev.filter((a) => a !== area)));
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    const form = event.currentTarget;
-    const formData = new FormData(form);
+    const formData = new FormData(event.currentTarget);
+    selectedAreas.forEach((a) => formData.append('areas', a));
 
     const file = formData.get('resume');
     if (!(file instanceof File) || file.size === 0) {
@@ -50,7 +92,7 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
       setError('El archivo supera el límite de 10MB.');
       return;
     }
-    if (formData.getAll('areas').length === 0) {
+    if (selectedAreas.length === 0) {
       setError('Elegí al menos un área de interés.');
       return;
     }
@@ -73,8 +115,8 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
 
   if (done) {
     return (
-      <section className="mt-8 rounded-xl border border-[var(--border)] bg-white p-8 text-center shadow-sm">
-        <h2 className="text-lg font-semibold text-foreground">¡Listo, ya te sumamos!</h2>
+      <section className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-8 text-center">
+        <h2 className="text-base font-semibold text-foreground">¡Listo, ya te sumamos!</h2>
         <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
           Tus datos quedaron en nuestro Banco de Talentos y te mandamos un mail de confirmación.
           Cuando abramos una búsqueda que tenga que ver con lo tuyo, te escribimos.
@@ -84,27 +126,23 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
   }
 
   return (
-    <section className="mt-8 rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
+    <section className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">¿No encontrás lo que buscás?</h2>
+          <h2 className="text-base font-semibold text-foreground">¿No encontrás lo que buscás?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Dejanos tus datos y te tenemos en cuenta para las próximas búsquedas.
           </p>
         </div>
         {!open && (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="shrink-0 rounded-md bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-secondary"
-          >
+          <Button size="lg" className="shrink-0" onClick={() => setOpen(true)}>
             Dejar mis datos
-          </button>
+          </Button>
         )}
       </div>
 
       {open && (
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6 border-t border-[var(--border)] pt-8">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6 border-t border-[var(--border)] pt-6">
           {/* Campo trampa: invisible para una persona, irresistible para un bot. */}
           <input
             type="text"
@@ -116,106 +154,78 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="tp-name" className={labelClass}>
-                Nombre completo *
-              </label>
-              <input
-                id="tp-name"
-                name="name"
-                type="text"
-                required
-                maxLength={MAX_NAME_LENGTH}
-                placeholder="Nombre y apellido"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tp-email" className={labelClass}>
-                Mail *
-              </label>
-              <input
-                id="tp-email"
-                name="email"
-                type="email"
-                required
-                placeholder="tu@mail.com"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tp-linkedin" className={labelClass}>
-                LinkedIn o portfolio
-              </label>
-              <input
-                id="tp-linkedin"
-                name="linkedinUrl"
-                type="text"
-                placeholder="linkedin.com/in/tuperfil"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tp-seniority" className={labelClass}>
-                Nivel de experiencia *
-              </label>
-              <select id="tp-seniority" name="seniority" required defaultValue="" className={inputClass}>
-                <option value="" disabled>
-                  Elegí una opción
-                </option>
-                {SENIORITY_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Input
+              id="tp-name"
+              name="name"
+              label="Nombre completo"
+              required
+              maxLength={MAX_NAME_LENGTH}
+              placeholder="Nombre y apellido"
+            />
+            <Input
+              id="tp-email"
+              name="email"
+              type="email"
+              label="Mail"
+              required
+              placeholder="tu@mail.com"
+            />
+            <Input
+              id="tp-linkedin"
+              name="linkedinUrl"
+              label="LinkedIn o portfolio"
+              placeholder="linkedin.com/in/tuperfil"
+            />
+            <Select
+              id="tp-seniority"
+              name="seniority"
+              label="Nivel de experiencia"
+              required
+              defaultValue=""
+              placeholder="Elegí una opción"
+              options={SENIORITY_OPTIONS.map((s) => ({ value: s, label: s }))}
+            />
           </div>
 
-          <fieldset>
-            <legend className={labelClass}>Áreas de interés * (podés elegir más de una)</legend>
+          <fieldset className="space-y-1.5">
+            <legend className="text-sm font-medium text-secondary-foreground">
+              Áreas de interés
+              <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
+              <span className="ml-1.5 font-normal text-muted-foreground">
+                (podés elegir más de una)
+              </span>
+            </legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {areas.map((area) => (
-                <label
+                <AreaChip
                   key={area}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
-                >
-                  <input
-                    type="checkbox"
-                    name="areas"
-                    value={area}
-                    className="h-4 w-4 rounded border-[var(--border)] accent-black"
-                  />
-                  {area}
-                </label>
+                  area={area}
+                  checked={selectedAreas.includes(area)}
+                  onToggle={toggleArea}
+                />
               ))}
             </div>
           </fieldset>
 
           <div>
-            <label htmlFor="tp-message" className={labelClass}>
-              ¿Por qué te gustaría trabajar en Pow?
-            </label>
-            <textarea
+            <Textarea
               id="tp-message"
               name="message"
+              label="¿Por qué te gustaría trabajar en Pow?"
               rows={4}
               maxLength={MAX_MESSAGE_LENGTH}
               onChange={(e) => setMessageLength(e.target.value.length)}
               placeholder="Contanos en pocas líneas qué te interesa y qué venís haciendo."
-              className={inputClass}
             />
             <p className="mt-1 text-right text-xs text-muted-foreground">
               {messageLength}/{MAX_MESSAGE_LENGTH}
             </p>
           </div>
 
-          <div>
-            <label htmlFor="tp-resume" className={labelClass}>
-              CV *
+          <div className="space-y-1.5">
+            <label htmlFor="tp-resume" className="block text-sm font-medium text-secondary-foreground">
+              CV
+              <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
             </label>
             <input
               id="tp-resume"
@@ -223,34 +233,22 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
               type="file"
               required
               accept=".pdf,.doc,.docx"
-              className="w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-foreground file:mr-4 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="w-full rounded-[var(--radius)] border border-input bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-[var(--gray-300)] file:mr-3 file:rounded-[var(--radius)] file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="mt-1 text-xs text-muted-foreground">PDF o Word, hasta 10MB.</p>
+            <p className="text-xs text-muted-foreground">PDF o Word, hasta 10MB.</p>
           </div>
 
-          {error && (
-            <div className="rounded-lg border border-danger/20 bg-danger-subtle p-4">
-              <p className="text-sm font-medium text-[var(--red-600)]">{error}</p>
-            </div>
-          )}
+          {error && <Alert variant="danger">{error}</Alert>}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-md border border-[var(--border)] px-6 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-              >
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" size="lg" onClick={() => setOpen(false)}>
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={sending}
-                className="rounded-md bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {sending ? 'Enviando...' : 'Enviar'}
-              </button>
+              </Button>
+              <Button type="submit" size="lg" loading={sending}>
+                Enviar
+              </Button>
             </div>
           </div>
         </form>

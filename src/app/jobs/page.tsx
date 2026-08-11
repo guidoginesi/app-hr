@@ -1,8 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Briefcase, Home, MapPin } from "lucide-react";
+import { buttonVariants } from "@pow/ui/components/ui/button";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { JobMessages } from "./JobMessages";
+import { PublicShell } from "./PublicShell";
 import { TalentPoolSection } from "./TalentPoolSection";
 import { getActiveAreas } from "@/lib/talentPoolServer";
 
@@ -26,7 +28,7 @@ export default async function JobsPage() {
       .select("*")
       .eq("is_published", true)
       .order("created_at", { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching jobs:', error);
       jobs = [];
@@ -48,79 +50,67 @@ export default async function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted font-sans text-foreground">
-      <header className="border-b border-[var(--border)] bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-4">
-          <div className="flex items-center">
-            <Image src="/Logo-Pow.svg" alt="Pow" width={150} height={50} priority className="h-auto" />
-          </div>
-          <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Trabaja con nosotros
-          </Link>
-        </div>
-      </header>
+    <PublicShell>
+      <div>
+        <h1 className="type-display">Oportunidades actuales</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Postulate a las posiciones abiertas que tenemos disponibles.
+        </p>
+      </div>
 
-      <main className="mx-auto max-w-5xl px-8 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Oportunidades actuales</h1>
+      <Suspense fallback={null}>
+        <div className="mt-6 empty:mt-0">
+          <JobMessages />
+        </div>
+      </Suspense>
+
+      {jobs.length === 0 ? (
+        <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-12 text-center">
+          <p className="text-sm font-medium text-foreground">
+            No hay búsquedas publicadas por el momento
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Postúlate a las posiciones abiertas que tenemos disponibles
+            Dejanos tus datos acá abajo y te avisamos cuando abramos una.
           </p>
         </div>
-        
-        <Suspense fallback={null}>
-          <JobMessages />
-        </Suspense>
-        
-        {jobs.length === 0 ? (
-          <div className="rounded-xl border border-[var(--border)] bg-white p-12 text-center shadow-sm">
-            <p className="text-sm font-medium text-muted-foreground">No hay búsquedas publicadas por el momento</p>
-            <p className="mt-1 text-xs text-muted-foreground">Vuelve pronto para ver nuevas oportunidades</p>
-          </div>
-        ) : (
-          <ul className="space-y-4">
-            {jobs.map((job) => (
-              <li key={job.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-muted p-6 transition-shadow hover:shadow-md">
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-foreground">{job.title}</h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
-                      <span>{job.work_mode || 'Remota'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span>{job.location || 'Buenos Aires, Buenos Aires, Argentina'}</span>
-                    </div>
-                    {job.department && (
-                      <div className="flex items-center gap-1.5">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span>{job.department}</span>
-                      </div>
-                    )}
-                  </div>
+      ) : (
+        <ul className="mt-6 space-y-3">
+          {jobs.map((job) => (
+            <li
+              key={job.id}
+              className="flex flex-col gap-4 rounded-[var(--radius)] border border-[var(--border)] bg-card p-6 transition-colors hover:border-[var(--gray-300)] sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold text-foreground">{job.title}</h2>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Home className="h-4 w-4 shrink-0" aria-hidden />
+                    {job.work_mode || 'Remota'}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                    {job.location || 'Buenos Aires, Argentina'}
+                  </span>
+                  {job.department && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Briefcase className="h-4 w-4 shrink-0" aria-hidden />
+                      {job.department}
+                    </span>
+                  )}
                 </div>
-                <Link
-                  href={`/jobs/${job.id}`}
-                  className="ml-6 rounded-md bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-secondary"
-                >
-                  Ver oferta
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+              </div>
+              <Link
+                href={`/jobs/${job.id}`}
+                className={buttonVariants({ size: 'lg', className: 'shrink-0' })}
+              >
+                Ver oferta
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
-        {areas.length > 0 && <TalentPoolSection areas={areas} />}
-      </main>
-    </div>
+      {areas.length > 0 && <TalentPoolSection areas={areas} />}
+    </PublicShell>
   );
 }
-
