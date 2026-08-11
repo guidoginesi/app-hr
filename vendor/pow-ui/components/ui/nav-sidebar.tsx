@@ -8,6 +8,14 @@ export interface NavItem {
   href?: string;
   icon?: LucideIcon;
   active?: boolean;
+  /**
+   * Punto de novedad a la derecha del ítem. Es un punto y no un número a
+   * propósito: dice "acá entró algo", que es lo que se decide de un vistazo;
+   * cuántos son se ve adentro del módulo.
+   */
+  badge?: boolean;
+  /** Texto para lectores de pantalla cuando `badge` está prendido. */
+  badgeLabel?: string;
 }
 export interface NavGroup {
   label?: string;
@@ -52,6 +60,12 @@ export function NavSidebar({
                   >
                     {Icon && <Icon className={cn("h-4 w-4 shrink-0", it.active && "text-brand")} />}
                     <span className="truncate">{it.label}</span>
+                    {it.badge && (
+                      <span className="ml-auto flex shrink-0 items-center">
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />
+                        <span className="sr-only">{it.badgeLabel ?? "Tiene novedades"}</span>
+                      </span>
+                    )}
                   </Comp>
                 );
               })}
