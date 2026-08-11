@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { Check } from 'lucide-react';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { Alert } from '@pow/ui/components/ui/alert';
 import { Button } from '@pow/ui/components/ui/button';
 import { Input } from '@pow/ui/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@pow/ui/components/ui/popover';
 import { Select } from '@pow/ui/components/ui/select';
 import { Textarea } from '@pow/ui/components/ui/textarea';
 import {
@@ -16,40 +17,91 @@ import {
 } from '@/lib/talentPool';
 
 /**
- * Chip de área. Es toda la tarjeta la que actúa de checkbox, y no un cuadradito
- * metido adentro de un `<label>`: el Checkbox del DS renderiza un `<button>`, y
- * un label no le reenvía el clic, así que de toda la tarjeta respondían sólo
- * 16px. El cuadradito de acá es decorativo; el control accesible es el botón.
+ * Selector de áreas: desplegable que admite varias.
+ *
+ * El DS tiene Select y Combobox, pero los dos son de una sola opción, y acá se
+ * puede elegir más de un área. Se arma con los mismos primitivos que el
+ * Combobox del DS (Popover) para que se vea y se comporte igual que el resto.
  */
-function AreaChip({
-  area,
-  checked,
+function AreasSelect({
+  areas,
+  selected,
   onToggle,
 }: {
-  area: string;
-  checked: boolean;
+  areas: string[];
+  selected: string[];
   onToggle: (area: string, checked: boolean) => void;
 }) {
+  const [open, setOpen] = useState(false);
+
+  const resumen =
+    selected.length === 0
+      ? 'Elegí una o más áreas'
+      : selected.length <= 2
+        ? selected.join(', ')
+        : `${selected.length} áreas elegidas`;
+
   return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      onClick={() => onToggle(area, !checked)}
-      className={`flex items-center gap-2 rounded-[var(--radius)] border px-3 py-2 text-left text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        checked ? 'border-primary bg-muted' : 'border-input hover:bg-muted'
-      }`}
-    >
-      <span
-        aria-hidden
-        className={`grid h-4 w-4 shrink-0 place-items-center rounded-[calc(var(--radius)-3px)] border transition-colors ${
-          checked ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-card'
-        }`}
-      >
-        {checked && <Check className="h-3 w-3" strokeWidth={3} />}
-      </span>
-      {area}
-    </button>
+    <div className="space-y-1.5">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            role="combobox"
+            aria-expanded={open}
+            aria-label="Áreas de interés"
+            className={`inline-flex h-9 w-full items-center justify-between gap-2 rounded-[var(--radius)] border border-input bg-card px-3 text-sm transition-colors hover:border-[var(--gray-300)] focus:outline-none focus:ring-2 focus:ring-ring ${
+              selected.length === 0 ? 'text-muted-foreground' : 'text-foreground'
+            }`}
+          >
+            <span className="truncate">{resumen}</span>
+            <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-1" align="start">
+          <ul className="max-h-64 overflow-y-auto">
+            {areas.map((area) => {
+              const checked = selected.includes(area);
+              return (
+                <li key={area}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={checked}
+                    // El desplegable NO se cierra al elegir: se pueden marcar
+                    // varias sin tener que abrirlo de nuevo cada vez.
+                    onClick={() => onToggle(area, !checked)}
+                    className="flex w-full items-center justify-between gap-2 rounded-[calc(var(--radius)-2px)] px-2.5 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                  >
+                    {area}
+                    {checked && <Check className="h-4 w-4 shrink-0 text-brand" strokeWidth={3} />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </PopoverContent>
+      </Popover>
+
+      {/* Lo elegido queda visible con el desplegable cerrado, y se puede sacar
+          desde acá sin volver a abrirlo. */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {selected.map((area) => (
+            <button
+              key={area}
+              type="button"
+              onClick={() => onToggle(area, false)}
+              aria-label={`Quitar ${area}`}
+              className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-muted py-0.5 pl-2.5 pr-1.5 text-xs text-secondary-foreground transition-colors hover:bg-secondary"
+            >
+              {area}
+              <X className="h-3 w-3" aria-hidden />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -172,25 +224,16 @@ export function TalentPoolForm({ areas }: { areas: string[] }) {
             </p>
           </div>
 
-          <fieldset className="space-y-1.5">
-            <legend className="text-sm font-medium text-secondary-foreground">
+          <div className="space-y-1.5 sm:max-w-sm">
+            <p className="text-sm font-medium text-secondary-foreground">
               Áreas de interés
               <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
               <span className="ml-1.5 font-normal text-muted-foreground">
                 (podés elegir más de una)
               </span>
-            </legend>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {areas.map((area) => (
-                <AreaChip
-                  key={area}
-                  area={area}
-                  checked={selectedAreas.includes(area)}
-                  onToggle={toggleArea}
-                />
-              ))}
-            </div>
-          </fieldset>
+            </p>
+            <AreasSelect areas={areas} selected={selectedAreas} onToggle={toggleArea} />
+          </div>
 
           <div>
             <Textarea
