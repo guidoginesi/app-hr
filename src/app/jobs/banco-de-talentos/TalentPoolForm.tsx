@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 import { Check } from 'lucide-react';
 import { Alert } from '@pow/ui/components/ui/alert';
 import { Button } from '@pow/ui/components/ui/button';
@@ -13,14 +14,6 @@ import {
   MAX_RESUME_BYTES,
   SENIORITY_OPTIONS,
 } from '@/lib/talentPool';
-
-/**
- * "¿No encontrás lo que buscás?" — Banco de Talentos.
- *
- * Va desplegable dentro del listado y no en una página aparte: quien llega y no
- * encuentra una búsqueda que le sirva se va del sitio, y un clic más es un clic
- * donde se pierde.
- */
 
 /**
  * Chip de área. Es toda la tarjeta la que actúa de checkbox, y no un cuadradito
@@ -60,14 +53,14 @@ function AreaChip({
   );
 }
 
-export function TalentPoolSection({ areas }: { areas: string[] }) {
-  const [open, setOpen] = useState(false);
+export function TalentPoolForm({ areas }: { areas: string[] }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
-  // Los checkboxes del DS son de Radix y no emiten un campo de formulario:
-  // las áreas se mandan a mano al armar el FormData.
+  // Las áreas viven en estado y no en inputs: el chip es un <button>, no un
+  // checkbox nativo, así que no aparece solo en el FormData.
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
 
   function toggleArea(area: string, checked: boolean) {
@@ -81,6 +74,10 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
     const formData = new FormData(event.currentTarget);
     selectedAreas.forEach((a) => formData.append('areas', a));
 
+    if (selectedAreas.length === 0) {
+      setError('Elegí al menos un área de interés.');
+      return;
+    }
     const file = formData.get('resume');
     if (!(file instanceof File) || file.size === 0) {
       setError('Adjuntá tu CV para que podamos tenerte en cuenta.');
@@ -92,10 +89,6 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
       setError('El archivo supera el límite de 10MB.');
       return;
     }
-    if (selectedAreas.length === 0) {
-      setError('Elegí al menos un área de interés.');
-      return;
-    }
 
     setSending(true);
     try {
@@ -105,7 +98,9 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
         setError(data?.error ?? 'No pudimos guardar tus datos. Probá de nuevo en un rato.');
         return;
       }
-      setDone(true);
+      // Mismo cierre que la postulación a una búsqueda: vuelve al listado con
+      // el aviso arriba, en vez de dejar a la persona en un formulario vacío.
+      startTransition(() => router.push('/jobs?talento=1'));
     } catch {
       setError('No pudimos guardar tus datos. Revisá tu conexión y probá de nuevo.');
     } finally {
@@ -113,45 +108,26 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
     }
   }
 
-  if (done) {
-    return (
-      <section className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-8 text-center">
-        <h2 className="text-base font-semibold text-foreground">¡Listo, ya te sumamos!</h2>
-        <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-          Tus datos quedaron en nuestro Banco de Talentos y te mandamos un mail de confirmación.
-          Cuando abramos una búsqueda que tenga que ver con lo tuyo, te escribimos.
-        </p>
-      </section>
-    );
-  }
-
   return (
-    <section className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">¿No encontrás lo que buscás?</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Dejanos tus datos y te tenemos en cuenta para las próximas búsquedas.
-          </p>
-        </div>
-        {!open && (
-          <Button size="lg" className="shrink-0" onClick={() => setOpen(true)}>
-            Dejar mis datos
-          </Button>
-        )}
-      </div>
+    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Campo trampa: invisible para una persona, irresistible para un bot. */}
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className="hidden"
+        />
 
-      {open && (
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6 border-t border-[var(--border)] pt-6">
-          {/* Campo trampa: invisible para una persona, irresistible para un bot. */}
-          <input
-            type="text"
-            name="website"
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-            className="hidden"
-          />
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Mi información</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Completá la información a continuación.
+            </p>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
@@ -185,6 +161,15 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
               placeholder="Elegí una opción"
               options={SENIORITY_OPTIONS.map((s) => ({ value: s, label: s }))}
             />
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Qué te interesa</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Nos sirve para avisarte cuando abramos algo de lo tuyo.
+            </p>
           </div>
 
           <fieldset className="space-y-1.5">
@@ -221,38 +206,38 @@ export function TalentPoolSection({ areas }: { areas: string[] }) {
               {messageLength}/{MAX_MESSAGE_LENGTH}
             </p>
           </div>
+        </section>
 
-          <div className="space-y-1.5">
-            <label htmlFor="tp-resume" className="block text-sm font-medium text-secondary-foreground">
-              CV
-              <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="tp-resume"
-              name="resume"
-              type="file"
-              required
-              accept=".pdf,.doc,.docx"
-              className="w-full rounded-[var(--radius)] border border-input bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-[var(--gray-300)] file:mr-3 file:rounded-[var(--radius)] file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <p className="text-xs text-muted-foreground">PDF o Word, hasta 10MB.</p>
-          </div>
+        <section className="space-y-1.5">
+          <label htmlFor="tp-resume" className="block text-sm font-medium text-secondary-foreground">
+            CV
+            <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="tp-resume"
+            name="resume"
+            type="file"
+            required
+            accept=".pdf,.doc,.docx"
+            className="w-full rounded-[var(--radius)] border border-input bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-[var(--gray-300)] file:mr-3 file:rounded-[var(--radius)] file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <p className="text-xs text-muted-foreground">PDF o Word, hasta 10MB.</p>
+        </section>
 
-          {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="lg" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" size="lg" loading={sending}>
-                Enviar
-              </Button>
-            </div>
-          </div>
-        </form>
-      )}
-    </section>
+        <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
+          <Button
+            type="submit"
+            size="lg"
+            loading={sending || isPending}
+            className="w-full sm:w-auto"
+          >
+            Enviar mis datos
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }
