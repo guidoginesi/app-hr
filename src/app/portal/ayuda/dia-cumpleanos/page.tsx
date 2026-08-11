@@ -28,6 +28,7 @@ export default async function Page() {
 
       <div className="mt-8 space-y-8">
         <ManualStep
+          image="/manual/dia-cumpleanos/01-saldo.png"
           n={1}
           title="Se acredita solo"
           imageAlt="Aviso en el portal informando que el día de cumpleaños está disponible."
@@ -38,6 +39,7 @@ export default async function Page() {
         </ManualStep>
 
         <ManualStep
+          image="/manual/dia-cumpleanos/03-form.png"
           n={2}
           title="Cuándo podés tomarlo"
           imageAlt="Formulario de nueva solicitud con el tipo Día de cumpleaños elegido y su nota de ventana."
@@ -48,6 +50,7 @@ export default async function Page() {
         </ManualStep>
 
         <ManualStep
+          image="/manual/dia-cumpleanos/02-selector.png"
           n={3}
           title="Cómo pedirlo"
           imageAlt="Selector de tipo de licencia con la opción Día de cumpleaños."
@@ -75,6 +78,7 @@ export default async function Page() {
         </ManualStep>
 
         <ManualStep
+          image="/manual/dia-cumpleanos/01-saldo.png"
           n={6}
           title="Casos particulares"
           imageAlt="Saldo de día de cumpleaños en el portal."
@@ -86,8 +90,7 @@ export default async function Page() {
       </div>
 
       <p className="mt-8 text-sm text-muted-foreground">
-        Las capturas de esta guía se agregan en breve. Si algo no coincide con lo que ves en pantalla, escribinos por
-        Consultas.
+        Si algo no coincide con lo que ves en pantalla, escribinos por Consultas.
       </p>
     </PortalAyudaLayout>
   );
