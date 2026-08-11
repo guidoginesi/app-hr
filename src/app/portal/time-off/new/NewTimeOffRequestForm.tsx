@@ -401,7 +401,16 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
                     // beneficio en vez de como una licencia que se justifica.
                     label: isUnlimitedLeaveType(type.code)
                       ? type.name
-                      : `${type.name} - Disponible: ${getAvailableDays(type.id)} ${type.count_type === 'weeks' ? 'semanas' : 'días'}`,
+                      : (() => {
+                          // El singular importa desde que existe el día de
+                          // cumpleaños, que siempre es 1: decía "1 días".
+                          const n = getAvailableDays(type.id);
+                          const semanas = type.count_type === 'weeks';
+                          const unidad = semanas
+                            ? n === 1 ? 'semana' : 'semanas'
+                            : n === 1 ? 'día' : 'días';
+                          return `${type.name} - Disponible: ${n} ${unidad}`;
+                        })(),
                   }))}
                 />
               )}
