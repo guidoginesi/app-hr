@@ -9,6 +9,7 @@ import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
 import { runInquiryAutomations } from '@/lib/inquiryAutomations';
 import { runLeaveCertificateReminders } from '@/lib/leaveCertificateReminders';
 import { runBirthdayLeaveAutomation } from '@/lib/birthdayLeaveAutomation';
+import { sendTalentPoolDigest } from '@/lib/talentPoolDigest';
 import { publishScheduledMessages } from '@/lib/scheduledMessages';
 import { Resend } from 'resend';
 
@@ -105,6 +106,7 @@ export async function GET(req: NextRequest) {
     approvalDigests: { sent: [] as string[], errors: [] as string[] },
     receiptReminders: { sent: 0, skipped: 0 },
     inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
+    talentPool: { sent: [] as string[], nuevos: 0 },
     leaveCertificates: { enviados: 0, errores: [] as string[] },
     birthdayLeave: { acreditados: [] as string[], vencidos: [] as string[], errores: [] as string[] },
     scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
@@ -388,6 +390,13 @@ export async function GET(req: NextRequest) {
     results.birthdayLeave = await runBirthdayLeaveAutomation();
   } catch (e: any) {
     results.errors.push(`Birthday leave: ${e.message}`);
+  }
+
+  // ── BANCO DE TALENTOS: resumen a People ────────────────────────
+  try {
+    results.talentPool = await sendTalentPoolDigest();
+  } catch (e: any) {
+    results.errors.push(`Talent pool digest: ${e.message}`);
   }
 
   // ── MENSAJES PROGRAMADOS ───────────────────────────────────────

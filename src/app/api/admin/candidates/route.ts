@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
 				});
 			if (uploadError) throw uploadError;
 
-			const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(uploadData.path);
-			const resumeUrl = publicUrlData.publicUrl;
+			// El path, no la URL pública: el bucket es privado y el link se firma al abrir.
+			const resumeUrl = uploadData.path;
 
 			// Crear aplicación con CV usando nuevo modelo
 			// CV_RECEIVED se completa automáticamente y pasa a HR_REVIEW

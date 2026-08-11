@@ -64,6 +64,35 @@ function build(): Record<string, { label: string; html: string }> {
     }),
   };
 
+  // ---- Banco de Talentos ----
+  previews['talent_pool_digest'] = {
+    label: 'Banco de Talentos · resumen diario a People',
+    html: renderEmail({
+      title: '3 perfiles sin revisar en el Banco de Talentos',
+      contextLabel: 'People · Reclutamiento',
+      badge: { tone: 'success', label: '2 nuevo(s)' },
+      preheader: 'Resumen diario del Banco de Talentos',
+      intro: 'Esta gente dejó sus datos y todavía está sin revisar:',
+      bodyHtml: `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:6px 0 4px;">
+        <tr><td style="padding:10px 0;border-bottom:1px solid #ECECEC;">
+          <div style="font-size:13px;font-weight:600;color:#1A1D23;">Lucía Fernández <span style="color:#C2410C;">· nuevo</span></div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px;">Producto, Growth · Semi Senior</div>
+        </td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #ECECEC;">
+          <div style="font-size:13px;font-weight:600;color:#1A1D23;">Martín Díaz <span style="color:#C2410C;">· nuevo</span></div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px;">Comercial · Senior</div>
+        </td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #ECECEC;">
+          <div style="font-size:13px;font-weight:600;color:#1A1D23;">Alicia Prats</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px;">Diseño, CX · Lead</div>
+        </td></tr>
+      </table>`,
+      cta: { label: 'Ir al Banco de Talentos', url: 'https://hr.pow-apps.com/admin/recruiting/banco' },
+      outro:
+        'Este resumen se arma cada mañana con lo que sigue en Nuevo. Al pasar un perfil a En espera, Descartado o Asignado deja de aparecer.',
+    }),
+  };
+
   // ---- Auth ----
   previews['reset'] = {
     label: 'Auth · restablecer contraseña',

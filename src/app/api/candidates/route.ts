@@ -82,8 +82,9 @@ export async function POST(req: NextRequest) {
 			});
 		if (uploadError) throw uploadError;
 
-		const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(uploadData.path);
-		const resumeUrl = publicUrlData.publicUrl;
+		// Se guarda el PATH y no la URL pública: el bucket es privado, así que una
+		// URL absoluta no resolvería. El link se firma al momento de abrir el CV.
+		const resumeUrl = uploadData.path;
 
 		// Create or upsert candidate
 		const { data: candidate, error: candErr } = await supabase

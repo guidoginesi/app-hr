@@ -373,7 +373,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 						)}
 						{mainApplication?.resume_url && (
 							<a
-								href={mainApplication.resume_url}
+								href={`/api/admin/candidates/cv?applicationId=${mainApplication.id}`}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="flex items-center gap-2 text-sm text-secondary-foreground hover:text-foreground"
@@ -812,7 +812,7 @@ export function CandidateDetailModal({ candidate, applicationId, onClose }: Cand
 						{mainApplication?.resume_url ? (
 							<div className="rounded-lg border border-[var(--border)] bg-white p-4">
 								<a
-									href={mainApplication.resume_url}
+									href={`/api/admin/candidates/cv?applicationId=${mainApplication.id}`}
 									target="_blank"
 									rel="noopener noreferrer"
 									className="inline-flex items-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-[var(--primary-hover)]"

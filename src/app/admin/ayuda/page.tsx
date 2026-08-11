@@ -11,6 +11,12 @@ type AdminManual = ManualCard & { administracion?: boolean };
 
 const MANUALS: AdminManual[] = [
   {
+    href: '/admin/ayuda/banco-de-talentos',
+    title: 'Banco de Talentos',
+    desc: 'Postulaciones espontáneas desde el portal público: los cuatro estados, asignar a una búsqueda abierta, qué pasa cuando alguien vuelve a anotarse y cómo se editan las áreas.',
+    updated: '2026-08-11',
+  },
+  {
     href: '/admin/ayuda/licencia-enfermedad',
     title: 'Licencia por enfermedad',
     desc: 'Circuito sin aprobación, aviso al líder sin datos de salud, certificado médico con plazo, y el KPI de ausentismo (tasa, frecuencia, duración, ranking).',

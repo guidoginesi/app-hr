@@ -123,8 +123,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Error al subir el CV' }, { status: 500 });
     }
 
-    const { data: publicUrlData } = supabase.storage.from('resumes').getPublicUrl(uploadData.path);
-    const resumeUrl = publicUrlData.publicUrl;
+    // El path, no la URL pública: el bucket es privado y el link se firma al abrir.
+    const resumeUrl = uploadData.path;
 
     // Upsert candidate
     const provinciaUpper = candidate_province.trim().toUpperCase().replace('OTRA', 'OTRA') as 'CABA' | 'GBA' | 'OTRA';
