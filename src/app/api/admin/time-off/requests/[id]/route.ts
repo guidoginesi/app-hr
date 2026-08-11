@@ -285,6 +285,22 @@ export async function DELETE(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Las notificaciones de esta licencia (al colaborador, al líder y a HR) no
+    // tienen FK contra leave_requests: quedaban en la campanita apuntando a una
+    // licencia que ya no existe. Si alguien las abría, caía en un Time Off donde
+    // no había nada. Se borran por el entity_id que guarda cada aviso; los
+    // destinatarios se van solos por la cascada de message_recipients.
+    const { error: avisosError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('metadata->>entity_type', 'leave_request')
+      .eq('metadata->>entity_id', id);
+    if (avisosError) {
+      console.error(
+        `[TimeOff] licencia ${id} borrada pero sus notificaciones quedaron: ${avisosError.message}`,
+      );
+    }
+
     // El certificado vive en Storage, que no tiene FK ni cascada: si no se borra
     // acá, el archivo queda huérfano para siempre y sin fila que lo referencie.
     // Va DESPUÉS del delete y sin frenar la respuesta: la fila ya no existe, y

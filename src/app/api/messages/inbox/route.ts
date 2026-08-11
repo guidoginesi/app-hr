@@ -48,6 +48,8 @@ export async function GET(req: NextRequest) {
         { count: 'exact' }
       )
       .eq('user_id', user.id)
+      // Las archivadas salen de la campanita. Siguen estando en "ver todas".
+      .is('dismissed_at', null)
       .or(`expires_at.is.null,expires_at.gt.${now}`, { referencedTable: 'messages' })
       .eq('messages.status', 'published')
       // Orden cronológico, lo más nuevo primero — el mismo que usa la página
@@ -94,11 +96,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Unread count (no read_at)
+    // Unread count (no read_at). Las archivadas no cuentan: archivar marca
+    // leído, pero además una archivada no debería volver a pedir atención.
     const { count: unreadCount } = await supabase
       .from('message_recipients')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
+      .is('dismissed_at', null)
       .is('read_at', null);
 
     // Pending confirmation count (require_confirmation=true AND confirmed_at IS NULL)

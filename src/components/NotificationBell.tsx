@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { Spinner } from '@/components/Spinner';
 import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
@@ -162,6 +163,46 @@ export function NotificationBell({ detailBasePath = '/portal/messages', directio
     await fetch(`/api/messages/${messageId}/read`, { method: 'POST' });
   };
 
+  /**
+   * Archiva una notificación: sale de la campanita y queda en "ver todas".
+   * Se saca de la lista al instante y si el server falla vuelve sola en el
+   * próximo poll, que corre cada pocos segundos.
+   */
+  const dismiss = async (messageId: string, recipientId: string) => {
+    setInbox((prev) => {
+      if (!prev) return prev;
+      const item = prev.items.find((i) => i.id === recipientId);
+      const eraSinLeer = item && !item.read_at;
+      return {
+        ...prev,
+        items: prev.items.filter((i) => i.id !== recipientId),
+        unread_count: eraSinLeer ? Math.max(0, prev.unread_count - 1) : prev.unread_count,
+        badge_count: eraSinLeer ? Math.max(0, prev.badge_count - 1) : prev.badge_count,
+      };
+    });
+    try {
+      await fetch(`/api/messages/${messageId}/dismiss`, { method: 'POST' });
+    } catch {
+      // El poll corrige.
+    }
+  };
+
+  /** "Limpiar todo": archiva de una todo lo que no esté esperando confirmación. */
+  const dismissAll = async () => {
+    setInbox((prev) => {
+      if (!prev) return prev;
+      const quedan = prev.items.filter(
+        (i) => i.messages?.require_confirmation && !i.confirmed_at,
+      );
+      return { ...prev, items: quedan, unread_count: 0, badge_count: prev.pending_confirm_count };
+    });
+    try {
+      await fetch('/api/messages/dismiss-all', { method: 'POST' });
+    } catch {
+      // El poll corrige.
+    }
+  };
+
   const handleItemClick = async (item: MessageItem) => {
     if (!item.messages) return;
     await markRead(item.message_id, item.id);
@@ -206,12 +247,29 @@ export function NotificationBell({ detailBasePath = '/portal/messages', directio
       const needsConfirm = msg.require_confirmation && !item.confirmed_at;
 
       return (
-        <button
+        <div
           key={item.id}
-          type="button"
-          onClick={() => handleItemClick(item)}
-          className={`w-full border-b border-[var(--border)] px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted ${isUnread ? 'bg-muted' : ''}`}
+          className={`group relative border-b border-[var(--border)] transition-colors last:border-0 hover:bg-muted ${isUnread ? 'bg-muted' : ''}`}
         >
+          {/* Archivar. No va dentro del botón de la fila porque un botón no
+              puede contener otro botón. Se muestra siempre y no sólo en hover:
+              en pantallas táctiles el hover no existe. */}
+          {!needsConfirm && (
+            <button
+              type="button"
+              onClick={() => dismiss(item.message_id, item.id)}
+              aria-label={`Archivar "${msg.title}"`}
+              title="Archivar"
+              className="absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-full text-muted-foreground opacity-60 transition-all hover:bg-secondary hover:text-foreground hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => handleItemClick(item)}
+            className="w-full px-4 py-3 pr-10 text-left"
+          >
           <div className="flex items-start gap-3">
             <div className="mt-1.5 flex-shrink-0">
               <span className={`block h-2 w-2 rounded-full ${isUnread ? 'bg-primary' : 'bg-transparent'}`} />
@@ -238,20 +296,35 @@ export function NotificationBell({ detailBasePath = '/portal/messages', directio
               </p>
             </div>
           </div>
-        </button>
+          </button>
+        </div>
       );
     })
   );
 
+  // Lo que se puede archivar de una: lo que no está esperando confirmación.
+  const archivables = items.filter((i) => !(i.messages?.require_confirmation && !i.confirmed_at));
+
   const panelFooter =
     items.length > 0 ? (
-      <div className="border-t border-[var(--border)] px-4 py-2.5">
+      <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-4 py-2.5">
+        {archivables.length > 0 ? (
+          <button
+            type="button"
+            onClick={dismissAll}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            Archivar todas
+          </button>
+        ) : (
+          <span />
+        )}
         <Link
           href={detailBasePath}
           onClick={() => setIsOpen(false)}
-          className="flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          Ver todas las notificaciones
+          Ver todas
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

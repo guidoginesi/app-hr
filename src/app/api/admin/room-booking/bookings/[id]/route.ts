@@ -163,6 +163,24 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // La invitación que recibieron los invitados no tiene FK contra la reserva:
+    // si no se borra acá, les queda en la campanita una reunión que ya no
+    // existe. Va después del delete y sin frenar la respuesta: la reserva ya
+    // se borró, y un aviso de más es menos grave que un 500 sobre algo hecho.
+    //
+    // Sólo alcanza a la reserva borrada. En una serie recurrente la invitación
+    // se guarda contra la primera ocurrencia, así que borrar una del medio no
+    // la toca — que es lo correcto: la serie sigue en pie.
+    const { error: avisosError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('metadata->>booking_id', id);
+    if (avisosError) {
+      console.error(
+        `[RoomBooking] reserva ${id} borrada pero su invitación quedó: ${avisosError.message}`,
+      );
+    }
+
     return NextResponse.json({ ok: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -23,6 +23,7 @@ import {
   FileCheck,
 } from 'lucide-react';
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
+import { moduleForPath, type AdminModule } from '@/lib/adminModules';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ShellSwitch } from '@/components/ShellSwitch';
@@ -38,9 +39,38 @@ type AdminShellProps = {
 
 export function AdminShell({ children, advancesOnly = false }: AdminShellProps) {
   const pathname = usePathname() || '';
+  const [novedades, setNovedades] = useState<Partial<Record<AdminModule, number>>>({});
+
+  // Al entrar a un módulo se marca como visto y se releen los conteos en la
+  // misma llamada. El punto de ese módulo se apaga solo, que es el sentido de
+  // que sea "desde tu última visita".
+  useEffect(() => {
+    const modulo = moduleForPath(pathname);
+    const req = modulo
+      ? fetch('/api/admin/pendientes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ module: modulo }),
+        })
+      : fetch('/api/admin/pendientes');
+
+    let vigente = true;
+    req
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (vigente && d?.counts) setNovedades(d.counts);
+      })
+      // Si falla, el sidebar se muestra sin puntos: no vale romper la nav por esto.
+      .catch(() => {});
+    return () => {
+      vigente = false;
+    };
+  }, [pathname]);
 
   const match = (href: string, ...aliases: string[]) =>
     [href, ...aliases].some((h) => pathname === h || pathname.startsWith(h + '/'));
+
+  const hay = (m: AdminModule) => (novedades[m] ?? 0) > 0;
 
   const groups: NavGroup[] = [
     {
@@ -52,8 +82,8 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
       label: 'Personas',
       items: [
         { label: 'People', href: '/admin/people', icon: Users, active: match('/admin/people') },
-        { label: 'Reclutamiento', href: '/admin/recruiting', icon: Briefcase, active: match('/admin/recruiting', '/admin/jobs', '/admin/candidates') },
-        { label: 'Referidos', href: '/admin/referidos', icon: UserPlus, active: match('/admin/referidos') },
+        { label: 'Reclutamiento', href: '/admin/recruiting', icon: Briefcase, active: match('/admin/recruiting', '/admin/jobs', '/admin/candidates'), badge: hay('reclutamiento'), badgeLabel: 'Tiene candidatos nuevos' },
+        { label: 'Referidos', href: '/admin/referidos', icon: UserPlus, active: match('/admin/referidos'), badge: hay('referidos'), badgeLabel: 'Tiene referidos nuevos' },
       ],
     },
     {
@@ -67,12 +97,12 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
     {
       label: 'Gestión',
       items: [
-        { label: 'Time Off', href: '/admin/time-off', icon: CalendarDays, active: match('/admin/time-off') },
+        { label: 'Time Off', href: '/admin/time-off', icon: CalendarDays, active: match('/admin/time-off'), badge: hay('time-off'), badgeLabel: 'Tiene licencias nuevas para aprobar' },
         { label: 'Liquidaciones', href: '/admin/payroll', icon: Wallet, active: match('/admin/payroll') },
-        { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
-        { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
-        { label: 'Capacitaciones', href: '/admin/training', icon: Award, active: match('/admin/training') },
-        { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros') },
+        { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances'), badge: hay('adelantos'), badgeLabel: 'Tiene adelantos nuevos para aprobar' },
+        { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos'), badge: hay('recibos'), badgeLabel: 'Tiene confirmaciones nuevas' },
+        { label: 'Capacitaciones', href: '/admin/training', icon: Award, active: match('/admin/training'), badge: hay('capacitaciones'), badgeLabel: 'Tiene pedidos nuevos' },
+        { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros'), badge: hay('reintegros'), badgeLabel: 'Tiene reintegros nuevos' },
       ],
     },
     {
@@ -80,7 +110,7 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
       items: [
         { label: 'Reserva de Salas', href: '/admin/room-booking', icon: DoorOpen, active: match('/admin/room-booking') },
         { label: 'Comunicaciones', href: '/admin/messages', icon: MessageSquare, active: match('/admin/messages') },
-        { label: 'Consultas', href: '/admin/consultas', icon: MessagesSquare, active: match('/admin/consultas') },
+        { label: 'Consultas', href: '/admin/consultas', icon: MessagesSquare, active: match('/admin/consultas'), badge: hay('consultas'), badgeLabel: 'Tiene consultas nuevas' },
       ],
     },
     {
@@ -97,10 +127,10 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
         {
           label: 'Gestión',
           items: [
-            { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances') },
-            { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos') },
+            { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances'), badge: hay('adelantos'), badgeLabel: 'Tiene adelantos nuevos para aprobar' },
+            { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos'), badge: hay('recibos'), badgeLabel: 'Tiene confirmaciones nuevas' },
             // Administración valida los reintegros, así que entra a esta ruta.
-            { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros') },
+            { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros'), badge: hay('reintegros'), badgeLabel: 'Tiene reintegros nuevos' },
             // El índice de Ayuda le muestra sólo los manuales de sus módulos.
             { label: 'Ayuda', href: '/admin/ayuda', icon: BookOpen, active: match('/admin/ayuda') },
           ],

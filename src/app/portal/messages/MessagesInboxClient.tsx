@@ -46,7 +46,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-type Filter = 'all' | 'unread' | 'needs_confirm';
+type Filter = 'all' | 'unread' | 'needs_confirm' | 'archived';
 
 export function MessagesInboxClient({ items: initialItems }: { items: MessageItem[] }) {
   const router = useRouter();
@@ -54,12 +54,16 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
   const [filter, setFilter] = useState<Filter>('all');
   const [openItem, setOpenItem] = useState<MessageItem | null>(null);
 
-  const unreadCount = items.filter((i) => !i.read_at).length;
-  const needsConfirmCount = items.filter(
+  // "Todos" son los que siguen activos: lo archivado tiene su propia solapa.
+  const activos = items.filter((i) => !i.dismissed_at);
+  const archivados = items.filter((i) => i.dismissed_at);
+
+  const unreadCount = activos.filter((i) => !i.read_at).length;
+  const needsConfirmCount = activos.filter(
     (i) => i.messages?.require_confirmation && !i.confirmed_at
   ).length;
 
-  const filtered = items.filter((item) => {
+  const filtered = (filter === 'archived' ? archivados : activos).filter((item) => {
     if (!item.messages) return false;
     if (filter === 'unread') return !item.read_at;
     if (filter === 'needs_confirm')
@@ -102,9 +106,10 @@ export function MessagesInboxClient({ items: initialItems }: { items: MessageIte
       <div className="flex gap-2">
         {(
           [
-            { key: 'all' as const, label: 'Todos', count: items.length },
+            { key: 'all' as const, label: 'Todos', count: activos.length },
             { key: 'unread' as const, label: 'No leídos', count: unreadCount },
             { key: 'needs_confirm' as const, label: 'Pendientes', count: needsConfirmCount },
+            { key: 'archived' as const, label: 'Archivados', count: archivados.length },
           ] as const
         ).map((tab) => (
           <button
