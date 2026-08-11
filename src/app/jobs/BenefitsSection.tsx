@@ -45,7 +45,7 @@ export async function BenefitsSection() {
 			<div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
 				{benefits.map((benefit, index) => (
 					<div key={index} className="flex items-start gap-2">
-						<Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-700)]" aria-hidden />
+						<Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
 						<span className="text-sm text-secondary-foreground">{benefit.text}</span>
 					</div>
 				))}

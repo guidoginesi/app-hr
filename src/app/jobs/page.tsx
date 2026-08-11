@@ -89,9 +89,11 @@ export default async function JobsPage() {
                   )}
                 </div>
               </div>
+              {/* Naranja: es la acción que queremos que hagan. El botón del
+                  Banco de Talentos queda en tinta, un escalón más abajo. */}
               <Link
                 href={`/jobs/${job.id}`}
-                className={buttonVariants({ size: 'lg', className: 'shrink-0' })}
+                className={buttonVariants({ variant: 'brand', size: 'lg', className: 'shrink-0' })}
               >
                 Ver oferta
               </Link>

@@ -59,7 +59,10 @@ export default async function JobDetailPage({
 
         {/* El CTA cierra la página: se llega después de leer la oferta. */}
         <div className="flex justify-center">
-          <Link href={`/jobs/${job.id}/apply`} className={buttonVariants({ size: 'lg' })}>
+          <Link
+            href={`/jobs/${job.id}/apply`}
+            className={buttonVariants({ variant: 'brand', size: 'lg' })}
+          >
             Postularme
           </Link>
         </div>

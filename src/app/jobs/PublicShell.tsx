@@ -24,6 +24,8 @@ export function PublicShell({
 }) {
   return (
     <div className="min-h-screen bg-muted font-sans text-foreground">
+      {/* Franja de marca, la misma que encabeza los mails de Pow. */}
+      <div className="h-1 bg-brand" aria-hidden />
       <header className="border-b border-[var(--border)] bg-card">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4 sm:px-8">
           <Link href="/jobs" aria-label="Pow — búsquedas abiertas" className="flex items-center">
