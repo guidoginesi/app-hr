@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Briefcase, Home, MapPin } from "lucide-react";
 import { buttonVariants } from "@pow/ui/components/ui/button";
+import { Card } from "@pow/ui/components/ui/card";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { JobMessages } from "./JobMessages";
 import { PublicShell } from "./PublicShell";
@@ -55,23 +56,25 @@ export default async function JobsPage() {
       </Suspense>
 
       {jobs.length === 0 ? (
-        <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-12 text-center">
+        <Card className="mt-6 p-12 text-center">
           <p className="text-sm font-medium text-foreground">
             No hay búsquedas publicadas por el momento
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Dejanos tus datos acá abajo y te avisamos cuando abramos una.
           </p>
-        </div>
+        </Card>
       ) : (
         <ul className="mt-6 space-y-3">
           {jobs.map((job) => (
-            <li
+            <Card
               key={job.id}
-              className="flex flex-col gap-4 rounded-[var(--radius)] border border-[var(--border)] bg-card p-6 transition-colors hover:border-[var(--gray-300)] sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-4 p-5 transition-colors hover:border-[var(--gray-300)] sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
-                <h2 className="text-base font-semibold text-foreground">{job.title}</h2>
+                <h2 className="font-display text-base font-semibold tracking-tight text-foreground">
+                  {job.title}
+                </h2>
                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">
                     <Home className="h-4 w-4 shrink-0" aria-hidden />
@@ -93,11 +96,11 @@ export default async function JobsPage() {
                   Banco de Talentos queda en tinta, un escalón más abajo. */}
               <Link
                 href={`/jobs/${job.id}`}
-                className={buttonVariants({ variant: 'brand', size: 'lg', className: 'shrink-0' })}
+                className={buttonVariants({ variant: 'brand', className: 'shrink-0' })}
               >
                 Ver oferta
               </Link>
-            </li>
+            </Card>
           ))}
         </ul>
       )}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { buttonVariants } from '@pow/ui/components/ui/button';
+import { Card } from '@pow/ui/components/ui/card';
 
 /**
  * "¿No encontrás lo que buscás?" — entrada al Banco de Talentos.
@@ -10,21 +11,20 @@ import { buttonVariants } from '@pow/ui/components/ui/button';
  */
 export function TalentPoolCta() {
   return (
-    <section className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">¿No encontrás lo que buscás?</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Dejanos tus datos y te tenemos en cuenta para las próximas búsquedas.
-          </p>
-        </div>
-        <Link
-          href="/jobs/banco-de-talentos"
-          className={buttonVariants({ size: 'lg', className: 'shrink-0' })}
-        >
-          Dejar mis datos
-        </Link>
+    <Card className="mt-6 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 className="font-display text-base font-semibold tracking-tight text-foreground">
+          ¿No encontrás lo que buscás?
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Dejanos tus datos y te tenemos en cuenta para las próximas búsquedas.
+        </p>
       </div>
-    </section>
+      {/* En tinta y no en naranja: postularse a una búsqueda abierta es lo que
+          queremos que hagan, el banco es la alternativa. */}
+      <Link href="/jobs/banco-de-talentos" className={buttonVariants({ className: 'shrink-0' })}>
+        Dejar mis datos
+      </Link>
+    </Card>
   );
 }

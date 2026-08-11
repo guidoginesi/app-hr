@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@pow/ui/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@pow/ui/components/ui/card";
 import { getSupabaseServer } from "@/lib/supabaseServer";
 import { BenefitsSection } from "../BenefitsSection";
 import { PublicShell } from "../PublicShell";
@@ -39,20 +40,22 @@ export default async function JobDetailPage({
         <h1 className="type-display">{job.title}</h1>
 
         {bloques.length > 0 && (
-          <section className="rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
-            <h2 className="text-base font-semibold text-foreground">Descripción del puesto</h2>
-            <div className="mt-4 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Descripción del puesto</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
               {bloques.map((bloque) => (
                 <div key={bloque.titulo}>
-                  <h3 className="text-sm font-semibold text-foreground">{bloque.titulo}</h3>
+                  <h4 className="text-sm font-semibold text-foreground">{bloque.titulo}</h4>
                   <div
-                    className="prose prose-sm mt-2 max-w-none text-secondary-foreground"
+                    className="prose prose-sm mt-1.5 max-w-none text-secondary-foreground"
                     dangerouslySetInnerHTML={{ __html: bloque.html as string }}
                   />
                 </div>
               ))}
-            </div>
-          </section>
+            </CardContent>
+          </Card>
         )}
 
         <BenefitsSection />
@@ -61,7 +64,7 @@ export default async function JobDetailPage({
         <div className="flex justify-center">
           <Link
             href={`/jobs/${job.id}/apply`}
-            className={buttonVariants({ variant: 'brand', size: 'lg' })}
+            className={buttonVariants({ variant: 'brand' })}
           >
             Postularme
           </Link>

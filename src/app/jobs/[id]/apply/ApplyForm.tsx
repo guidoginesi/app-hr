@@ -4,17 +4,21 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Alert } from '@pow/ui/components/ui/alert';
 import { Button } from '@pow/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@pow/ui/components/ui/card';
 import { Input } from '@pow/ui/components/ui/input';
 import { Select } from '@pow/ui/components/ui/select';
+import { FileField } from '../../FileField';
 
 interface ApplyFormProps {
   jobId: string;
   jobTitle: string;
 }
-
-/** Estilo del input de archivo: no hay componente de DS para file. */
-const fileInputClass =
-  'w-full rounded-[var(--radius)] border border-input bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-[var(--gray-300)] file:mr-3 file:rounded-[var(--radius)] file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring';
 
 export function ApplyForm({ jobId }: ApplyFormProps) {
   const router = useRouter();
@@ -37,6 +41,14 @@ export function ApplyForm({ jobId }: ApplyFormProps) {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+
+    // El input de archivo no lleva `required` (está oculto detrás del botón del
+    // DS y el navegador no puede enfocarlo para avisar), así que se valida acá.
+    const file = formData.get('resume');
+    if (!(file instanceof File) || file.size === 0) {
+      setError('Adjuntá tu CV para poder postularte.');
+      return;
+    }
 
     // Asegurarse de enviar solo números para salary
     const salaryValue = salaryDisplay.replace(/\D/g, '');
@@ -77,18 +89,15 @@ export function ApplyForm({ jobId }: ApplyFormProps) {
   }
 
   return (
-    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <input type="hidden" name="jobId" value={jobId} />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <input type="hidden" name="jobId" value={jobId} />
 
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Mi información</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Completá la información a continuación.
-            </p>
-          </div>
-
+      <Card>
+        <CardHeader>
+          <CardTitle>Tus datos</CardTitle>
+          <CardDescription>Completá la información a continuación.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input id="name" name="name" label="Nombre completo" required placeholder="Nombre y apellido" />
             <Input
@@ -134,14 +143,15 @@ export function ApplyForm({ jobId }: ApplyFormProps) {
               ]}
             />
           </div>
-        </section>
+        </CardContent>
+      </Card>
 
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Información adicional</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">Opcional, pero nos ayuda a conocerte.</p>
-          </div>
-
+      <Card>
+        <CardHeader>
+          <CardTitle>Información adicional</CardTitle>
+          <CardDescription>Opcional, pero nos ayuda a conocerte.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               id="linkedinUrl"
@@ -160,38 +170,26 @@ export function ApplyForm({ jobId }: ApplyFormProps) {
               inputMode="numeric"
             />
           </div>
-        </section>
 
-        <section className="space-y-1.5">
-          <label htmlFor="resume" className="block text-sm font-medium text-secondary-foreground">
-            CV / Currículum
-            <span className="ml-0.5 text-danger" aria-hidden="true">*</span>
-          </label>
-          <input
+          <FileField
             id="resume"
             name="resume"
-            type="file"
+            label="CV / Currículum"
             required
             accept=".pdf,.doc,.docx,.txt"
-            className={fileInputClass}
+            helper="PDF o Word, hasta 10MB."
           />
-        </section>
+        </CardContent>
+      </Card>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+      {error && <Alert variant="danger">{error}</Alert>}
 
-        <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
-          <Button
-            type="submit"
-            variant="brand"
-            size="lg"
-            loading={isPending}
-            className="w-full sm:w-auto"
-          >
-            Enviar postulación
-          </Button>
-        </div>
-      </form>
-    </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">Los campos con * son obligatorios.</p>
+        <Button type="submit" variant="brand" loading={isPending} className="w-full sm:w-auto">
+          Enviar postulación
+        </Button>
+      </div>
+    </form>
   );
 }

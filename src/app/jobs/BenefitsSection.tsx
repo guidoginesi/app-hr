@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@pow/ui/components/ui/card';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 export async function BenefitsSection() {
@@ -40,17 +41,19 @@ export async function BenefitsSection() {
 	}
 
 	return (
-		<section className="rounded-[var(--radius)] border border-[var(--border)] bg-card p-6">
-			<h2 className="text-base font-semibold text-foreground">Beneficios</h2>
-			<div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+		<Card>
+			<CardHeader>
+				<CardTitle>Beneficios</CardTitle>
+			</CardHeader>
+			<CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 				{benefits.map((benefit, index) => (
 					<div key={index} className="flex items-start gap-2">
 						<Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
 						<span className="text-sm text-secondary-foreground">{benefit.text}</span>
 					</div>
 				))}
-			</div>
-		</section>
+			</CardContent>
+		</Card>
 	);
 }
 
