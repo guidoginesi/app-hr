@@ -4,11 +4,7 @@ import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { Stage, StageStatus } from '@/types/funnel';
-import {
-  MANUAL_TALENT_POOL_STATUSES,
-  RESUMES_BUCKET,
-  TALENT_POOL_SOURCE,
-} from '@/lib/talentPool';
+import { MANUAL_TALENT_POOL_STATUSES, TALENT_POOL_SOURCE } from '@/lib/talentPool';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,19 +84,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // `applications.resume_url` guarda una URL absoluta en las 1700 postulaciones
-    // que ya existen. Se mantiene el mismo formato para no dejar una fila que el
-    // resto del módulo no sepa abrir; cerrar el bucket migra la columna entera.
-    const { data: publicUrl } = supabase.storage
-      .from(RESUMES_BUCKET)
-      .getPublicUrl(entry.resume_path as string);
+    // El path del CV del banco se copia tal cual: `applications.resume_url` ahora
+    // guarda paths, y el link se firma al momento de abrirlo.
 
     const { data: application, error: appErr } = await supabase
       .from('applications')
       .insert({
         candidate_id: entry.candidate_id,
         job_id: body.jobId,
-        resume_url: publicUrl.publicUrl,
+        resume_url: entry.resume_path,
         current_stage: Stage.HR_REVIEW,
         current_stage_status: StageStatus.PENDING,
         status: 'Recibido',
