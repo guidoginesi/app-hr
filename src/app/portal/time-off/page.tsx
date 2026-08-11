@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { Cake } from 'lucide-react';
 import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
@@ -184,6 +185,32 @@ export default async function TimeOffPortalPage() {
               </div>
             </div>
           </div>
+
+          {/* Día de cumpleaños
+              Sólo se muestra mientras el día está acreditado. El beneficio vive
+              en una ventana corta alrededor del cumpleaños; una tarjeta en cero
+              los otros once meses sería ruido, y encima confundiría con un día
+              que se puede pedir cuando no. */}
+          {Number(balancesByType['birthday']?.entitled_days ?? 0) > 0 && (
+            <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                  <Cake className="h-5 w-5 text-secondary-foreground" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Día de cumpleaños
+                  </p>
+                  <p className="mt-0.5 text-2xl font-bold text-foreground">
+                    {Number(balancesByType['birthday']?.available_days ?? 0)}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      {' '}/ {Number(balancesByType['birthday']?.entitled_days ?? 0)} día
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Estudio */}
           {employee.is_studying && (
