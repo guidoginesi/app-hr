@@ -15,12 +15,17 @@ implementación, aquel define qué tiene que devolver.
 | | |
 |---|---|
 | Ruta | `GET https://hr.pow-apps.com/api/payroll/settlements` |
-| Implementada | Sí, en producción |
-| Operativa | **No todavía** — falta cargar `AF_INTEGRATION_KEY` en Vercel |
+| Estado | **Operativa** |
+| Verificada de punta a punta | 11/08/2026, con `scripts/check-rrhh-import.ts` |
 
-Mientras la variable no esté, la ruta responde `503`. Es a propósito: sin el
-secreto configurado quedaría abierta a internet, y devuelve las liquidaciones de
-toda la empresa.
+El secreto ya está cargado en los dos proyectos de Vercel (`AF_INTEGRATION_KEY`
+en app-hr, `RRHH_API_KEY` en app-adm) y en los `.env.local` de los dos repos para
+desarrollo local. Está marcado como sensible en Vercel: **no se puede volver a
+leer desde el panel**. Si hace falta rotarlo, hay que generarlo de nuevo y
+cargarlo en los cuatro lugares a la vez.
+
+Si la variable faltara, la ruta responde `503` en vez de quedar abierta: devuelve
+las liquidaciones de toda la empresa.
 
 ## Autenticación
 
@@ -87,7 +92,8 @@ envía una liquidación y no queremos que quede cacheado en el camino.
 
 ### Qué devuelve hoy
 
-Al 11/08/2026, sin `since`:
+Al 11/08/2026, sin `since` — medido corriendo `check-rrhh-import.ts` contra la
+ruta en producción:
 
 | | |
 |---|---|
