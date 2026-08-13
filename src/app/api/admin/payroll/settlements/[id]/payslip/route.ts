@@ -8,6 +8,25 @@ import {
   type PayslipSlot,
 } from '@/lib/payrollPayslips';
 import { notifyPayslipReplaced } from '@/lib/payrollReceiptReminders';
+import { parsearYGuardarDesglose } from '@/lib/payslipBreakdown';
+
+/**
+ * Lee el recibo y guarda su desglose. Va acá y no en la ruta de A&F porque esa
+ * no puede abrir decenas de PDFs por request.
+ *
+ * Nunca hace fallar la operación: que A&F no pueda importar un recibo es un
+ * problema mucho menor que impedirle a People publicarlo.
+ */
+async function releerDesglose(settlementId: string, periodKey: string) {
+  try {
+    const { estado } = await parsearYGuardarDesglose(settlementId, periodKey);
+    if (estado !== 'OK') {
+      console.warn(`[Payslip] desglose de ${settlementId}: ${estado}`);
+    }
+  } catch (error) {
+    console.error(`[Payslip] no se pudo leer el desglose de ${settlementId}:`, error);
+  }
+}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -201,6 +220,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     await syncSettlementStatusAfterPayslipChange(supabase, id);
+    await releerDesglose(id, periodKey);
 
     return NextResponse.json(payslip, { status: 201 });
   } catch (error: any) {
@@ -224,12 +244,17 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
 
     const { data: settlement } = await supabase
       .from('payroll_employee_settlements')
-      .select('status, period:payroll_periods(status)')
+      .select('status, period:payroll_periods(period_key, status)')
       .eq('id', id)
       .single();
 
-    const periodData = (settlement?.period as { status: string } | { status: string }[] | null | undefined);
-    const periodStatus = Array.isArray(periodData) ? periodData[0]?.status : periodData?.status;
+    const periodRaw = settlement?.period as
+      | { period_key: string; status: string }
+      | { period_key: string; status: string }[]
+      | null
+      | undefined;
+    const periodData = Array.isArray(periodRaw) ? periodRaw[0] : periodRaw;
+    const periodStatus = periodData?.status;
     if (periodStatus === 'CLOSED') {
       return NextResponse.json({ error: 'El período está cerrado' }, { status: 400 });
     }
@@ -277,6 +302,8 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     await syncSettlementStatusAfterPayslipChange(supabase, id);
+    // Sin esto el desglose seguiría teniendo los importes de un archivo borrado.
+    await releerDesglose(id, periodData?.period_key ?? 'unknown');
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
