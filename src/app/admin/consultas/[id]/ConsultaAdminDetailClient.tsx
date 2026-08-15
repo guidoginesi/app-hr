@@ -8,6 +8,7 @@ import { Checkbox } from '@pow/ui/components/ui/checkbox';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { AttachmentPanel } from '@/components/inquiries/AttachmentPanel';
+import { PropuestaAgente } from '@/components/inquiries/PropuestaAgente';
 import { CATEGORY_LABELS, STATUS_LABELS_HR, type InquiryCategory, type InquiryStatus } from '@/lib/inquiries';
 
 type Msg = {
@@ -200,6 +201,15 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
       <AttachmentPanel inquiryId={inquiryId} />
 
       <div className="space-y-3 rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+        {/* La propuesta va arriba del cuadro de respuesta y sólo cuando se está
+            respondiendo al colaborador: para una nota interna no tiene sentido. */}
+        {!internal && !yaCerrada && (
+          <PropuestaAgente
+            inquiryId={inquiryId}
+            onUsar={(texto) => setBody(texto)}
+            disabled={busy}
+          />
+        )}
         <Textarea
           rows={3}
           value={body}

@@ -18,6 +18,48 @@ const ActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('unshare_leader') }),
 ]);
 
+/**
+ * Marca qué hizo HR con la propuesta del agente, comparando lo que se mandó
+ * contra el borrador. Sólo aplica a la propuesta que todavía no fue calificada.
+ *
+ * Se compara normalizando espacios: un salto de línea de más no es una edición.
+ */
+async function calificarPropuestaPendiente(
+  supabase: ReturnType<typeof getSupabaseServer>,
+  inquiryId: string,
+  enviado: string,
+  userId: string,
+) {
+  const { data: propuesta } = await supabase
+    .from('inquiry_answer_drafts')
+    .select('id, borrador')
+    .eq('inquiry_id', inquiryId)
+    .is('resultado', null)
+    .not('borrador', 'is', null)
+    .order('creado_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!propuesta) return;
+
+  const normalizar = (t: string) => t.replace(/\s+/g, ' ').trim();
+  const usadaTalCual = normalizar(propuesta.borrador as string) === normalizar(enviado);
+
+  const { error } = await supabase
+    .from('inquiry_answer_drafts')
+    .update({
+      resultado: usadaTalCual ? 'USADA' : 'EDITADA',
+      // La respuesta real se guarda sólo cuando difiere: si es idéntica ya está
+      // en el borrador y guardarla dos veces no agrega nada.
+      respuesta_enviada: usadaTalCual ? null : enviado,
+      calificado_at: new Date().toISOString(),
+      calificado_por: userId,
+    })
+    .eq('id', propuesta.id);
+  // No frena la respuesta al colaborador: perder la calificación es molesto,
+  // no mandar la respuesta es un problema.
+  if (error) console.error('[propuesta] no se pudo calificar:', error.message);
+}
+
 // GET — detalle + hilo completo (incluye notas internas)
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { isAdmin } = await requireAdmin();
@@ -76,12 +118,21 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
   // ── Respuesta de HR al colaborador ──
   if (a.action === 'reply') {
+    const cuerpo = a.body.trim();
+
     await supabase.from('inquiry_messages').insert({
       inquiry_id: id,
       author_user_id: user.id,
       author_role: 'hr',
-      body: a.body.trim(),
+      body: cuerpo,
     });
+
+    // La calificación de la propuesta del agente sale sola del flujo: si HR
+    // mandó el borrador tal cual, la propuesta era buena; si lo editó, el diff
+    // contra lo que mandó es la corrección, que es el dato que más enseña.
+    // Preguntarlo aparte sería pedirle a alguien que califique después de
+    // haber terminado, que es cuando nadie lo hace.
+    await calificarPropuestaPendiente(supabase, id, cuerpo, user.id);
 
     // "Responder y marcar resuelta" es un solo paso: antes había que responder y
     // después cambiar el estado a mano, y quedaban consultas resueltas sin marcar.
