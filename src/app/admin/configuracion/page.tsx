@@ -20,6 +20,22 @@ export default async function AdminConfiguracionPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Manual de RRHH</CardTitle>
+          <CardDescription>
+            Define qué secciones del manual se le pueden citar a un colaborador. Lo que no está
+            revisado no se cita: es lo que evita que una respuesta automática termine mostrando
+            algo que no debería salir de HR.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/admin/configuracion/manual" className={buttonVariants({ variant: 'primary' })}>
+            Revisar el manual
+          </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Estructura organizacional</CardTitle>
           <CardDescription>
             Administra las sociedades y departamentos de la organización.
