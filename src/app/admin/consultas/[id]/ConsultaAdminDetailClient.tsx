@@ -17,6 +17,7 @@ type Msg = {
   body: string;
   is_internal: boolean;
   created_at: string;
+  edited_at?: string | null;
 };
 
 type Inquiry = {
@@ -45,6 +46,9 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
   const [body, setBody] = useState('');
   const [internal, setInternal] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Mensaje que se está editando y su texto en curso. Editar es deliberado:
+  // se entra explícitamente y se guarda explícitamente.
+  const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -84,6 +88,34 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
       if (okText) setMsg({ type: 'ok', text: okText });
       await load();
       return true;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const guardarEdicion = async () => {
+    if (!editando?.texto.trim()) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/admin/inquiries/${inquiryId}/messages/${editando.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: editando.texto }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg({ type: 'err', text: data.error ?? 'No se pudo editar' });
+        return;
+      }
+      setEditando(null);
+      setMsg({
+        type: 'ok',
+        text: data.sin_cambios
+          ? 'No había cambios que guardar'
+          : 'Mensaje editado. Queda marcado como editado, también del lado del colaborador.',
+      });
+      await load();
     } finally {
       setBusy(false);
     }
@@ -191,8 +223,45 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {m.author_role === 'employee' ? inquiry.employee_name : m.author_role === 'hr' ? 'People' : 'Líder'}
                 {m.is_internal && ' · nota interna'} · {when(m.created_at)}
+                {m.edited_at && ` · editado ${when(m.edited_at)}`}
               </p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
+
+              {editando?.id === m.id ? (
+                <div className="mt-2 space-y-2">
+                  <Textarea
+                    rows={5}
+                    aria-label="Editar el mensaje"
+                    value={editando.texto}
+                    onChange={(e) => setEditando({ id: m.id, texto: e.target.value })}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={guardarEdicion} loading={busy} disabled={!editando.texto.trim()}>
+                      Guardar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditando(null)} disabled={busy}>
+                      Cancelar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    No se le vuelve a notificar: editar es para corregir sin golpear la puerta de nuevo. Si el
+                    cambio amerita avisar, mandá un mensaje nuevo.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
+                  {/* Sólo lo de People: lo que escribió el colaborador es su voz. */}
+                  {m.author_role === 'hr' && (
+                    <button
+                      type="button"
+                      className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+                      onClick={() => setEditando({ id: m.id, texto: m.body })}
+                    >
+                      Editar
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         ))}
