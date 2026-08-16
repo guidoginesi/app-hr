@@ -11,6 +11,12 @@ type AdminManual = ManualCard & { administracion?: boolean };
 
 const MANUALS: AdminManual[] = [
   {
+    href: '/admin/ayuda/agente-de-respuestas',
+    title: 'Agente de respuestas',
+    desc: 'El Manual RRHH adentro de la app: qué se le puede citar a un colaborador, cómo el agente propone una respuesta a una consulta, y cómo se captura lo que el manual no dice.',
+    updated: '2026-08-16',
+  },
+  {
     href: '/admin/ayuda/banco-de-talentos',
     title: 'Banco de Talentos',
     desc: 'Postulaciones espontáneas desde el portal público: los cuatro estados, asignar a una búsqueda abierta, qué pasa cuando alguien vuelve a anotarse y cómo se editan las áreas.',
@@ -43,8 +49,8 @@ const MANUALS: AdminManual[] = [
   {
     href: '/admin/ayuda/consultas',
     title: 'Consultas',
-    desc: 'Bandeja única de People: responder, notas internas, compartir con el líder, estados y cierre, reportes y recurrentes.',
-    updated: '2026-08-02',
+    desc: 'Bandeja única de People: responder, editar una respuesta ya enviada, notas internas, compartir con el líder, estados y cierre, reportes y recurrentes.',
+    updated: '2026-08-16',
   },
   {
     href: '/admin/ayuda/mensajes',
