@@ -9,6 +9,10 @@ create table if not exists public.inquiry_answer_drafts (
   inquiry_id    uuid not null references public.employee_inquiries(id) on delete cascade,
 
   borrador      text,
+  -- Contexto para quien revisa antes de mandar: qué respalda el manual, qué
+  -- hay que decidir y qué dato falta. NO viaja en el mensaje al colaborador:
+  -- al colaborador no le sirve saber de dónde salió la respuesta.
+  nota_para_hr  text,
   -- Slugs de manual_sections. Es la trazabilidad: sin esto no se puede
   -- reconstruir de dónde salió una respuesta.
   secciones_citadas text[] not null default '{}',

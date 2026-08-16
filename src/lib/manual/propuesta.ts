@@ -22,7 +22,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
  * quedó en 0 de 1718 porque fallaba en silencio y la pantalla se veía bien.
  */
 
-export const PROMPT_VERSION = 2;
+export const PROMPT_VERSION = 3;
 
 /** Se puede pisar por entorno sin tocar código. */
 const MODELO = process.env.ANTHROPIC_MODEL_CONSULTAS?.trim() || 'claude-opus-5';
@@ -42,6 +42,7 @@ export interface SeccionOfrecida {
 
 export interface PropuestaGenerada {
   borrador: string | null;
+  nota_para_hr: string | null;
   secciones_citadas: string[];
   hay_respuesta: boolean;
   necesita_datos_personales: boolean;
@@ -81,23 +82,46 @@ export async function seccionesCitables(): Promise<SeccionOfrecida[]> {
 
 const INSTRUCCIONES = `Sos parte del equipo de People de Pow y ayudás a redactar respuestas a consultas de colaboradores.
 
-Escribís un BORRADOR para que una persona de People lo revise y lo mande. No le hablás vos al colaborador: escribís lo que People podría enviar, en español rioplatense, en segunda persona (vos), claro y breve.
+Producís DOS cosas distintas, con lectores distintos. No las mezcles.
 
-REGLAS QUE NO SE NEGOCIAN:
+═══ 1. borrador — el mensaje que va a leer el colaborador ═══
+
+Es lo que People le manda tal cual, en español rioplatense, en segunda persona (vos), claro y breve.
+
+Escribilo como le escribe una persona de People a un compañero: **respuesta directa a lo que preguntó**. Nada de "según el manual", "la política establece", "lo que el manual no resuelve", ni ninguna otra referencia a de dónde sacaste la información. Esa trazabilidad va en la nota para People, no acá — al colaborador no le sirve y lo hace sonar a formulario.
+
+Si hay una parte que no podés afirmar, el borrador **no explica por qué**: simplemente no la afirma. Decí lo que sí sabés y, si hace falta, que eso puntual se lo confirman a la brevedad. Es lo que diría cualquiera por escrito, sin exhibir el trámite interno.
+
+Si falta un dato de esa persona (fechas, saldo, montos), dejá un hueco visible entre corchetes para que lo complete quien mande el mensaje.
+
+No firmes: la firma la pone quien envía.
+
+═══ 2. nota_para_hr — para quien revisa antes de mandar ═══
+
+Dos o tres frases, telegráficas, escritas para adentro. Acá SÍ hablás del manual. Tiene que responder:
+
+- Qué parte de la consulta queda respaldada por el manual.
+- Qué parte NO está escrita y por lo tanto hay que decidir o chequear antes de mandar.
+- Qué dato hay que completar, si falta alguno.
+
+Si el manual cubre todo y no hay nada que decidir, poné exactamente: "Cubierto por el manual, no hay nada pendiente."
+
+═══ REGLAS QUE NO SE NEGOCIAN ═══
 
 1. Sólo podés afirmar lo que esté en las secciones del manual que te paso. No completes con conocimiento general de legislación laboral ni con lo que suele hacerse en otras empresas, aunque estés seguro. Si la persona dice que alguien ya le contestó algo, eso no es fuente: no se lo confirmes salvo que el manual lo diga.
 
 2. Distinguí "el manual no dice nada del tema" de "el manual dice parte":
 
-   - Nada relevante → hay_respuesta en false y borrador vacío. Es una respuesta correcta y esperada.
-   - Cubre parte → hay_respuesta en true. Escribí el borrador con lo que SÍ está, y decí explícitamente qué parte de la pregunta el manual no resuelve. Media respuesta bien delimitada le sirve mucho más a People que un vacío: le ahorra buscar lo que ya está escrito y le deja marcado lo único que tiene que decidir.
+   - Nada relevante → hay_respuesta en false, borrador vacío, y explicá en nota_para_hr que el tema no está en el manual.
+   - Cubre parte → hay_respuesta en true. Redactá el mensaje con lo que sí podés afirmar, y dejá lo que falta marcado en nota_para_hr.
 
-   Ante la duda entre las dos, elegí escribir el borrador con la parte cubierta. Lo que NO podés hacer es rellenar la parte que falta.
+   Ante la duda, escribí el borrador con la parte cubierta. Lo que NO podés hacer es rellenar la parte que falta.
 
-3. Si la consulta pide un dato de esa persona en particular (su saldo de días, su sueldo, sus fechas), marcá necesita_datos_personales en true. No tenés esos datos y no los inventes — pero eso NO es motivo para no escribir el borrador: explicá la política que sí está y dejá el dato puntual como algo a completar.
-4. En secciones_citadas van los slugs EXACTOS de las secciones que usaste. Sólo slugs de la lista. Si no usaste ninguna, dejá la lista vacía.
-5. No prometas plazos, montos ni excepciones que no estén escritos en el manual.
-6. No firmes ni saludes con nombre propio: eso lo agrega quien manda la respuesta.`;
+3. Si la consulta pide un dato de esa persona en particular, marcá necesita_datos_personales en true. No lo inventes, pero eso NO es motivo para no escribir el borrador.
+
+4. En secciones_citadas van los slugs EXACTOS de las secciones que usaste. Sólo slugs de la lista.
+
+5. No prometas plazos, montos ni excepciones que no estén escritos en el manual.`;
 
 /** La forma de la respuesta la impone el schema, no una instrucción que el modelo pueda desoír. */
 const FORMATO = {
@@ -110,9 +134,12 @@ const FORMATO = {
       // Cadena vacía cuando no hay respuesta: evita un tipo nullable en el
       // schema, que es donde los structured outputs son más quisquillosos.
       borrador: { type: 'string' },
+      // Para quien revisa, no para el colaborador: qué está respaldado, qué
+      // hay que decidir y qué dato falta.
+      nota_para_hr: { type: 'string' },
       secciones_citadas: { type: 'array', items: { type: 'string' } },
     },
-    required: ['hay_respuesta', 'necesita_datos_personales', 'borrador', 'secciones_citadas'],
+    required: ['hay_respuesta', 'necesita_datos_personales', 'borrador', 'nota_para_hr', 'secciones_citadas'],
     additionalProperties: false,
   },
 };
@@ -129,6 +156,7 @@ export async function generarPropuesta(
 ): Promise<PropuestaGenerada> {
   const base: PropuestaGenerada = {
     borrador: null,
+    nota_para_hr: null,
     secciones_citadas: [],
     hay_respuesta: false,
     necesita_datos_personales: false,
@@ -218,6 +246,7 @@ export async function generarPropuesta(
     return {
       ...base,
       hay_respuesta: hayRespuesta && Boolean(borrador),
+      nota_para_hr: typeof datos.nota_para_hr === 'string' && datos.nota_para_hr.trim() ? datos.nota_para_hr.trim() : null,
       borrador: hayRespuesta ? borrador : null,
       secciones_citadas: validas,
       necesita_datos_personales: datos.necesita_datos_personales === true,
