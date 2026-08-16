@@ -38,7 +38,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
   const { data: messages } = await supabase
     .from('inquiry_messages')
-    .select('id, author_role, body, created_at')
+    .select('id, author_role, body, created_at, edited_at')
     .eq('inquiry_id', id)
     .eq('is_internal', false)
     .order('created_at', { ascending: true });

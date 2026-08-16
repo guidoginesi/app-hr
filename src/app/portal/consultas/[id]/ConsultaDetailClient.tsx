@@ -14,7 +14,7 @@ import {
   type InquiryStatus,
 } from '@/lib/inquiries';
 
-type Msg = { id: string; author_role: 'employee' | 'hr' | 'leader'; body: string; created_at: string };
+type Msg = { id: string; author_role: 'employee' | 'hr' | 'leader'; body: string; created_at: string; edited_at?: string | null };
 type Inquiry = {
   id: string;
   category: InquiryCategory;
@@ -134,6 +134,9 @@ export function ConsultaDetailClient({ inquiryId }: { inquiryId: string }) {
               >
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {mine ? 'Vos' : m.author_role === 'hr' ? 'People' : 'Tu líder'} · {when(m.created_at)}
+                  {/* Si se editó, se dice. Un mensaje que cambia en silencio
+                      debajo de quien lo leyó es peor que no poder editarlo. */}
+                  {m.edited_at && ` · editado ${when(m.edited_at)}`}
                 </p>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
               </div>
