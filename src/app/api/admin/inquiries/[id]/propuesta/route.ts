@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { generarPropuesta, seccionesCitables, datosDelColaborador, PROMPT_VERSION } from '@/lib/manual/propuesta';
+import { faqsVigentes } from '@/lib/manual/faq';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,13 +32,20 @@ async function ultimaPropuesta(inquiryId: string) {
   if (!data) return null;
 
   const slugs = (data.secciones_citadas ?? []) as string[];
-  let citas: { slug: string; ruta: string[] }[] = [];
-  if (slugs.length) {
+  const citas: { slug: string; ruta: string[] }[] = [];
+  const delManual = slugs.filter((s) => !s.startsWith('faq:'));
+  const deFaq = slugs.filter((s) => s.startsWith('faq:')).map((s) => s.slice(4));
+  if (delManual.length) {
     const { data: secciones } = await supabase
       .from('manual_sections')
       .select('slug, ruta')
-      .in('slug', slugs);
-    citas = (secciones ?? []).map((s) => ({ slug: s.slug as string, ruta: (s.ruta ?? []) as string[] }));
+      .in('slug', delManual);
+    for (const s of secciones ?? []) citas.push({ slug: s.slug as string, ruta: (s.ruta ?? []) as string[] });
+  }
+  if (deFaq.length) {
+    const { data: faqs } = await supabase.from('manual_faqs').select('id, pregunta').in('id', deFaq);
+    // Se marcan como FAQ para que en la pantalla se distingan del manual.
+    for (const f of faqs ?? []) citas.push({ slug: `faq:${f.id}`, ruta: ['FAQ', f.pregunta as string] });
   }
   return { ...data, citas };
 }
@@ -83,8 +91,9 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
     // Los datos de la persona son opcionales: si fallan, la propuesta sale
     // igual pero sin fechas concretas. No vale la pena perder la propuesta
     // entera por no poder leer un saldo.
-    const [secciones, datos] = await Promise.all([
+    const [secciones, faqs, datos] = await Promise.all([
       seccionesCitables(),
+      faqsVigentes(),
       datosDelColaborador(consulta.employee_id as string).catch((e) => {
         console.error('[propuesta] no se pudieron leer los datos del colaborador:', e);
         return '';
@@ -99,6 +108,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
         datos,
       },
       secciones,
+      faqs,
     );
   } catch (error) {
     return NextResponse.json(

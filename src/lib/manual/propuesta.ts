@@ -1,5 +1,6 @@
 import { getAnthropic } from '@/lib/anthropic';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { slugFaq, type FaqVigente } from '@/lib/manual/faq';
 
 /**
  * Propone una respuesta a una consulta, basada en el Manual RRHH.
@@ -22,7 +23,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
  * quedó en 0 de 1718 porque fallaba en silencio y la pantalla se veía bien.
  */
 
-export const PROMPT_VERSION = 4;
+export const PROMPT_VERSION = 5;
 
 /** Se puede pisar por entorno sin tocar código. */
 const MODELO = process.env.ANTHROPIC_MODEL_CONSULTAS?.trim() || 'claude-opus-5';
@@ -179,7 +180,9 @@ Si el manual cubre todo y no hay nada que decidir, poné exactamente: "Cubierto 
 
 ═══ REGLAS QUE NO SE NEGOCIAN ═══
 
-1. Sólo podés afirmar lo que esté en las secciones del manual que te paso. No completes con conocimiento general de legislación laboral ni con lo que suele hacerse en otras empresas, aunque estés seguro. Si la persona dice que alguien ya le contestó algo, eso no es fuente: no se lo confirmes salvo que el manual lo diga.
+0. Tenés DOS fuentes con la misma autoridad: las secciones del manual y las FAQ. Las FAQ son respuestas que People ya dio y confirmó para casos que el manual no cubre; usalas como usarías el manual. Si las dos hablan del mismo tema y se contradicen, ganá por el manual y avisá de la contradicción en nota_para_hr.
+
+1. Sólo podés afirmar lo que esté en las secciones del manual o en las FAQ que te paso. No completes con conocimiento general de legislación laboral ni con lo que suele hacerse en otras empresas, aunque estés seguro. Si la persona dice que alguien ya le contestó algo, eso no es fuente: no se lo confirmes salvo que el manual lo diga.
 
 2. Distinguí "el manual no dice nada del tema" de "el manual dice parte":
 
@@ -222,6 +225,12 @@ const FORMATO = {
   },
 };
 
+function armarFaqs(faqs: FaqVigente[]): string {
+  return faqs
+    .map((f) => `### slug: ${slugFaq(f.id)}\n### pregunta: ${f.pregunta}\n${f.respuesta}`)
+    .join('\n\n---\n\n');
+}
+
 function armarManual(secciones: SeccionOfrecida[]): string {
   return secciones
     .map((s) => `### slug: ${s.slug}\n### sección: ${s.ruta.join(' › ')}\n${s.texto}`)
@@ -231,6 +240,7 @@ function armarManual(secciones: SeccionOfrecida[]): string {
 export async function generarPropuesta(
   consulta: ConsultaParaProponer,
   secciones: SeccionOfrecida[],
+  faqs: FaqVigente[] = [],
 ): Promise<PropuestaGenerada> {
   const base: PropuestaGenerada = {
     borrador: null,
@@ -265,6 +275,9 @@ export async function generarPropuesta(
           role: 'user',
           content:
             `SECCIONES DEL MANUAL DISPONIBLES:\n\n${armarManual(secciones)}\n\n` +
+            (faqs.length
+              ? `---\n\nFAQ — RESPUESTAS QUE PEOPLE YA CONFIRMÓ (misma autoridad que el manual)\n\n${armarFaqs(faqs)}\n\n`
+              : '') +
             (consulta.datos ? `---\n\nDATOS DE LA PERSONA (de la app, no del manual)\n\n${consulta.datos}\n\n` : '') +
             `---\n\nCONSULTA\n` +
             `Categoría: ${consulta.categoria}\n` +
@@ -306,7 +319,7 @@ export async function generarPropuesta(
     // Sólo se aceptan citas a secciones que efectivamente le pasamos. Una cita a
     // algo que no estaba es un invento, y un invento con apariencia de fuente es
     // exactamente lo que no puede pasar.
-    const ofrecidos = new Set(secciones.map((s) => s.slug));
+    const ofrecidos = new Set([...secciones.map((s) => s.slug), ...faqs.map((f) => slugFaq(f.id))]);
     const citadas = Array.isArray(datos.secciones_citadas)
       ? (datos.secciones_citadas as unknown[]).filter((s): s is string => typeof s === 'string')
       : [];
