@@ -16,6 +16,7 @@ type Cita = { slug: string; ruta: string[] };
 type Propuesta = {
   id: string;
   borrador: string | null;
+  nota_para_hr: string | null;
   hay_respuesta: boolean;
   necesita_datos_personales: boolean;
   secciones_ofrecidas: number;
@@ -141,6 +142,17 @@ export function PropuestaAgente({
               <div className="whitespace-pre-wrap rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-foreground">
                 {propuesta.borrador}
               </div>
+
+              {/* Para quien revisa, no para el colaborador: va afuera del borrador
+                  y con otro fondo, para que no se confunda con el mensaje. */}
+              {propuesta.nota_para_hr && (
+                <div className="rounded-lg border border-[var(--border)] bg-secondary px-4 py-3">
+                  <p className="text-xs font-medium text-secondary-foreground">Antes de mandarlo</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-secondary-foreground">
+                    {propuesta.nota_para_hr}
+                  </p>
+                </div>
+              )}
 
               {propuesta.citas.length > 0 && (
                 <div className="text-xs text-muted-foreground">

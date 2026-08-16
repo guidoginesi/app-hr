@@ -102,6 +102,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
   const { error: insertError } = await supabase.from('inquiry_answer_drafts').insert({
     inquiry_id: id,
     borrador: generada.borrador,
+    nota_para_hr: generada.nota_para_hr,
     secciones_citadas: generada.secciones_citadas,
     hay_respuesta: generada.hay_respuesta,
     necesita_datos_personales: generada.necesita_datos_personales,
