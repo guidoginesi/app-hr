@@ -36,6 +36,22 @@ export default async function AdminConfiguracionPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Agujeros del manual</CardTitle>
+          <CardDescription>
+            Cuando el manual no alcanza y People contesta igual, esa respuesta es conocimiento de
+            la empresa que no está escrito. Acá se captura como pregunta frecuente para que la
+            próxima vez ya esté.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/admin/configuracion/faq" className={buttonVariants({ variant: 'primary' })}>
+            Ver los agujeros
+          </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Estructura organizacional</CardTitle>
           <CardDescription>
             Administra las sociedades y departamentos de la organización.
