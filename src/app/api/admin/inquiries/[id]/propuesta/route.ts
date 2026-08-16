@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { generarPropuesta, seccionesCitables, PROMPT_VERSION } from '@/lib/manual/propuesta';
+import { generarPropuesta, seccionesCitables, datosDelColaborador, PROMPT_VERSION } from '@/lib/manual/propuesta';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +59,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
 
   const { data: consulta } = await supabase
     .from('inquiries_with_details')
-    .select('id, subject, category, employee_name')
+    .select('id, subject, category, employee_name, employee_id')
     .eq('id', id)
     .maybeSingle();
   if (!consulta) return NextResponse.json({ error: 'Consulta no encontrada' }, { status: 404 });
@@ -80,13 +80,23 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
 
   let generada;
   try {
-    const secciones = await seccionesCitables();
+    // Los datos de la persona son opcionales: si fallan, la propuesta sale
+    // igual pero sin fechas concretas. No vale la pena perder la propuesta
+    // entera por no poder leer un saldo.
+    const [secciones, datos] = await Promise.all([
+      seccionesCitables(),
+      datosDelColaborador(consulta.employee_id as string).catch((e) => {
+        console.error('[propuesta] no se pudieron leer los datos del colaborador:', e);
+        return '';
+      }),
+    ]);
     generada = await generarPropuesta(
       {
         asunto: consulta.subject as string,
         categoria: consulta.category as string,
         nombre: consulta.employee_name as string,
         mensaje: delColaborador.map((m) => m.body as string).join('\n\n'),
+        datos,
       },
       secciones,
     );

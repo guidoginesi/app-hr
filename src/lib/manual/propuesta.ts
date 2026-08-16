@@ -22,7 +22,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
  * quedó en 0 de 1718 porque fallaba en silencio y la pantalla se veía bien.
  */
 
-export const PROMPT_VERSION = 3;
+export const PROMPT_VERSION = 4;
 
 /** Se puede pisar por entorno sin tocar código. */
 const MODELO = process.env.ANTHROPIC_MODEL_CONSULTAS?.trim() || 'claude-opus-5';
@@ -58,6 +58,77 @@ export interface ConsultaParaProponer {
   categoria: string;
   mensaje: string;
   nombre: string;
+  /** Lo que la app sabe de esa persona. Vacío si no se pudo leer. */
+  datos: string;
+}
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+/** El modelo no calcula días de la semana: se los damos ya resueltos. */
+function fecha(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${DIAS[d.getDay()]} ${d.getDate()}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+/**
+ * Lo que la app sabe de quien consulta: licencias cargadas y saldos.
+ *
+ * Es un recorte a propósito. Va lo que hace falta para contestar sobre
+ * licencias —que es de lo que se pregunta— y NO va nada de compensación: el
+ * sueldo es el dato más sensible del sistema y no tiene por qué salir de la app
+ * para redactar un borrador.
+ */
+export async function datosDelColaborador(employeeId: string): Promise<string> {
+  const supabase = getSupabaseServer();
+  const partes: string[] = [];
+
+  const { data: persona } = await supabase
+    .from('employees')
+    .select('hire_date, job_title')
+    .eq('id', employeeId)
+    .maybeSingle();
+  if (persona?.hire_date) {
+    const anios = Math.floor((Date.now() - new Date(persona.hire_date as string).getTime()) / 31557600000);
+    partes.push(`Ingreso: ${fecha(persona.hire_date as string)} (antigüedad: ${anios} ${anios === 1 ? 'año' : 'años'})`);
+  }
+
+  const { data: licencias } = await supabase
+    .from('leave_requests_with_details')
+    .select('leave_type_name, start_date, end_date, days_requested, status')
+    .eq('employee_id', employeeId)
+    .order('start_date', { ascending: false })
+    .limit(8);
+  if (licencias?.length) {
+    partes.push(
+      'Licencias cargadas en el Portal (de la más reciente):\n' +
+        licencias
+          .map(
+            (l) =>
+              `- ${l.leave_type_name}: del ${fecha(l.start_date as string)} al ${fecha(l.end_date as string)}` +
+              ` · ${l.days_requested} días · ${l.status}`,
+          )
+          .join('\n'),
+    );
+  }
+
+  const anio = new Date().getFullYear();
+  const { data: saldos } = await supabase
+    .from('leave_balances_with_details')
+    .select('leave_type_name, available_days, used_days, pending_days')
+    .eq('employee_id', employeeId)
+    .eq('year', anio);
+  if (saldos?.length) {
+    partes.push(
+      `Saldos ${anio}:\n` +
+        saldos
+          .map((b) => `- ${b.leave_type_name}: ${b.available_days} disponibles, ${b.used_days} usados, ${b.pending_days} pendientes`)
+          .join('\n'),
+    );
+  }
+
+  return partes.join('\n\n');
 }
 
 /**
@@ -121,7 +192,14 @@ Si el manual cubre todo y no hay nada que decidir, poné exactamente: "Cubierto 
 
 4. En secciones_citadas van los slugs EXACTOS de las secciones que usaste. Sólo slugs de la lista.
 
-5. No prometas plazos, montos ni excepciones que no estén escritos en el manual.`;
+5. No prometas plazos, montos ni excepciones que no estén escritos en el manual.
+
+6. Sobre los DATOS DE LA PERSONA, si vienen:
+
+   - Son lo que está cargado en la app. Usalos para ser concreto —fechas, días, saldos— en vez de dejar huecos. Si tenés la fecha, escribila; no pongas [completar].
+   - Dos fuentes distintas: el manual dice la POLÍTICA, los datos dicen EL CASO. No uses uno para afirmar lo del otro.
+   - Los días de la semana ya vienen resueltos. No los calcules vos, no cuentes días hábiles ni feriados, y no infieras fechas que no estén ahí.
+   - **Si lo que cuenta la persona no coincide con los datos, no se lo discutas en el borrador.** Escribí el borrador con lo que dicen los datos y avisá de la diferencia en nota_para_hr, para que People lo verifique antes de mandar.`;
 
 /** La forma de la respuesta la impone el schema, no una instrucción que el modelo pueda desoír. */
 const FORMATO = {
@@ -187,6 +265,7 @@ export async function generarPropuesta(
           role: 'user',
           content:
             `SECCIONES DEL MANUAL DISPONIBLES:\n\n${armarManual(secciones)}\n\n` +
+            (consulta.datos ? `---\n\nDATOS DE LA PERSONA (de la app, no del manual)\n\n${consulta.datos}\n\n` : '') +
             `---\n\nCONSULTA\n` +
             `Categoría: ${consulta.categoria}\n` +
             `Asunto: ${consulta.asunto}\n` +
