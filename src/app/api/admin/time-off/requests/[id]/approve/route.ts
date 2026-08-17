@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
+import { sincronizarLicencia } from '@/lib/leaveCalendar';
 
 // PUT /api/admin/time-off/requests/[id]/approve - HR Admin approves a leave request
 export async function PUT(
@@ -101,6 +102,10 @@ export async function PUT(
           .eq('year', startYear);
       }
     }
+
+    // El evento en el calendario del equipo. Sin await: si Google falla, la
+    // licencia igual quedó aprobada.
+    sincronizarLicencia(id).catch((err) => console.error('[calendar] al aprobar:', err));
 
     // Send email notification to employee
     const formatDate = (date: string) => {
