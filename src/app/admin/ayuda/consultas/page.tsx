@@ -44,8 +44,8 @@ export default async function AyudaConsultasPage() {
           <p>Arriba del cuadro de respuesta vas a ver <b>Propuesta desde el manual</b>: un borrador armado con el Manual RRHH, que revisás y enviás vos. Está explicado aparte en el <Link href="/admin/ayuda/agente-de-respuestas" className="font-medium text-[var(--brand-strong)] underline underline-offset-2">manual del agente de respuestas</Link>.</p>
         </ManualStep>
 
-        <ManualStep n={4} title="Editar una respuesta ya enviada" imageAlt="Mensaje de People con el lápiz de editar y la leyenda 'editado' con la fecha.">
-          <p>Si mandaste un dato mal, no hace falta escribir otro mensaje para corregirlo: pasá el mouse por encima de tu mensaje y tocá el <b>lápiz</b>.</p>
+        <ManualStep image="/manual/consultas-admin/04-editar.png" n={4} title="Editar una respuesta ya enviada" imageAlt="Mensaje de People con la leyenda 'editado' y la fecha, y el botón Editar debajo.">
+          <p>Si mandaste un dato mal, no hace falta escribir otro mensaje para corregirlo: debajo de tu mensaje tenés <b>Editar</b>.</p>
           <p>Queda <b>marcado como editado</b>, con la fecha, y esa marca <b>también la ve el colaborador</b>. Si se editó, se dice. La versión anterior se guarda, así se puede reconstruir qué decía cuando la persona lo leyó.</p>
           <p>Editar <b>no vuelve a notificar</b>: el punto es corregir sin volver a golpear la puerta. Si el cambio amerita avisar, mandá un mensaje nuevo. Y si la persona ya lo leyó, avisale igual: la marca dice que cambió, no qué cambió.</p>
           <p>Sólo se pueden editar <b>los mensajes de People</b>. Lo que escribió el colaborador no se toca: es su voz, y editarla sería reescribir lo que preguntó.</p>

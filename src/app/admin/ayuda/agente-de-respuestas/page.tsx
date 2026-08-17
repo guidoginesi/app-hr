@@ -31,7 +31,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
       </div>
 
       <div className="mt-8 space-y-10">
-        <ManualStep n={1} title="Dónde encontrarlo" imageAlt="Configuración con las tarjetas 'Manual de RRHH' y 'Agujeros del manual'.">
+        <ManualStep image="/manual/agente-de-respuestas/01-configuracion.png" n={1} title="Dónde encontrarlo" imageAlt="Configuración con las tarjetas 'Manual de RRHH' y 'Agujeros del manual'.">
           <p>Son tres lugares:</p>
           <p>
             · <b>Configuración → Manual de RRHH</b>: el manual importado y la revisión de audiencias.<br />
@@ -40,7 +40,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={2} title="Traer el manual desde el Google Doc" imageAlt="Menú 'Pow RRHH → Sincronizar con app-hr' dentro del Google Doc.">
+        <ManualStep image="/manual/agente-de-respuestas/02-estado.png" n={2} title="Traer el manual desde el Google Doc" imageAlt="Menú 'Pow RRHH → Sincronizar con app-hr' dentro del Google Doc.">
           <p>
             El manual sigue viviendo en el Doc: ahí se escribe y ahí se discute. La app guarda una <b>copia</b> para
             poder citarla.
@@ -57,7 +57,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={3} title="Decidir qué se le puede citar a un colaborador" imageAlt="Lista de secciones agrupadas por capítulo, con los botones Colaborador / Solo HR / Sin revisar.">
+        <ManualStep image="/manual/agente-de-respuestas/03-secciones.png" n={3} title="Decidir qué se le puede citar a un colaborador" imageAlt="Lista de secciones agrupadas por capítulo, con los botones Colaborador / Solo HR / Sin revisar.">
           <p>Cada sección tiene una de tres etiquetas:</p>
           <p>
             · <b>Colaborador</b> — el agente la puede usar para escribir una respuesta.<br />
@@ -94,7 +94,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           <p>Tocar la etiqueta (aunque la dejes igual) limpia la marca.</p>
         </ManualStep>
 
-        <ManualStep n={5} title="Pedir una propuesta en una consulta" imageAlt="Bloque 'Propuesta desde el manual' con el botón 'Proponer una respuesta'.">
+        <ManualStep image="/manual/agente-de-respuestas/05-pedir.png" n={5} title="Pedir una propuesta en una consulta" imageAlt="Bloque 'Propuesta desde el manual' con el botón 'Proponer una respuesta'.">
           <p>
             En cualquier consulta abierta, tocá <b>Proponer una respuesta</b>. Tarda unos segundos porque lee el manual
             entero, no un resumen.
@@ -115,7 +115,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={6} title="Leer la propuesta" imageAlt="Propuesta con el borrador, el bloque 'Antes de mandarlo' y la lista 'Salió de'.">
+        <ManualStep image="/manual/agente-de-respuestas/06-propuesta.png" n={6} title="Leer la propuesta" imageAlt="Propuesta con el borrador, el bloque 'Antes de mandarlo' y la lista 'Salió de'.">
           <p>Vienen tres cosas separadas a propósito:</p>
           <p>
             · <b>El borrador</b> — el mensaje tal como lo leería el colaborador. No dice &quot;según el manual&quot; ni explica de
@@ -134,7 +134,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={7} title="Usarla, editarla o descartarla" imageAlt="Botones 'Usar este borrador' y 'Descartar' debajo de la propuesta.">
+        <ManualStep image="/manual/agente-de-respuestas/07-usar.png" n={7} title="Usarla, editarla o descartarla" imageAlt="Botones 'Usar este borrador' y 'Descartar' debajo de la propuesta.">
           <p>
             <b>Usar este borrador</b> lo copia al cuadro de respuesta. Ahí lo editás como cualquier respuesta tuya y lo
             enviás vos. <b>Nunca se manda solo</b>, ni siquiera si está perfecto.
@@ -145,7 +145,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={8} title="Cómo aprende" imageAlt="Propuesta ya calificada, con la leyenda 'Se usó editada' y la fecha.">
+        <ManualStep image="/manual/agente-de-respuestas/08-calificada.png" n={8} title="Cómo aprende" imageAlt="Propuesta ya calificada, con la leyenda 'Se usó editada' y la fecha.">
           <p>
             No hay que calificar nada a mano. Cuando enviás la respuesta, la app compara <b>lo que mandaste</b> contra{' '}
             <b>lo que se había propuesto</b> y la marca sola:
@@ -166,7 +166,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={9} title="Agujeros del manual" imageAlt="Lista de agujeros con el motivo, la respuesta que dio People y el botón 'Proponer FAQ'.">
+        <ManualStep image="/manual/agente-de-respuestas/09-agujeros.png" n={9} title="Agujeros del manual" imageAlt="Lista de agujeros con el motivo, la respuesta que dio People y el botón 'Proponer FAQ'.">
           <p>
             En <b>Configuración → Agujeros del manual</b> se juntan esas consultas, cada una con el motivo (<i>el manual
             no cubría la consulta</i> o <i>HR editó el borrador</i>) y con la respuesta que ustedes terminaron dando.
@@ -185,7 +185,7 @@ export default async function AyudaAgenteDeRespuestasPage() {
           </p>
         </ManualStep>
 
-        <ManualStep n={10} title="El destino de una FAQ es dejar de ser FAQ" imageAlt="Aviso 'Faltan en el Doc' con el botón 'Ya la subí al Doc'.">
+        <ManualStep image="/manual/agente-de-respuestas/10-faq.png" n={10} title="El destino de una FAQ es dejar de ser FAQ" imageAlt="Aviso 'Faltan en el Doc' con el botón 'Ya la subí al Doc'.">
           <p>
             Una FAQ aprobada queda marcada como <b>Falta en el Doc</b> hasta que la subas al manual de verdad. La app
             avisa cuántas hay pendientes.
