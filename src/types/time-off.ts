@@ -108,6 +108,9 @@ export interface LeaveRequestWithDetails extends LeaveRequest {
   // Two-level approval names
   leader_name: string | null;
   hr_approver_name: string | null;
+  /** Id del evento en el calendario del equipo. null = no está publicado. */
+  google_event_id: string | null;
+  calendar_synced_at: string | null;
 }
 
 export interface LeaveBalance {

@@ -9,6 +9,7 @@ import { TabNav } from '@pow/ui/components/ui/tab-nav';
 import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
 import { LeaveCertificateControl } from '@/components/time-off/LeaveCertificateControl';
 import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
+import { textoDelEvento } from '@/lib/leaveCalendarText';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 
 const MONTH_NAMES = [
@@ -284,18 +285,23 @@ export default function TimeOffRequestsPage() {
     return ['pending', 'pending_leader', 'pending_hr'].includes(status);
   }
 
+  /**
+   * El link manual, que ahora es sólo el plan B: si la integración está andando,
+   * el evento ya existe y este botón lo duplicaría.
+   *
+   * El título sale de `textoDelEvento`, el mismo que usa la sincronización, para
+   * que el plan B no publique "Licencia por enfermedad — Fulano" justo cuando el
+   * camino normal se cuida de no hacerlo.
+   */
   function buildGCalUrl(request: LeaveRequestWithDetails): string {
     const startDate = request.start_date.replace(/-/g, '');
     // GCal all-day end date is exclusive — add 1 day
     const endObj = new Date(request.end_date + 'T00:00:00');
     endObj.setDate(endObj.getDate() + 1);
     const endDate = endObj.toISOString().slice(0, 10).replace(/-/g, '');
-    const title = encodeURIComponent(`${request.leave_type_name} — ${request.employee_name}`);
-    const details = encodeURIComponent(
-      `Tipo: ${request.leave_type_name}\nEmpleado: ${request.employee_name}\nDuración: ${request.days_requested} ${request.count_type === 'weeks' ? 'semana(s)' : 'día(s)'}`
-    );
+    const { titulo, descripcion } = textoDelEvento(request);
     const calId = encodeURIComponent('holapow.com_k5bov6etce7tj5nv40kutgni5s@group.calendar.google.com');
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}&src=${calId}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(descripcion)}&src=${calId}`;
   }
 
   function canCancel(request: LeaveRequestWithDetails): boolean {
@@ -708,17 +714,30 @@ export default function TimeOffRequestsPage() {
                             {request.hr_approver_name?.trim() && <p>HR: {request.hr_approver_name}</p>}
                             {request.leader_name?.trim() && <p>Líder: {request.leader_name}</p>}
                           </div>
-                          <a
-                            href={buildGCalUrl(request)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex w-fit items-center gap-1.5 rounded border border-[var(--border)] bg-card px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:bg-muted"
-                          >
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
-                            </svg>
-                            Google Calendar
-                          </a>
+                          {/* Si el evento ya existe, se informa y no se ofrece el
+                              link: apretarlo crearía un duplicado. El link queda
+                              sólo como plan B mientras la integración no esté
+                              configurada o si falló. */}
+                          {request.google_event_id ? (
+                            <span className="inline-flex w-fit items-center gap-1.5 rounded bg-success-subtle px-2.5 py-1 text-xs font-medium text-[var(--green-700)]">
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+                              </svg>
+                              En el calendario
+                            </span>
+                          ) : (
+                            <a
+                              href={buildGCalUrl(request)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex w-fit items-center gap-1.5 rounded border border-[var(--border)] bg-card px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:bg-muted"
+                            >
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+                              </svg>
+                              Agregar al calendario
+                            </a>
+                          )}
                           {canCancel(request) && (
                             <>
                               {cancellingId === request.id ? (

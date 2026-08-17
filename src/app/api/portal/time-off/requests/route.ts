@@ -7,6 +7,7 @@ import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType } from '@/lib/leaveTypes';
 import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline } from '@/lib/leaveCertificates';
 import { BIRTHDAY_LEAVE_CODE, birthdayWindow, isWithinBirthdayWindow } from '@/lib/birthdayLeave';
+import { sincronizarLicencia } from '@/lib/leaveCalendar';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -349,6 +350,12 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('Error creating leave request:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Los tipos autorregistrados —enfermedad— nacen aprobados y no pasan por
+    // ninguna aprobación después: si el evento no se crea acá, no se crea nunca.
+    if (initialStatus === 'approved') {
+      sincronizarLicencia(data.id).catch((err) => console.error('[calendar] al registrar:', err));
     }
 
     // Update pending days in balance (skip for unlimited types)

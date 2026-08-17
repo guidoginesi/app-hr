@@ -5,6 +5,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
+import { sincronizarLicencia } from '@/lib/leaveCalendar';
 
 const CancelSchema = z.object({
   cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido'),
@@ -110,6 +111,10 @@ export async function PUT(
         }
       }
     }
+
+    // Sacar el evento del calendario del equipo: una licencia cancelada que
+    // sigue publicada es peor que no haberla publicado nunca.
+    sincronizarLicencia(id).catch((err) => console.error('[calendar] al cancelar:', err));
 
     // Delete remote work weeks if applicable
     await supabase.from('remote_work_weeks').delete().eq('leave_request_id', id);
