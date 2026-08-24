@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/checkAuth';
 import { AyudaLayout } from '../AyudaLayout';
@@ -40,28 +41,36 @@ export default async function AyudaConsultasPage() {
           <p>Entrá a la consulta y escribí la respuesta. Al enviarla, la consulta pasa a <b>Esperando al colaborador</b>, se registra el cumplimiento del objetivo y queda <b>asignada a vos</b> automáticamente.</p>
           <p>Si con esa respuesta el tema queda cerrado, usá <b>Responder y marcar resuelta</b>: hace las dos cosas de una, sin tener que tocar después el selector de estado.</p>
           <p>Al colaborador le llega un aviso en el portal y por mail.</p>
+          <p>Arriba del cuadro de respuesta vas a ver <b>Propuesta desde el manual</b>: un borrador armado con el Manual RRHH, que revisás y enviás vos. Está explicado aparte en el <Link href="/admin/ayuda/agente-de-respuestas" className="font-medium text-[var(--brand-strong)] underline underline-offset-2">manual del agente de respuestas</Link>.</p>
         </ManualStep>
 
-        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={4} title="Notas internas" imageAlt="Casilla 'Nota interna' debajo del cuadro de respuesta, y una nota destacada en el hilo.">
+        <ManualStep image="/manual/consultas-admin/04-editar.png" n={4} title="Editar una respuesta ya enviada" imageAlt="Mensaje de People con la leyenda 'editado' y la fecha, y el botón Editar debajo.">
+          <p>Si mandaste un dato mal, no hace falta escribir otro mensaje para corregirlo: debajo de tu mensaje tenés <b>Editar</b>.</p>
+          <p>Queda <b>marcado como editado</b>, con la fecha, y esa marca <b>también la ve el colaborador</b>. Si se editó, se dice. La versión anterior se guarda, así se puede reconstruir qué decía cuando la persona lo leyó.</p>
+          <p>Editar <b>no vuelve a notificar</b>: el punto es corregir sin volver a golpear la puerta. Si el cambio amerita avisar, mandá un mensaje nuevo. Y si la persona ya lo leyó, avisale igual: la marca dice que cambió, no qué cambió.</p>
+          <p>Sólo se pueden editar <b>los mensajes de People</b>. Lo que escribió el colaborador no se toca: es su voz, y editarla sería reescribir lo que preguntó.</p>
+        </ManualStep>
+
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={5} title="Notas internas" imageAlt="Casilla 'Nota interna' debajo del cuadro de respuesta, y una nota destacada en el hilo.">
           <p>Si tildás <b>Nota interna</b>, lo que escribas queda en el hilo pero <b>el colaborador no lo ve</b> (se muestra con borde punteado). Sirve para coordinar entre ustedes sin sacar la conversación de la app.</p>
         </ManualStep>
 
-        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={5} title="Compartir con el líder" imageAlt="Bloque 'Compartir con el líder' con el botón Compartir.">
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={6} title="Compartir con el líder" imageAlt="Bloque 'Compartir con el líder' con el botón Compartir.">
           <p>Si necesitás la mirada del líder, tocá <b>Compartir</b>. Le da acceso <b>solo a esa consulta</b> — nunca a las del resto del equipo — y la ve en su portal, donde puede responder. <b>No ve las notas internas.</b></p>
           <p>Es reversible: <b>Dejar de compartir</b> le quita el acceso. Queda registrado quién compartió y cuándo.</p>
         </ManualStep>
 
-        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={6} title="Estados y cierre" imageAlt="Selector de estado con las opciones En curso, Esperando al colaborador, Resuelta y Cerrada.">
+        <ManualStep image="/manual/consultas-admin/03-detalle.png" n={7} title="Estados y cierre" imageAlt="Selector de estado con las opciones En curso, Esperando al colaborador, Resuelta y Cerrada.">
           <p>Arriba a la derecha tenés el <b>estado</b> de la consulta. Cuando terminás, marcala como <b>Resuelta</b> —o usá <b>Responder y marcar resuelta</b> directamente desde el cuadro de respuesta—. Si el colaborador no dice nada, <b>se cierra sola a los 3 días hábiles</b>.</p>
           <p>Tanto en <b>Resuelta</b> como en <b>Cerrada</b> el colaborador puede <b>reabrirla</b> respondiendo en el hilo: desde el cierre tiene <b>7 días</b>, y pasado ese plazo abre una nueva.</p>
         </ManualStep>
 
-        <ManualStep image="/manual/consultas-admin/07-reportes.png" n={7} title="Reportes" imageAlt="Pestaña Reportes con el volumen por categoría y el bloque de consultas recurrentes.">
+        <ManualStep image="/manual/consultas-admin/07-reportes.png" n={8} title="Reportes" imageAlt="Pestaña Reportes con el volumen por categoría y el bloque de consultas recurrentes.">
           <p>En la pestaña <b>Reportes</b> ves el volumen por categoría, el <b>tiempo de primera respuesta</b> (mediana y p90) y el cumplimiento del objetivo.</p>
           <p>Lo más útil es <b>Consultas recurrentes</b>: reabiertas, continuaciones y quién pregunta lo mismo tres o más veces. Cuando algo se repite, casi siempre es un problema de comunicación o de proceso, no una duda individual.</p>
         </ManualStep>
 
-        <ManualStep n={8} title="Qué pasa automáticamente" imageAlt="Ejemplo del mail diario con las consultas sin responder.">
+        <ManualStep n={9} title="Qué pasa automáticamente" imageAlt="Ejemplo del mail diario con las consultas sin responder.">
           <p>Cada mañana llega un <b>resumen por mail</b> con las consultas sin responder, marcando las vencidas. Se repite todos los días hasta que la cola queda vacía.</p>
           <p>Y las consultas resueltas se cierran solas a los 3 días hábiles, para que la bandeja no se llene de casos terminados.</p>
         </ManualStep>

@@ -89,9 +89,11 @@ const settlementStatusConfig: Record<SettlementStatus, { label: string; classes:
 
 type PayrollPeriodDetailClientProps = {
   periodId: string;
+  /** Administración: ve todo, no toca nada. Las rutas lo vuelven a chequear. */
+  soloLectura?: boolean;
 };
 
-export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClientProps) {
+export function PayrollPeriodDetailClient({ periodId, soloLectura = false }: PayrollPeriodDetailClientProps) {
   const [period, setPeriod] = useState<PayrollPeriod | null>(null);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -537,32 +539,38 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
             Excel Monotributo
           </Button>
 
-          {/* Excel import */}
-          <Button
-            variant="outline"
-            loading={importing}
-            onClick={() => importInputRef.current?.click()}
-          >
-            Importar Excel
-          </Button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            className="hidden"
-            onChange={handleImportFile}
-            disabled={importing}
-          />
+          {/* Lo que escribe no se le muestra a Administración. El export se
+              queda: bajar un Excel es leer. */}
+          {!soloLectura && (
+            <>
+              {/* Excel import */}
+              <Button
+                variant="outline"
+                loading={importing}
+                onClick={() => importInputRef.current?.click()}
+              >
+                Importar Excel
+              </Button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={handleImportFile}
+                disabled={importing}
+              />
 
-          {/* Reclamar facturas pendientes */}
-          <Button variant="outline" loading={claimingInvoices} onClick={handleClaimInvoices}>
-            Reclamar facturas
-          </Button>
+              {/* Reclamar facturas pendientes */}
+              <Button variant="outline" loading={claimingInvoices} onClick={handleClaimInvoices}>
+                Reclamar facturas
+              </Button>
 
-          {!isClosed && (
-            <Button loading={actionLoading} onClick={() => handlePeriodAction('send-all')}>
-              Enviar a todos
-            </Button>
+              {!isClosed && (
+                <Button loading={actionLoading} onClick={() => handlePeriodAction('send-all')}>
+                  Enviar a todos
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -613,7 +621,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
             {selectedIds.size} {selectedIds.size === 1 ? 'liquidación seleccionada' : 'liquidaciones seleccionadas'}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            {!isClosed && (
+            {!isClosed && !soloLectura && (
               <Button
                 size="sm"
                 loading={actionLoading}
@@ -645,7 +653,7 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-muted text-left">
-                  <th className="w-10 px-4 py-3">
+                  <th className={`w-10 px-4 py-3 ${soloLectura ? 'hidden' : ''}`}>
                     <input
                       type="checkbox"
                       checked={selectedIds.size === filteredSettlements.length && filteredSettlements.length > 0}
@@ -687,8 +695,9 @@ export function PayrollPeriodDetailClient({ periodId }: PayrollPeriodDetailClien
                     key={settlement.id}
                     settlement={settlement}
                     activeFilter={activeFilter}
-                    isEditable={isEditable && settlement.status !== 'SENT'}
-                    isPeriodOpen={isPeriodOpen}
+                    isEditable={!soloLectura && isEditable && settlement.status !== 'SENT'}
+                    isPeriodOpen={!soloLectura && isPeriodOpen}
+                    soloLectura={soloLectura}
                     editedValues={editedRows[settlement.id]}
                     isSaving={!!savingRows[settlement.id]}
                     isUploading={!!uploadingRows[`${settlement.id}-1`] || !!uploadingRows[`${settlement.id}-2`]}
@@ -737,6 +746,7 @@ type SettlementRowProps = {
   uploadingRows: Record<string, boolean>;
   hasChanges: boolean;
   isSelected: boolean;
+  soloLectura: boolean;
   onToggleSelect: (id: string) => void;
   onFieldChange: (id: string, field: string, value: number) => void;
   getFieldValue: (settlement: Settlement, field: keyof Settlement) => number;
@@ -756,6 +766,7 @@ function SettlementRow({
   isUploading,
   hasChanges,
   isSelected,
+  soloLectura,
   onToggleSelect,
   onFieldChange,
   getFieldValue,
@@ -869,7 +880,7 @@ function SettlementRow({
 
   return (
     <tr className={`transition-colors hover:bg-muted ${isSelected ? 'bg-accent' : ''}`}>
-      <td className="w-10 px-4 py-3">
+      <td className={`w-10 px-4 py-3 ${soloLectura ? 'hidden' : ''}`}>
         <input
           type="checkbox"
           checked={isSelected}

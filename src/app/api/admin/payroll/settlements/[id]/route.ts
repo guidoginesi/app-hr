@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdmin, requirePayrollViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdateMonotributoSchema = z.object({
@@ -32,8 +32,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET /api/admin/payroll/settlements/[id] - Get single settlement with details
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    // Lectura: Administración también entra. Escribir sigue siendo de admin.
+    const auth = await requirePayrollViewer();
+    if (!auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
+import { sincronizarLicencia } from '@/lib/leaveCalendar';
+import { borrarEvento } from '@/lib/googleCalendar';
 
 const UpdateRequestSchema = z.object({
   status: z.enum(['pending', 'pending_leader', 'pending_hr', 'approved', 'rejected', 'rejected_leader', 'rejected_hr', 'cancelled']).optional(),
@@ -212,6 +214,10 @@ export async function PUT(
     }
 
     console.log('Leave request updated successfully:', data);
+
+    // Si cambiaron fechas o estado, el evento del calendario tiene que seguirlas.
+    sincronizarLicencia(id).catch((err) => console.error('[calendar] al editar:', err));
+
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error in PUT /api/admin/time-off/requests/[id]:', error);
@@ -242,6 +248,14 @@ export async function DELETE(
 
     if (!request) {
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
+    }
+
+    // Acá no sirve el reconciliador: se borra la fila, y después no queda de
+    // dónde leer el id del evento. Hay que sacarlo antes o queda huérfano.
+    if (request.google_event_id) {
+      await borrarEvento(request.google_event_id).catch((err) =>
+        console.error('[calendar] al eliminar la solicitud:', err),
+      );
     }
 
     // If pending (any pending status), restore the balance

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdmin, requirePayrollViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdatePeriodSchema = z.object({
@@ -12,8 +12,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET /api/admin/payroll/periods/[id] - Get period with all settlements
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    // Lectura: Administración también entra. Escribir sigue siendo de admin.
+    const auth = await requirePayrollViewer();
+    if (!auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

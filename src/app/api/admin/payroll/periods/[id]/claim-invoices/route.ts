@@ -1,124 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { sendBatchEmails } from '@/lib/emailService';
-import { renderEmail } from '@/lib/email/layout';
-import { createSystemNotification } from '@/lib/notificationService';
-import { formatPayrollPeriodLabelFromKey, type PayrollPeriodType } from '@/lib/payrollPeriods';
+import { findPendingInvoices, sendInvoiceReminders } from '@/lib/payrollInvoiceReminders';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-// POST /api/admin/payroll/periods/[id]/claim-invoices
-// Notifica a todos los Monotributistas SENT sin factura cargada
+/**
+ * POST /api/admin/payroll/periods/[id]/claim-invoices
+ *
+ * El reclamo a mano de un período. Comparte el texto y el registro con la
+ * cadencia automática (ver payrollInvoiceReminders): si fueran dos caminos, el
+ * mail terminaría diciendo dos cosas distintas según quién lo dispare.
+ *
+ * Queda registrado como NO automático, así que no le gasta el cupo a la cadencia:
+ * apretar el botón no apaga los recordatorios que iban a salir solos.
+ */
 export async function POST(_req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    const { isAdmin, user } = await requireAdmin();
+    if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await context.params;
     const supabase = getSupabaseServer();
 
-    const { data: period, error: periodError } = await supabase
-      .from('payroll_periods')
-      .select('year, month, period_type')
-      .eq('id', id)
-      .single();
-
-    if (periodError || !period) {
-      return NextResponse.json({ error: 'Período no encontrado' }, { status: 404 });
-    }
-
-    const periodLabel = formatPayrollPeriodLabelFromKey({
-      year: period.year,
-      month: period.month,
-      period_type: (period.period_type as PayrollPeriodType | null) ?? 'MONTHLY',
-    });
-    const portalUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.pow.la';
-
-    // Buscar Monotributistas SENT sin factura
-    const { data: settlements, error: fetchError } = await supabase
-      .from('payroll_settlements_with_details')
-      .select('id, first_name, last_name, email_to, employee_user_id, invoice_storage_path')
-      .eq('period_id', id)
-      .eq('contract_type_snapshot', 'MONOTRIBUTO')
-      .eq('status', 'SENT')
-      .is('invoice_storage_path', null);
-
-    if (fetchError) {
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
-    }
-
-    if (!settlements || settlements.length === 0) {
+    const pendientes = await findPendingInvoices(supabase, { periodId: id });
+    if (pendientes.length === 0) {
       return NextResponse.json({
         notified_count: 0,
         message: 'No hay Monotributistas con facturas pendientes',
       });
     }
 
-    let notifiedCount = 0;
-
-    // Emails queued for batch dispatch
-    const pendingEmails: Array<{ to: string; subject: string; html: string }> = [];
-
-    for (const s of settlements) {
-      const employeeName = `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim();
-
-      // Queue email for batch dispatch
-      if (s.email_to) {
-        pendingEmails.push({
-          to: s.email_to,
-          subject: `Recordatorio: factura pendiente ${periodLabel}`,
-          html: renderEmail({
-            title: 'Tenés una factura pendiente',
-            contextLabel: 'People · Liquidaciones',
-            badge: { tone: 'warning', label: 'Factura pendiente' },
-            preheader: `Todavía no recibimos tu factura de ${periodLabel}.`,
-            intro: `Hola ${employeeName}, todavía no recibimos tu factura correspondiente a la liquidación de ${periodLabel}. Por favor, emitíla por el importe de tu liquidación y cargala en el portal a la brevedad.`,
-            cta: { label: 'Cargar factura', url: `${portalUrl}/portal/liquidaciones` },
-          }),
-        });
-      }
-
-      // In-app notification
-      const employeeUserId = s.employee_user_id;
-      if (employeeUserId) {
-        createSystemNotification({
-          userIds: [employeeUserId],
-          title: `Factura pendiente — ${periodLabel}`,
-          body: `Todavía no recibimos tu factura de ${periodLabel}. Por favor cargala en el portal.`,
-          deepLink: '/portal/liquidaciones',
-          dedupeKey: `claim-invoice-${s.id}-${period.year}-${period.month}`,
-        }).catch((err) => {
-          console.error(`[ClaimInvoices] In-app notification failed for settlement ${s.id}:`, err);
-        });
-      }
-
-      notifiedCount++;
-    }
-
-    // Dispatch all reminder emails in a single batch call (fire-and-forget)
-    if (pendingEmails.length > 0) {
-      sendBatchEmails(pendingEmails)
-        .then((result) => {
-          if (!result.success) {
-            console.error('[ClaimInvoices] Batch email failed:', result.error);
-          } else {
-            console.log(`[ClaimInvoices] Batch sent: ${result.ids?.filter(Boolean).length ?? 0}/${pendingEmails.length} emails dispatched`);
-          }
-        })
-        .catch((err) => {
-          console.error('[ClaimInvoices] Batch email exception:', err);
-        });
-    }
+    const res = await sendInvoiceReminders(supabase, pendientes, { automated: false, sentBy: user.id });
 
     return NextResponse.json({
-      notified_count: notifiedCount,
-      message: `Recordatorio enviado a ${notifiedCount} Monotributista${notifiedCount !== 1 ? 's' : ''} con factura pendiente`,
+      notified_count: res.notified,
+      message: `Recordatorio enviado a ${res.notified} Monotributista${res.notified !== 1 ? 's' : ''} con factura pendiente`,
     });
-  } catch (error: any) {
-    console.error('Error in POST /api/admin/payroll/periods/[id]/claim-invoices:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error inesperado';
+    console.error('Error in POST /api/admin/payroll/periods/[id]/claim-invoices:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

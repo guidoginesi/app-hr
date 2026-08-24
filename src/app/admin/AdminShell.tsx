@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { NavSidebar, type NavGroup } from '@pow/ui/components/ui/nav-sidebar';
 import { moduleForPath, type AdminModule } from '@/lib/adminModules';
+import { administracionPuedeEntrar } from '@/lib/administracionRoutes';
 import { AdminProfileDropdown } from '@/components/AdminProfileDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ShellSwitch } from '@/components/ShellSwitch';
@@ -127,6 +128,9 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
         {
           label: 'Gestión',
           items: [
+            // Administración lee las liquidaciones para conciliar; no las envía
+            // ni cierra períodos — eso lo cortan las rutas y la propia pantalla.
+            { label: 'Liquidaciones', href: '/admin/payroll', icon: Wallet, active: match('/admin/payroll') },
             { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances'), badge: hay('adelantos'), badgeLabel: 'Tiene adelantos nuevos para aprobar' },
             { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos'), badge: hay('recibos'), badgeLabel: 'Tiene confirmaciones nuevas' },
             // Administración valida los reintegros, así que entra a esta ruta.
@@ -136,6 +140,9 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
           ],
         },
       ]
+        // El menú no ofrece lo que el middleware va a rebotar: un ítem que no
+        // lleva a ningún lado es peor que un ítem que no está.
+        .map((g) => ({ ...g, items: g.items.filter((i) => administracionPuedeEntrar(i.href)) }))
     : groups;
 
   return (

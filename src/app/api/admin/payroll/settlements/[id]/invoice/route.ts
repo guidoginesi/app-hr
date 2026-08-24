@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdmin, requirePayrollViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -7,8 +7,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET /api/admin/payroll/settlements/[id]/invoice - Admin downloads employee invoice
 export async function GET(_req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    // Lectura: Administración también entra. Escribir sigue siendo de admin.
+    const auth = await requirePayrollViewer();
+    if (!auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
