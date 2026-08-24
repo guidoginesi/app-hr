@@ -1,61 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import {
+  ROLE_CACHE_DURATION,
+  getRoleCacheKey,
+  firmarCache,
+  leerCache,
+} from '@/lib/roleCache';
 import { administracionPuedeEntrar, INICIO_DE_ADMINISTRACION } from '@/lib/administracionRoutes';
-
-// Cache duration for role checks (5 minutes)
-const ROLE_CACHE_DURATION = 5 * 60 * 1000;
-
-type CachedRoles = {
-  roles: string[];
-  employeeId: string | null;
-  hasDirectReports: boolean;
-  timestamp: number;
-};
-
-function getRoleCacheKey(userId: string): string {
-  return `hr_roles_${userId}`;
-}
-
-/**
- * Lee el caché de roles de la cookie.
- *
- * Valida la FORMA, no sólo la fecha. Antes alcanzaba con que el JSON parseara y
- * no estuviera vencido: una cookie con otra estructura pasaba el filtro y
- * después `cachedRoles.roles.some(...)` explotaba con un 500 en el middleware,
- * antes de que la página llegara a correr. Pasó de verdad con `/portal/team`.
- *
- * Devolver null es la reacción correcta a cualquier cosa rara: el middleware
- * vuelve a leer los roles de la base y reescribe la cookie, así que una cookie
- * corrupta se arregla sola en el siguiente request en vez de dejar a alguien
- * afuera hasta que se le ocurra borrarla a mano.
- *
- * Y es dato que manda el cliente: no se le cree la forma, igual que no se le
- * creería el contenido.
- */
-function parseCachedRoles(cookie: string | undefined): CachedRoles | null {
-  if (!cookie) return null;
-  try {
-    const parsed = JSON.parse(cookie) as unknown;
-    if (!parsed || typeof parsed !== 'object') return null;
-
-    const c = parsed as Partial<CachedRoles>;
-    const formaValida =
-      Array.isArray(c.roles) &&
-      c.roles.every((r) => typeof r === 'string') &&
-      (c.employeeId === null || typeof c.employeeId === 'string') &&
-      typeof c.hasDirectReports === 'boolean' &&
-      typeof c.timestamp === 'number';
-    if (!formaValida) return null;
-
-    if (Date.now() - (c.timestamp as number) < ROLE_CACHE_DURATION) {
-      return c as CachedRoles;
-    }
-  } catch {
-    // JSON inválido: se ignora y se relee de la base.
-  }
-  return null;
-}
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -120,7 +72,7 @@ export async function middleware(request: NextRequest) {
 
     // Try to get cached roles first
     const cacheKey = getRoleCacheKey(user.id);
-    let cachedRoles = parseCachedRoles(request.cookies.get(cacheKey)?.value);
+    let cachedRoles = await leerCache(request.cookies.get(cacheKey)?.value, user.id);
 
     if (!cachedRoles) {
       // Fetch roles and legacy admin status in parallel
@@ -142,14 +94,19 @@ export async function middleware(request: NextRequest) {
         timestamp: Date.now(),
       };
 
-      response.cookies.set({
-        name: cacheKey,
-        value: JSON.stringify(cachedRoles),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: ROLE_CACHE_DURATION / 1000,
-      });
+      // Sin secreto no se escribe nada: una cookie sin firmar no se va a poder
+      // leer después, así que guardarla sólo ensucia el navegador.
+      const firmada = await firmarCache(cachedRoles, user.id);
+      if (firmada) {
+        response.cookies.set({
+          name: cacheKey,
+          value: firmada,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: ROLE_CACHE_DURATION / 1000,
+        });
+      }
     }
 
     const isAdmin = cachedRoles.roles.includes('admin');
@@ -176,7 +133,7 @@ export async function middleware(request: NextRequest) {
 
     // Try to get cached roles first
     const cacheKey = getRoleCacheKey(user.id);
-    let cachedRoles = parseCachedRoles(request.cookies.get(cacheKey)?.value);
+    let cachedRoles = await leerCache(request.cookies.get(cacheKey)?.value, user.id);
 
     if (!cachedRoles) {
       // Fetch roles and employee data in parallel
@@ -207,14 +164,19 @@ export async function middleware(request: NextRequest) {
         timestamp: Date.now(),
       };
 
-      response.cookies.set({
-        name: cacheKey,
-        value: JSON.stringify(cachedRoles),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: ROLE_CACHE_DURATION / 1000,
-      });
+      // Sin secreto no se escribe nada: una cookie sin firmar no se va a poder
+      // leer después, así que guardarla sólo ensucia el navegador.
+      const firmada = await firmarCache(cachedRoles, user.id);
+      if (firmada) {
+        response.cookies.set({
+          name: cacheKey,
+          value: firmada,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: ROLE_CACHE_DURATION / 1000,
+        });
+      }
     }
 
     const hasAccess = 
