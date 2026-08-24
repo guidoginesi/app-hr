@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { administracionPuedeEntrar, INICIO_DE_ADMINISTRACION } from '@/lib/administracionRoutes';
 
 // Cache duration for role checks (5 minutes)
 const ROLE_CACHE_DURATION = 5 * 60 * 1000;
@@ -156,11 +157,10 @@ export async function middleware(request: NextRequest) {
 
     if (!isAdmin) {
       if (isAdministracion) {
-        // Perfil Administración: Adelantos + la vista de recepción de recibos
-        // (solo estado, sin montos). El resto del admin lo redirige.
-        const allowed = ['/admin/salary-advances', '/admin/recibos', '/admin/reintegros'];
-        if (!allowed.some((p) => pathname.startsWith(p))) {
-          return NextResponse.redirect(new URL('/admin/salary-advances', request.url));
+        // La lista vive en un solo lado y la comparte la nav: si están acá se
+        // ven en el menú, y si no, no. Ver src/lib/administracionRoutes.ts.
+        if (!administracionPuedeEntrar(pathname)) {
+          return NextResponse.redirect(new URL(INICIO_DE_ADMINISTRACION, request.url));
         }
       } else {
         return NextResponse.redirect(new URL('/admin/login', request.url));
