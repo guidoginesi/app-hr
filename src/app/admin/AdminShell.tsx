@@ -127,6 +127,9 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
         {
           label: 'Gestión',
           items: [
+            // Administración lee las liquidaciones para conciliar; no las envía
+            // ni cierra períodos — eso lo cortan las rutas y la propia pantalla.
+            { label: 'Liquidaciones', href: '/admin/payroll', icon: Wallet, active: match('/admin/payroll') },
             { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances'), badge: hay('adelantos'), badgeLabel: 'Tiene adelantos nuevos para aprobar' },
             { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos'), badge: hay('recibos'), badgeLabel: 'Tiene confirmaciones nuevas' },
             // Administración valida los reintegros, así que entra a esta ruta.

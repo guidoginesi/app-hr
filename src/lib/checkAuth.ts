@@ -158,6 +158,24 @@ export async function requirePayrollReceiptsViewer(): Promise<AuthResult | null>
 }
 
 /**
+ * Require read access to the payroll module (/admin/payroll).
+ *
+ * Administración LEE: períodos, liquidaciones, montos, recibos y facturas. No
+ * escribe: importar el Excel, validar, enviar, cerrar y reabrir siguen siendo
+ * de admin.
+ *
+ * La separación es a propósito. Enviar los recibos de todo el mundo o cerrar un
+ * período no se deshacen con un botón, y quien necesita mirar una liquidación
+ * para conciliar no necesita poder mandarla. Por eso son dos permisos y no uno:
+ * el que mira y el que dispara.
+ *
+ * Cada ruta la aplica en su GET y deja los POST/PUT/DELETE con requireAdmin.
+ */
+export async function requirePayrollViewer(): Promise<AuthResult | null> {
+  return requireRole(['admin', 'administracion']);
+}
+
+/**
  * Require leader role (for team management)
  */
 export async function requireLeader(): Promise<AuthResult | null> {
