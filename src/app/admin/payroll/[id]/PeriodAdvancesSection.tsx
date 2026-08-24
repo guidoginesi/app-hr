@@ -17,7 +17,7 @@ type Row = {
 const ars = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(n);
 
-export function PeriodAdvancesSection({ periodId }: { periodId: string }) {
+export function PeriodAdvancesSection({ periodId, soloLectura = false }: { periodId: string; soloLectura?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [periodType, setPeriodType] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,9 +66,11 @@ export function PeriodAdvancesSection({ periodId }: { periodId: string }) {
             {rows.length === 0 ? 'Sin adelantos para descontar este mes' : `${rows.length} adelanto${rows.length !== 1 ? 's' : ''} a descontar`}
           </p>
         </div>
-        <Button variant="secondary" onClick={refresh} loading={refreshing}>
-          Actualizar adelantos
-        </Button>
+        {!soloLectura && (
+          <Button variant="secondary" onClick={refresh} loading={refreshing}>
+            Actualizar adelantos
+          </Button>
+        )}
       </div>
 
       {rows.length > 0 && (

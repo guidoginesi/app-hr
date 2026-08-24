@@ -41,7 +41,7 @@ type PayrollPeriod = {
   created_at: string;
 };
 
-export function PayrollPeriodsClient() {
+export function PayrollPeriodsClient({ soloLectura = false }: { soloLectura?: boolean }) {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -207,7 +207,7 @@ export function PayrollPeriodsClient() {
               Liquidaciones mensuales y períodos de SAC (Sueldo Anual Complementario)
             </p>
           </div>
-          <Button onClick={() => setShowModal(true)}>Nuevo periodo</Button>
+          {!soloLectura && <Button onClick={() => setShowModal(true)}>Nuevo periodo</Button>}
         </div>
         {loading ? (
           <div className="px-6 py-6">
@@ -216,7 +216,9 @@ export function PayrollPeriodsClient() {
         ) : periods.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <p className="text-sm font-medium text-muted-foreground">No hay periodos de liquidación</p>
-            <p className="mt-1 text-xs text-muted-foreground">Crea un periodo para comenzar</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {soloLectura ? 'Todavía no hay ninguno cargado' : 'Crea un periodo para comenzar'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">

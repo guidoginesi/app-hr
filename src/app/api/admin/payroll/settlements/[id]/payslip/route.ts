@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdmin, requirePayrollViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import {
   parsePayslipSlot,
@@ -315,8 +315,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
 // GET /api/admin/payroll/settlements/[id]/payslip?slot=1|2 - Download PDF
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    // Lectura: Administración también entra. Escribir sigue siendo de admin.
+    const auth = await requirePayrollViewer();
+    if (!auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
