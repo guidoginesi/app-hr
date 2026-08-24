@@ -6,6 +6,7 @@ import { getEmailFrom, renderPlainTemplate } from '@/lib/email/layout';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
+import { runAutomaticInvoiceReminders } from '@/lib/payrollInvoiceReminders';
 import { runInquiryAutomations } from '@/lib/inquiryAutomations';
 import { runLeaveCertificateReminders } from '@/lib/leaveCertificateReminders';
 import { runBirthdayLeaveAutomation } from '@/lib/birthdayLeaveAutomation';
@@ -105,6 +106,7 @@ export async function GET(req: NextRequest) {
     preLeaveReminders: [] as string[],
     approvalDigests: { sent: [] as string[], errors: [] as string[] },
     receiptReminders: { sent: 0, skipped: 0 },
+    invoiceReminders: { sent: 0, skipped: 0, tooOld: 0 },
     inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
     talentPool: { sent: [] as string[], nuevos: 0 },
     leaveCertificates: { enviados: 0, errores: [] as string[] },
@@ -369,6 +371,13 @@ export async function GET(req: NextRequest) {
     results.receiptReminders = await runAutomaticReceiptReminders();
   } catch (e: any) {
     results.errors.push(`Receipt reminders: ${e.message}`);
+  }
+
+  // ── RECORDATORIOS DE FACTURA PENDIENTE (Monotributo) ───────────
+  try {
+    results.invoiceReminders = await runAutomaticInvoiceReminders();
+  } catch (e) {
+    results.errors.push(`Invoice reminders: ${e instanceof Error ? e.message : e}`);
   }
 
   // ── CONSULTAS: auto-cierre + digest a People ───────────────────
