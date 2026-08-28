@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { generarPropuesta, seccionesCitables, datosDelColaborador, PROMPT_VERSION } from '@/lib/manual/propuesta';
-import { faqsVigentes } from '@/lib/manual/faq';
+import { generarPropuestaDeConsulta, yaTienePropuesta } from '@/lib/manual/generarPropuestaDeConsulta';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,9 +10,9 @@ type Ctx = { params: Promise<{ id: string }> };
 /**
  * Propuesta de respuesta para una consulta, armada con el Manual RRHH.
  *
- * Se genera a pedido y no al entrar la consulta: la mayoría de las consultas
- * las contesta alguien que ya sabe la respuesta, y generar de más cuesta plata
- * en propuestas que nadie va a mirar.
+ * La primera se genera sola al entrar la consulta, así el borrador ya está
+ * cuando People la abre. Este POST es para pedir OTRA: después de sincronizar el
+ * manual, de aprobar una FAQ, o simplemente porque la anterior no servía.
  *
  * La propuesta NUNCA se manda sola. Queda como borrador para que People lo
  * edite y lo envíe.
@@ -58,86 +57,27 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   return NextResponse.json({ propuesta: await ultimaPropuesta(id) });
 }
 
-export async function POST(_req: NextRequest, ctx: Ctx) {
+export async function POST(req: NextRequest, ctx: Ctx) {
   const { isAdmin, user } = await requireAdmin();
   if (!isAdmin || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await ctx.params;
-  const supabase = getSupabaseServer();
 
-  const { data: consulta } = await supabase
-    .from('inquiries_with_details')
-    .select('id, subject, category, employee_name, employee_id')
-    .eq('id', id)
-    .maybeSingle();
-  if (!consulta) return NextResponse.json({ error: 'Consulta no encontrada' }, { status: 404 });
-
-  // El primer mensaje del colaborador es la consulta; el resto es la
-  // conversación. Se manda todo lo que escribió, sin las notas internas.
-  const { data: mensajes } = await supabase
-    .from('inquiry_messages')
-    .select('body, author_role, created_at')
-    .eq('inquiry_id', id)
-    .eq('is_internal', false)
-    .order('created_at');
-
-  const delColaborador = (mensajes ?? []).filter((m) => m.author_role === 'employee');
-  if (delColaborador.length === 0) {
-    return NextResponse.json({ error: 'La consulta no tiene ningún mensaje del colaborador.' }, { status: 400 });
+  /**
+   * `?auto=1` es la generación automática al abrir una consulta que no tenía
+   * propuesta. Si ya hay una, no genera: el alta la dispara sola y tarda unos
+   * segundos, así que abrir la consulta en ese rato pediría una segunda para
+   * nada. El botón no manda `auto` porque pedir OTRA es justamente su función.
+   */
+  if (req.nextUrl.searchParams.get('auto') === '1' && (await yaTienePropuesta(id))) {
+    return NextResponse.json({ propuesta: await ultimaPropuesta(id) });
   }
 
-  let generada;
-  try {
-    // Los datos de la persona son opcionales: si fallan, la propuesta sale
-    // igual pero sin fechas concretas. No vale la pena perder la propuesta
-    // entera por no poder leer un saldo.
-    const [secciones, faqs, datos] = await Promise.all([
-      seccionesCitables(),
-      faqsVigentes(),
-      datosDelColaborador(consulta.employee_id as string).catch((e) => {
-        console.error('[propuesta] no se pudieron leer los datos del colaborador:', e);
-        return '';
-      }),
-    ]);
-    generada = await generarPropuesta(
-      {
-        asunto: consulta.subject as string,
-        categoria: consulta.category as string,
-        nombre: consulta.employee_name as string,
-        mensaje: delColaborador.map((m) => m.body as string).join('\n\n'),
-        datos,
-      },
-      secciones,
-      faqs,
-    );
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'No se pudo generar la propuesta' },
-      { status: 500 },
-    );
-  }
-
-  // Se guarda siempre, también cuando falló: un agente que falla en silencio es
-  // peor que no tenerlo.
-  const { error: insertError } = await supabase.from('inquiry_answer_drafts').insert({
-    inquiry_id: id,
-    borrador: generada.borrador,
-    nota_para_hr: generada.nota_para_hr,
-    secciones_citadas: generada.secciones_citadas,
-    hay_respuesta: generada.hay_respuesta,
-    necesita_datos_personales: generada.necesita_datos_personales,
-    modelo: generada.modelo,
-    prompt_version: PROMPT_VERSION,
-    secciones_ofrecidas: generada.secciones_ofrecidas,
-    tokens_entrada: generada.tokens_entrada,
-    tokens_salida: generada.tokens_salida,
-    error: generada.error,
-    generado_por: user.id,
-  });
-  if (insertError) {
-    console.error('[propuesta] no se pudo guardar:', insertError.message);
-    return NextResponse.json({ error: 'No se pudo guardar la propuesta' }, { status: 500 });
-  }
+  const res = await generarPropuestaDeConsulta(id, { generadoPor: user.id }).catch((e) => ({
+    ok: false as const,
+    motivo: e instanceof Error ? e.message : 'No se pudo generar la propuesta',
+  }));
+  if (!res.ok) return NextResponse.json({ error: res.motivo }, { status: 500 });
 
   return NextResponse.json({ propuesta: await ultimaPropuesta(id) });
 }

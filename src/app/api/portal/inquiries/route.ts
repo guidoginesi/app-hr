@@ -4,6 +4,7 @@ import { getAuthResult } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getAdminUserIds, createSystemNotification } from '@/lib/notificationService';
 import { firstResponseDueAt, CATEGORY_LABELS, type InquiryCategory } from '@/lib/inquiries';
+import { generarPropuestaDeConsulta } from '@/lib/manual/generarPropuestaDeConsulta';
 
 const CreateSchema = z.object({
   category: z.enum(['sueldo', 'licencias', 'beneficios', 'adelantos', 'capacitaciones', 'certificados', 'otros']),
@@ -78,6 +79,15 @@ export async function POST(req: NextRequest) {
     event_type: 'created',
     to_status: 'nueva',
   });
+
+  // La propuesta de respuesta se arma sola, para que el borrador ya esté cuando
+  // People abre la consulta en vez de tener que pedirlo y esperar.
+  //
+  // Sin await y con el error atajado: el colaborador no tiene por qué esperar a
+  // que el agente lea el manual, y si el agente falla la consulta igual entra.
+  generarPropuestaDeConsulta(inquiry.id as string).catch((e) =>
+    console.error('[inquiries] no se pudo generar la propuesta:', e),
+  );
 
   // Aviso a People. dedupeKey por consulta (evento irrepetible: el alta).
   const adminIds = await getAdminUserIds();
