@@ -54,9 +54,10 @@ export default async function AyudaReintegrosPage() {
           n={3}
           title="Qué carga el colaborador"
           image="/manual/reintegros-portal/02-form.png"
-          imageAlt="Formulario Nuevo reintegro con fecha, motivo, descripción, monto, moneda, datos del comprobante y el archivo."
+          imageAlt="Formulario Nuevo reintegro con fecha, motivo, descripción, monto, moneda, datos del comprobante y el bloque para adjuntar archivos."
         >
-          <p>Fecha del gasto, <b>motivo</b>, <b>descripción</b> libre, monto y moneda, el tipo y número de comprobante, el CUIT del proveedor y —obligatorio— el <b>archivo del comprobante</b> (PDF, JPG, PNG o WEBP, hasta 10 MB). Sin comprobante no se puede enviar: Administración no tendría con qué validarlo.</p>
+          <p>Fecha del gasto, <b>motivo</b>, <b>descripción</b> libre, monto y moneda, el tipo y número de comprobante, el CUIT del proveedor y —obligatorio— el <b>comprobante</b> (PDF, JPG, PNG o WEBP, hasta 10 MB cada uno). Sin comprobante no se puede enviar: Administración no tendría con qué validarlo.</p>
+          <p>Puede adjuntar <b>hasta 5 archivos</b> por gasto — la factura y el ticket, la ida y la vuelta—, así que un gasto con varios papeles entra como un solo reintegro. Cuando hay más de uno, en la cola y en el panel de gestión aparecen <b>listados por nombre</b> en vez de un único botón: quien valida necesita saber cuál está abriendo.</p>
           <p>Si el gasto es de hace más de <b>60 días</b>, si la fecha es futura o si el monto supera <b>ARS 300.000</b> / <b>USD 300</b>, el formulario se lo marca y le <b>exige explicar por qué</b>. Sin esa explicación no puede enviarlo; con ella, sí: un gasto real no debería quedar sin reintegrar por estar fuera de plazo.</p>
           <p>Esa explicación la ves en la solicitud —tanto vos como el líder— y queda en el historial. <b>No viaja en el mail de aviso</b>, que lleva sólo concepto, motivo y monto.</p>
           <p>Si hay clientes o proyectos cargados, aparece el selector para imputar el gasto. Es opcional, y mientras no cargues ninguno el selector no se muestra.</p>
