@@ -35,7 +35,13 @@ export function SelectMenu({
   const selected = options.find((o) => o.value === value);
 
   return (
-    <Dropdown>
+    // `modal={false}`: un select no tiene por qué volver modal a la página.
+    // Con el modal de Radix, abrir el menú le pone `pointer-events: none` al
+    // body, así que el clic que lo vuelve a cerrar no llega al trigger sino al
+    // fondo — y un Sheet que lo contenga lo lee como "clic afuera" y se cierra
+    // solo. Pasaba en el formulario de reintegros: abrir el selector de
+    // comprobante y volver a tocarlo cerraba el panel entero con todo cargado.
+    <Dropdown modal={false}>
       <DropdownTrigger
         disabled={disabled}
         aria-label={ariaLabel}
