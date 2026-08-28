@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@pow/ui/components/ui/button';
 import { Textarea } from '@pow/ui/components/ui/textarea';
@@ -10,6 +10,10 @@ import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { AttachmentPanel } from '@/components/inquiries/AttachmentPanel';
 import { PropuestaAgente } from '@/components/inquiries/PropuestaAgente';
 import { CATEGORY_LABELS, STATUS_LABELS_HR, type InquiryCategory, type InquiryStatus } from '@/lib/inquiries';
+
+/** Techo de la caja de respuesta: pasado esto scrollea, para que los botones de
+ *  enviar no se vayan de pantalla. */
+const MAX_ALTO_RESPUESTA = 520;
 
 type Msg = {
   id: string;
@@ -44,6 +48,25 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [sharedWithLeader, setSharedWithLeader] = useState(false);
   const [body, setBody] = useState('');
+  const cajaDeRespuesta = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * La caja crece con lo que tiene adentro.
+   *
+   * Era de tres renglones fijos, así que al usar el borrador del agente —que son
+   * varios párrafos— se veía un pedacito con barra de scroll. Revisar antes de
+   * enviar es el único punto de control que hay: si para leer lo que vas a
+   * mandar tenés que scrollear una ventanita, no lo leés.
+   *
+   * Con un techo, igual: pasado eso scrollea, para que los botones de enviar no
+   * queden fuera de pantalla.
+   */
+  useEffect(() => {
+    const caja = cajaDeRespuesta.current;
+    if (!caja) return;
+    caja.style.height = 'auto';
+    caja.style.height = `${Math.min(caja.scrollHeight, MAX_ALTO_RESPUESTA)}px`;
+  }, [body]);
   const [internal, setInternal] = useState(false);
   const [busy, setBusy] = useState(false);
   // Mensaje que se está editando y su texto en curso. Editar es deliberado:
@@ -280,7 +303,9 @@ export function ConsultaAdminDetailClient({ inquiryId }: { inquiryId: string }) 
           />
         )}
         <Textarea
-          rows={3}
+          ref={cajaDeRespuesta}
+          rows={6}
+          className="min-h-[7.5rem] resize-y"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={internal ? 'Nota interna (el colaborador no la ve)…' : 'Escribí la respuesta al colaborador…'}
