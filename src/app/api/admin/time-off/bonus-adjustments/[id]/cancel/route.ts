@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { conUnidad } from '@/lib/leaveUnits';
 
 const CancelBonusSchema = z.object({
   cancellation_reason: z.string().min(1, 'El motivo de cancelación es requerido').max(500),
@@ -123,7 +124,7 @@ export async function PUT(
     // Get leave type name and employee name for response
     const { data: leaveType } = await supabase
       .from('leave_types')
-      .select('name')
+      .select('name, count_type')
       .eq('id', adjustment.leave_type_id)
       .single();
 
@@ -141,7 +142,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: `Se canceló el ajuste de ${adjustment.days} día(s) de ${leaveType?.name || 'bonus'} para ${employeeName}`,
+      message: `Se canceló el ajuste de ${conUnidad(leaveType?.count_type, adjustment.days)} de ${leaveType?.name || 'bonus'} para ${employeeName}`,
     });
   } catch (error: any) {
     console.error('Error in PUT /api/admin/time-off/bonus-adjustments/[id]/cancel:', error);

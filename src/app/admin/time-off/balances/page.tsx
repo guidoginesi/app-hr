@@ -6,7 +6,8 @@ import { Button } from '@pow/ui/components/ui/button';
 import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { X } from 'lucide-react';
 import { formatDateLocal } from '@/lib/dateUtils';
-import type { LeaveBalanceWithDetails } from '@/types/time-off';
+import type { CountType, LeaveBalanceWithDetails } from '@/types/time-off';
+import { conUnidad, limitesDeAjuste, unidadDeLicencia } from '@/lib/leaveUnits';
 
 interface EmployeeWithBalances {
   id: string;
@@ -28,6 +29,8 @@ interface BonusModalState {
   employeeName: string;
   leaveTypeId: string;
   leaveTypeName: string;
+  /** Días Pow se cuenta en días; Trabajo Remoto, en semanas enteras. */
+  countType: CountType;
 }
 
 export default function TimeOffBalancesPage() {
@@ -41,6 +44,7 @@ export default function TimeOffBalancesPage() {
     employeeName: '',
     leaveTypeId: '',
     leaveTypeName: '',
+    countType: 'business_days',
   });
   const [bonusDays, setBonusDays] = useState<string>('1');
   const [bonusReason, setBonusReason] = useState('');
@@ -133,7 +137,13 @@ export default function TimeOffBalancesPage() {
     }
   }
 
-  function openBonusModal(employeeId: string, employeeName: string, leaveTypeId: string, leaveTypeName: string) {
+  function openBonusModal(
+    employeeId: string,
+    employeeName: string,
+    leaveTypeId: string,
+    leaveTypeName: string,
+    countType: CountType,
+  ) {
     // Debug logging
     console.log('Opening bonus modal:', { employeeId, employeeName, leaveTypeId, leaveTypeName });
     
@@ -150,6 +160,7 @@ export default function TimeOffBalancesPage() {
       employeeName,
       leaveTypeId,
       leaveTypeName,
+      countType,
     });
     setBonusDays('1');
     setBonusReason('');
@@ -162,6 +173,7 @@ export default function TimeOffBalancesPage() {
       employeeName: '',
       leaveTypeId: '',
       leaveTypeName: '',
+      countType: 'business_days',
     });
   }
 
@@ -447,7 +459,7 @@ export default function TimeOffBalancesPage() {
                                 )}
                               </div>
                               <button
-                                onClick={() => openBonusModal(emp.id, emp.name, pow.leave_type_id, 'Días Pow')}
+                                onClick={() => openBonusModal(emp.id, emp.name, pow.leave_type_id, 'Días Pow', 'business_days')}
                                 className="rounded-full bg-secondary p-1 text-secondary-foreground hover:bg-[var(--gray-200)]"
                                 title="Agregar días bonus"
                               >
@@ -484,13 +496,29 @@ export default function TimeOffBalancesPage() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           {remote ? (
-                            <div>
-                              <span className="text-sm font-semibold text-foreground">
-                                {remote.available_days}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                {' '}/ {Number(remote.entitled_days) + Number(remote.bonus_days || 0)} sem
-                              </span>
+                            <div className="flex items-center justify-center gap-2">
+                              <div>
+                                <span className="text-sm font-semibold text-foreground">
+                                  {remote.available_days}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {' '}/ {Number(remote.entitled_days) + Number(remote.bonus_days || 0)} sem
+                                </span>
+                                {Number(remote.bonus_days) > 0 && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    +{Number(remote.bonus_days)} bonus
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => openBonusModal(emp.id, emp.name, remote.leave_type_id, 'Trabajo Remoto', 'weeks')}
+                                className="rounded-full bg-secondary p-1 text-secondary-foreground hover:bg-[var(--gray-200)]"
+                                title="Agregar semanas remotas"
+                              >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                              </button>
                             </div>
                           ) : (
                             <span className="text-sm text-muted-foreground">~8</span>
@@ -526,7 +554,7 @@ export default function TimeOffBalancesPage() {
             <div>
               <h2 className="type-title">Agregar {bonusModal.leaveTypeName}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Días bonus para <strong>{bonusModal.employeeName}</strong>
+                {unidadDeLicencia(bonusModal.countType, 2)} extra para <strong>{bonusModal.employeeName}</strong>
               </p>
             </div>
             <SheetClose
@@ -541,13 +569,13 @@ export default function TimeOffBalancesPage() {
           <div className="flex-1 space-y-4 overflow-y-auto p-6">
             <div>
               <label className="block text-xs font-medium text-secondary-foreground mb-1">
-                Cantidad de días
+                Cantidad de {unidadDeLicencia(bonusModal.countType, 2)}
               </label>
               <input
                 type="number"
-                min="0.5"
-                max="30"
-                step="0.5"
+                min={limitesDeAjuste(bonusModal.countType).min}
+                max={limitesDeAjuste(bonusModal.countType).max}
+                step={limitesDeAjuste(bonusModal.countType).paso}
                 value={bonusDays}
                 onChange={(e) => setBonusDays(e.target.value)}
                 className="block w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
@@ -578,7 +606,7 @@ export default function TimeOffBalancesPage() {
               disabled={addingBonus || !bonusReason.trim()}
               loading={addingBonus}
             >
-              {`Agregar ${bonusDays || '0'} día${parseFloat(bonusDays) !== 1 ? 's' : ''}`}
+              {`Agregar ${conUnidad(bonusModal.countType, parseFloat(bonusDays) || 0)}`}
             </Button>
           </div>
         </SheetContent>

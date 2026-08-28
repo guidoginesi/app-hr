@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { conUnidad, esPorSemanas, limitesDeAjuste } from '@/lib/leaveUnits';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -10,7 +11,9 @@ const AddBonusDaysSchema = z.object({
   employee_id: z.string().regex(uuidRegex, 'ID de empleado inválido'),
   leave_type_id: z.string().regex(uuidRegex, 'ID de tipo de licencia inválido'),
   year: z.number().int().min(2020).max(2100),
-  days: z.number().min(0.5, 'Mínimo 0.5 días').max(30, 'Máximo 30 días'),
+  // El rango no se puede fijar acá: depende de si el tipo se cuenta en días o
+  // en semanas, y eso está en la base. Se valida abajo, con el tipo en la mano.
+  days: z.number().positive('La cantidad tiene que ser mayor a cero'),
   reason: z.string().min(1, 'El motivo es requerido').max(500),
 });
 
@@ -37,6 +40,34 @@ export async function POST(req: NextRequest) {
 
     const { employee_id, leave_type_id, year, days, reason } = parsed.data;
     const supabase = getSupabaseServer();
+
+    // El tipo primero: define la unidad, el rango y cómo se le cuenta esto a
+    // quien lo lea después.
+    const { data: leaveType } = await supabase
+      .from('leave_types')
+      .select('name, count_type')
+      .eq('id', leave_type_id)
+      .single();
+
+    if (!leaveType) {
+      return NextResponse.json({ error: 'Tipo de licencia no encontrado' }, { status: 404 });
+    }
+
+    const limites = limitesDeAjuste(leaveType.count_type);
+    const unidadPlural = esPorSemanas(leaveType.count_type) ? 'semanas' : 'días';
+
+    if (days < limites.min || days > limites.max) {
+      return NextResponse.json(
+        { error: `La cantidad tiene que estar entre ${limites.min} y ${limites.max} ${unidadPlural}.` },
+        { status: 400 },
+      );
+    }
+    if (limites.soloEnteros && !Number.isInteger(days)) {
+      return NextResponse.json(
+        { error: 'El trabajo remoto se toma de lunes a domingo: sólo semanas enteras.' },
+        { status: 400 },
+      );
+    }
 
     // Verify employee exists
     const { data: employee, error: empError } = await supabase
@@ -137,18 +168,11 @@ export async function POST(req: NextRequest) {
       console.log('[Bonus Days] Adjustment recorded with ID:', adjustmentData?.id);
     }
 
-    console.log(`[Bonus Days] Added ${days} days to employee ${employee_id}, type ${leave_type_id}, year ${year}. Reason: ${reason}. Admin: ${user.email}`);
-
-    // Get leave type name for response
-    const { data: leaveType } = await supabase
-      .from('leave_types')
-      .select('name')
-      .eq('id', leave_type_id)
-      .single();
+    console.log(`[Bonus Days] Added ${days} ${unidadPlural} to employee ${employee_id}, type ${leave_type_id}, year ${year}. Reason: ${reason}. Admin: ${user.email}`);
 
     return NextResponse.json({
       success: true,
-      message: `Se agregaron ${days} día(s) de ${leaveType?.name || 'bonificación'} a ${employee.first_name} ${employee.last_name}`,
+      message: `Se agregaron ${conUnidad(leaveType.count_type, days)} de ${leaveType.name} a ${employee.first_name} ${employee.last_name}`,
       balance: data,
     });
   } catch (error: any) {
