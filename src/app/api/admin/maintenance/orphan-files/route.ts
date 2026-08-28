@@ -100,7 +100,14 @@ export async function POST(req: NextRequest) {
             .from('expense_reimbursements')
             .select('receipt_path, payment_receipt_path');
           if (error) throw new Error(`expense_reimbursements: ${error.message}`);
+          // Los comprobantes extra viven en su propia tabla: sin mirarla, esta
+          // limpieza los tomaría por huérfanos y borraría adjuntos válidos.
+          const { data: extra, error: extraError } = await supabase
+            .from('expense_reimbursement_files')
+            .select('storage_path');
+          if (extraError) throw new Error(`expense_reimbursement_files: ${extraError.message}`);
           return new Set([
+            ...nonNull((extra ?? []).map((f) => f.storage_path as string)),
             ...nonNull((data ?? []).map((r) => r.receipt_path as string)),
             // 'pendiente' es el placeholder que se escribe antes de subir el archivo.
             ...nonNull((data ?? []).map((r) => r.payment_receipt_path as string)),

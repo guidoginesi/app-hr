@@ -99,6 +99,15 @@ export const CUTOFF_DAY = 20;
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 export const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 
+/**
+ * Cuántos comprobantes admite un reintegro.
+ *
+ * Un gasto puede necesitar más de uno —la factura y el ticket, la ida y la
+ * vuelta—, pero cinco alcanzan para cualquier caso razonable y ponen un techo:
+ * sin tope, un formulario de carga es una invitación a subir una carpeta entera.
+ */
+export const MAX_FILES = 5;
+
 // ── Cálculos ─────────────────────────────────────────────────────────────────
 
 /** Fecha de HOY en Argentina como YYYY-MM-DD, sin depender de la zona del server. */

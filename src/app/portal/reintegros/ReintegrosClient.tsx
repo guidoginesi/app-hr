@@ -8,6 +8,7 @@ import { Textarea } from '@pow/ui/components/ui/textarea';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import {
+  MAX_FILES,
   RECEIPT_TYPES,
   STATUS_LABELS_EMPLOYEE,
   STEPS,
@@ -55,7 +56,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...DEFAULT_FORM });
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
   const reasonRequired = evaluation?.requiresReason ?? false;
 
   const canSubmit =
-    Boolean(file) &&
+    files.length > 0 &&
     form.reason_id &&
     form.expense_date &&
     form.concept.trim().length >= 3 &&
@@ -105,12 +106,13 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
     !saving;
 
   const submit = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     setSaving(true);
     setError(null);
     try {
       const fd = new FormData();
-      fd.append('receipt', file);
+      // Un campo repetido: del otro lado se leen con getAll('receipt').
+      for (const f of files) fd.append('receipt', f);
       fd.append(
         'data',
         JSON.stringify({
@@ -135,7 +137,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
       setNotice('Reintegro enviado. Te avisamos cuando lo aprueben.');
       setShowForm(false);
       setForm({ ...DEFAULT_FORM });
-      setFile(null);
+      setFiles([]);
       await load();
     } catch {
       setError('No se pudo enviar el reintegro.');
@@ -157,8 +159,9 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
     await load();
   };
 
-  const verComprobante = async (id: string) => {
-    const res = await fetch(`/api/reintegros/${id}/file?kind=comprobante`);
+  const verComprobante = async (id: string, fileId?: string) => {
+    const qs = fileId ? `&fileId=${encodeURIComponent(fileId)}` : '';
+    const res = await fetch(`/api/reintegros/${id}/file?kind=comprobante${qs}`);
     const data = await res.json();
     if (data.url) window.open(data.url, '_blank');
     else setError(data.error ?? 'No se pudo abrir el comprobante.');
@@ -305,21 +308,65 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                   </div>
                 </div>
 
-                {/* Adjunto obligatorio */}
+                {/* Adjuntos: al menos uno, hasta MAX_FILES */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Archivo del comprobante *</label>
-                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border)] bg-muted px-4 py-2.5 text-center transition-colors hover:border-[var(--brand)] hover:bg-accent">
-                    <span className="text-sm font-medium text-foreground">
-                      {file ? file.name : 'Elegir archivo'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">PDF, JPG, PNG o WEBP · máx. 10 MB</span>
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      className="hidden"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    />
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Archivos del comprobante *
                   </label>
+
+                  {files.length > 0 && (
+                    <ul className="flex flex-col gap-1">
+                      {files.map((f, i) => (
+                        <li
+                          key={`${f.name}-${f.size}-${i}`}
+                          className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-card px-3 py-2"
+                        >
+                          <span className="min-w-0 flex-1 truncate text-sm text-foreground">{f.name}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground nums-tabular">
+                            {(f.size / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Quitar ${f.name}`}
+                            className="shrink-0 text-xs font-medium text-[var(--red-600)] hover:underline"
+                            onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                          >
+                            Quitar
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {files.length < MAX_FILES && (
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border)] bg-muted px-4 py-2.5 text-center transition-colors hover:border-[var(--brand)] hover:bg-accent">
+                      <span className="text-sm font-medium text-foreground">
+                        {files.length === 0 ? 'Elegir archivos' : 'Agregar otro'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        PDF, JPG, PNG o WEBP · máx. 10 MB cada uno
+                      </span>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        // El input se limpia después de leerlo para poder volver a
+                        // elegir el mismo archivo si alguien lo quita por error.
+                        onChange={(e) => {
+                          const nuevos = Array.from(e.target.files ?? []);
+                          setFiles((prev) => [...prev, ...nuevos].slice(0, MAX_FILES));
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  )}
+
+                  {files.length >= MAX_FILES && (
+                    <p className="text-xs text-muted-foreground">
+                      Llegaste al máximo de {MAX_FILES} comprobantes.
+                    </p>
+                  )}
                 </div>
 
                 {/* Reglas informativas: no bloquean, pero si fallan piden motivo. */}
@@ -459,9 +506,27 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                   )}
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={() => verComprobante(r.id)}>
-                      Ver comprobante
-                    </Button>
+                    {/* Con un solo comprobante alcanza un botón; con varios se
+                        listan por nombre, que es como los reconoce quien los subió. */}
+                    {(r.receipt_files?.length ?? 0) > 1 ? (
+                      (r.receipt_files ?? []).map((f, i) => (
+                        <Button
+                          key={f.id}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => verComprobante(r.id, f.id)}
+                          title={f.filename}
+                        >
+                          <span className="max-w-[14rem] truncate">
+                            {i + 1}. {f.filename}
+                          </span>
+                        </Button>
+                      ))
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={() => verComprobante(r.id)}>
+                        Ver comprobante
+                      </Button>
+                    )}
                     {/* Cancelar sólo antes de que Administración lo valide: después
                         ya está imputado a un período de pago. */}
                     {['requested', 'leader_approved'].includes(r.status) && (

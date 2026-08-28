@@ -126,8 +126,9 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
     }
   };
 
-  const verArchivo = async (id: string, kind: 'comprobante' | 'comprobante_pago') => {
-    const res = await fetch(`/api/reintegros/${id}/file?kind=${kind}`);
+  const verArchivo = async (id: string, kind: 'comprobante' | 'comprobante_pago', fileId?: string) => {
+    const qs = fileId ? `&fileId=${encodeURIComponent(fileId)}` : '';
+    const res = await fetch(`/api/reintegros/${id}/file?kind=${kind}${qs}`);
     const data = await res.json();
     if (data.url) window.open(data.url, '_blank');
     else setError(data.error ?? 'No se pudo abrir el archivo.');
@@ -261,9 +262,27 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
                     </div>
 
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => verArchivo(r.id, 'comprobante')}>
-                        Ver comprobante
-                      </Button>
+                      {/* Con varios comprobantes se listan por nombre: quien valida
+                          necesita saber cuál está abriendo. */}
+                      {(r.receipt_files?.length ?? 0) > 1 ? (
+                        (r.receipt_files ?? []).map((f, i) => (
+                          <Button
+                            key={f.id}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => verArchivo(r.id, 'comprobante', f.id)}
+                            title={f.filename}
+                          >
+                            <span className="max-w-[14rem] truncate">
+                              {i + 1}. {f.filename}
+                            </span>
+                          </Button>
+                        ))
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => verArchivo(r.id, 'comprobante')}>
+                          Ver comprobante
+                        </Button>
+                      )}
                       {r.payment_receipt_path && (
                         <Button size="sm" variant="outline" onClick={() => verArchivo(r.id, 'comprobante_pago')}>
                           Ver comprobante de pago

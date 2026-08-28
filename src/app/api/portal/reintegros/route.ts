@@ -10,6 +10,7 @@ import { hasReimbursementAccess, logEvent, actorDisplayName } from '@/lib/reimbu
 import {
   ALLOWED_MIMES,
   MAX_FILE_BYTES,
+  MAX_FILES,
   evaluateRequest,
   money,
   todayInArgentina,
@@ -96,16 +97,24 @@ export async function POST(req: NextRequest) {
     }
 
     const form = await req.formData();
-    const file = form.get('receipt') as File | null;
-    if (!file || file.size === 0) {
+    // Varios comprobantes por gasto: la factura y el ticket, la ida y la vuelta.
+    // El primero es el que se espeja en las columnas receipt_* del reintegro.
+    const files = form.getAll('receipt').filter((f): f is File => f instanceof File && f.size > 0);
+    if (files.length === 0) {
       return NextResponse.json({ error: 'El comprobante es obligatorio.' }, { status: 400 });
     }
-    if (file.size > MAX_FILE_BYTES) {
-      return NextResponse.json({ error: 'El comprobante no puede superar 10 MB.' }, { status: 400 });
+    if (files.length > MAX_FILES) {
+      return NextResponse.json({ error: `Se pueden adjuntar hasta ${MAX_FILES} comprobantes.` }, { status: 400 });
     }
-    if (!ALLOWED_MIMES.includes(file.type)) {
-      return NextResponse.json({ error: 'El comprobante tiene que ser PDF, JPG, PNG o WEBP.' }, { status: 400 });
+    for (const f of files) {
+      if (f.size > MAX_FILE_BYTES) {
+        return NextResponse.json({ error: `"${f.name}" supera los 10 MB.` }, { status: 400 });
+      }
+      if (!ALLOWED_MIMES.includes(f.type)) {
+        return NextResponse.json({ error: `"${f.name}" tiene que ser PDF, JPG, PNG o WEBP.` }, { status: 400 });
+      }
     }
+    const file = files[0];
 
     const raw = form.get('data');
     const parsed = CreateSchema.safeParse(JSON.parse(typeof raw === 'string' ? raw : '{}'));
@@ -188,28 +197,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insertError?.message ?? 'No se pudo crear el reintegro.' }, { status: 500 });
     }
 
-    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().slice(0, 8);
-    const path = `${created.id}/comprobante-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false });
-
-    if (uploadError) {
-      // Sin comprobante el reintegro no puede existir: se borra la fila para no
-      // dejar una solicitud imposible de validar.
+    // Se suben todos o no queda ninguno: un reintegro con la mitad de los
+    // comprobantes es peor que uno que falló, porque parece completo.
+    const subidos: { path: string; file: File }[] = [];
+    const abortar = async (mensaje: string) => {
+      if (subidos.length > 0) {
+        await supabase.storage.from(BUCKET).remove(subidos.map((s) => s.path));
+      }
       await supabase.from('expense_reimbursements').delete().eq('id', created.id);
-      return NextResponse.json({ error: `No se pudo subir el comprobante: ${uploadError.message}` }, { status: 500 });
+      return NextResponse.json({ error: mensaje }, { status: 500 });
+    };
+
+    for (const [i, f] of files.entries()) {
+      const ext = (f.name.split('.').pop() || 'bin').toLowerCase().slice(0, 8);
+      const path = `${created.id}/comprobante-${Date.now()}-${i}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, Buffer.from(await f.arrayBuffer()), { contentType: f.type, upsert: false });
+      if (uploadError) {
+        return abortar(`No se pudo subir "${f.name}": ${uploadError.message}`);
+      }
+      subidos.push({ path, file: f });
     }
 
+    const { error: filesError } = await supabase.from('expense_reimbursement_files').insert(
+      subidos.map((s) => ({
+        reimbursement_id: created.id,
+        storage_path: s.path,
+        filename: s.file.name,
+        size: s.file.size,
+        mime: s.file.type,
+      })),
+    );
+    if (filesError) return abortar(filesError.message);
+
+    // El primero también va a las columnas del reintegro: es el que usan la
+    // validación y los listados donde el comprobante es uno solo.
     const { error: pathError } = await supabase
       .from('expense_reimbursements')
-      .update({ receipt_path: path })
+      .update({ receipt_path: subidos[0].path })
       .eq('id', created.id);
-    if (pathError) {
-      await supabase.storage.from(BUCKET).remove([path]);
-      await supabase.from('expense_reimbursements').delete().eq('id', created.id);
-      return NextResponse.json({ error: pathError.message }, { status: 500 });
-    }
+    if (pathError) return abortar(pathError.message);
 
     const actorName = await actorDisplayName(auth.user.id, auth.user.email);
     await logEvent({
