@@ -61,8 +61,8 @@ const MANUALS: AdminManual[] = [
   {
     href: '/admin/ayuda/reintegros',
     title: 'Reintegros de gastos',
-    desc: 'Habilitados y motivos, aprobación del líder, validación de comprobante e imputación, monto parcial y tipo de cambio, agenda de pago y comprobante de pago.',
-    updated: '2026-08-04',
+    desc: 'Habilitados y motivos, hasta 5 comprobantes por gasto, aprobación del líder, validación e imputación, monto parcial y tipo de cambio, agenda de pago y comprobante de pago.',
+    updated: '2026-08-28',
     /** Administración valida y paga reintegros, así que también lee este manual. */
     administracion: true,
   },

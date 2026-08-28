@@ -34,15 +34,26 @@ export default async function Page() {
           n={1}
           title="Cargar el gasto"
           image="/manual/reintegros-portal/02-form.png"
-          imageAlt="Formulario de nuevo reintegro con los campos del gasto, los datos del comprobante y el archivo."
+          imageAlt="Formulario de nuevo reintegro con los campos del gasto, los datos del comprobante y el bloque para adjuntar archivos."
         >
           <p>En <b>Reintegros → Nuevo reintegro</b> completás la <b>fecha</b> del gasto, el <b>motivo</b> (viáticos, movilidad, comidas de trabajo, insumos, suscripciones…), una <b>descripción</b> corta de qué fue y el <b>monto</b> con su moneda.</p>
           <p>Después van los datos del comprobante: <b>tipo</b> (factura A, B, C, ticket…), <b>número</b> y el <b>CUIT</b> de quien te lo emitió.</p>
-          <p>El <b>archivo del comprobante es obligatorio</b> — PDF o foto, hasta 10 MB. Sin comprobante no se puede enviar, porque es lo que Administración tiene que validar. Una foto legible del ticket alcanza.</p>
+          <p>El <b>comprobante es obligatorio</b> — PDF o foto, hasta 10 MB cada uno. Sin comprobante no se puede enviar, porque es lo que Administración tiene que validar. Una foto legible del ticket alcanza.</p>
         </ManualStep>
 
         <ManualStep
           n={2}
+          title="Si el gasto tiene más de un comprobante"
+          image="/manual/reintegros-portal/08-varios.png"
+          imageAlt="Un reintegro con dos comprobantes listados por nombre: 1. pasaje-ida.pdf y 2. pasaje-vuelta.pdf."
+        >
+          <p>Podés adjuntar <b>hasta 5 archivos</b> en el mismo reintegro: la factura y el ticket, el pasaje de ida y el de vuelta, el detalle y el resumen. Van todos al mismo gasto, así que no hace falta cargar un reintegro por cada papel ni mandar el resto por otro lado.</p>
+          <p>Los vas viendo listados a medida que los elegís, con su tamaño, y podés <b>quitar</b> el que no va antes de enviar. Se suben todos juntos: si uno falla, no queda el reintegro a medias.</p>
+          <p>Después aparecen <b>numerados y con su nombre</b>, tanto en tu lista como en la pantalla de quien lo aprueba. Poneles nombres que se entiendan: es lo que van a leer tu líder y Administración para saber cuál abrir.</p>
+        </ManualStep>
+
+        <ManualStep
+          n={3}
           title="Si el gasto está fuera de lo habitual"
           image="/manual/reintegros-portal/03-fuera-de-plazo.png"
           imageAlt="Bloque 'Revisá antes de enviar' marcando el gasto de hace 124 días y el monto sobre el tope, con el campo Motivo debajo."
@@ -51,22 +62,22 @@ export default async function Page() {
           <p><b>No es un rechazo</b>: podés enviarlo igual, sólo tenés que contar el contexto. Esa explicación la ven tu líder y Administración junto con la solicitud, así no tienen que preguntártelo por otro canal.</p>
         </ManualStep>
 
-        <ManualStep n={3} image="/manual/reintegros-portal/04-estados.png" title="Seguir el estado" imageAlt="Lista de reintegros con los estados y el historial de uno abierto.">
+        <ManualStep n={4} image="/manual/reintegros-portal/04-estados.png" title="Seguir el estado" imageAlt="Lista de reintegros con los estados y el historial de uno abierto.">
           <p>Cada reintegro te muestra en qué paso está: <b>esperando a tu líder</b> → <b>en validación de Administración</b> → <b>a pagar</b> → <b>pagado</b>. Te llega un mail y una notificación en la campanita en cada cambio.</p>
           <p>Abajo de cada uno está el <b>historial</b>: qué pasó, cuándo y quién lo hizo. Si alguien dejó un comentario al aprobar o al validar, lo ves ahí.</p>
         </ManualStep>
 
-        <ManualStep n={4} image="/manual/reintegros-portal/05-pago.png" title="Cuándo te lo pagan" imageAlt="Detalle de un reintegro mostrando el método de pago y la fecha estimada.">
+        <ManualStep n={5} image="/manual/reintegros-portal/05-pago.png" title="Cuándo te lo pagan" imageAlt="Detalle de un reintegro mostrando el método de pago y la fecha estimada.">
           <p>Cuando Administración agenda el pago aparecen el <b>método</b> (transferencia o con la liquidación) y una <b>fecha estimada</b>.</p>
           <p>El corte es el día <b>20</b>: si el pago se agenda hasta el 20, se paga dentro de ese mes; del 21 en adelante, pasa al mes siguiente. La fecha estimada es el <b>último día</b> del mes que corresponda, y una vez asignada <b>no se mueve</b>.</p>
         </ManualStep>
 
-        <ManualStep n={5} image="/manual/reintegros-portal/06-por-menos.png" title="Si te lo validan por menos" imageAlt="Reintegro validado por un monto menor, con el motivo a la vista.">
+        <ManualStep n={6} image="/manual/reintegros-portal/06-por-menos.png" title="Si te lo validan por menos" imageAlt="Reintegro validado por un monto menor, con el motivo a la vista.">
           <p>Administración puede validar el reintegro por un <b>monto menor</b> al que pediste —por ejemplo si el comprobante dice menos que lo cargado—. Cuando pasa, está <b>obligada a explicar por qué</b>, y ves el monto nuevo y el motivo en el mail y en el historial.</p>
           <p>Si el gasto fue en <b>dólares</b>, en ese paso se carga el <b>tipo de cambio</b> con el que se convierte a pesos. Queda fijo: lo que vas a cobrar no cambia si después se mueve el dólar.</p>
         </ManualStep>
 
-        <ManualStep n={6} image="/manual/reintegros-portal/07-cancelar-rechazo.png" title="Cancelar o si te lo rechazan" imageAlt="Botón de cancelar en un reintegro pendiente y un reintegro rechazado con su motivo.">
+        <ManualStep n={7} image="/manual/reintegros-portal/07-cancelar-rechazo.png" title="Cancelar o si te lo rechazan" imageAlt="Botón de cancelar en un reintegro pendiente y un reintegro rechazado con su motivo.">
           <p>Podés <b>cancelar</b> un reintegro tuyo mientras esté esperando a tu líder o recién aprobado. Una vez que Administración lo validó ya está imputado a un período de pago y no se puede cancelar solo: escribile a People por Consultas.</p>
           <p>Si te lo <b>rechazan</b>, el motivo es obligatorio y lo vas a ver en el mail y en la pantalla. Si el rechazo fue por algo corregible —faltaba el comprobante, estaba ilegible, el número no coincidía— podés <b>cargarlo de nuevo</b> con el dato corregido.</p>
         </ManualStep>
