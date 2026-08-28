@@ -9,10 +9,14 @@ export const dynamic = 'force-dynamic';
 const BUCKET = 'reimbursement-files';
 
 /**
- * GET /api/reintegros/[id]/file?kind=comprobante|comprobante_pago
+ * GET /api/reintegros/[id]/file?kind=comprobante|comprobante_pago[&fileId=...]
  *
  * Devuelve una URL firmada de 120 segundos. El bucket es privado: el acceso lo
  * decide resolveActor y no la URL, así que un link filtrado caduca solo.
+ *
+ * Un reintegro puede tener varios comprobantes. Sin `fileId` se devuelve el
+ * primero —el que espejan las columnas receipt_*—, que es lo que esperan los
+ * lugares donde el link es uno solo.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -42,7 +46,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .maybeSingle();
     if (!r) return NextResponse.json({ error: 'Reintegro no encontrado' }, { status: 404 });
 
-    const path = kind === 'comprobante' ? r.receipt_path : r.payment_receipt_path;
+    let path = kind === 'comprobante' ? r.receipt_path : r.payment_receipt_path;
+
+    // Un adjunto puntual: se verifica que pertenezca a ESTE reintegro antes de
+    // firmarlo. Si no, un id de otro reintegro alcanzaría para leer su archivo.
+    const fileId = new URL(req.url).searchParams.get('fileId');
+    if (kind === 'comprobante' && fileId) {
+      const { data: archivo } = await supabase
+        .from('expense_reimbursement_files')
+        .select('storage_path')
+        .eq('id', fileId)
+        .eq('reimbursement_id', id)
+        .maybeSingle();
+      if (!archivo) {
+        return NextResponse.json({ error: 'Ese archivo no existe en este reintegro.' }, { status: 404 });
+      }
+      path = archivo.storage_path as string;
+    }
+
     if (!path || path === 'pendiente') {
       return NextResponse.json({ error: 'Ese archivo todavía no está cargado.' }, { status: 404 });
     }

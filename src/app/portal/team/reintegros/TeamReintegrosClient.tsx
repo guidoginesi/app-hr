@@ -76,8 +76,9 @@ export function TeamReintegrosClient() {
     }
   };
 
-  const verComprobante = async (id: string) => {
-    const res = await fetch(`/api/reintegros/${id}/file?kind=comprobante`);
+  const verComprobante = async (id: string, fileId?: string) => {
+    const qs = fileId ? `&fileId=${encodeURIComponent(fileId)}` : '';
+    const res = await fetch(`/api/reintegros/${id}/file?kind=comprobante${qs}`);
     const data = await res.json();
     if (data.url) window.open(data.url, '_blank');
     else setError(data.error ?? 'No se pudo abrir el comprobante.');
@@ -115,7 +116,7 @@ export function TeamReintegrosClient() {
           <Seccion titulo={`Esperando tu decisión${pendientes.length ? ` (${pendientes.length})` : ''}`} vacio="No tenés reintegros por aprobar.">
             {pendientes.map((r) => (
               <li key={r.id} className="px-6 py-4">
-                <Fila r={r} onVer={() => verComprobante(r.id)} />
+                <Fila r={r} onVer={(fileId) => verComprobante(r.id, fileId)} />
 
                 {openId === r.id ? (
                   <div className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-muted p-4">
@@ -172,7 +173,7 @@ export function TeamReintegrosClient() {
           <Seccion titulo="Histórico del equipo" vacio="Todavía no hay reintegros cerrados.">
             {resto.map((r) => (
               <li key={r.id} className="px-6 py-4">
-                <Fila r={r} onVer={() => verComprobante(r.id)} />
+                <Fila r={r} onVer={(fileId) => verComprobante(r.id, fileId)} />
               </li>
             ))}
           </Seccion>
@@ -181,7 +182,7 @@ export function TeamReintegrosClient() {
     </div>
   );
 
-  function Fila({ r, onVer }: { r: ReimbursementWithDetails; onVer: () => void }) {
+  function Fila({ r, onVer }: { r: ReimbursementWithDetails; onVer: (fileId?: string) => void }) {
     return (
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -190,13 +191,30 @@ export function TeamReintegrosClient() {
             {r.employee_name} · {r.reason_label_snapshot ?? r.reason_name ?? '—'} · {fecha(r.expense_date)}
             {r.project_label_snapshot ? ` · ${r.project_label_snapshot}` : ''}
           </p>
+          {/* Con varios, uno por archivo: el líder aprueba mirando lo que hay. */}
+          {(r.receipt_files?.length ?? 0) > 1 ? (
+            <span className="mt-1 flex flex-wrap gap-3">
+              {(r.receipt_files ?? []).map((f, i) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => onVer(f.id)}
+                  title={f.filename}
+                  className="max-w-[14rem] truncate text-xs font-medium text-[var(--brand-strong)] underline decoration-dotted underline-offset-4"
+                >
+                  {i + 1}. {f.filename}
+                </button>
+              ))}
+            </span>
+          ) : (
           <button
             type="button"
-            onClick={onVer}
+            onClick={() => onVer()}
             className="mt-1 text-xs font-medium text-[var(--brand-strong)] underline decoration-dotted underline-offset-4"
           >
             Ver comprobante
           </button>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <p className="font-medium text-foreground nums-tabular">{money(r.amount, r.currency)}</p>

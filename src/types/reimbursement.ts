@@ -58,6 +58,8 @@ export type Reimbursement = {
   receipt_number: string | null;
   supplier_cuit: string | null;
   receipt_filename: string | null;
+  /** Todos los comprobantes del reintegro. El primero es el de receipt_*. */
+  receipt_files?: { id: string; filename: string; size: number | null; mime: string | null }[];
 
   status: ReimbursementStatus;
 
