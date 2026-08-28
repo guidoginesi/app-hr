@@ -10,6 +10,7 @@ import type { LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
 import { LeaveCertificateControl } from '@/components/time-off/LeaveCertificateControl';
 import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 import { textoDelEvento } from '@/lib/leaveCalendarText';
+import { conUnidad } from '@/lib/leaveUnits';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 
 const MONTH_NAMES = [
@@ -93,6 +94,7 @@ interface BonusAdjustment {
   employee_name: string;
   leave_type_code: string;
   leave_type_name: string;
+  count_type: string;
   created_by_name: string | null;
   cancelled_by_name: string | null;
 }
@@ -468,7 +470,7 @@ export default function TimeOffRequestsPage() {
           onChange={(v) => setActiveTab(v)}
           options={[
             { value: 'requests', label: 'Solicitudes de licencias' },
-            { value: 'bonus', label: `Ajustes de días (${activeBonusAdjustments.length} activos)` },
+            { value: 'bonus', label: `Ajustes de saldo (${activeBonusAdjustments.length} activos)` },
           ]}
         />
 
@@ -815,7 +817,7 @@ export default function TimeOffRequestsPage() {
             {/* Bonus adjustments info */}
             <div className="rounded-lg border border-[var(--border)] bg-muted p-4 text-sm text-secondary-foreground">
               <p>
-                <strong>Ajustes de días:</strong> Aquí puedes ver los días extra agregados a los empleados (días Pow, vacaciones, etc.) y cancelarlos si es necesario.
+                <strong>Ajustes de saldo:</strong> acá ves lo que People sumó a mano a cada persona —días Pow, vacaciones, semanas de trabajo remoto— y podés cancelarlo. Cada ajuste se muestra en su unidad: los días en días y las semanas remotas en semanas.
                 Al cancelar, los días se restan automáticamente del balance del empleado.
               </p>
             </div>
@@ -836,7 +838,7 @@ export default function TimeOffRequestsPage() {
                     <tr className="border-b border-[var(--border)] bg-muted text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <th className="px-6 py-3">Empleado</th>
                       <th className="px-6 py-3">Tipo</th>
-                      <th className="px-6 py-3">Días</th>
+                      <th className="px-6 py-3">Cantidad</th>
                       <th className="px-6 py-3">Motivo</th>
                       <th className="px-6 py-3">Fecha</th>
                       <th className="px-6 py-3">Estado</th>
@@ -857,7 +859,7 @@ export default function TimeOffRequestsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm font-semibold text-foreground nums-tabular">
-                            {adjustment.days > 0 ? '+' : ''}{adjustment.days}
+                            {adjustment.days > 0 ? '+' : ''}{conUnidad(adjustment.count_type, adjustment.days)}
                           </span>
                         </td>
                         <td className="px-6 py-4 max-w-xs">
