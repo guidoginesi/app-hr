@@ -75,7 +75,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (actor.role === 'none') return NextResponse.json({ error: 'No tenés acceso a este reintegro.' }, { status: 403 });
 
     const from = r.status as ReimbursementStatus;
-    if (!canDo(action, from, actor.role)) {
+
+    /**
+     * Cancelar es del dueño, no de un rol.
+     *
+     * `resolveActor` colapsa a cada persona en UN solo rol, y a quien además es
+     * admin le devuelve 'admin' antes de mirar si es el dueño del reintegro. Como
+     * cancelar sólo lo permite 'employee', quien carga un gasto y encima es admin
+     * o Administración no podía dar de baja el suyo — le decía "no tenés permiso"
+     * sobre algo que acababa de cargar.
+     *
+     * El estado lo sigue mandando TRANSITIONS: sólo antes de que Administración
+     * valide, porque después ya está imputado a un período de pago.
+     */
+    const esElDueno =
+      actor.viewerEmployeeId !== null && actor.viewerEmployeeId === actor.ownerEmployeeId;
+    const puedeCancelarLoSuyo =
+      action === 'cancel' && esElDueno && TRANSITIONS.cancel.from.includes(from);
+
+    if (!canDo(action, from, actor.role) && !puedeCancelarLoSuyo) {
       const t = TRANSITIONS[action];
       return NextResponse.json(
         {
