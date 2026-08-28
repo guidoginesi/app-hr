@@ -73,31 +73,31 @@ export default async function AyudaReintegrosPage() {
           <p>Cada fila se despliega y desde ahí se opera todo el circuito, sin cambiar de pantalla.</p>
         </ManualStep>
 
-        <ManualStep n={5} title="La aprobación del líder" imageAlt="Vista Reintegros del equipo en el portal, con las acciones Aprobar y Rechazar.">
+        <ManualStep n={5} image="/manual/reintegros-admin/05-lider.png" title="La aprobación del líder" imageAlt="Vista Reintegros del equipo en el portal, con las acciones Aprobar y Rechazar.">
           <p>Le llega un aviso al <b>líder directo</b> por mail y en la campanita. Lo aprueba desde su portal, en <b>Reintegros del equipo</b>, con un comentario opcional; o lo rechaza, y ahí el motivo es obligatorio.</p>
           <p>El líder que decide es el que la persona tenía <b>cuando pidió el reintegro</b>, no el que tenga después: si cambia de líder a mitad del circuito, el aprobador no se muda.</p>
           <p>Desde la cola de People podés <b>aprobar en nombre del líder</b> en cualquier solicitud pendiente, con el botón <b>Aprobar como líder</b> — sirve para desatascar cuando el líder está de vacaciones. Y si la persona <b>no tiene líder cargado</b>, el aviso va directo a People y ésa es la única vía: si no, quedaría esperando a nadie.</p>
         </ManualStep>
 
-        <ManualStep n={6} title="La validación de Administración" imageAlt="Panel de gestión con los dos tildes de validación, el monto y el tipo de cambio.">
+        <ManualStep n={6} image="/manual/reintegros-admin/06-validar.png" title="La validación de Administración" imageAlt="Panel de gestión con los dos tildes de validación, el monto y el tipo de cambio.">
           <p>Este es el paso de Administración. Hay que confirmar <b>dos cosas</b> con un tilde cada una, y sin las dos no se puede avanzar: que el <b>comprobante fiscal</b> está correcto y que la <b>imputación contable</b> está correcta.</p>
           <p><b>Se puede validar por un monto menor</b> al que se pidió — por ejemplo si el comprobante dice menos. En ese caso el comentario es obligatorio, y el colaborador ve el monto nuevo y el motivo en el mail y en el historial. No hace falta rechazar y pedir de nuevo. Por un monto <b>mayor</b> al pedido no se puede validar.</p>
           <p>Si el gasto está en <b>USD</b>, acá se carga el <b>tipo de cambio</b>. La conversión a pesos se hace <b>una sola vez</b>, en este paso, y queda fija: los totales y los reportes suman ese importe, así que no cambian si mañana cambia el dólar.</p>
         </ManualStep>
 
-        <ManualStep n={7} title="Agendar el pago" imageAlt="Selector de método de pago con las opciones Transferencia y Con la liquidación.">
+        <ManualStep n={7} image="/manual/reintegros-admin/07-agendar.png" title="Agendar el pago" imageAlt="Selector de método de pago con las opciones Transferencia y Con la liquidación.">
           <p>Elegís el <b>método</b>: transferencia, o con la liquidación. Los dos están disponibles para cualquier persona; el sistema no restringe uno según la modalidad de contratación.</p>
           <p>El <b>período de pago</b> se define por el día en que <b>agendás el pago</b> —no por la fecha del gasto ni por la de validación— con el corte del día <b>20</b>: si agendás hasta el 20, el pago queda en ese mes; del 21 en adelante, en el mes siguiente. La fecha estimada es el <b>último día</b> de ese mes.</p>
           <p>Se calcula <b>una sola vez</b> y queda guardada, así la fecha que ve el colaborador no se mueve sola al pasar el corte. Ojo con esto: si validás el día 19 pero agendás el 21, el pago cae al mes siguiente.</p>
           <p className="text-muted-foreground">El pago por liquidación hoy se registra a mano. La imputación automática al período está prevista para una etapa siguiente.</p>
         </ManualStep>
 
-        <ManualStep n={8} title="Marcar pagado" imageAlt="Botón para subir el comprobante de pago y, una vez cargado, el botón Marcar como pagado.">
+        <ManualStep n={8} image="/manual/reintegros-admin/08-pagar.png" title="Marcar pagado" imageAlt="Botón para subir el comprobante de pago y, una vez cargado, el botón Marcar como pagado.">
           <p>Primero <b>subís el comprobante de pago</b> y después aparece <b>Marcar como pagado</b>. En ese orden a propósito: sin comprobante no se puede cerrar, así que nunca queda un reintegro dado por pagado sin evidencia.</p>
           <p>Si reemplazás el comprobante, el anterior <b>se conserva</b>: es documentación de pago y borrarla perdería trazabilidad.</p>
         </ManualStep>
 
-        <ManualStep n={9} title="Rechazar, cancelar y el historial" imageAlt="Bloque de rechazo con el motivo obligatorio y el historial del reintegro debajo.">
+        <ManualStep n={9} image="/manual/reintegros-admin/09-rechazo.png" title="Rechazar, cancelar y el historial" imageAlt="Bloque de rechazo con el motivo obligatorio y el historial del reintegro debajo.">
           <p><b>Rechazar</b> está disponible mientras el reintegro esté abierto —esperando al líder, a validar o validado— y el motivo es siempre obligatorio. El colaborador lo ve en el mail y en su pantalla.</p>
           <p><b>El colaborador puede cancelar</b> su propio reintegro, pero sólo hasta que Administración lo valide. Después ya está imputado a un período de pago y cancelarlo dejaría la cuenta inconsistente.</p>
           <p>Abajo de cada reintegro está el <b>historial</b>: cada cambio de estado con su fecha y quién lo hizo. Lo ve también el colaborador, porque es su gasto.</p>

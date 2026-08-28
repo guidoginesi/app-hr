@@ -51,22 +51,22 @@ export default async function Page() {
           <p><b>No es un rechazo</b>: podés enviarlo igual, sólo tenés que contar el contexto. Esa explicación la ven tu líder y Administración junto con la solicitud, así no tienen que preguntártelo por otro canal.</p>
         </ManualStep>
 
-        <ManualStep n={3} title="Seguir el estado" imageAlt="Lista de reintegros con los estados y el historial de uno abierto.">
+        <ManualStep n={3} image="/manual/reintegros-portal/04-estados.png" title="Seguir el estado" imageAlt="Lista de reintegros con los estados y el historial de uno abierto.">
           <p>Cada reintegro te muestra en qué paso está: <b>esperando a tu líder</b> → <b>en validación de Administración</b> → <b>a pagar</b> → <b>pagado</b>. Te llega un mail y una notificación en la campanita en cada cambio.</p>
           <p>Abajo de cada uno está el <b>historial</b>: qué pasó, cuándo y quién lo hizo. Si alguien dejó un comentario al aprobar o al validar, lo ves ahí.</p>
         </ManualStep>
 
-        <ManualStep n={4} title="Cuándo te lo pagan" imageAlt="Detalle de un reintegro mostrando el método de pago y la fecha estimada.">
+        <ManualStep n={4} image="/manual/reintegros-portal/05-pago.png" title="Cuándo te lo pagan" imageAlt="Detalle de un reintegro mostrando el método de pago y la fecha estimada.">
           <p>Cuando Administración agenda el pago aparecen el <b>método</b> (transferencia o con la liquidación) y una <b>fecha estimada</b>.</p>
           <p>El corte es el día <b>20</b>: si el pago se agenda hasta el 20, se paga dentro de ese mes; del 21 en adelante, pasa al mes siguiente. La fecha estimada es el <b>último día</b> del mes que corresponda, y una vez asignada <b>no se mueve</b>.</p>
         </ManualStep>
 
-        <ManualStep n={5} title="Si te lo validan por menos" imageAlt="Reintegro validado por un monto menor, con el motivo a la vista.">
+        <ManualStep n={5} image="/manual/reintegros-portal/06-por-menos.png" title="Si te lo validan por menos" imageAlt="Reintegro validado por un monto menor, con el motivo a la vista.">
           <p>Administración puede validar el reintegro por un <b>monto menor</b> al que pediste —por ejemplo si el comprobante dice menos que lo cargado—. Cuando pasa, está <b>obligada a explicar por qué</b>, y ves el monto nuevo y el motivo en el mail y en el historial.</p>
           <p>Si el gasto fue en <b>dólares</b>, en ese paso se carga el <b>tipo de cambio</b> con el que se convierte a pesos. Queda fijo: lo que vas a cobrar no cambia si después se mueve el dólar.</p>
         </ManualStep>
 
-        <ManualStep n={6} title="Cancelar o si te lo rechazan" imageAlt="Botón de cancelar en un reintegro pendiente y un reintegro rechazado con su motivo.">
+        <ManualStep n={6} image="/manual/reintegros-portal/07-cancelar-rechazo.png" title="Cancelar o si te lo rechazan" imageAlt="Botón de cancelar en un reintegro pendiente y un reintegro rechazado con su motivo.">
           <p>Podés <b>cancelar</b> un reintegro tuyo mientras esté esperando a tu líder o recién aprobado. Una vez que Administración lo validó ya está imputado a un período de pago y no se puede cancelar solo: escribile a People por Consultas.</p>
           <p>Si te lo <b>rechazan</b>, el motivo es obligatorio y lo vas a ver en el mail y en la pantalla. Si el rechazo fue por algo corregible —faltaba el comprobante, estaba ilegible, el número no coincidía— podés <b>cargarlo de nuevo</b> con el dato corregido.</p>
         </ManualStep>
