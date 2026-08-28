@@ -85,11 +85,22 @@ export async function GET(req: NextRequest) {
      * sirven para decir "viene de agosto" en vez de dejar una fecha suelta que
      * no coincide con lo que la persona pidió.
      */
+    // "Ya liquidada" es por mes: se pregunta por el mes que se está mirando, no
+    // por la solicitud entera. Una licencia que cruza el mes puede estar
+    // liquidada en agosto y pendiente en septiembre.
+    const { data: marcas } = await supabase
+      .from('leave_request_plus_paid_months')
+      .select('leave_request_id')
+      .eq('year', year)
+      .eq('month', month);
+    const liquidadasEsteMes = new Set((marcas ?? []).map((m) => m.leave_request_id as string));
+
     const novedades = (data ?? []).flatMap((n) => {
       const tramo = recortarAlMes(n as unknown as LicenciaARecortar, year, month);
       if (!tramo) return [];
       return [{
         ...n,
+        plus_paid: liquidadasEsteMes.has(n.id as string),
         start_date: tramo.desde,
         end_date: tramo.hasta,
         days_requested: tramo.duracion,
