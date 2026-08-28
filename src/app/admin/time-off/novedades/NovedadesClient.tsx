@@ -90,7 +90,9 @@ function exportToExcel(novedades: Novedad[], year: number, month: number) {
       ? `Parcial (licencia completa: ${formatDateLocal(n.licencia_desde)} al ${formatDateLocal(n.licencia_hasta)}, ${n.licencia_duracion})`
       : 'Completa',
     Estado: STATUS_LABELS[n.status] ?? n.status,
-    'Vacaciones ya liquidadas': n.leave_type_code === 'vacation' ? (n.plus_paid ? 'Sí' : 'No') : '',
+    // Por mes, como todo lo demás en esta pantalla: responde por el tramo que se
+    // está liquidando, no por la licencia entera.
+    'Ya liquidada en el mes': n.leave_type_code === 'vacation' ? (n.plus_paid ? 'Sí' : 'No') : '',
     Observaciones: [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
       .filter(Boolean).join(' | '),
   }));
@@ -138,7 +140,7 @@ export function NovedadesClient() {
         fetch(`/api/admin/time-off/requests/${id}/plus-paid`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plus_paid: val }),
+          body: JSON.stringify({ plus_paid: val, year, month }),
         })
           .then((r) => ({ id, val, ok: r.ok }))
           .catch(() => ({ id, val, ok: false })),
@@ -387,26 +389,26 @@ export function NovedadesClient() {
                           </span>
                         </td>
                         <td className="px-6 py-3 text-center">
-                          {n.leave_type_code !== 'vacation' ? (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          ) : n.viene_del_mes_anterior ? (
-                            // El plus se paga una vez, con la licencia, no una vez
-                            // por mes. El interruptor vive en el mes donde arranca.
+                          {n.leave_type_code === 'vacation' ? (
+                            // Uno por mes: la liquidación es mensual, así que el
+                            // tramo de septiembre se marca aparte del de agosto.
                             <span
-                              className="text-xs text-muted-foreground"
-                              title={`El plus se marca en el mes donde arranca la licencia. ${licenciaCompleta(n)}`}
+                              className="inline-flex items-center justify-center"
+                              title={
+                                n.tramo_parcial
+                                  ? `Marca sólo el tramo de ${periodLabel}. ${licenciaCompleta(n)}`
+                                  : 'Vacaciones ya liquidadas: se excluyen del reporte de plus vacacional'
+                              }
                             >
-                              se marca al inicio
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center justify-center" title="Vacaciones ya liquidadas: se excluyen del reporte de plus vacacional">
                               <Switch
-                                aria-label="Vacaciones ya liquidadas"
+                                aria-label={`Vacaciones ya liquidadas en ${periodLabel}`}
                                 checked={plusChecked(n)}
                                 disabled={savingPlus}
                                 onCheckedChange={(v) => setPlusValue(n, v)}
                               />
                             </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className="px-6 py-3 max-w-xs">
