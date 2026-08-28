@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@pow/ui/components/ui/button';
 
 /**
@@ -9,6 +9,11 @@ import { Button } from '@pow/ui/components/ui/button';
  * Nunca se manda sola: se copia al cuadro de respuesta para que People la edite
  * y la envíe. La calificación no se pide acá — sale de lo que HR haga después
  * con el borrador, comparando lo enviado contra lo propuesto.
+ *
+ * No hay que pedirla: las consultas nuevas ya la traen hecha desde el alta, y si
+ * una vieja no la tiene se genera sola al abrirla. El botón queda para pedir
+ * OTRA —después de sincronizar el manual o de aprobar una FAQ—, que es cuando
+ * tiene sentido volver a preguntar.
  */
 
 type Cita = { slug: string; ruta: string[] };
@@ -46,24 +51,44 @@ export function PropuestaAgente({
   const [generando, setGenerando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Una sola generación automática por montaje: sin esto, un error de red haría
+  // que cada re-render pida otra propuesta.
+  const yaPidio = useRef(false);
 
   const cargar = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/inquiries/${inquiryId}/propuesta`);
       const data = await res.json();
-      if (res.ok) setPropuesta(data.propuesta ?? null);
-    } finally {
-      setCargando(false);
+      if (res.ok) return (data.propuesta ?? null) as Propuesta | null;
+    } catch {
+      // Se cae al mismo lugar que una respuesta vacía: sin propuesta.
     }
+    return null;
   }, [inquiryId]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      const p = await cargar();
+      if (!vivo) return;
+      setPropuesta(p);
+      setCargando(false);
+      // Consultas viejas, o altas donde el agente falló: se arma acá.
+      if (!p && !disabled && !yaPidio.current) {
+        yaPidio.current = true;
+        generar(true);
+      }
+    })();
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cargar, disabled]);
 
-  const generar = async () => {
+  const generar = async (auto = false) => {
     setGenerando(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/inquiries/${inquiryId}/propuesta`, { method: 'POST' });
+      const qs = auto ? '?auto=1' : '';
+      const res = await fetch(`/api/admin/inquiries/${inquiryId}/propuesta${qs}`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? 'No se pudo generar la propuesta.');
@@ -79,7 +104,7 @@ export function PropuestaAgente({
 
   const descartar = async () => {
     await fetch(`/api/admin/inquiries/${inquiryId}/propuesta`, { method: 'PATCH' });
-    await cargar();
+    setPropuesta(await cargar());
   };
 
   if (cargando) return null;
@@ -98,7 +123,7 @@ export function PropuestaAgente({
           </p>
         </div>
         {!propuesta || yaCalificada ? (
-          <Button size="sm" variant="outline" onClick={generar} disabled={generando || disabled}>
+          <Button size="sm" variant="outline" onClick={() => generar()} disabled={generando || disabled}>
             {generando ? 'Buscando en el manual…' : propuesta ? 'Proponer de nuevo' : 'Proponer una respuesta'}
           </Button>
         ) : null}
