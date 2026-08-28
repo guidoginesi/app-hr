@@ -11,6 +11,7 @@ import { LeaveCertificateControl } from '@/components/time-off/LeaveCertificateC
 import { requiresLeaveCertificate } from '@/lib/leaveCertificates';
 import { textoDelEvento } from '@/lib/leaveCalendarText';
 import { conUnidad } from '@/lib/leaveUnits';
+import { duracionEnTexto } from '@/lib/novedadesPorMes';
 import { formatDateLocal, parseLocalDate } from '@/lib/dateUtils';
 
 const MONTH_NAMES = [
@@ -65,10 +66,13 @@ interface Novedad {
   id: string;
   employee_name: string;
   leave_type_name: string;
+  // Recortadas al mes que se liquida (ver src/lib/novedadesPorMes.ts).
   start_date: string;
   end_date: string;
   days_requested: number;
   count_type: string;
+  duracion_unidad: 'dias' | 'semanas';
+  tramo_parcial: boolean;
   status: string;
   notes: string | null;
   rejection_reason: string | null;
@@ -403,9 +407,8 @@ export default function TimeOffRequestsPage() {
       'Tipo de licencia': n.leave_type_name,
       'Fecha inicio': formatDateLocal(n.start_date),
       'Fecha fin': formatDateLocal(n.end_date),
-      Duración: n.count_type === 'weeks'
-        ? `${n.days_requested} semana${n.days_requested !== 1 ? 's' : ''}`
-        : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`,
+      Duración: duracionEnTexto({ duracion: n.days_requested, unidad: n.duracion_unidad ?? 'dias' }),
+      Tramo: n.tramo_parcial ? 'Parcial' : 'Completa',
       Estado: NOV_STATUS_LABELS[n.status] ?? n.status,
       Observaciones: [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
         .filter(Boolean).join(' | '),
@@ -1043,9 +1046,10 @@ export default function TimeOffRequestsPage() {
                       {novedades.map((n) => {
                         const obs = [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason].filter(Boolean).join(' | ');
                         const isExpanded = novExpandedRow === n.id;
-                        const duracion = n.count_type === 'weeks'
-                          ? `${n.days_requested} sem.`
-                          : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`;
+                        const duracion = duracionEnTexto({
+                          duracion: n.days_requested,
+                          unidad: n.duracion_unidad ?? 'dias',
+                        });
                         return (
                           <tr key={n.id} className="hover:bg-muted transition-colors">
                             <td className="px-6 py-3 text-sm font-medium text-foreground">{n.employee_name}</td>

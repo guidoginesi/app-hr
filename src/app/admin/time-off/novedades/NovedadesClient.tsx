@@ -7,6 +7,7 @@ import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { Switch } from '@pow/ui/components/ui/switch';
 import { formatDateLocal } from '@/lib/dateUtils';
+import { duracionEnTexto } from '@/lib/novedadesPorMes';
 
 interface Novedad {
   id: string;
@@ -24,6 +25,14 @@ interface Novedad {
   hr_rejection_reason: string | null;
   leader_rejection_reason: string | null;
   plus_paid: boolean;
+  // Recorte al mes que se liquida: la ruta ya manda start/end/days del tramo.
+  duracion_unidad: 'dias' | 'semanas';
+  tramo_parcial: boolean;
+  viene_del_mes_anterior: boolean;
+  sigue_el_mes_siguiente: boolean;
+  licencia_desde: string;
+  licencia_hasta: string;
+  licencia_duracion: number;
 }
 
 interface Employee {
@@ -67,14 +76,19 @@ const STATUS_COLORS: Record<string, string> = {
 function exportToExcel(novedades: Novedad[], year: number, month: number) {
   const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 
+  // Las fechas y la duración van recortadas al mes: es lo que se liquida. La
+  // licencia completa va en columnas aparte para que quien concilia pueda ver
+  // de dónde salió el tramo sin tener que abrir la app.
   const rows = novedades.map((n) => ({
     Empleado: n.employee_name,
     'Tipo de licencia': n.leave_type_name,
     'Fecha inicio': formatDateLocal(n.start_date),
     'Fecha fin': formatDateLocal(n.end_date),
-    Duración: n.count_type === 'weeks'
-      ? `${n.days_requested} semana${n.days_requested !== 1 ? 's' : ''}`
-      : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`,
+    Duración: duracionEnTexto({ duracion: n.days_requested, unidad: n.duracion_unidad ?? 'dias' }),
+    'Días en el mes': n.days_requested,
+    Tramo: n.tramo_parcial
+      ? `Parcial (licencia completa: ${formatDateLocal(n.licencia_desde)} al ${formatDateLocal(n.licencia_hasta)}, ${n.licencia_duracion})`
+      : 'Completa',
     Estado: STATUS_LABELS[n.status] ?? n.status,
     'Vacaciones ya liquidadas': n.leave_type_code === 'vacation' ? (n.plus_paid ? 'Sí' : 'No') : '',
     Observaciones: [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
@@ -179,9 +193,13 @@ export function NovedadesClient() {
   const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 
   const durationLabel = (n: Novedad) =>
-    n.count_type === 'weeks'
-      ? `${n.days_requested} sem.`
-      : `${n.days_requested} día${n.days_requested !== 1 ? 's' : ''}`;
+    duracionEnTexto({ duracion: n.days_requested, unidad: n.duracion_unidad ?? 'dias' });
+
+  /** "Del 24/8 al 6/9 · 14 días": la licencia completa, para no perderla de vista. */
+  const licenciaCompleta = (n: Novedad) =>
+    `Del ${formatDateLocal(n.licencia_desde)} al ${formatDateLocal(n.licencia_hasta)} · ${n.licencia_duracion} ${
+      n.count_type === 'weeks' ? 'semana' : 'día'
+    }${n.licencia_duracion !== 1 ? 's' : ''} en total`;
 
   const observations = (n: Novedad) =>
     [n.notes, n.rejection_reason, n.hr_rejection_reason, n.leader_rejection_reason]
@@ -342,8 +360,22 @@ export function NovedadesClient() {
                       >
                         <td className="px-6 py-3 text-sm font-medium text-foreground">{n.employee_name}</td>
                         <td className="px-6 py-3 text-muted-foreground">{n.leave_type_name}</td>
-                        <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.start_date)}</td>
-                        <td className="px-6 py-3 text-muted-foreground">{formatDateLocal(n.end_date)}</td>
+                        <td className="px-6 py-3 text-muted-foreground">
+                          {formatDateLocal(n.start_date)}
+                          {n.viene_del_mes_anterior && (
+                            <span className="ml-1 text-[10px] text-muted-foreground" title={licenciaCompleta(n)}>
+                              ← viene del mes anterior
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-muted-foreground">
+                          {formatDateLocal(n.end_date)}
+                          {n.sigue_el_mes_siguiente && (
+                            <span className="ml-1 text-[10px] text-muted-foreground" title={licenciaCompleta(n)}>
+                              sigue el mes siguiente →
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-3 text-center">
                           <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
                             {durationLabel(n)}
@@ -355,7 +387,18 @@ export function NovedadesClient() {
                           </span>
                         </td>
                         <td className="px-6 py-3 text-center">
-                          {n.leave_type_code === 'vacation' ? (
+                          {n.leave_type_code !== 'vacation' ? (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          ) : n.viene_del_mes_anterior ? (
+                            // El plus se paga una vez, con la licencia, no una vez
+                            // por mes. El interruptor vive en el mes donde arranca.
+                            <span
+                              className="text-xs text-muted-foreground"
+                              title={`El plus se marca en el mes donde arranca la licencia. ${licenciaCompleta(n)}`}
+                            >
+                              se marca al inicio
+                            </span>
+                          ) : (
                             <span className="inline-flex items-center justify-center" title="Vacaciones ya liquidadas: se excluyen del reporte de plus vacacional">
                               <Switch
                                 aria-label="Vacaciones ya liquidadas"
@@ -364,8 +407,6 @@ export function NovedadesClient() {
                                 onCheckedChange={(v) => setPlusValue(n, v)}
                               />
                             </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className="px-6 py-3 max-w-xs">

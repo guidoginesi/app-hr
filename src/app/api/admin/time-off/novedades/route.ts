@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { recortarAlMes, type LicenciaARecortar } from '@/lib/novedadesPorMes';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,8 +74,37 @@ export async function GET(req: NextRequest) {
       .select('code, name')
       .order('sort_order').order('name');
 
+    /**
+     * Cada licencia se recorta al mes que se está liquidando.
+     *
+     * Una licencia del 24/8 al 6/9 no son 14 días de agosto ni 14 de
+     * septiembre: son 8 y 6. Antes se devolvía entera en los dos meses y la
+     * cuenta la hacía a mano quien liquidaba.
+     *
+     * Las fechas originales viajan aparte para no perderlas: en la pantalla
+     * sirven para decir "viene de agosto" en vez de dejar una fecha suelta que
+     * no coincide con lo que la persona pidió.
+     */
+    const novedades = (data ?? []).flatMap((n) => {
+      const tramo = recortarAlMes(n as unknown as LicenciaARecortar, year, month);
+      if (!tramo) return [];
+      return [{
+        ...n,
+        start_date: tramo.desde,
+        end_date: tramo.hasta,
+        days_requested: tramo.duracion,
+        duracion_unidad: tramo.unidad,
+        tramo_parcial: !tramo.completa,
+        viene_del_mes_anterior: tramo.vieneDelMesAnterior,
+        sigue_el_mes_siguiente: tramo.sigueElMesSiguiente,
+        licencia_desde: (n.start_date as string).slice(0, 10),
+        licencia_hasta: (n.end_date as string).slice(0, 10),
+        licencia_duracion: n.days_requested,
+      }];
+    });
+
     return NextResponse.json({
-      novedades: data ?? [],
+      novedades,
       employees: employees ?? [],
       leaveTypes: leaveTypes ?? [],
     });
