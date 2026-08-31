@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { puedenSuperponerse } from '@/lib/leaveTypes';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -130,11 +131,7 @@ export async function POST(req: NextRequest) {
     const blockingOverlap = (overlapping ?? []).filter((r) => {
       const lt = r.leave_types;
       const existingCode = (Array.isArray(lt) ? lt[0] : lt as unknown as { code: string } | null)?.code;
-      if (
-        (newCode === 'pow_days' && existingCode === 'remote_work') ||
-        (newCode === 'remote_work' && existingCode === 'pow_days')
-      ) return false;
-      return true;
+      return !puedenSuperponerse(newCode, existingCode);
     });
 
     if (blockingOverlap.length > 0) {
