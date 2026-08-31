@@ -14,6 +14,37 @@ export const HR_ONLY_APPROVAL_LEAVE_TYPE_CODES: LeaveTypeCode[] = ['remote_work_
  */
 export const SELF_REGISTERED_LEAVE_TYPE_CODES: LeaveTypeCode[] = ['sick'];
 
+/**
+ * Pares de licencias que SÍ pueden convivir en las mismas fechas.
+ *
+ * La regla general es que dos licencias no se superponen: si ya pediste algo
+ * para esos días, pedir otra cosa encima casi siempre es un error de carga.
+ *
+ * La excepción es el trabajo remoto, porque no es una ausencia: dice desde
+ * DÓNDE trabajás, no si estás. Enfermarte durante una semana remota es
+ * perfectamente posible, y el parte de enfermedad hay que poder cargarlo igual
+ * —no es algo que se pueda posponer hasta que termine la semana—.
+ *
+ * Se guarda como pares y no como "remoto se superpone con todo" a propósito: el
+ * trabajo remoto tiene cupo anual, y dejar que cualquier licencia se le monte
+ * encima haría que una semana remota se consuma aunque la persona no la haya
+ * usado. Cada par se habilita cuando alguien decide que corresponde.
+ */
+const SUPERPOSICIONES_PERMITIDAS: [LeaveTypeCode, LeaveTypeCode][] = [
+  ['pow_days', 'remote_work'],
+  ['remote_work_trip', 'remote_work'],
+  // Enfermarse no se planifica ni se pospone: se carga cuando pasa.
+  ['sick', 'remote_work'],
+];
+
+/** ¿Estas dos licencias pueden compartir fechas? El orden no importa. */
+export function puedenSuperponerse(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  return SUPERPOSICIONES_PERMITIDAS.some(
+    ([x, y]) => (a === x && b === y) || (a === y && b === x),
+  );
+}
+
 export function isUnlimitedLeaveType(code: string): boolean {
   return UNLIMITED_LEAVE_TYPE_CODES.includes(code as LeaveTypeCode);
 }

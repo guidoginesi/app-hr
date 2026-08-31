@@ -4,7 +4,7 @@ import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
-import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType } from '@/lib/leaveTypes';
+import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType, puedenSuperponerse } from '@/lib/leaveTypes';
 import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline } from '@/lib/leaveCertificates';
 import { BIRTHDAY_LEAVE_CODE, birthdayWindow, isWithinBirthdayWindow } from '@/lib/birthdayLeave';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
@@ -282,8 +282,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check for overlapping requests (exclude final rejected/cancelled statuses)
-    // pow_days and remote_work are allowed to overlap with each other
+    // Dos licencias no comparten fechas, salvo los pares que la regla habilita
+    // (ver puedenSuperponerse). Se excluyen las rechazadas y canceladas.
     const { data: overlapping } = await supabase
       .from('leave_requests')
       .select('id, leave_type_id, leave_types(code)')
@@ -295,13 +295,7 @@ export async function POST(req: NextRequest) {
     const blockingOverlap = (overlapping ?? []).filter((r) => {
       const lt = r.leave_types;
       const existingCode = (Array.isArray(lt) ? lt[0] : lt as unknown as { code: string } | null)?.code;
-      if (
-        (leaveType.code === 'pow_days' && existingCode === 'remote_work') ||
-        (leaveType.code === 'remote_work' && existingCode === 'pow_days') ||
-        (leaveType.code === 'remote_work_trip' && existingCode === 'remote_work') ||
-        (leaveType.code === 'remote_work' && existingCode === 'remote_work_trip')
-      ) return false;
-      return true;
+      return !puedenSuperponerse(leaveType.code, existingCode);
     });
 
     if (blockingOverlap.length > 0) {
