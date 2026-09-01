@@ -15,6 +15,20 @@ export const HR_ONLY_APPROVAL_LEAVE_TYPE_CODES: LeaveTypeCode[] = ['remote_work_
 export const SELF_REGISTERED_LEAVE_TYPE_CODES: LeaveTypeCode[] = ['sick'];
 
 /**
+ * Tipos que NO son una ausencia: la persona está trabajando, sólo que desde otro
+ * lado. Es la misma idea que habilita superponer enfermedad con trabajo remoto,
+ * y sirve para todo lo que pregunte "¿está o no está?" — por ejemplo, para
+ * decidir desde qué día se puede tomar el día de cumpleaños.
+ */
+const TIPOS_QUE_NO_SON_AUSENCIA: LeaveTypeCode[] = ['remote_work', 'remote_work_trip'];
+
+/** ¿Esta licencia deja a la persona fuera del trabajo? */
+export function esAusencia(code: string | null | undefined): boolean {
+  if (!code) return false;
+  return !TIPOS_QUE_NO_SON_AUSENCIA.includes(code as LeaveTypeCode);
+}
+
+/**
  * Pares de licencias que SÍ pueden convivir en las mismas fechas.
  *
  * La regla general es que dos licencias no se superponen: si ya pediste algo
