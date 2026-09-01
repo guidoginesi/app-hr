@@ -35,7 +35,14 @@ export function birthdayInYear(birthDate: string, year: number): string {
   return `${year}-${m}-${d}`;
 }
 
-export type BirthdayWindow = { start: string; end: string };
+export type BirthdayWindow = {
+  start: string;
+  end: string;
+  /** El cumpleaños de ese año, esté o no dentro de la ventana. */
+  cumple: string;
+  /** True si la ventana no arranca el día del cumple porque no estaba trabajando. */
+  corrida: boolean;
+};
 
 /**
  * Ventana para tomar el día.
@@ -57,9 +64,10 @@ export function birthdayWindow(input: {
     d.setUTCDate(d.getUTCDate() + 1);
   }
 
+  const cumple = birthdayInYear(input.birthDate, input.year);
   const start = iso(d);
   d.setUTCDate(d.getUTCDate() + BIRTHDAY_WINDOW_DAYS);
-  return { start, end: iso(d) };
+  return { start, end: iso(d), cumple, corrida: start !== cumple };
 }
 
 /** ¿La fecha pedida cae dentro de la ventana? */

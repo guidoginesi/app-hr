@@ -11,6 +11,7 @@
 // y año) y, en el vencimiento, que sólo toca saldos que siguen sin usar.
 
 import { getSupabaseServer } from '@/lib/supabaseServer';
+import { diasAusenteEnElAnio } from '@/lib/birthdayBusyDays';
 import { sendSimpleEmail } from '@/lib/emailService';
 import { renderPlainTemplate, getAppUrl } from '@/lib/email/layout';
 import { createSystemNotification } from '@/lib/notificationService';
@@ -37,28 +38,6 @@ function formatearFecha(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
-/** Días en los que la persona ya está ausente por una licencia aprobada. */
-async function busyDaysFor(employeeId: string, year: number): Promise<Set<string>> {
-  const supabase = getSupabaseServer();
-  const { data } = await supabase
-    .from('leave_requests')
-    .select('start_date, end_date')
-    .eq('employee_id', employeeId)
-    .in('status', ['approved', 'pending_hr', 'pending_leader'])
-    .gte('end_date', `${year}-01-01`)
-    .lte('start_date', `${year}-12-31`);
-
-  const set = new Set<string>();
-  for (const r of data ?? []) {
-    const d = new Date(`${r.start_date}T00:00:00Z`);
-    const fin = new Date(`${r.end_date}T00:00:00Z`);
-    while (d <= fin) {
-      set.add(d.toISOString().slice(0, 10));
-      d.setUTCDate(d.getUTCDate() + 1);
-    }
-  }
-  return set;
-}
 
 export async function runBirthdayLeaveAutomation(): Promise<{
   acreditados: string[];
@@ -122,7 +101,7 @@ export async function runBirthdayLeaveAutomation(): Promise<{
         const ventana = birthdayWindow({
           birthDate: emp.birth_date as string,
           year,
-          busyDays: await busyDaysFor(emp.id as string, year),
+          busyDays: await diasAusenteEnElAnio(emp.id as string, year),
         });
 
         // upsert: si la fila del saldo no existe se crea, y si existe se le
@@ -173,6 +152,13 @@ export async function runBirthdayLeaveAutomation(): Promise<{
               firstName,
               ventanaDesde: formatearFecha(ventana.start),
               ventanaHasta: formatearFecha(ventana.end),
+              cumple: formatearFecha(ventana.cumple),
+              // Cuando la ventana no arranca el día del cumple hay que decir por
+              // qué. Sin esto el mail da una fecha de otro mes sin explicación y
+              // parece un error del sistema — que fue exactamente lo que pasó.
+              explicacionVentana: ventana.corrida
+                ? `Tu cumpleaños es el ${formatearFecha(ventana.cumple)}, pero ese día no estás trabajando (cae fin de semana o ya tenés una licencia cargada). Por eso la ventana arranca el ${formatearFecha(ventana.start)}, que es tu primer día de trabajo desde entonces.`
+                : '',
               // Va como variable y no fija en la plantilla: si cambia el dominio,
               // el link no queda apuntando a un lugar viejo desde la base.
               linkInstructivo: `${getAppUrl()}/portal/ayuda/dia-cumpleanos`,
@@ -211,7 +197,7 @@ export async function runBirthdayLeaveAutomation(): Promise<{
       const ventana = birthdayWindow({
         birthDate: emp.birth_date as string,
         year,
-        busyDays: await busyDaysFor(emp.id as string, year),
+        busyDays: await diasAusenteEnElAnio(emp.id as string, year),
       });
       if (hoy <= ventana.end) continue;
 

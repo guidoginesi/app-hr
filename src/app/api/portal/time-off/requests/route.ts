@@ -7,6 +7,7 @@ import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType, puedenSuperponerse } from '@/lib/leaveTypes';
 import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline } from '@/lib/leaveCertificates';
 import { BIRTHDAY_LEAVE_CODE, birthdayWindow, isWithinBirthdayWindow } from '@/lib/birthdayLeave';
+import { diasAusenteEnElAnio } from '@/lib/birthdayBusyDays';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
 
 // Regex for UUID format (more permissive than RFC 4122)
@@ -32,31 +33,6 @@ async function withRetry<T>(
   throw lastError;
 }
 
-/** Días del año en que la persona ya está ausente por una licencia vigente. */
-async function busyDaysForEmployee(
-  supabase: ReturnType<typeof getSupabaseServer>,
-  employeeId: string,
-  year: number,
-): Promise<Set<string>> {
-  const { data } = await supabase
-    .from('leave_requests')
-    .select('start_date, end_date')
-    .eq('employee_id', employeeId)
-    .in('status', ['approved', 'pending_hr', 'pending_leader'])
-    .gte('end_date', `${year}-01-01`)
-    .lte('start_date', `${year}-12-31`);
-
-  const set = new Set<string>();
-  for (const r of data ?? []) {
-    const d = new Date(`${r.start_date}T00:00:00Z`);
-    const fin = new Date(`${r.end_date}T00:00:00Z`);
-    while (d <= fin) {
-      set.add(d.toISOString().slice(0, 10));
-      d.setUTCDate(d.getUTCDate() + 1);
-    }
-  }
-  return set;
-}
 
 // Parse date string as local date to avoid timezone issues
 function parseLocalDate(dateStr: string): Date {
@@ -218,7 +194,7 @@ export async function POST(req: NextRequest) {
         birthDate: auth.employee.birth_date,
         year: Number(parsed.data.start_date.slice(0, 4)),
         // Se excluye la propia solicitud que se está creando: todavía no existe.
-        busyDays: await busyDaysForEmployee(supabase, auth.employee.id, Number(parsed.data.start_date.slice(0, 4))),
+        busyDays: await diasAusenteEnElAnio(auth.employee.id, Number(parsed.data.start_date.slice(0, 4))),
       });
 
       if (
