@@ -73,11 +73,20 @@ type Settlement = {
   acknowledged_at?: string | null;
 };
 
+/**
+ * Con centavos, siempre.
+ *
+ * Estaba en cero decimales, así que un sueldo de 1.864.167,08 se mostraba como
+ * 1.864.167 y la diferencia no aparecía en ningún lado. Los importes se guardan
+ * con dos decimales y el portal ya se los muestra así al colaborador: esta
+ * pantalla era la única que redondeaba, y hacía que People y la persona vieran
+ * números distintos del mismo recibo.
+ */
 const currencyFormatter = new Intl.NumberFormat('es-AR', {
   style: 'currency',
   currency: 'ARS',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 
@@ -911,7 +920,9 @@ function SettlementRow({
                       onChange={(e) => onFieldChange(settlement.id, field.key, parseFloat(e.target.value) || 0)}
                       className="w-28 rounded-lg border border-[var(--border)] px-2 py-1.5 text-right text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring"
                       min={0}
-                      step={1}
+                      // Con paso 1 el campo rechazaba los centavos, así que
+                      // editar una fila los borraba sin avisar.
+                      step="0.01"
                     />
                   ) : (
                     <span className="text-sm text-muted-foreground">
