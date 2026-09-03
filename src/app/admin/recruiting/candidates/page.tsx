@@ -1,8 +1,27 @@
 import { redirect } from 'next/navigation';
+import { leerTodo, PAGINA } from '@/lib/leerTodo';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { RecruitingLayout } from '../RecruitingLayout';
 import { CandidatesClient } from '../../candidates/CandidatesClient';
+
+/**
+ * Las filas se consumen más abajo con acceso libre a sus campos, como venía
+ * haciendo esta pantalla. Alcanza con decir "es una fila", sin repetir acá las
+ * veinte columnas de applications.
+ */
+type Fila = Record<string, unknown>;
+
+/** El candidato se copia entero al resultado, así que sus campos sí importan. */
+type FilaCandidato = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  provincia: string | null;
+  linkedin_url: string | null;
+  created_at: string;
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -52,28 +71,44 @@ export default async function RecruitingCandidatesPage() {
     .eq('is_published', true)
     .order('created_at', { ascending: false });
 
-  // Obtener todos los candidatos
-  const { data: candidates } = await supabase
-    .from('candidates')
-    .select('id,name,email,phone,provincia,linkedin_url,created_at')
-    .order('created_at', { ascending: false });
+  // Todos quiere decir TODOS: la búsqueda de esta pantalla filtra en memoria, así
+  // que lo que no se traiga acá es gente que no se puede encontrar. PostgREST
+  // corta en 1000 sin avisar, y con 1435 candidatos eso dejaba afuera a
+  // cualquiera que se hubiera postulado hace unos meses.
+  const { filas: candidates } = await leerTodo<FilaCandidato>((desde) =>
+    supabase
+      .from('candidates')
+      .select('id,name,email,phone,provincia,linkedin_url,created_at')
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(desde, desde + PAGINA - 1),
+  );
 
-  // Obtener todas las aplicaciones con información de IA y funnel
-  const { data: applications } = await supabase
-    .from('applications')
-    .select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason,recruiter_rating,referral_id,source')
-    .order('created_at', { ascending: false });
+  const { filas: applications } = await leerTodo<Fila>((desde) =>
+    supabase
+      .from('applications')
+      .select('id,candidate_id,job_id,status,ai_score,resume_url,created_at,salary_expectation,english_level,ai_extracted,ai_reasons,ai_match_highlights,current_stage,current_stage_status,offer_status,final_outcome,final_rejection_reason,recruiter_rating,referral_id,source')
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(desde, desde + PAGINA - 1),
+  );
 
   // Obtener el historial de etapas para todas las aplicaciones
   const applicationIds = (applications || []).map((app: any) => app.id);
   let stageHistoryMap = new Map<string, any[]>();
 
   if (applicationIds.length > 0) {
-    const { data: stageHistory } = await supabase
-      .from('stage_history')
-      .select('*')
-      .in('application_id', applicationIds)
-      .order('changed_at', { ascending: false });
+    // El historial también se paginaba solo: con 1810 aplicaciones son varias
+    // miles de filas, y sin esto las etapas de las más viejas no llegaban.
+    const { filas: stageHistory } = await leerTodo<Fila>((desde) =>
+      supabase
+        .from('stage_history')
+        .select('*')
+        .in('application_id', applicationIds)
+        .order('changed_at', { ascending: false })
+        .order('id')
+        .range(desde, desde + PAGINA - 1),
+    );
 
     // Agrupar por application_id
     if (stageHistory) {
