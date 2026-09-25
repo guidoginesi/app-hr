@@ -176,6 +176,22 @@ export async function requirePayrollViewer(): Promise<AuthResult | null> {
 }
 
 /**
+ * Require read access to the monthly leave novelties (/admin/time-off/novedades).
+ *
+ * Administración LEE las novedades del mes y las exporta: es la planilla con la
+ * que controla sueldos (vacaciones, plus vacacional y ausencias). No marca el
+ * plus como liquidado —eso sigue en requireAdmin— y no entra al resto de Time
+ * Off: solicitudes, balances, certificados y configuración.
+ *
+ * Tampoco recibe los textos libres de la licencia (observaciones y motivos de
+ * rechazo): pueden traer datos de salud, y para liquidar no hacen falta. La ruta
+ * los recorta según quién pide.
+ */
+export async function requireNovedadesViewer(): Promise<AuthResult | null> {
+  return requireRole(['admin', 'administracion']);
+}
+
+/**
  * Require leader role (for team management)
  */
 export async function requireLeader(): Promise<AuthResult | null> {

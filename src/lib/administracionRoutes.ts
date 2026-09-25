@@ -24,6 +24,10 @@ export const RUTAS_DE_ADMINISTRACION = [
   '/admin/payroll',
   // El índice de Ayuda le muestra sólo los manuales de sus módulos.
   '/admin/ayuda',
+  // Lectura de las novedades de licencias del mes, con su export. Es la planilla
+  // del control de sueldos: vacaciones, plus y ausencias. Marcar el plus como
+  // liquidado sigue siendo de admin, y el resto de Time Off queda afuera.
+  '/admin/time-off/novedades',
 ];
 
 /** Dónde cae si intenta entrar a otra cosa. */

@@ -133,6 +133,9 @@ export function AdminShell({ children, advancesOnly = false }: AdminShellProps) 
             { label: 'Liquidaciones', href: '/admin/payroll', icon: Wallet, active: match('/admin/payroll') },
             { label: 'Adelantos', href: '/admin/salary-advances', icon: Banknote, active: match('/admin/salary-advances'), badge: hay('adelantos'), badgeLabel: 'Tiene adelantos nuevos para aprobar' },
             { label: 'Recepción de recibos', href: '/admin/recibos', icon: FileCheck, active: match('/admin/recibos'), badge: hay('recibos'), badgeLabel: 'Tiene confirmaciones nuevas' },
+            // Las novedades de licencias del mes, en lectura: es la planilla del
+            // control de sueldos. El resto de Time Off no le corresponde.
+            { label: 'Novedades de licencias', href: '/admin/time-off/novedades', icon: CalendarDays, active: match('/admin/time-off/novedades') },
             // Administración valida los reintegros, así que entra a esta ruta.
             { label: 'Reintegros', href: '/admin/reintegros', icon: Receipt, active: match('/admin/reintegros'), badge: hay('reintegros'), badgeLabel: 'Tiene reintegros nuevos' },
             // El índice de Ayuda le muestra sólo los manuales de sus módulos.
