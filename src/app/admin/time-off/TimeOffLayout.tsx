@@ -7,10 +7,13 @@ export function TimeOffLayout({
   active,
   actions,
   children,
+  soloNovedades = false,
 }: {
   active: TimeOffTab;
   actions?: ReactNode;
   children: ReactNode;
+  /** Perfil Administración: ve sólo la pestaña de Novedades. */
+  soloNovedades?: boolean;
 }) {
   return (
     <AdminShell active="time-off">
@@ -20,7 +23,7 @@ export function TimeOffLayout({
           description="Vacaciones, licencias y días libres"
           actions={actions}
         />
-        <TimeOffTabs active={active} />
+        <TimeOffTabs active={active} soloNovedades={soloNovedades} />
         {children}
       </div>
     </AdminShell>

@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireNovedadesViewer } from '@/lib/checkAuth';
 import { NovedadesClient } from './NovedadesClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NovedadesPage() {
-  const { isAdmin } = await requireAdmin();
-  if (!isAdmin) redirect('/admin');
+  // Admin completo edita; Administración sólo lee y exporta.
+  const auth = await requireNovedadesViewer();
+  if (!auth) redirect('/admin');
 
-  return <NovedadesClient />;
+  return <NovedadesClient soloLectura={!auth.isAdmin} />;
 }

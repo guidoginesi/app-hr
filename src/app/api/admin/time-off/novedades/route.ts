@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/checkAuth';
+import { requireNovedadesViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { recortarAlMes, type LicenciaARecortar } from '@/lib/novedadesPorMes';
 
@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic';
 // GET /api/admin/time-off/novedades?year=2026&month=3&employee_id=...&status=...
 export async function GET(req: NextRequest) {
   try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
+    const auth = await requireNovedadesViewer();
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const soloLectura = !auth.isAdmin;
 
     const { searchParams } = new URL(req.url);
     const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()));
@@ -98,8 +99,12 @@ export async function GET(req: NextRequest) {
     const novedades = (data ?? []).flatMap((n) => {
       const tramo = recortarAlMes(n as unknown as LicenciaARecortar, year, month);
       if (!tramo) return [];
+      // Administración recibe sólo lo que la pantalla muestra: la vista trae
+      // además rutas de adjuntos y certificados, y los textos libres pueden
+      // tener datos de salud. Ver requireNovedadesViewer.
+      const base = soloLectura ? camposDeLectura(n as Record<string, unknown>) : n;
       return [{
-        ...n,
+        ...base,
         plus_paid: liquidadasEsteMes.has(n.id as string),
         start_date: tramo.desde,
         end_date: tramo.hasta,
@@ -118,9 +123,30 @@ export async function GET(req: NextRequest) {
       novedades,
       employees: employees ?? [],
       leaveTypes: leaveTypes ?? [],
+      soloLectura,
     });
   } catch (error: any) {
     console.error('Error in GET /api/admin/time-off/novedades:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+/** Los campos de una licencia que ve Administración: sin adjuntos ni textos libres. */
+function camposDeLectura(n: Record<string, unknown>) {
+  return {
+    id: n.id,
+    employee_id: n.employee_id,
+    employee_name: n.employee_name,
+    leave_type_name: n.leave_type_name,
+    leave_type_code: n.leave_type_code,
+    start_date: n.start_date,
+    end_date: n.end_date,
+    days_requested: n.days_requested,
+    count_type: n.count_type,
+    status: n.status,
+    notes: null,
+    rejection_reason: null,
+    hr_rejection_reason: null,
+    leader_rejection_reason: null,
+  };
 }

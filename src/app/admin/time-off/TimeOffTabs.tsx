@@ -15,17 +15,20 @@ const TABS = [
 
 export type TimeOffTab = (typeof TABS)[number]['value'];
 
-export function TimeOffTabs({ active }: { active: TimeOffTab }) {
+export function TimeOffTabs({ active, soloNovedades = false }: { active: TimeOffTab; soloNovedades?: boolean }) {
   const router = useRouter();
+  // Administración entra sólo a Novedades: mostrarle las otras pestañas sería
+  // ofrecerle lo que el middleware le rebota.
+  const tabs = soloNovedades ? TABS.filter((t) => t.value === 'novedades') : TABS;
   return (
     <TabNav<TimeOffTab>
       aria-label="Secciones de Time Off"
       value={active}
       onChange={(v) => {
-        const tab = TABS.find((t) => t.value === v);
+        const tab = tabs.find((t) => t.value === v);
         if (tab) router.push(tab.href);
       }}
-      options={TABS.map((t) => ({ value: t.value, label: t.label }))}
+      options={tabs.map((t) => ({ value: t.value, label: t.label }))}
     />
   );
 }

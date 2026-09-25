@@ -103,7 +103,7 @@ function exportToExcel(novedades: Novedad[], year: number, month: number) {
   XLSX.writeFile(wb, `novedades-${year}-${String(month).padStart(2, '0')}.xlsx`);
 }
 
-export function NovedadesClient() {
+export function NovedadesClient({ soloLectura = false }: { soloLectura?: boolean }) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -211,7 +211,7 @@ export function NovedadesClient() {
   const yearOptions = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
 
   return (
-    <TimeOffLayout active="novedades">
+    <TimeOffLayout active="novedades" soloNovedades={soloLectura}>
       <div className="space-y-6">
         {/* Filters */}
         <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm">
@@ -403,7 +403,9 @@ export function NovedadesClient() {
                               <Switch
                                 aria-label={`Vacaciones ya liquidadas en ${periodLabel}`}
                                 checked={plusChecked(n)}
-                                disabled={savingPlus}
+                                // Marcar el plus como liquidado es de admin; la ruta
+                                // también lo rechaza, esto sólo evita ofrecerlo.
+                                disabled={savingPlus || soloLectura}
                                 onCheckedChange={(v) => setPlusValue(n, v)}
                               />
                             </span>
