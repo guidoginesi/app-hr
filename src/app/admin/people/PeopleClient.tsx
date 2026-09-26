@@ -15,6 +15,9 @@ const EmployeeModal = dynamic(() => import('./EmployeeModal').then(mod => mod.Em
 const EmployeeFormModal = dynamic(() => import('./EmployeeFormModal').then(mod => mod.EmployeeFormModal), {
   loading: () => null,
 });
+const TerminateEmployeeModal = dynamic(() => import('./TerminateEmployeeModal').then(mod => mod.TerminateEmployeeModal), {
+  loading: () => null,
+});
 
 type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed' | 'other';
 type EducationLevel = 'primary' | 'secondary' | 'tertiary' | 'university' | 'postgraduate';
@@ -91,6 +94,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithRelations | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeWithRelations | null>(null);
+  const [terminatingEmployee, setTerminatingEmployee] = useState<EmployeeWithRelations | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | 'ALL'>('ALL');
   const [legalEntityFilter, setLegalEntityFilter] = useState<string>('ALL');
@@ -178,6 +182,22 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
     if (selectedEmployee?.id === updatedEmployee.id) {
       setSelectedEmployee(updatedEmployee);
     }
+  };
+
+  /**
+   * La baja no se carga desde el formulario de edición: pide fecha y motivo, y
+   * deja registrado quién la hizo. Por eso tiene su propio panel.
+   */
+  const handleTerminateClick = (employee: EmployeeWithRelations) => {
+    setTerminatingEmployee(employee);
+    setSelectedEmployee(null);
+  };
+
+  const handleEmployeeTerminated = (updatedEmployee: EmployeeWithRelations) => {
+    setEmployees((prev) =>
+      prev.map((emp) => (emp.id === updatedEmployee.id ? updatedEmployee : emp))
+    );
+    setTerminatingEmployee(null);
   };
 
   const handleEditClick = (employee: EmployeeWithRelations) => {
@@ -458,6 +478,16 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
           employee={selectedEmployee}
           onClose={() => setSelectedEmployee(null)}
           onEdit={() => handleEditClick(selectedEmployee)}
+          onTerminate={() => handleTerminateClick(selectedEmployee)}
+        />
+      )}
+
+      {/* Registrar baja */}
+      {terminatingEmployee && (
+        <TerminateEmployeeModal
+          employee={terminatingEmployee}
+          onClose={() => setTerminatingEmployee(null)}
+          onSuccess={handleEmployeeTerminated}
         />
       )}
 
