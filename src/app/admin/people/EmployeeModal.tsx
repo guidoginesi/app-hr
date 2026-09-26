@@ -37,6 +37,7 @@ type EmployeeModalProps = {
   employee: EmployeeWithRelations;
   onClose: () => void;
   onEdit: () => void;
+  onTerminate: () => void;
 };
 
 const statusLabels: Record<EmployeeStatus, string> = {
@@ -51,7 +52,7 @@ const statusColors: Record<EmployeeStatus, string> = {
   terminated: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
-export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps) {
+export function EmployeeModal({ employee, onClose, onEdit, onTerminate }: EmployeeModalProps) {
   const [resending, setResending] = useState(false);
   const [resendMsg, setResendMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -231,11 +232,26 @@ export function EmployeeModal({ employee, onClose, onEdit }: EmployeeModalProps)
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 border-t border-[var(--border)] p-4">
-            <Button variant="outline" onClick={onClose}>
-              Cerrar
-            </Button>
-            <Button onClick={onEdit}>Editar</Button>
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-4">
+            {/* A la izquierda y en ghost: la baja no se deshace con un botón, así
+                que no va pegada a "Editar", que se usa todos los días. */}
+            {employee.status !== 'terminated' ? (
+              <Button
+                variant="ghost"
+                onClick={onTerminate}
+                className="text-[var(--red-600)] hover:bg-danger-subtle hover:text-[var(--red-600)]"
+              >
+                Registrar baja
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={onClose}>
+                Cerrar
+              </Button>
+              <Button onClick={onEdit}>Editar</Button>
+            </div>
           </div>
       </SheetContent>
     </Sheet>
