@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { hasPdf } from '@/lib/payrollReceipts';
 
@@ -10,7 +10,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // Idempotente: si ya está confirmado devuelve already_confirmed.
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

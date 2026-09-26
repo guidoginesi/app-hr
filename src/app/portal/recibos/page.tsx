@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAuthResult, checkIsLeader } from '@/lib/checkAuth';
+import { getPortalAuth, checkIsLeader } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import { RecibosClient } from './RecibosClient';
@@ -7,7 +7,7 @@ import { RecibosClient } from './RecibosClient';
 export const dynamic = 'force-dynamic';
 
 export default async function PortalRecibosPage() {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
 
   if (!auth.user) {
     redirect('/portal/login');

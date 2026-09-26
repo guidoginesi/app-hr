@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { dbId } from '@/lib/zodId';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // UUID validation regex
@@ -31,7 +31,7 @@ const MAX_OBJECTIVES_PER_EMPLOYEE = 2;
 // GET /api/portal/objectives - List objectives
 export async function GET(request: NextRequest) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
 // POST /api/portal/objectives - Create objective
 export async function POST(request: NextRequest) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

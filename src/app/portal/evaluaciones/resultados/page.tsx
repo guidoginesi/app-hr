@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAuthResult, checkIsLeader } from '@/lib/checkAuth';
+import { getPortalAuth, checkIsLeader } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../../PortalShell';
 import { ResultadosClient } from './ResultadosClient';
@@ -7,7 +7,7 @@ import { ResultadosClient } from './ResultadosClient';
 export const dynamic = 'force-dynamic';
 
 export default async function ResultadosPage() {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   
   if (!auth.user || !auth.employee) {
     redirect('/portal/login');

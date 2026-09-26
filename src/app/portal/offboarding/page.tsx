@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requirePortalAccess } from '@/lib/checkAuth';
+import { requireOffboardingAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import { OffboardingClient } from './OffboardingClient';
@@ -7,7 +7,7 @@ import { OffboardingClient } from './OffboardingClient';
 export const dynamic = 'force-dynamic';
 
 export default async function PortalOffboardingPage() {
-  const auth = await requirePortalAccess();
+  const auth = await requireOffboardingAccess();
   
   if (!auth || !auth.employee) {
     redirect('/portal/login');
@@ -36,7 +36,7 @@ export default async function PortalOffboardingPage() {
     .maybeSingle();
 
   return (
-    <PortalShell employee={employee} isLeader={isLeader} active="offboarding">
+    <PortalShell employee={employee} isLeader={isLeader} active="offboarding" soloSalida>
       <OffboardingClient
         employee={{
           id: employeeData.id,

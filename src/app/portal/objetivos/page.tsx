@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAuthResult, checkIsLeader } from '@/lib/checkAuth';
+import { getPortalAuth, checkIsLeader } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import { ObjetivosClient } from './ObjetivosClient';
@@ -8,7 +8,7 @@ import { ObjectivesPeriod } from '@/types/objective';
 export const dynamic = 'force-dynamic';
 
 export default async function PortalObjetivosPage() {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   
   if (!auth.user) {
     redirect('/portal/login');

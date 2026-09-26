@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAuthResult, checkIsLeader } from '@/lib/checkAuth';
+import { getPortalAuth, checkIsLeader } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import { EvaluacionesClient } from './EvaluacionesClient';
@@ -11,7 +11,7 @@ export default async function PortalEvaluacionesPage({
 }: {
   searchParams: Promise<{ period_id?: string }>;
 }) {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
 
   if (!auth.user) {
     redirect('/portal/login');

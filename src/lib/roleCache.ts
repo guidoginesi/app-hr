@@ -23,6 +23,8 @@ export type CachedRoles = {
   roles: string[];
   employeeId: string | null;
   hasDirectReports: boolean;
+  /** El legajo está dado de baja. Ver `src/lib/accesoDelPortal.ts`. */
+  desvinculado: boolean;
   timestamp: number;
 };
 
@@ -105,11 +107,20 @@ export async function leerCache(
       c.roles.every((r) => typeof r === 'string') &&
       (c.employeeId === null || typeof c.employeeId === 'string') &&
       typeof c.hasDirectReports === 'boolean' &&
+      // Una cookie vieja no trae este campo y no pasa la forma: se relee de la
+      // base y se reescribe. Es justo lo que queremos al agregar un campo nuevo.
+      typeof c.desvinculado === 'boolean' &&
       typeof c.timestamp === 'number';
     if (!formaValida) return null;
 
     if (Date.now() - (c.timestamp as number) < ROLE_CACHE_DURATION) {
-      return { roles: c.roles!, employeeId: c.employeeId!, hasDirectReports: c.hasDirectReports!, timestamp: c.timestamp! };
+      return {
+        roles: c.roles!,
+        employeeId: c.employeeId!,
+        hasDirectReports: c.hasDirectReports!,
+        desvinculado: c.desvinculado!,
+        timestamp: c.timestamp!,
+      };
     }
   } catch {
     // Base64 o JSON inválidos: se ignora y se relee de la base.

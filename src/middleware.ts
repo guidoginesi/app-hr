@@ -8,6 +8,7 @@ import {
   leerCache,
 } from '@/lib/roleCache';
 import { administracionPuedeEntrar, INICIO_DE_ADMINISTRACION } from '@/lib/administracionRoutes';
+import { ENCUESTA_DE_SALIDA, esLaEncuestaDeSalida, estaDesvinculado } from '@/lib/accesoDelPortal';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -91,6 +92,9 @@ export async function middleware(request: NextRequest) {
         roles,
         employeeId: null,
         hasDirectReports: false,
+        // Acá no se mira el legajo: /admin se resuelve por rol. El portal no se
+        // fía de este valor, corta con `requirePortalAccess` contra la base.
+        desvinculado: false,
         timestamp: Date.now(),
       };
 
@@ -139,11 +143,12 @@ export async function middleware(request: NextRequest) {
       // Fetch roles and employee data in parallel
       const [rolesResult, employeeResult] = await Promise.all([
         supabase.from('user_roles').select('role').eq('user_id', user.id),
-        supabase.from('employees').select('id').eq('user_id', user.id).maybeSingle(),
+        supabase.from('employees').select('id, status').eq('user_id', user.id).maybeSingle(),
       ]);
 
       const roles = rolesResult.data?.map((r) => r.role) || [];
       const employeeId = employeeResult.data?.id || null;
+      const desvinculado = estaDesvinculado(employeeResult.data?.status);
 
       // Check for direct reports only if we have an employee
       let hasDirectReports = false;
@@ -161,6 +166,7 @@ export async function middleware(request: NextRequest) {
         roles,
         employeeId,
         hasDirectReports,
+        desvinculado,
         timestamp: Date.now(),
       };
 
@@ -185,6 +191,14 @@ export async function middleware(request: NextRequest) {
 
     if (!hasAccess) {
       return NextResponse.redirect(new URL('/portal/login', request.url));
+    }
+
+    // Quien ya no trabaja acá sólo llega a la encuesta de salida. Se redirige en
+    // vez de mandarlo al login: el login lo dejaría entrar de nuevo (usuario y
+    // contraseña siguen siendo válidos) y quedaría rebotando. Lo que corta de
+    // verdad es `requirePortalAccess`; esto es para que aterrice en algún lado.
+    if (cachedRoles.desvinculado && !esLaEncuestaDeSalida(pathname)) {
+      return NextResponse.redirect(new URL(ENCUESTA_DE_SALIDA, request.url));
     }
 
     // Team routes require leader role or direct reports

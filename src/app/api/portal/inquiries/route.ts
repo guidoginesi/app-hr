@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getAdminUserIds, createSystemNotification } from '@/lib/notificationService';
 import { firstResponseDueAt, CATEGORY_LABELS, type InquiryCategory } from '@/lib/inquiries';
@@ -14,7 +14,7 @@ const CreateSchema = z.object({
 
 // GET /api/portal/inquiries — mis consultas
 export async function GET() {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   if (!auth.user || !auth.employee) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
@@ -34,7 +34,7 @@ export async function GET() {
 
 // POST /api/portal/inquiries — nueva consulta
 export async function POST(req: NextRequest) {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   if (!auth.user || !auth.employee) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
