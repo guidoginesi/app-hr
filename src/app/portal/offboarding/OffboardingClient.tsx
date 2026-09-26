@@ -76,8 +76,8 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
           </div>
           <h3 className="mt-4 text-lg font-semibold text-foreground">Encuesta no habilitada</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            La encuesta de salida no ha sido habilitada para tu cuenta.<br />
-            Si crees que esto es un error, contacta al equipo de Recursos Humanos.
+            La encuesta de salida no está habilitada para tu cuenta.<br />
+            Si creés que es un error, escribile al equipo de People.
           </p>
         </div>
       </div>
@@ -118,8 +118,8 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Te deseamos lo mejor</h2>
           <p className="text-sm text-muted-foreground">
-            Esperamos que tu experiencia con nosotros haya sido positiva y te deseamos mucho éxito
-            en tus futuros proyectos. Las puertas siempre estarán abiertas.
+            Esperamos que tu paso por Pow haya sido positivo y te deseamos mucho éxito en lo que
+            venga. Las puertas siempre van a estar abiertas.
           </p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
   // Show the survey form
   return (
     <div className="space-y-6">
-      <PageHeader title="Encuesta de Salida" description={`${employee.firstName}, nos gustaría conocer tu experiencia en la empresa`} />
+      <PageHeader title="Encuesta de Salida" description={`${employee.firstName}, nos gustaría conocer tu experiencia en Pow`} />
 
       <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4">
         <div className="flex gap-3">
@@ -141,7 +141,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
               Tu feedback es importante para nosotros
             </p>
             <p className="mt-1 text-xs text-[var(--amber-600)]">
-              Esta encuesta es confidencial y nos ayudará a mejorar como organización.
+              Esta encuesta es confidencial y nos ayuda a mejorar como equipo.
               Tus respuestas serán tratadas de forma anónima.
             </p>
           </div>

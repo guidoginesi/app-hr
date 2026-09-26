@@ -20,6 +20,17 @@ export interface OffboardingQuestion {
   options?: OffboardingQuestionOption[];
 }
 
+/**
+ * Las preguntas de la encuesta de salida.
+ *
+ * En voseo y nombrando a Pow, como le habla el resto de la app. Nacieron en
+ * "tú" y hablando de "la empresa"; como nunca se usaron, nadie lo notó hasta
+ * que se puso a andar el mail de invitación.
+ *
+ * Los `id` son las claves con las que se guardan las respuestas en
+ * `offboarding_responses.responses`: cambiar uno deja huérfano lo ya contestado.
+ * El texto se puede editar libremente; el `id`, no.
+ */
 export const OFFBOARDING_QUESTIONS: OffboardingQuestion[] = [
   {
     id: 'main_reason',
@@ -41,13 +52,13 @@ export const OFFBOARDING_QUESTIONS: OffboardingQuestion[] = [
   {
     id: 'other_reason',
     type: 'textarea',
-    label: 'Si seleccionaste "Otro", por favor especifica:',
+    label: 'Si seleccionaste "Otro", especificá cuál:',
     required: false,
   },
   {
     id: 'overall_satisfaction',
     type: 'rating_1_5',
-    label: '¿Qué tan satisfecho/a estuviste con tu experiencia general en la empresa?',
+    label: '¿Qué tan satisfecho/a estuviste con tu experiencia general en Pow?',
     description: '1 = Muy insatisfecho, 5 = Muy satisfecho',
     required: true,
   },
@@ -75,19 +86,19 @@ export const OFFBOARDING_QUESTIONS: OffboardingQuestion[] = [
   {
     id: 'would_recommend',
     type: 'yes_no',
-    label: '¿Recomendarías a un amigo o conocido trabajar en esta empresa?',
+    label: '¿Recomendarías a un amigo o conocido trabajar en Pow?',
     required: true,
   },
   {
     id: 'would_return',
     type: 'yes_no',
-    label: '¿Considerarías volver a trabajar en la empresa en el futuro?',
+    label: '¿Considerarías volver a trabajar en Pow en el futuro?',
     required: true,
   },
   {
     id: 'best_aspects',
     type: 'multi_select',
-    label: '¿Cuáles fueron los mejores aspectos de trabajar aquí?',
+    label: '¿Cuáles fueron los mejores aspectos de trabajar en Pow?',
     required: false,
     options: [
       { value: 'team', label: 'El equipo de trabajo' },
@@ -103,7 +114,7 @@ export const OFFBOARDING_QUESTIONS: OffboardingQuestion[] = [
   {
     id: 'areas_to_improve',
     type: 'multi_select',
-    label: '¿Qué áreas crees que la empresa debería mejorar?',
+    label: '¿Qué áreas creés que Pow debería mejorar?',
     required: false,
     options: [
       { value: 'communication', label: 'Comunicación interna' },
@@ -119,7 +130,7 @@ export const OFFBOARDING_QUESTIONS: OffboardingQuestion[] = [
   {
     id: 'improvements_detail',
     type: 'textarea',
-    label: '¿Tienes sugerencias específicas de mejora para la empresa?',
+    label: '¿Tenés sugerencias específicas de mejora para Pow?',
     required: false,
   },
   {
