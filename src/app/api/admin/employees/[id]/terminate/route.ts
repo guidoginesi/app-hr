@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
+import { invitarAEncuestaDeSalida, type Invitacion } from '@/lib/offboardingSurveyInvite';
 
 const TerminateEmployeeSchema = z.object({
   termination_date: z.string().min(1, 'La fecha de baja es requerida'),
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     // If offboarding is enabled, create or update offboarding response record
     let offboarding = null;
+    let invitacion: Invitacion | null = null;
     if (enable_offboarding) {
       const { data: offboardingData, error: offboardingError } = await supabase
         .from('offboarding_responses')
@@ -102,12 +104,27 @@ export async function POST(req: NextRequest, context: RouteContext) {
       } else {
         offboarding = offboardingData;
       }
+
+      // Se avisa acá y una sola vez. Desde que el portal corta el acceso a quien
+      // ya no trabaja acá, la encuesta es la única pantalla que le queda: sin
+      // este mail se entera sólo si se le ocurre entrar. Si falla, la baja ya
+      // está registrada igual y la respuesta lo dice, para que RRHH avise a mano.
+      invitacion = await invitarAEncuestaDeSalida({
+        first_name: employee.first_name,
+        personal_email: employee.personal_email,
+        work_email: employee.work_email,
+        termination_date: employee.termination_date,
+      });
+      if (!invitacion.enviada) {
+        console.error('[Offboarding] no se pudo invitar a la encuesta:', invitacion);
+      }
     }
 
     return NextResponse.json({
       ok: true,
       employee,
       offboarding,
+      invitacion,
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/employees/[id]/terminate:', error);

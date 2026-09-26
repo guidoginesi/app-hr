@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
+import type { Invitacion } from '@/lib/offboardingSurveyInvite';
 
 type TerminateEmployeeModalProps = {
   employee: {
@@ -14,7 +15,8 @@ type TerminateEmployeeModalProps = {
     personal_email: string;
   };
   onClose: () => void;
-  onSuccess: (updatedEmployee: any) => void;
+  /** `invitacion` dice si salió el mail de la encuesta, para poder avisarlo. */
+  onSuccess: (updatedEmployee: any, invitacion: Invitacion | null) => void;
 };
 
 type TerminationReason = 'resignation' | 'dismissal';
@@ -55,7 +57,7 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
         throw new Error(data.error || 'Error al registrar la baja');
       }
 
-      onSuccess(data.employee);
+      onSuccess(data.employee, data.invitacion ?? null);
     } catch (err: any) {
       setError(err.message);
     } finally {
