@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendSimpleEmail, sendBatchEmails } from '@/lib/emailService';
 import { renderEmail, type DetailRow } from '@/lib/email/layout';
@@ -8,7 +8,7 @@ import { createSystemNotification } from '@/lib/notificationService';
 // GET /api/portal/room-booking/bookings - List bookings
 export async function GET(req: NextRequest) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -238,7 +238,7 @@ function buildInvitationEmail(params: {
 // ---------------------------------------------------------------
 export async function POST(req: NextRequest) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

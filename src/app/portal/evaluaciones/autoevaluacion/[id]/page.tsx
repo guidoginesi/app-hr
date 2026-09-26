@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { AutoevaluacionWizard } from './AutoevaluacionWizard';
 
@@ -11,7 +11,7 @@ type PageProps = {
 
 export default async function AutoevaluacionPage({ params }: PageProps) {
   const { id } = await params;
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   
   if (!auth.user || !auth.employee) {
     redirect('/portal/login');

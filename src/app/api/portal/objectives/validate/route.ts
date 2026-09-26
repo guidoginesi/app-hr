@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // GET /api/portal/objectives/validate - Validate employee objectives configuration
 export async function GET(request: NextRequest) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

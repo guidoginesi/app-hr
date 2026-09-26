@@ -27,15 +27,22 @@ import { getSupabaseBrowser } from '@/lib/supabaseClient';
 import type { Employee } from '@/types/employee';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ShellSwitch, useAccess } from '@/components/ShellSwitch';
+import { ENCUESTA_DE_SALIDA } from '@/lib/accesoDelPortal';
 
 type PortalShellProps = {
   children: ReactNode;
   employee: Employee;
   isLeader: boolean;
+  /**
+   * La persona está desvinculada: lo único que puede abrir es la encuesta de
+   * salida, así que el menú se reduce a eso. Mostrarle el menú entero sería
+   * ofrecerle catorce links que el middleware le rebota.
+   */
+  soloSalida?: boolean;
   active: 'dashboard' | 'profile' | 'team' | 'reintegros' | 'reintegros-equipo' | 'evaluaciones' | 'objetivos' | 'time-off' | 'adelantos' | 'capacitaciones' | 'liquidaciones' | 'recibos' | 'messages' | 'consultas' | 'consultas-equipo' | 'offboarding' | 'room-booking' | 'certificates' | 'referidos' | 'entrenamiento-ia' | 'ayuda';
 };
 
-export function PortalShell({ children, employee, isLeader, active }: PortalShellProps) {
+export function PortalShell({ children, employee, isLeader, active, soloSalida = false }: PortalShellProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -74,7 +81,20 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
   // habilitada. Lo resuelve el server, no el cliente.
   const access = useAccess();
 
-  const navGroups: NavGroup[] = [
+  const navGroups: NavGroup[] = soloSalida
+    ? [
+        {
+          items: [
+            {
+              label: 'Encuesta de salida',
+              href: ENCUESTA_DE_SALIDA,
+              icon: ClipboardCheck,
+              active: on('offboarding'),
+            },
+          ],
+        },
+      ]
+    : [
     {
       items: [{ label: 'Dashboard', href: '/portal', icon: LayoutDashboard, active: on('dashboard') }],
     },
@@ -139,7 +159,7 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
       <NavSidebar
         groups={navGroups}
         header={
-          <Link href="/portal" className="flex items-center gap-2.5">
+          <Link href={soloSalida ? ENCUESTA_DE_SALIDA : '/portal'} className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm">
               <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -155,7 +175,9 @@ export function PortalShell({ children, employee, isLeader, active }: PortalShel
         <div className="space-y-1">
           {/* Sólo aparece para admin y Administración; ShellSwitch lo resuelve. */}
           <ShellSwitch to="admin" />
-          <NotificationBell direction="up" label="Notificaciones" />
+          {/* Un desvinculado no puede leer notificaciones: la campanita le daría
+              401 y un panel vacío. Mejor no ofrecerla. */}
+          {!soloSalida && <NotificationBell direction="up" label="Notificaciones" />}
           <div className="relative min-w-0" ref={dropdownRef}>
               <button
                 type="button"

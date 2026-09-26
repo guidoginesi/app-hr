@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { parsePayslipSlot } from '@/lib/payrollPayslips';
 
@@ -8,7 +8,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET /api/portal/payroll/payslips/[id]?slot=1|2 - Download payslip PDF
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

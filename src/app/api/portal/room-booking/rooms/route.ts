@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 // GET /api/portal/room-booking/rooms - List active rooms
 export async function GET(req: NextRequest) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

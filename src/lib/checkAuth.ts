@@ -1,6 +1,7 @@
 import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import type { UserRole, AuthResult, Employee } from '@/types/employee';
+import { estaDesvinculado } from '@/lib/accesoDelPortal';
 
 /**
  * Get all roles for a user
@@ -97,6 +98,21 @@ export async function getAuthResult(): Promise<AuthResult> {
 }
 
 /**
+ * Igual que `getAuthResult`, pero para el portal: al desvinculado le devuelve
+ * `employee: null`.
+ *
+ * Las rutas de /api/portal ya cortan todas con el mismo chequeo —
+ * `if (!auth.user || !auth.employee) return 401`— así que alcanza con que el
+ * legajo no les llegue; cada una conserva su propio mensaje de error. Se usa
+ * en vez de `getAuthResult` en todo /api/portal salvo la encuesta de salida.
+ */
+export async function getPortalAuth(): Promise<AuthResult> {
+  const auth = await getAuthResult();
+  if (!estaDesvinculado(auth.employee?.status)) return auth;
+  return { ...auth, employee: null, isEmployee: false, isLeader: false };
+}
+
+/**
  * Require specific roles - returns auth result or null if unauthorized
  */
 export async function requireRole(allowedRoles: UserRole[]): Promise<AuthResult | null> {
@@ -135,8 +151,27 @@ export async function requireAdmin(): Promise<{ user: { id: string; email?: stri
 
 /**
  * Require employee or leader role (for portal access)
+ *
+ * Al dar de baja a alguien le queda el usuario y le queda el rol `employee`, así
+ * que el rol solo no dice si todavía puede entrar: hay que mirar el legajo. Ver
+ * `src/lib/accesoDelPortal.ts`.
+ *
+ * Esto es lo que corta de verdad. El middleware redirige las páginas, pero no
+ * corre sobre /api/portal — esas rutas se defienden solas, y todas pasan por acá.
  */
 export async function requirePortalAccess(): Promise<AuthResult | null> {
+  const auth = await requireRole(['employee', 'leader']);
+  if (!auth) return null;
+  if (estaDesvinculado(auth.employee?.status)) return null;
+  return auth;
+}
+
+/**
+ * Lo mismo, pero para la encuesta de salida: la única pantalla del portal que
+ * un desvinculado sí tiene que poder abrir. Es el guard de excepción, y por eso
+ * lo usan exactamente dos lugares (la página y su API) y ninguno más.
+ */
+export async function requireOffboardingAccess(): Promise<AuthResult | null> {
   return requireRole(['employee', 'leader']);
 }
 
@@ -195,7 +230,10 @@ export async function requireNovedadesViewer(): Promise<AuthResult | null> {
  * Require leader role (for team management)
  */
 export async function requireLeader(): Promise<AuthResult | null> {
-  return requireRole(['leader']);
+  const auth = await requireRole(['leader']);
+  if (!auth) return null;
+  if (estaDesvinculado(auth.employee?.status)) return null;
+  return auth;
 }
 
 /**

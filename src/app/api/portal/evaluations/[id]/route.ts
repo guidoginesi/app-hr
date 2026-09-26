@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -7,7 +7,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET /api/portal/evaluations/[id] - Get evaluation details with dimensions and responses
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -131,7 +131,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
 // PUT /api/portal/evaluations/[id] - Update evaluation (step, status)
 export async function PUT(req: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

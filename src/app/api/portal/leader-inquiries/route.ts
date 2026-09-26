@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 /**
@@ -8,7 +8,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
  * NUNCA se resuelve por manager_id: solo por permisos otorgados uno a uno.
  */
 export async function GET() {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   if (!auth.user || !auth.employee) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const supabase = getSupabaseServer();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const UpdateObjectiveSchema = z.object({
@@ -20,7 +20,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET /api/portal/objectives/[id] - Get single objective
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // PUT /api/portal/objectives/[id] - Update objective
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
@@ -177,7 +177,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 // DELETE /api/portal/objectives/[id] - Delete objective
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }

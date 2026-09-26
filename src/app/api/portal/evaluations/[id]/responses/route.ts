@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { dbId } from '@/lib/zodId';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 
 const SaveResponseSchema = z.object({
@@ -20,7 +20,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // POST /api/portal/evaluations/[id]/responses - Save response (auto-save)
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const auth = await getAuthResult();
+    const auth = await getPortalAuth();
     if (!auth.user || !auth.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

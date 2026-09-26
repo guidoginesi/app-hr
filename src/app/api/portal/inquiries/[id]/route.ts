@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthResult } from '@/lib/checkAuth';
+import { getPortalAuth } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getAdminUserIds, createSystemNotification } from '@/lib/notificationService';
 import { canReopen, type InquiryStatus } from '@/lib/inquiries';
@@ -21,7 +21,7 @@ async function loadOwn(supabase: any, id: string, employeeId: string) {
 
 // GET — detalle + hilo (sin notas internas)
 export async function GET(_req: NextRequest, ctx: Ctx) {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   if (!auth.user || !auth.employee) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const { id } = await ctx.params;
@@ -45,7 +45,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
 // POST — responder en el hilo (o reabrir si está cerrada dentro de la ventana)
 export async function POST(req: NextRequest, ctx: Ctx) {
-  const auth = await getAuthResult();
+  const auth = await getPortalAuth();
   if (!auth.user || !auth.employee) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const parsed = ReplySchema.safeParse(await req.json().catch(() => ({})));

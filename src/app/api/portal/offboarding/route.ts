@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePortalAccess } from '@/lib/checkAuth';
+import { requireOffboardingAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { OFFBOARDING_QUESTIONS, validateOffboardingResponses } from '@/config/offboardingQuestions';
 
 // GET /api/portal/offboarding - Get offboarding survey data for the current user
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requirePortalAccess();
+    const auth = await requireOffboardingAccess();
     if (!auth?.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
 // POST /api/portal/offboarding - Submit offboarding survey
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requirePortalAccess();
+    const auth = await requireOffboardingAccess();
     if (!auth?.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
