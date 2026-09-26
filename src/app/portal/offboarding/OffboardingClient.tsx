@@ -141,8 +141,8 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
               Tu feedback es importante para nosotros
             </p>
             <p className="mt-1 text-xs text-[var(--amber-600)]">
-              Esta encuesta es confidencial y nos ayuda a mejorar como equipo.
-              Tus respuestas serán tratadas de forma anónima.
+              La lee el equipo de People y nos ayuda a mejorar. No es anónima
+              —sabemos quién contestó—, pero se trata con confidencialidad.
             </p>
           </div>
         </div>
@@ -266,6 +266,27 @@ function QuestionField({
                 >
                   No
                 </button>
+              </div>
+            )}
+
+            {/* Las cuatro opciones en fila, como en el Form: son siete preguntas
+                seguidas y en lista de radios serían veintiocho renglones. */}
+            {question.type === 'scale_4' && question.options && (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {question.options.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onChange(option.value)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      value === option.value
+                        ? 'border-foreground bg-foreground text-white'
+                        : 'border-[var(--border)] bg-white text-secondary-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
             )}
 
