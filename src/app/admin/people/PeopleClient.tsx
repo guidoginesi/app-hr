@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { formatDateLocal } from '@/lib/dateUtils';
 import { useDebounce } from '@/lib/useDebounce';
 import type { LegalEntity, Department, EmployeeStatus } from '@/types/employee';
+import type { Invitacion } from '@/lib/offboardingSurveyInvite';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
@@ -193,11 +194,36 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
     setSelectedEmployee(null);
   };
 
-  const handleEmployeeTerminated = (updatedEmployee: EmployeeWithRelations) => {
+  const handleEmployeeTerminated = (
+    updatedEmployee: EmployeeWithRelations,
+    invitacion: Invitacion | null,
+  ) => {
     setEmployees((prev) =>
       prev.map((emp) => (emp.id === updatedEmployee.id ? updatedEmployee : emp))
     );
     setTerminatingEmployee(null);
+
+    // Si el mail de la encuesta no salió, hay que decirlo: la baja quedó igual,
+    // pero alguien tiene que avisarle a mano.
+    const quien = `${updatedEmployee.first_name} ${updatedEmployee.last_name}`;
+    if (!invitacion) {
+      setInviteMessage({ type: 'success', text: `Baja registrada para ${quien}.` });
+    } else if (invitacion.enviada) {
+      setInviteMessage({
+        type: 'success',
+        text: `Baja registrada para ${quien}. Se le mandó la encuesta de salida a ${invitacion.a}.`,
+      });
+    } else if (invitacion.motivo === 'sin-mail') {
+      setInviteMessage({
+        type: 'error',
+        text: `Baja registrada para ${quien}, pero no tiene ningún mail cargado: avisale vos de la encuesta de salida.`,
+      });
+    } else {
+      setInviteMessage({
+        type: 'error',
+        text: `Baja registrada para ${quien}, pero el mail de la encuesta de salida no salió. Avisale vos.`,
+      });
+    }
   };
 
   const handleEditClick = (employee: EmployeeWithRelations) => {
