@@ -1,9 +1,10 @@
-export type OffboardingQuestionType = 
-  | 'text' 
-  | 'textarea' 
-  | 'rating_1_5' 
-  | 'yes_no' 
-  | 'single_select' 
+export type OffboardingQuestionType =
+  | 'text'
+  | 'textarea'
+  | 'rating_1_5'
+  | 'scale_4'
+  | 'yes_no'
+  | 'single_select'
   | 'multi_select';
 
 export interface OffboardingQuestionOption {
@@ -20,113 +21,119 @@ export interface OffboardingQuestion {
   options?: OffboardingQuestionOption[];
 }
 
+/**
+ * Las cuatro opciones de las escalas, en orden de mejor a peor.
+ *
+ * Cada pregunta trae las suyas porque concuerdan distinto: "Relación entre
+ * compañeros" es *Excelente*, "Sueldos y Beneficios" es *Excelentes* y
+ * "condiciones de trabajo" es *Excelentes* en femenino. En la planilla están
+ * así, y si acá se unifican dejan de coincidir con el histórico.
+ *
+ * El `value` sí es común a todas: es lo que se guarda y lo que permite
+ * promediar y comparar entre preguntas.
+ */
+function escala(
+  [exc, bueno, reg, malo]: [string, string, string, string],
+): OffboardingQuestionOption[] {
+  return [
+    { value: 'excelente', label: exc },
+    { value: 'bueno', label: bueno },
+    { value: 'regular', label: reg },
+    { value: 'malo', label: malo },
+  ];
+}
+
+/**
+ * Las preguntas de la entrevista de salida.
+ *
+ * Son las del Google Form "Entrevista de Salida" que People viene usando desde
+ * 2022, con 25 respuestas. Se copiaron tal cual —mismas preguntas, mismas
+ * escalas de cuatro niveles— para que lo que se conteste acá se pueda leer
+ * junto con lo que ya está en la planilla. Si se cambian las escalas o se
+ * reformula una pregunta, esa continuidad se corta.
+ *
+ * Quedaron afuera dos del Form, porque la app ya las sabe y preguntarlas sería
+ * hacer trabajar a alguien que se está yendo: **Antigüedad** (sale de
+ * `hire_date` y `termination_date`) y **Nombre** (la respuesta se guarda con el
+ * `employee_id`).
+ *
+ * Los `id` son las claves con las que se guardan las respuestas en
+ * `offboarding_responses.responses`: cambiar uno deja huérfano lo ya
+ * contestado. El texto se puede editar; el `id`, no.
+ */
 export const OFFBOARDING_QUESTIONS: OffboardingQuestion[] = [
   {
-    id: 'main_reason',
-    type: 'single_select',
-    label: '¿Cuál es el motivo principal de tu salida?',
-    required: true,
-    options: [
-      { value: 'new_opportunity', label: 'Nueva oportunidad laboral' },
-      { value: 'career_growth', label: 'Crecimiento profesional' },
-      { value: 'compensation', label: 'Compensación/Beneficios' },
-      { value: 'work_life_balance', label: 'Balance vida-trabajo' },
-      { value: 'relocation', label: 'Mudanza/Cambio de ubicación' },
-      { value: 'personal_reasons', label: 'Motivos personales' },
-      { value: 'management', label: 'Relación con liderazgo' },
-      { value: 'culture', label: 'Cultura organizacional' },
-      { value: 'other', label: 'Otro' },
-    ],
-  },
-  {
-    id: 'other_reason',
+    id: 'separation_reason',
     type: 'textarea',
-    label: 'Si seleccionaste "Otro", por favor especifica:',
-    required: false,
-  },
-  {
-    id: 'overall_satisfaction',
-    type: 'rating_1_5',
-    label: '¿Qué tan satisfecho/a estuviste con tu experiencia general en la empresa?',
-    description: '1 = Muy insatisfecho, 5 = Muy satisfecho',
+    label: '¿Cuál es el motivo de tu desvinculación de Pow?',
     required: true,
   },
   {
-    id: 'manager_satisfaction',
-    type: 'rating_1_5',
-    label: '¿Qué tan satisfecho/a estuviste con tu líder directo?',
-    description: '1 = Muy insatisfecho, 5 = Muy satisfecho',
-    required: true,
-  },
-  {
-    id: 'growth_opportunities',
-    type: 'rating_1_5',
-    label: '¿Cómo calificarías las oportunidades de crecimiento profesional?',
-    description: '1 = Muy pobres, 5 = Excelentes',
-    required: true,
-  },
-  {
-    id: 'work_environment',
-    type: 'rating_1_5',
-    label: '¿Cómo calificarías el ambiente de trabajo?',
-    description: '1 = Muy malo, 5 = Excelente',
-    required: true,
-  },
-  {
-    id: 'would_recommend',
-    type: 'yes_no',
-    label: '¿Recomendarías a un amigo o conocido trabajar en esta empresa?',
-    required: true,
-  },
-  {
-    id: 'would_return',
-    type: 'yes_no',
-    label: '¿Considerarías volver a trabajar en la empresa en el futuro?',
-    required: true,
-  },
-  {
-    id: 'best_aspects',
-    type: 'multi_select',
-    label: '¿Cuáles fueron los mejores aspectos de trabajar aquí?',
-    required: false,
-    options: [
-      { value: 'team', label: 'El equipo de trabajo' },
-      { value: 'projects', label: 'Los proyectos' },
-      { value: 'flexibility', label: 'La flexibilidad' },
-      { value: 'benefits', label: 'Los beneficios' },
-      { value: 'culture', label: 'La cultura' },
-      { value: 'learning', label: 'Las oportunidades de aprendizaje' },
-      { value: 'leadership', label: 'El liderazgo' },
-      { value: 'compensation', label: 'La compensación' },
-    ],
-  },
-  {
-    id: 'areas_to_improve',
-    type: 'multi_select',
-    label: '¿Qué áreas crees que la empresa debería mejorar?',
-    required: false,
-    options: [
-      { value: 'communication', label: 'Comunicación interna' },
-      { value: 'career_development', label: 'Desarrollo de carrera' },
-      { value: 'compensation', label: 'Compensación y beneficios' },
-      { value: 'work_life_balance', label: 'Balance vida-trabajo' },
-      { value: 'management', label: 'Gestión y liderazgo' },
-      { value: 'tools', label: 'Herramientas de trabajo' },
-      { value: 'processes', label: 'Procesos internos' },
-      { value: 'culture', label: 'Cultura organizacional' },
-    ],
-  },
-  {
-    id: 'improvements_detail',
+    id: 'would_recommend_why',
     type: 'textarea',
-    label: '¿Tienes sugerencias específicas de mejora para la empresa?',
-    required: false,
+    label: '¿Recomendarías trabajar en Pow? ¿Por qué?',
+    required: true,
   },
   {
-    id: 'additional_comments',
+    id: 'boss_would_change',
     type: 'textarea',
-    label: '¿Hay algo más que quieras compartir?',
-    required: false,
+    label: 'Si tuvieras el puesto de tu líder, ¿qué harías diferente?',
+    required: true,
+  },
+  {
+    id: 'improvements',
+    type: 'textarea',
+    label: '¿Qué mejoras le recomendarías a Pow?',
+    required: true,
+  },
+  {
+    id: 'peer_relationship',
+    type: 'scale_4',
+    label: 'Relación entre compañeros',
+    required: true,
+    options: escala(['Excelente', 'Buena', 'Regular', 'Mala']),
+  },
+  {
+    id: 'manager_relationship',
+    type: 'scale_4',
+    label: 'Relación entre líderes y equipo',
+    required: true,
+    options: escala(['Excelente', 'Buena', 'Regular', 'Mala']),
+  },
+  {
+    id: 'onboarding_training',
+    type: 'scale_4',
+    label: 'Plan de inducción y capacitación',
+    required: true,
+    options: escala(['Excelente', 'Bueno', 'Regular', 'Malo']),
+  },
+  {
+    id: 'work_conditions',
+    type: 'scale_4',
+    label: '¿Cómo son las condiciones de trabajo?',
+    required: true,
+    options: escala(['Excelentes', 'Buenas', 'Regulares', 'Malas']),
+  },
+  {
+    id: 'salary_benefits',
+    type: 'scale_4',
+    label: 'Sueldos y beneficios',
+    required: true,
+    options: escala(['Excelentes', 'Buenos', 'Regulares', 'Malos']),
+  },
+  {
+    id: 'promotion_opportunities',
+    type: 'scale_4',
+    label: 'Facilidades para promociones',
+    required: true,
+    options: escala(['Excelentes', 'Buenas', 'Regulares', 'Malas']),
+  },
+  {
+    id: 'fair_treatment',
+    type: 'scale_4',
+    label: 'Trato justo y clima de trabajo',
+    required: true,
+    options: escala(['Excelente', 'Bueno', 'Regular', 'Malo']),
   },
 ];
 

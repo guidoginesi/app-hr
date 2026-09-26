@@ -76,8 +76,8 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
           </div>
           <h3 className="mt-4 text-lg font-semibold text-foreground">Encuesta no habilitada</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            La encuesta de salida no ha sido habilitada para tu cuenta.<br />
-            Si crees que esto es un error, contacta al equipo de Recursos Humanos.
+            La encuesta de salida no está habilitada para tu cuenta.<br />
+            Si creés que es un error, escribile al equipo de People.
           </p>
         </div>
       </div>
@@ -118,8 +118,8 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
         <div className="rounded-xl border border-[var(--border)] bg-white p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Te deseamos lo mejor</h2>
           <p className="text-sm text-muted-foreground">
-            Esperamos que tu experiencia con nosotros haya sido positiva y te deseamos mucho éxito
-            en tus futuros proyectos. Las puertas siempre estarán abiertas.
+            Esperamos que tu paso por Pow haya sido positivo y te deseamos mucho éxito en lo que
+            venga. Las puertas siempre van a estar abiertas.
           </p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
   // Show the survey form
   return (
     <div className="space-y-6">
-      <PageHeader title="Encuesta de Salida" description={`${employee.firstName}, nos gustaría conocer tu experiencia en la empresa`} />
+      <PageHeader title="Encuesta de Salida" description={`${employee.firstName}, nos gustaría conocer tu experiencia en Pow`} />
 
       <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4">
         <div className="flex gap-3">
@@ -141,8 +141,8 @@ export function OffboardingClient({ employee, offboardingResponse }: Offboarding
               Tu feedback es importante para nosotros
             </p>
             <p className="mt-1 text-xs text-[var(--amber-600)]">
-              Esta encuesta es confidencial y nos ayudará a mejorar como organización.
-              Tus respuestas serán tratadas de forma anónima.
+              La lee el equipo de People y nos ayuda a mejorar. No es anónima
+              —sabemos quién contestó—, pero se trata con confidencialidad.
             </p>
           </div>
         </div>
@@ -266,6 +266,27 @@ function QuestionField({
                 >
                   No
                 </button>
+              </div>
+            )}
+
+            {/* Las cuatro opciones en fila, como en el Form: son siete preguntas
+                seguidas y en lista de radios serían veintiocho renglones. */}
+            {question.type === 'scale_4' && question.options && (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {question.options.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onChange(option.value)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      value === option.value
+                        ? 'border-foreground bg-foreground text-white'
+                        : 'border-[var(--border)] bg-white text-secondary-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
             )}
 
