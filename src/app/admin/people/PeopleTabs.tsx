@@ -8,6 +8,7 @@ const TABS = [
   { value: 'empleados', label: 'Empleados', href: '/admin/people' },
   { value: 'organizacion', label: 'Organización', href: '/admin/people/organizacion' },
   { value: 'organigrama', label: 'Organigrama', href: '/admin/people/organigrama' },
+  { value: 'salidas', label: 'Salidas', href: '/admin/people/salidas' },
 ] as const;
 
 type PeopleTab = (typeof TABS)[number]['value'];

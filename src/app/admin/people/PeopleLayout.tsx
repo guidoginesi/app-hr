@@ -3,7 +3,7 @@ import { AdminShell } from '@/app/admin/AdminShell';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { PeopleTabs } from './PeopleTabs';
 
-type PeopleTab = 'empleados' | 'dashboard' | 'organizacion' | 'organigrama';
+type PeopleTab = 'empleados' | 'dashboard' | 'organizacion' | 'organigrama' | 'salidas';
 
 export function PeopleLayout({
   active,
