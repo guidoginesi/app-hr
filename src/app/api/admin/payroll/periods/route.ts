@@ -3,12 +3,7 @@ import { z } from 'zod';
 import { requireAdmin, requirePayrollViewer } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { applyAdvancesToPeriod } from '@/lib/payrollAdvances';
-import {
-  buildPeriodKey,
-  formatPayrollPeriodLabel,
-  resolvePeriodMonth,
-  type PayrollPeriodType,
-} from '@/lib/payrollPeriods';
+import { buildPeriodKey, formatPayrollPeriodLabel, resolvePeriodMonth, type PayrollPeriodType, primerDiaDelPeriodo } from '@/lib/payrollPeriods';
 
 const CreatePeriodSchema = z.object({
   year: z.number().int().min(2020).max(2100),
@@ -131,11 +126,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: periodError.message }, { status: 500 });
     }
 
-    // Get all active employees
+    // Se liquida a quien trabajó el período, no a quien está activo hoy.
+    //
+    // Antes esto era `.eq('status', 'active')`, y por eso alguien que trabajó
+    // el mes y se dio de baja antes de que se generara la liquidación se
+    // quedaba sin ella. Estuvo cerca de pasar: Ruben Mavarez trabajó 8 días de
+    // septiembre, el período se generó el 28/09 y su baja se cargó el 29. Con
+    // un día de diferencia se quedaba sin cobrar lo que ya había trabajado.
+    const desde = primerDiaDelPeriodo(year, period_type, month);
     const { data: employees, error: empError } = await supabase
       .from('employees')
-      .select('id, employment_type, personal_email, work_email')
-      .eq('status', 'active');
+      .select('id, employment_type, personal_email, work_email, status')
+      .or(`status.eq.active,and(status.eq.terminated,termination_date.gte.${desde})`);
 
     if (empError) {
       console.error('Error fetching employees:', empError);
@@ -153,7 +155,13 @@ export async function POST(req: NextRequest) {
       contract_type_snapshot: emp.employment_type === 'dependency' ? 'RELACION_DEPENDENCIA' : 'MONOTRIBUTO',
       currency: 'ARS',
       status: 'DRAFT',
-      email_to: emp.work_email?.trim() || emp.personal_email?.trim() || null,
+      // A quien ya se fue se le escribe al mail personal: el de trabajo es el
+      // que se da de baja cuando alguien se va, y ésta es justo la liquidación
+      // que tiene que recibir sí o sí.
+      email_to:
+        emp.status === 'terminated'
+          ? emp.personal_email?.trim() || emp.work_email?.trim() || null
+          : emp.work_email?.trim() || emp.personal_email?.trim() || null,
     }));
 
     const { data: createdSettlements, error: settError } = await supabase
