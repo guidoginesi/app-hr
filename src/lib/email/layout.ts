@@ -112,11 +112,21 @@ export function getReplyTo(): string | undefined {
   return raw || undefined;
 }
 
+/**
+ * La base de los links que van en los mails.
+ *
+ * El default importa más de lo que parece: es lo que se usa cuando la variable
+ * no está, y eso pasa en cualquier entorno que no sea producción. Era
+ * `https://app.pow.la`, un dominio que hoy devuelve un AccessDenied de S3, así
+ * que todo mail mandado desde local llevaba un link roto y no se notaba hasta
+ * que alguien lo clickeaba. Ahora apunta al dominio donde la app vive de
+ * verdad.
+ */
 export function getAppUrl(): string {
   return (
     process.env.APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    'https://app.pow.la'
+    'https://hr.pow-apps.com'
   ).replace(/\/$/, '');
 }
 
