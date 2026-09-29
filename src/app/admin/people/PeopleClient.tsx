@@ -6,6 +6,7 @@ import { formatDateLocal } from '@/lib/dateUtils';
 import { useDebounce } from '@/lib/useDebounce';
 import type { LegalEntity, Department, EmployeeStatus } from '@/types/employee';
 import type { Invitacion } from '@/lib/offboardingSurveyInvite';
+import { esBajaProgramada } from '@/lib/bajasProgramadas';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 
@@ -197,11 +198,20 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
   const handleEmployeeTerminated = (
     updatedEmployee: EmployeeWithRelations,
     invitacion: Invitacion | null,
+    programada: boolean,
   ) => {
     setEmployees((prev) =>
       prev.map((emp) => (emp.id === updatedEmployee.id ? updatedEmployee : emp))
     );
     setTerminatingEmployee(null);
+
+    if (programada) {
+      setInviteMessage({
+        type: 'success',
+        text: `Baja programada para ${updatedEmployee.first_name} ${updatedEmployee.last_name} el ${formatDateLocal(updatedEmployee.termination_date!)}. Hasta ese día sigue con acceso; se aplica sola.`,
+      });
+      return;
+    }
 
     // Si el mail de la encuesta no salió, hay que decirlo: la baja quedó igual,
     // pero alguien tiene que avisarle a mano.
@@ -223,6 +233,22 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
         type: 'error',
         text: `Baja registrada para ${quien}, pero el mail de la encuesta de salida no salió. Avisale vos.`,
       });
+    }
+  };
+
+  const handleCancelTermination = async (employee: EmployeeWithRelations) => {
+    try {
+      const res = await fetch(`/api/admin/employees/${employee.id}/terminate`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo cancelar la baja');
+      setEmployees((prev) => prev.map((e) => (e.id === data.employee.id ? data.employee : e)));
+      setSelectedEmployee(null);
+      setInviteMessage({
+        type: 'success',
+        text: `Se canceló la baja programada de ${employee.first_name} ${employee.last_name}.`,
+      });
+    } catch (err) {
+      setInviteMessage({ type: 'error', text: (err as Error).message });
     }
   };
 
@@ -431,6 +457,13 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
                           Con acceso
                         </span>
                       )}
+                      {/* Sigue activo, pero tiene fecha de baja cargada. Si no se
+                          muestra, la baja programada es invisible hasta que ocurre. */}
+                      {esBajaProgramada(employee) && employee.termination_date && (
+                        <span className="inline-flex items-center rounded-full bg-warning-subtle px-2 py-0.5 text-xs font-medium text-[var(--amber-600)]">
+                          Baja el {formatDateLocal(employee.termination_date)}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleEditClick(employee)}
@@ -505,6 +538,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
           onClose={() => setSelectedEmployee(null)}
           onEdit={() => handleEditClick(selectedEmployee)}
           onTerminate={() => handleTerminateClick(selectedEmployee)}
+          onCancelTermination={() => handleCancelTermination(selectedEmployee)}
         />
       )}
 

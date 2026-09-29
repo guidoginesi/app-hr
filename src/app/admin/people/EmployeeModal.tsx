@@ -6,6 +6,7 @@ import { formatDateLocal } from '@/lib/dateUtils';
 import type { EmployeeStatus } from '@/types/employee';
 import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { Button } from '@pow/ui/components/ui/button';
+import { esBajaProgramada } from '@/lib/bajasProgramadas';
 
 type EmployeeWithRelations = {
   id: string;
@@ -38,6 +39,7 @@ type EmployeeModalProps = {
   onClose: () => void;
   onEdit: () => void;
   onTerminate: () => void;
+  onCancelTermination: () => void;
 };
 
 const statusLabels: Record<EmployeeStatus, string> = {
@@ -52,7 +54,8 @@ const statusColors: Record<EmployeeStatus, string> = {
   terminated: 'bg-danger-subtle text-[var(--red-600)]',
 };
 
-export function EmployeeModal({ employee, onClose, onEdit, onTerminate }: EmployeeModalProps) {
+export function EmployeeModal({ employee, onClose, onEdit, onTerminate, onCancelTermination }: EmployeeModalProps) {
+  const bajaProgramada = esBajaProgramada(employee);
   const [resending, setResending] = useState(false);
   const [resendMsg, setResendMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -219,9 +222,11 @@ export function EmployeeModal({ employee, onClose, onEdit, onTerminate }: Employ
                       : '-'}
                   </p>
                 </div>
-                {employee.status === 'terminated' && employee.termination_date && (
+                {(employee.status === 'terminated' || bajaProgramada) && employee.termination_date && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Fecha de desvinculación</p>
+                    <p className="text-xs text-muted-foreground">
+                      {bajaProgramada ? 'Baja programada para' : 'Fecha de desvinculación'}
+                    </p>
                     <p className="text-sm font-medium text-foreground">
                       {formatDateLocal(employee.termination_date)}
                     </p>
@@ -235,7 +240,15 @@ export function EmployeeModal({ employee, onClose, onEdit, onTerminate }: Employ
           <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-4">
             {/* A la izquierda y en ghost: la baja no se deshace con un botón, así
                 que no va pegada a "Editar", que se usa todos los días. */}
-            {employee.status !== 'terminated' ? (
+            {bajaProgramada ? (
+              <Button
+                variant="ghost"
+                onClick={onCancelTermination}
+                className="text-[var(--amber-600)] hover:bg-warning-subtle hover:text-[var(--amber-600)]"
+              >
+                Cancelar la baja programada
+              </Button>
+            ) : employee.status !== 'terminated' ? (
               <Button
                 variant="ghost"
                 onClick={onTerminate}
