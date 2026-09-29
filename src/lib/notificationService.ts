@@ -1,4 +1,5 @@
 import { getSupabaseServer } from './supabaseServer';
+import { estaDesvinculado } from '@/lib/accesoDelPortal';
 
 type NotificationPriority = 'info' | 'warning' | 'critical';
 
@@ -239,6 +240,18 @@ export async function getUserIdsForRoles(roles: string[]): Promise<string[]> {
  * Prefers the employee work/personal email, and falls back to the auth.users
  * email for role holders that are not employees (e.g. the generic admin /
  * administración accounts). Reusable for any role-targeted email (digests, etc.).
+ *
+ * **A quien ya no trabaja acá no se le escribe.** Dar de baja a alguien no le
+ * saca los roles, y esto resolvía direcciones por rol sin mirar el legajo: una
+ * persona que se fue seguía recibiendo los digest de aprobaciones, el de banco
+ * de talentos y los avisos de consultas. Pasó de verdad, con una persona que
+ * se fue en agosto y lo siguió recibiendo hasta que se notó en septiembre.
+ *
+ * Sacarle el rol al irse sigue siendo lo correcto, pero no puede ser lo único
+ * que separe a un ex empleado de la casilla interna del equipo.
+ *
+ * Los que no tienen legajo —las cuentas genéricas de admin y administración—
+ * no se tocan: no son empleados, así que no hay baja que mirar.
  */
 export async function getEmailsForUserIds(
   userIds: string[],
@@ -248,13 +261,31 @@ export async function getEmailsForUserIds(
   const supabase = getSupabaseServer();
   const { data: emps } = await supabase
     .from('employees')
-    .select('user_id, first_name, last_name, work_email, personal_email')
+    .select('user_id, first_name, last_name, work_email, personal_email, status')
     .in('user_id', userIds);
-  const empByUser = new Map<string, any>((emps ?? []).map((e: any) => [e.user_id, e]));
+  type Legajo = {
+    user_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    work_email: string | null;
+    personal_email: string | null;
+    status: string | null;
+  };
+  const legajos = (emps ?? []) as Legajo[];
+
+  const empByUser = new Map<string, Legajo>(
+    legajos.filter((e) => !estaDesvinculado(e.status)).map((e) => [e.user_id, e]),
+  );
+  // Con legajo desvinculado no se cae al fallback de auth.users: ahí volvería a
+  // entrar por la ventana.
+  const desvinculados = new Set(
+    legajos.filter((e) => estaDesvinculado(e.status)).map((e) => e.user_id),
+  );
 
   const out: { userId: string; email: string; name: string }[] = [];
   const missing: string[] = [];
   for (const uid of userIds) {
+    if (desvinculados.has(uid)) continue;
     const e = empByUser.get(uid);
     const email = e?.work_email || e?.personal_email;
     if (email) {
