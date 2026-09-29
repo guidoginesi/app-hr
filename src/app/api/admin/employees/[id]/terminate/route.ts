@@ -84,7 +84,19 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // If offboarding is enabled, create or update offboarding response record
     let offboarding = null;
     let invitacion: Invitacion | null = null;
-    if (enable_offboarding) {
+
+    // Si ya contestó, no se toca nada. El upsert de abajo reemplaza la fila
+    // entera —eso hace `onConflict`— así que registrar la baja de alguien que
+    // ya había contestado le borraba las respuestas, y encima le mandaba un
+    // mail pidiéndole que completara lo que ya completó. No es hipotético: las
+    // 25 entrevistas importadas del Form viejo están todas en ese caso.
+    const { data: yaContestada } = enable_offboarding
+      ? await supabase.from('offboarding_responses').select('*').eq('employee_id', id).maybeSingle()
+      : { data: null };
+
+    if (yaContestada?.status === 'submitted') {
+      offboarding = yaContestada;
+    } else if (enable_offboarding) {
       const { data: offboardingData, error: offboardingError } = await supabase
         .from('offboarding_responses')
         .upsert(
