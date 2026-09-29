@@ -124,7 +124,7 @@ export async function aplicarBajasProgramadas(
 
     if (invitacion.enviada) {
       resultado.invitadas++;
-      resultado.detalle.push(`${quien}: baja aplicada, encuesta enviada a ${invitacion.a}`);
+      resultado.detalle.push(`${quien}: baja aplicada, encuesta enviada a ${invitacion.a.join(' y ')}`);
     } else {
       resultado.detalle.push(`${quien}: baja aplicada, PERO el mail no salió (${invitacion.motivo})`);
     }
