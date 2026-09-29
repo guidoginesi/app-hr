@@ -182,7 +182,15 @@ export async function runBirthdayLeaveAutomation(): Promise<{
           await createSystemNotification({
             userIds: [emp.user_id as string],
             title: '🎂 Tenés tu día de cumpleaños disponible',
-            body: `Podés tomarlo entre el ${formatearFecha(ventana.start)} y el ${formatearFecha(ventana.end)}. Se carga desde Time Off con el tipo "Día de cumpleaños"; las reglas están en Ayuda → Día de cumpleaños.`,
+            // La misma aclaración que el mail. Quien ve sólo la campanita se
+            // encuentra si no con un rango que no coincide con su cumpleaños y
+            // ninguna pista de por qué.
+            body:
+              `Podés tomarlo entre el ${formatearFecha(ventana.start)} y el ${formatearFecha(ventana.end)}.` +
+              (ventana.corrida
+                ? ` Tu cumple es el ${formatearFecha(ventana.cumple)}, pero ese día no trabajás, así que la ventana arranca cuando volvés.`
+                : '') +
+              ` Se carga desde Time Off con el tipo "Día de cumpleaños"; las reglas están en Ayuda → Día de cumpleaños.`,
             priority: 'info',
             deepLink: '/portal/time-off/new',
             dedupeKey: `birthday_leave:${emp.id}:${year}`,
