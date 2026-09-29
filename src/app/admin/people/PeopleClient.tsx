@@ -221,7 +221,7 @@ export function PeopleClient({ employees: initialEmployees, legalEntities, depar
     } else if (invitacion.enviada) {
       setInviteMessage({
         type: 'success',
-        text: `Baja registrada para ${quien}. Se le mandó la encuesta de salida a ${invitacion.a}.`,
+        text: `Baja registrada para ${quien}. Se le mandó la encuesta de salida a ${invitacion.a.join(' y ')}.`,
       });
     } else if (invitacion.motivo === 'sin-mail') {
       setInviteMessage({

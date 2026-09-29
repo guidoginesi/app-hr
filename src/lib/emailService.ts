@@ -234,7 +234,8 @@ export async function updateEmailTemplate(
  * Envía un email simple (sin template de BD)
  */
 export async function sendSimpleEmail(params: {
-	to: string;
+	/** Uno o varios destinatarios: Resend acepta las dos formas. */
+	to: string | string[];
 	subject: string;
 	html: string;
 	replyTo?: string;

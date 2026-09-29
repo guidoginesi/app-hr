@@ -14,6 +14,7 @@
 import { renderEmail, getAppUrl, getReplyTo } from './email/layout';
 import { sendSimpleEmail } from './emailService';
 import { formatDateLocal } from './dateUtils';
+import { getRoleEmails } from './notificationService';
 
 export type ParaInvitar = {
   first_name: string | null;
@@ -23,18 +24,27 @@ export type ParaInvitar = {
 };
 
 export type Invitacion =
-  | { enviada: true; a: string }
+  | { enviada: true; a: string[] }
   | { enviada: false; motivo: 'sin-mail' | 'falló'; detalle?: string };
 
 /**
- * Al revés que en el resto de la app, que usa `work_email || personal_email`.
+ * Las casillas de la persona, en orden de importancia.
  *
- * El mail de trabajo es justamente el que se da de baja cuando alguien se va,
- * así que mandar ahí la invitación es mandarla a una casilla que capaz ya no
- * existe. El personal es el que le va a seguir llegando.
+ * Primero el **personal**, al revés que el resto de la app, que usa
+ * `work_email || personal_email`: el de trabajo es justamente el que se da de
+ * baja cuando alguien se va, así que es el que puede no existir más.
+ *
+ * Y también el de trabajo, mientras siga vivo. Desde que las bajas se pueden
+ * programar, la invitación puede salir días antes del último día: ahí la
+ * casilla de Pow todavía funciona y es donde la persona mira todos los días.
+ * Si ya se dio de baja, ese mail rebota y queda el personal, que es el que
+ * importa.
  */
-function aDondeMandar(e: ParaInvitar): string | null {
-  return (e.personal_email || e.work_email || '').trim() || null;
+function aDondeMandar(e: ParaInvitar): string[] {
+  const casillas = [e.personal_email, e.work_email]
+    .map((m) => (m ?? '').trim().toLowerCase())
+    .filter(Boolean);
+  return [...new Set(casillas)];
 }
 
 function mail(e: ParaInvitar): { subject: string; html: string } {
@@ -67,16 +77,55 @@ function mail(e: ParaInvitar): { subject: string; html: string } {
   };
 }
 
-/** Manda la invitación. Nunca lanza: la baja no se cae porque falle un mail. */
+/**
+ * Manda la invitación. Nunca lanza: la baja no se cae porque falle un mail.
+ *
+ * Va con copia a People. No es control: es que la invitación sale una sola vez
+ * y sin copia nadie del equipo se entera de que salió, ni a qué casilla. Si
+ * después la persona no contesta, al menos se sabe que se le escribió.
+ *
+ * Si falla la copia no pasa nada: lo que no puede fallar es el mail a la
+ * persona, y eso es lo que decide el resultado.
+ */
 export async function invitarAEncuestaDeSalida(e: ParaInvitar): Promise<Invitacion> {
-  const to = aDondeMandar(e);
-  if (!to) return { enviada: false, motivo: 'sin-mail' };
+  const destinos = aDondeMandar(e);
+  if (destinos.length === 0) return { enviada: false, motivo: 'sin-mail' };
+
+  const contenido = mail(e);
 
   try {
-    const res = await sendSimpleEmail({ to, replyTo: getReplyTo(), ...mail(e) });
+    const res = await sendSimpleEmail({ to: destinos, replyTo: getReplyTo(), ...contenido });
     if (!res.success) return { enviada: false, motivo: 'falló', detalle: res.error };
-    return { enviada: true, a: to };
+
+    await copiarAPeople(e, destinos).catch((error) => {
+      console.error('[Offboarding] no se pudo copiar a People:', error);
+    });
+
+    return { enviada: true, a: destinos };
   } catch (error) {
     return { enviada: false, motivo: 'falló', detalle: (error as Error)?.message };
   }
+}
+
+/** La copia para el equipo, con un encabezado que aclara que es una copia. */
+async function copiarAPeople(e: ParaInvitar, destinos: string[]): Promise<void> {
+  const people = await getRoleEmails(['admin']);
+  if (people.length === 0) return;
+
+  const quien = (e.first_name ?? '').trim() || 'la persona';
+  await sendSimpleEmail({
+    to: people.map((p) => p.email),
+    replyTo: getReplyTo(),
+    subject: `Copia: se le pidió la entrevista de salida a ${quien}`,
+    html: renderEmail({
+      title: 'Entrevista de salida enviada',
+      contextLabel: 'People · Offboarding',
+      preheader: `Copia de lo que recibió ${quien}.`,
+      intro:
+        `Se le mandó la entrevista de salida a ${quien}, a ${destinos.join(' y ')}. ` +
+        `El texto es el mismo que ya conocés.`,
+      cta: { label: 'Ver las entrevistas', url: `${getAppUrl()}/admin/people/salidas` },
+      outro: 'Esto es una copia automática. La persona no ve este mail.',
+    }),
+  });
 }
