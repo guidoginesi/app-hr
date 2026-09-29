@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetClose } from '@pow/ui/components/ui/sheet';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import type { Invitacion } from '@/lib/offboardingSurveyInvite';
+import { hoyISO } from '@/lib/bajasProgramadas';
 
 type TerminateEmployeeModalProps = {
   employee: {
@@ -16,7 +17,7 @@ type TerminateEmployeeModalProps = {
   };
   onClose: () => void;
   /** `invitacion` dice si salió el mail de la encuesta, para poder avisarlo. */
-  onSuccess: (updatedEmployee: any, invitacion: Invitacion | null) => void;
+  onSuccess: (updatedEmployee: any, invitacion: Invitacion | null, programada: boolean) => void;
 };
 
 type TerminationReason = 'resignation' | 'dismissal';
@@ -32,6 +33,9 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
   const [terminationNotes, setTerminationNotes] = useState('');
   const [enableOffboarding, setEnableOffboarding] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Con fecha futura la baja se guarda pero se aplica ese día. Conviene decirlo
+  // acá: el cartel de abajo, si no, promete algo que todavía no va a pasar.
+  const esFutura = terminationDate > hoyISO();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +61,7 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
         throw new Error(data.error || 'Error al registrar la baja');
       }
 
-      onSuccess(data.employee, data.invitacion ?? null);
+      onSuccess(data.employee, data.invitacion ?? null, !!data.programada);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -175,10 +179,14 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
                   </svg>
                   <div>
                     <p className="text-sm font-medium text-[var(--amber-600)]">
-                      Esta acción cambiará el estado del empleado a "Desvinculado"
+                      {esFutura
+                        ? 'La baja queda programada para esa fecha'
+                        : 'Esta acción cambiará el estado del empleado a "Desvinculado"'}
                     </p>
                     <p className="mt-1 text-xs text-[var(--amber-600)]">
-                      El empleado perderá acceso al portal excepto a la encuesta de salida (si está habilitada)
+                      {esFutura
+                        ? 'Hasta ese día no cambia nada: sigue activo y con acceso al portal. Ese día pierde el acceso y recibe la encuesta de salida. Podés cancelarla antes.'
+                        : 'El empleado perderá acceso al portal excepto a la encuesta de salida (si está habilitada)'}
                     </p>
                   </div>
                 </div>
@@ -191,7 +199,7 @@ export function TerminateEmployeeModal({ employee, onClose, onSuccess }: Termina
               Cancelar
             </Button>
             <Button type="submit" variant="destructive" loading={isSubmitting}>
-              Confirmar baja
+              {esFutura ? 'Programar baja' : 'Confirmar baja'}
             </Button>
           </div>
         </form>

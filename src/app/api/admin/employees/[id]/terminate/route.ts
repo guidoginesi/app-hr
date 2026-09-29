@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { getSupabaseAuthServer } from '@/lib/supabaseAuthServer';
 import { invitarAEncuestaDeSalida, type Invitacion } from '@/lib/offboardingSurveyInvite';
+import { hoyISO, esBajaProgramada } from '@/lib/bajasProgramadas';
 
 const TerminateEmployeeSchema = z.object({
   termination_date: z.string().min(1, 'La fecha de baja es requerida'),
@@ -56,11 +57,18 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
+    // Una baja con fecha futura se guarda pero no se aplica: el legajo sigue
+    // activo hasta ese día. Si se desvinculara ahora, la persona perdería el
+    // portal mientras todavía trabaja —el corte mira el estado, no la fecha— y
+    // además se le mandaría la encuesta de salida antes de tiempo. El cron
+    // diario la aplica el día que corresponde. Ver `src/lib/bajasProgramadas.ts`.
+    const programada = termination_date > hoyISO();
+
     // Update employee with termination data
     const { data: employee, error: updateError } = await supabase
       .from('employees')
       .update({
-        status: 'terminated',
+        ...(programada ? {} : { status: 'terminated' }),
         termination_date,
         termination_reason,
         termination_notes: termination_notes || null,
@@ -90,13 +98,13 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // ya había contestado le borraba las respuestas, y encima le mandaba un
     // mail pidiéndole que completara lo que ya completó. No es hipotético: las
     // 25 entrevistas importadas del Form viejo están todas en ese caso.
-    const { data: yaContestada } = enable_offboarding
+    const { data: yaContestada } = enable_offboarding && !programada
       ? await supabase.from('offboarding_responses').select('*').eq('employee_id', id).maybeSingle()
       : { data: null };
 
     if (yaContestada?.status === 'submitted') {
       offboarding = yaContestada;
-    } else if (enable_offboarding) {
+    } else if (enable_offboarding && !programada) {
       const { data: offboardingData, error: offboardingError } = await supabase
         .from('offboarding_responses')
         .upsert(
@@ -137,9 +145,70 @@ export async function POST(req: NextRequest, context: RouteContext) {
       employee,
       offboarding,
       invitacion,
+      programada,
     });
   } catch (error: any) {
     console.error('Error in POST /api/admin/employees/[id]/terminate:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// DELETE /api/admin/employees/[id]/terminate - Cancelar una baja programada
+//
+// Sólo sirve mientras la baja no se aplicó. Una vez que el legajo quedó
+// desvinculado esto no lo revive: reincorporar a alguien es otra cosa y se
+// hace desde el formulario del empleado, a conciencia.
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  try {
+    const { isAdmin } = await requireAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+    const supabase = getSupabaseServer();
+
+    const { data: existente } = await supabase
+      .from('employees')
+      .select('id, status, termination_date')
+      .eq('id', id)
+      .single();
+
+    if (!existente) {
+      return NextResponse.json({ error: 'Empleado no encontrado' }, { status: 404 });
+    }
+    if (!esBajaProgramada(existente)) {
+      return NextResponse.json(
+        { error: 'Esta persona no tiene una baja programada para cancelar' },
+        { status: 400 }
+      );
+    }
+
+    const { data: employee, error } = await supabase
+      .from('employees')
+      .update({
+        termination_date: null,
+        termination_reason: null,
+        termination_notes: null,
+        terminated_by_user_id: null,
+        offboarding_enabled: false,
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        legal_entity:legal_entities(id, name),
+        department:departments(id, name),
+        manager:employees!manager_id(id, first_name, last_name)
+      `)
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, employee });
+  } catch (error: any) {
+    console.error('Error in DELETE /api/admin/employees/[id]/terminate:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
