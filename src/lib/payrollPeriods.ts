@@ -36,6 +36,27 @@ export function buildPeriodKey(year: number, periodType: PayrollPeriodType, mont
   return `${year}-${String(m).padStart(2, '0')}`;
 }
 
+/**
+ * El primer día que cubre el período. Sirve para saber quién hay que liquidar.
+ *
+ * Al crear un período se armaban las liquidaciones de los empleados **activos
+ * hoy**, y eso deja afuera a quien trabajó el mes y se fue antes de que se
+ * generara. Lo correcto es mirar el período: si la baja es igual o posterior a
+ * este día, esa persona trabajó parte de lo que se está liquidando.
+ *
+ * El SAC arranca en el semestre: quien se fue en septiembre tiene derecho a la
+ * parte proporcional del SAC 2, no a nada.
+ */
+export function primerDiaDelPeriodo(
+  year: number,
+  periodType: PayrollPeriodType,
+  month: number,
+): string {
+  if (periodType === 'SAC_1') return `${year}-01-01`;
+  if (periodType === 'SAC_2') return `${year}-07-01`;
+  return `${year}-${String(month).padStart(2, '0')}-01`;
+}
+
 export function formatPayrollPeriodLabel(
   year: number,
   month: number,
