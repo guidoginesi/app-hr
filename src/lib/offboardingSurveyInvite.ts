@@ -62,11 +62,15 @@ function mail(e: ParaInvitar): { subject: string; html: string } {
     : 'gracias por el tiempo que pasaste con nosotros.';
 
   return {
-    subject: 'Contanos cómo te fue',
+    // El asunto tiene que decir qué es. "Contanos cómo te fue", de un noreply,
+    // se confunde con un newsletter: la primera persona que lo recibió de
+    // verdad lo tuvo entregado y abierto en Gmail, y aun así dijo que nunca
+    // le había llegado.
+    subject: 'Tu entrevista de salida de Pow',
     html: renderEmail({
       title: 'Contanos cómo te fue',
       contextLabel: 'People · Offboarding',
-      preheader: 'Tu opinión nos ayuda a mejorar. Son unos minutos.',
+      preheader: 'Son unos minutos y nos ayuda a mejorar.',
       intro:
         `${hola}, ${contexto} Nos gustaría conocer tu experiencia: qué funcionó, qué no, y qué ` +
         `deberíamos cambiar. La lee el equipo de People y nos sirve de verdad para mejorar.\n\n` +
