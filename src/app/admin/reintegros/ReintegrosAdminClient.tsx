@@ -757,7 +757,9 @@ function Timeline({ id }: { id: string }) {
  * los reintegros históricos sin motivo y el reporte mentiría hacia atrás.
  */
 function MotivosPanel({ onNotice, onError }: { onNotice: (s: string) => void; onError: (s: string) => void }) {
-  const [reasons, setReasons] = useState<{ id: string; name: string; active: boolean; used: number }[]>([]);
+  const [reasons, setReasons] = useState<
+    { id: string; name: string; active: boolean; used: number; requiere_lider?: boolean }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [nuevo, setNuevo] = useState('');
@@ -848,6 +850,7 @@ function MotivosPanel({ onNotice, onError }: { onNotice: (s: string) => void; on
                   {r.used === 0 ? 'Sin usar' : `Usado en ${r.used} reintegro${r.used === 1 ? '' : 's'}`}
                 </p>
               </div>
+              <div className="flex flex-wrap items-center gap-5">
               <label className="flex cursor-pointer items-center gap-2 text-sm text-secondary-foreground">
                 <Checkbox
                   aria-label={`Ofrecer ${r.name} en el formulario`}
@@ -862,6 +865,26 @@ function MotivosPanel({ onNotice, onError }: { onNotice: (s: string) => void; on
                 />
                 Se ofrece
               </label>
+              {/* Para beneficios con reglas fijas, como Guardería, la aprobación del
+                  líder no agrega nada y sólo lo demora. Sin la migración el campo no
+                  viene, y se muestra tildado: es el comportamiento de siempre. */}
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-secondary-foreground">
+                <Checkbox
+                  aria-label={`${r.name} pasa por el líder`}
+                  checked={r.requiere_lider !== false}
+                  disabled={saving}
+                  onCheckedChange={(c) =>
+                    post(
+                      { action: 'lider', id: r.id, requiere_lider: c === true },
+                      c === true
+                        ? 'Ahora pasa por la aprobación del líder.'
+                        : 'Ya no pasa por el líder: va directo a validación.',
+                    )
+                  }
+                />
+                Pasa por el líder
+              </label>
+              </div>
             </li>
           ))}
         </ul>

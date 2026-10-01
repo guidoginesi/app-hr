@@ -472,7 +472,11 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                         )}
                       </div>
                       <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusPill[r.status]}`}>
-                        {STATUS_LABELS_EMPLOYEE[r.status]}
+                        {/* Sin líder que lo haya aprobado (motivos como Guardería), "Aprobado
+                            por tu líder" sería mentira: está esperando a Administración. */}
+                        {r.status === 'leader_approved' && !r.leader_approved_by
+                          ? 'En validación'
+                          : STATUS_LABELS_EMPLOYEE[r.status]}
                       </span>
                     </div>
                   </div>

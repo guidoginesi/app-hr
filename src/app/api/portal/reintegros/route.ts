@@ -13,6 +13,7 @@ import {
   MAX_FILES,
   evaluateRequest,
   money,
+  requiereLider,
   todayInArgentina,
 } from '@/lib/reimbursements';
 
@@ -142,9 +143,12 @@ export async function POST(req: NextRequest) {
 
     // El motivo se resuelve ahora para guardar su nombre: si se renombra o se
     // retira, el reintegro histórico sigue diciendo con qué motivo se pidió.
+    // `*` y no una lista de columnas: `requiere_lider` llega con una migración, y
+    // pedirla por nombre antes de que exista rompería el alta de todos los
+    // reintegros.
     const { data: reason } = await supabase
       .from('expense_reasons')
-      .select('name, active')
+      .select('*')
       .eq('id', d.reason_id)
       .maybeSingle();
     if (!reason || !reason.active) {
@@ -165,6 +169,10 @@ export async function POST(req: NextRequest) {
       }
       projectLabel = proj.client_name ? `${proj.client_name} · ${proj.name}` : (proj.name as string);
     }
+
+    // Guardería y cualquier otro motivo marcado así no pasan por el líder: el
+    // pedido nace listo para que Administración lo valide.
+    const sinLider = !requiereLider(reason);
 
     // La fila se crea primero para tener el id que nombra el archivo, y así el
     // path del comprobante queda atado al reintegro y no a un uuid suelto.
@@ -189,6 +197,7 @@ export async function POST(req: NextRequest) {
         receipt_size: file.size,
         receipt_mime: file.type,
         validations: { rules: evaluation.rules, justification: d.justification ?? null, evaluated_on: today },
+        ...(sinLider ? { status: 'leader_approved', leader_approved_at: new Date().toISOString() } : {}),
       })
       .select('id')
       .single();
@@ -249,7 +258,19 @@ export async function POST(req: NextRequest) {
       note: d.justification || null,
     });
 
-    await notifyApprover({
+    if (sinLider) {
+      // Queda en la línea de tiempo por qué no lo aprobó nadie: si no, parece que
+      // se salteó un paso.
+      await logEvent({
+        reimbursementId: created.id,
+        eventType: 'approve_leader',
+        fromStatus: 'requested',
+        toStatus: 'leader_approved',
+        actorUserId: null,
+        actorName: 'Sin aprobación del líder',
+        note: `El motivo ${reason.name as string} no pasa por el líder.`,
+      });
+    } else await notifyApprover({
       reimbursementId: created.id,
       employeeName: actorName,
       leaderId: auth.employee.manager_id ?? null,
