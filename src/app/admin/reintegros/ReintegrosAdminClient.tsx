@@ -9,6 +9,7 @@ import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { TabNav } from '@pow/ui/components/ui/tab-nav';
 import {
   PAYMENT_METHOD_LABELS,
+  pideComprobanteDePago,
   RECEIPT_TYPE_LABELS,
   STATUS_LABELS_ADMIN,
   money,
@@ -250,7 +251,22 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className="font-medium text-foreground nums-tabular">{money(r.amount, r.currency)}</p>
+                          {/* Cuando se reintegra menos de lo presentado se ven los dos: el
+                              gasto que cargó la persona y lo que se le paga. Mostrando sólo
+                              el presentado, la diferencia quedaba explicada en una nota a mano. */}
+                          {r.payable < Number(r.amount) ? (
+                            <>
+                              <p className="font-medium text-foreground nums-tabular">
+                                {money(r.payable, r.currency)}
+                                <span className="ml-1 text-xs font-normal text-muted-foreground">a reintegrar</span>
+                              </p>
+                              <p className="text-xs text-muted-foreground nums-tabular">
+                                {money(r.amount, r.currency)} presentado
+                              </p>
+                            </>
+                          ) : (
+                            <p className="font-medium text-foreground nums-tabular">{money(r.amount, r.currency)}</p>
+                          )}
                           {r.amount_ars !== null && r.currency === 'USD' && (
                             <p className="text-xs text-muted-foreground nums-tabular">≈ {ars(Number(r.amount_ars))}</p>
                           )}
@@ -448,7 +464,7 @@ export function ReintegrosAdminClient({ canManageAccess }: { canManageAccess: bo
                               {PAYMENT_METHOD_LABELS[r.payment_method ?? 'transfer']}
                               {r.estimated_payment_date ? ` · estimado ${fecha(r.estimated_payment_date)}` : ''}
                             </p>
-                            {!r.payment_receipt_path ? (
+                            {pideComprobanteDePago(r.payment_method) && !r.payment_receipt_path ? (
                               <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[var(--border)] bg-white px-4 py-2 text-sm transition-colors hover:border-[var(--brand)]">
                                 <span className="font-medium text-foreground">Subir comprobante de pago</span>
                                 <input

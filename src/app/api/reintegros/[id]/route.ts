@@ -11,6 +11,8 @@ import {
   TRANSITIONS,
   canDo,
   money,
+  payableAmount,
+  pideComprobanteDePago,
   resolvePaymentPeriod,
   todayInArgentina,
   type ReimbursementAction,
@@ -165,12 +167,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       update.pay_year = periodo.pay_year;
       update.pay_month = periodo.pay_month;
       update.estimated_payment_date = periodo.estimated_payment_date;
-      note = `Pago por ${body.payment_method === 'payroll' ? 'liquidación' : 'transferencia'}, estimado ${periodo.estimated_payment_date}`;
+      note = `Pago ${body.payment_method === 'payroll' ? 'con el recibo de sueldo' : 'por transferencia'}, estimado ${periodo.estimated_payment_date}`;
     }
 
     if (body.action === 'mark_paid') {
       // El comprobante de pago se sube por su propio endpoint, antes de esto.
-      if (!r.payment_receipt_path) {
+      // Si va con el sueldo no se pide: la prueba es el recibo.
+      if (pideComprobanteDePago(r.payment_method) && !r.payment_receipt_path) {
         return NextResponse.json(
           { error: 'Subí el comprobante de pago antes de marcarlo como pagado.' },
           { status: 400 },
@@ -230,6 +233,17 @@ async function notifyTransition(input: {
   const r = input.reimbursement;
   const url = `${getAppUrl()}/portal/reintegros`;
   const importe = money(Number(r.amount), String(r.currency));
+  // Lo que se le paga, que no siempre es lo que presentó. Los avisos de agendado
+  // y de pagado decían el importe presentado: con guardería, que siempre tiene
+  // tope, a alguien que cobraba 202.121 le llegaba "se pagó tu reintegro de
+  // 396.960". Una vez validado, el monto que importa es éste.
+  const aCobrar = payableAmount({
+    amount: Number(r.amount),
+    approved_amount: input.approvedAmount ?? (r.approved_amount != null ? Number(r.approved_amount) : null),
+  });
+  const reintegrado = money(aCobrar, String(r.currency));
+  const esParcial = aCobrar < Number(r.amount);
+  const sobre = esParcial ? ` (de ${importe} presentados)` : '';
   const motivo = String(r.reason_label_snapshot ?? r.reason_name ?? '—');
 
   const paraElColaborador: Record<string, { title: string; intro: string }> = {
@@ -245,9 +259,9 @@ async function notifyTransition(input: {
     },
     schedule_payment: {
       title: 'Tu reintegro tiene fecha de pago',
-      intro: `Tu reintegro de ${importe} quedó agendado para pagarse.`,
+      intro: `Tu reintegro de ${reintegrado}${sobre} quedó agendado para pagarse.`,
     },
-    mark_paid: { title: 'Tu reintegro fue pagado', intro: `Se pagó tu reintegro de ${importe}.` },
+    mark_paid: { title: 'Tu reintegro fue pagado', intro: `Se pagó tu reintegro de ${reintegrado}${sobre}.` },
     reject: { title: 'Tu reintegro fue rechazado', intro: `${input.actorName} rechazó tu reintegro de ${importe}.` },
   };
 
@@ -283,6 +297,7 @@ async function notifyTransition(input: {
             { label: 'Concepto', value: String(r.concept) },
             { label: 'Motivo', value: motivo },
             { label: 'Monto solicitado', value: importe },
+            ...(esParcial ? [{ label: 'Monto a reintegrar', value: reintegrado }] : []),
             ...(r.estimated_payment_date
               ? [{ label: 'Pago estimado', value: String(r.estimated_payment_date) }]
               : []),
