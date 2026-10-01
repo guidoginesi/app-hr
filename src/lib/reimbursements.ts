@@ -55,9 +55,20 @@ export const STATUS_LABELS_ADMIN: Record<ReimbursementStatus, string> = {
 };
 
 export const PAYMENT_METHOD_LABELS: Record<ReimbursementPaymentMethod, string> = {
-  payroll: 'Con la liquidación',
+  payroll: 'Con el recibo de sueldo',
   transfer: 'Transferencia',
 };
+
+/**
+ * ¿Hace falta subir un comprobante para marcarlo como pagado?
+ *
+ * Sólo si se pagó por transferencia aparte. Cuando va con el sueldo, la prueba
+ * es el recibo: lo que se subía era la transferencia del sueldo completo, que
+ * no prueba el reintegro y no lo mira nadie.
+ */
+export function pideComprobanteDePago(method: ReimbursementPaymentMethod | null | undefined): boolean {
+  return method !== 'payroll';
+}
 
 /** Estados en los que el reintegro sigue en curso. */
 export const OPEN_STATUSES: ReimbursementStatus[] = [
