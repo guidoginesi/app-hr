@@ -17,7 +17,9 @@ export const dynamic = 'force-dynamic';
 async function list() {
   const supabase = getSupabaseServer();
   const [reasons, usage] = await Promise.all([
-    supabase.from('expense_reasons').select('id, name, active, sort_order').order('sort_order'),
+    // `*`: `requiere_lider` llega con una migración y pedirla por nombre antes
+    // de que exista dejaría la pestaña en blanco.
+    supabase.from('expense_reasons').select('*').order('sort_order'),
     supabase.from('expense_reimbursements').select('reason_id'),
   ]);
   if (reasons.error) throw new Error(reasons.error.message);
@@ -51,6 +53,7 @@ const BodySchema = z.discriminatedUnion('action', [
   }),
   z.object({ action: z.literal('toggle'), id: dbId(), active: z.boolean() }),
   z.object({ action: z.literal('rename'), id: dbId(), name: z.string().trim().min(2).max(60) }),
+  z.object({ action: z.literal('lider'), id: dbId(), requiere_lider: z.boolean() }),
 ]);
 
 export async function POST(req: NextRequest) {
@@ -85,6 +88,21 @@ export async function POST(req: NextRequest) {
     if (body.action === 'toggle') {
       const { error } = await supabase.from('expense_reasons').update({ active: body.active }).eq('id', body.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (body.action === 'lider') {
+      const { error } = await supabase
+        .from('expense_reasons')
+        .update({ requiere_lider: body.requiere_lider })
+        .eq('id', body.id);
+      if (error) {
+        // Sin la migración la columna no existe: mejor decirlo que dar un 500 mudo.
+        const falta = /requiere_lider/.test(error.message);
+        return NextResponse.json(
+          { error: falta ? 'Falta correr db/migration-reintegros-motivo-sin-lider.sql en Supabase.' : error.message },
+          { status: 500 },
+        );
+      }
     }
 
     if (body.action === 'rename') {

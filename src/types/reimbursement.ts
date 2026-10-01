@@ -64,6 +64,10 @@ export type Reimbursement = {
   status: ReimbursementStatus;
 
   leader_approved_at: string | null;
+
+  /** null si el motivo no pasa por el líder (p. ej. Guardería). */
+
+  leader_approved_by: string | null;
   leader_comment: string | null;
 
   admin_validated_at: string | null;

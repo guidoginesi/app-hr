@@ -255,6 +255,19 @@ export function canDo(action: ReimbursementAction, status: ReimbursementStatus, 
   return t.from.includes(status) && t.actors.includes(actor);
 }
 
+/**
+ * ¿El motivo pasa por la aprobación del líder?
+ *
+ * Casi todos sí. Guardería no: es un beneficio con reglas fijas, no un gasto
+ * que el líder tenga que evaluar, y su aprobación sólo lo demoraba.
+ *
+ * Si la columna todavía no existe (la migración no se corrió), el valor llega
+ * `undefined` y se toma como `true`: igual que antes.
+ */
+export function requiereLider(reason: { requiere_lider?: boolean | null }): boolean {
+  return reason.requiere_lider !== false;
+}
+
 /** Monto que efectivamente se reintegra. */
 export function payableAmount(r: { amount: number; approved_amount: number | null }): number {
   return r.approved_amount ?? r.amount;
