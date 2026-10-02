@@ -4,6 +4,7 @@ import { PortalShell } from '../PortalShell';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { buttonVariants } from '@pow/ui/components/ui/button';
 import { ManualToc } from '@/components/manual/ManualToc';
+import { TEMA_MANUALES } from '@/lib/ayudaContenidos';
 import type { Employee } from '@/types/employee';
 
 /**
@@ -22,6 +23,8 @@ export function PortalAyudaLayout({
   description = 'Cómo usar las funcionalidades del portal.',
   /** El índice no muestra el botón de volver: ya es la raíz. */
   showBack = true,
+  /** A qué tema del índice vuelve. Los manuales, al suyo. */
+  volverA = `/portal/ayuda?tema=${TEMA_MANUALES}`,
 }: {
   children: ReactNode;
   employee: Employee;
@@ -29,6 +32,7 @@ export function PortalAyudaLayout({
   title?: string;
   description?: string;
   showBack?: boolean;
+  volverA?: string;
 }) {
   return (
     <PortalShell employee={employee} isLeader={isLeader} active="ayuda">
@@ -38,7 +42,7 @@ export function PortalAyudaLayout({
           description={description}
           actions={
             showBack ? (
-              <Link href="/portal/ayuda" className={buttonVariants({ variant: 'outline' })}>
+              <Link href={volverA} className={buttonVariants({ variant: 'outline' })}>
                 Volver
               </Link>
             ) : undefined

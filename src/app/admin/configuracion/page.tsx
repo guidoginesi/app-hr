@@ -36,6 +36,21 @@ export default async function AdminConfiguracionPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Contenidos de Ayuda</CardTitle>
+          <CardDescription>
+            Beneficios, políticas y formularios que el equipo ve en la Ayuda del portal, junto a
+            los manuales. Se editan acá y se publican sin deploy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/admin/configuracion/ayuda" className={buttonVariants({ variant: 'primary' })}>
+            Editar los contenidos
+          </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Agujeros del manual</CardTitle>
           <CardDescription>
             Cuando el manual no alcanza y People contesta igual, esa respuesta es conocimiento de
