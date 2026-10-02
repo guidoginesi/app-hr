@@ -1,7 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { contenidoParaElPortal } from '@/lib/ayudaContenidosQuery';
-import { slugDe } from '@/lib/ayudaContenidos';
+import { slugDe, tipoDeLink } from '@/lib/ayudaContenidos';
+import { buttonVariants } from '@pow/ui/components/ui/button';
+import { ExternalLink } from 'lucide-react';
 import { CuerpoDeAyuda } from '@/components/ayuda/CuerpoDeAyuda';
 import { PortalAyudaLayout } from '../../PortalAyudaLayout';
 import { formatDateLocal } from '@/lib/dateUtils';
@@ -38,12 +40,10 @@ export default async function RecursoDeAyudaPage({ params }: { params: Promise<{
             href={c.link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            className={`${buttonVariants()} mt-6`}
           >
-            Abrir el documento
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
-            </svg>
+            {tipoDeLink(c.link_url).abrir}
+            <ExternalLink className="ml-1.5 h-4 w-4" aria-hidden />
           </a>
         )}
 

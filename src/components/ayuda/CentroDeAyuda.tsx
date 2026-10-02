@@ -78,7 +78,7 @@ export function CentroDeAyuda({ temas }: { temas: TemaDeAyuda[] }) {
     <div className="space-y-6">
       <div className="relative">
         <Search
-          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
         <input
@@ -91,7 +91,7 @@ export function CentroDeAyuda({ temas }: { temas: TemaDeAyuda[] }) {
           }}
           placeholder="Buscá un beneficio, una política o cómo hacer algo en el portal"
           aria-label="Buscar en la Ayuda"
-          className="h-12 w-full rounded-xl border border-[var(--border)] bg-white pl-12 pr-14 text-[15px] text-foreground shadow-sm transition-colors placeholder:text-muted-foreground hover:border-[var(--gray-300)] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring [&::-webkit-search-cancel-button]:appearance-none"
+          className="h-11 w-full rounded-xl border border-[var(--border)] bg-white pl-11 pr-14 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground hover:border-[var(--gray-300)] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring [&::-webkit-search-cancel-button]:appearance-none"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2">
           {consulta ? (
@@ -214,7 +214,7 @@ function Tema({ tema, onAbrir }: { tema: TemaDeAyuda; onAbrir: AlAbrir }) {
       className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm motion-safe:animate-[pow-fade-in_180ms_var(--ease-out)]"
     >
       <header className="flex items-center gap-4 border-b border-[var(--border)] px-6 py-5">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-accent">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent">
           <IconoDeAyuda nombre={nombreDeIconoDeTema(tema)} className="h-5 w-5 text-brand" aria-hidden />
         </span>
         <div className="min-w-0">
@@ -300,8 +300,8 @@ function Fila({
   const texto = (
     <>
       {/* Al pasar el mouse, el ícono toma el naranja del tema elegido: dice "esto se abre". */}
-      <span className="grid h-10 w-10 shrink-0 place-items-center self-start rounded-lg bg-secondary text-secondary-foreground transition-colors group-hover:bg-accent group-hover:text-brand">
-        <IconoDeAyuda nombre={nombreDeIconoDeItem(item)} className="h-5 w-5" aria-hidden />
+      <span className="grid h-9 w-9 shrink-0 place-items-center self-start rounded-lg bg-secondary text-secondary-foreground transition-colors group-hover:bg-accent group-hover:text-brand">
+        <IconoDeAyuda nombre={nombreDeIconoDeItem(item)} className="h-4 w-4" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
         {conTema && (
@@ -311,7 +311,7 @@ function Fila({
           </p>
         )}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <h3 className="text-[15px] font-semibold text-foreground transition-colors group-hover:text-[var(--brand-strong)]">
+          <h3 className="text-sm font-semibold text-foreground transition-colors group-hover:text-[var(--brand-strong)]">
             <Resaltado texto={item.titulo} palabras={palabras} />
           </h3>
           {item.tipo === 'manual' && item.nuevo && (
@@ -334,7 +334,7 @@ function Fila({
     </>
   );
   const clase =
-    'group flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring';
+    'group flex w-full items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring';
 
   if (item.tipo === 'link') {
     return (
@@ -350,7 +350,7 @@ function Fila({
 
   const flecha = (
     <ChevronRight
-      className="h-5 w-5 shrink-0 text-[var(--gray-300)] transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-muted-foreground"
+      className="h-4 w-4 shrink-0 text-[var(--gray-300)] transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-muted-foreground"
       aria-hidden
     />
   );
