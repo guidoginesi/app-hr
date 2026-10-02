@@ -206,25 +206,41 @@ function ListaDeTemas({
   );
 }
 
-/** Un tema: su encabezado con el ícono y la lista de lo que tiene. */
+/**
+ * El encabezado de lo que se está viendo —un tema o los resultados—, afuera
+ * de la tarjeta: así se lee como el título de la lista y no como su primera
+ * fila.
+ */
+function Encabezado({ id, icono, titulo, detalle }: { id?: string; icono: ReactNode; titulo: ReactNode; detalle: ReactNode }) {
+  return (
+    <header className="flex items-center gap-3.5">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent text-brand">{icono}</span>
+      <div className="min-w-0">
+        <h2 id={id} className="text-base font-semibold text-foreground">
+          {titulo}
+        </h2>
+        <p className="text-sm text-muted-foreground">{detalle}</p>
+      </div>
+    </header>
+  );
+}
+
+const LISTA = 'divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm';
+
+/** Un tema: su encabezado y, en una tarjeta aparte, lo que tiene. */
 function Tema({ tema, onAbrir }: { tema: TemaDeAyuda; onAbrir: AlAbrir }) {
   return (
     <section
       aria-labelledby={`tema-${tema.id}`}
-      className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm motion-safe:animate-[pow-fade-in_180ms_var(--ease-out)]"
+      className="space-y-4 motion-safe:animate-[pow-fade-in_180ms_var(--ease-out)]"
     >
-      <header className="flex items-center gap-4 border-b border-[var(--border)] px-6 py-5">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent">
-          <IconoDeAyuda nombre={nombreDeIconoDeTema(tema)} className="h-5 w-5 text-brand" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <h2 id={`tema-${tema.id}`} className="text-base font-semibold text-foreground">
-            {tema.nombre}
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">{tema.descripcion}</p>
-        </div>
-      </header>
-      <ul className="divide-y divide-[var(--border)]">
+      <Encabezado
+        id={`tema-${tema.id}`}
+        icono={<IconoDeAyuda nombre={nombreDeIconoDeTema(tema)} className="h-5 w-5" aria-hidden />}
+        titulo={tema.nombre}
+        detalle={tema.descripcion}
+      />
+      <ul className={LISTA}>
         {tema.items.map((item) => (
           <li key={item.id}>
             <Fila item={item} tema={tema} onAbrir={onAbrir} />
@@ -260,14 +276,18 @@ function Resultados({
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
-      <header className="border-b border-[var(--border)] px-6 py-4">
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          {resultados.length} {resultados.length === 1 ? 'resultado' : 'resultados'} para{' '}
-          <span className="font-medium text-foreground">“{consulta}”</span>
-        </p>
-      </header>
-      <ul className="divide-y divide-[var(--border)]">
+    <section className="space-y-4">
+      <Encabezado
+        icono={<Search className="h-5 w-5" aria-hidden />}
+        titulo="Resultados de la búsqueda"
+        detalle={
+          <span aria-live="polite">
+            {resultados.length} {resultados.length === 1 ? 'resultado' : 'resultados'} para{' '}
+            <span className="font-medium text-foreground">“{consulta}”</span>
+          </span>
+        }
+      />
+      <ul className={LISTA}>
         {resultados.map((r) => (
           <li key={`${r.tema.id}:${r.item.id}`}>
             <Fila item={r.item} tema={r.tema} palabras={palabras} fragmento={r.fragmento} conTema onAbrir={onAbrir} />
