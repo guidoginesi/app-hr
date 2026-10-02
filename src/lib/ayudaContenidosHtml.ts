@@ -18,12 +18,20 @@ export function limpiarHtml(html: string): string {
     ],
     allowedAttributes: { a: ['href', 'target', 'rel'] },
     allowedSchemes: ['http', 'https', 'mailto'],
-    // Los links salen siempre a otra pestaña: el portal no se pierde detrás.
+    // Los links de afuera abren en otra pestaña, así el portal no se pierde
+    // detrás. Los del propio portal ("/portal/time-off/new") abren en la misma:
+    // son el paso siguiente, no una consulta al costado.
     transformTags: {
-      a: (tagName, attribs) => ({
-        tagName,
-        attribs: { ...attribs, target: '_blank', rel: 'noopener noreferrer' },
-      }),
+      a: (tagName, attribs) => {
+        const resto = { ...attribs };
+        delete resto.target;
+        delete resto.rel;
+        const interno = /^\/(?!\/)/.test(resto.href ?? '');
+        return {
+          tagName,
+          attribs: interno ? resto : { ...resto, target: '_blank', rel: 'noopener noreferrer' },
+        };
+      },
     },
   }).trim();
 }
