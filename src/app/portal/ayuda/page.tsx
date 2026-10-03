@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { hasReimbursementAccess } from '@/lib/reimbursementAccess';
 import { PortalAyudaLayout } from './PortalAyudaLayout';
-import { ManualIndex, type ManualCard } from '@/components/manual/ManualIndex';
+import type { ManualCard } from '@/components/manual/ManualIndex';
+import { CentroDeAyuda } from '@/components/ayuda/CentroDeAyuda';
+import { armarTemas, contenidosDeAyudaPara } from '@/lib/ayudaContenidosQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,19 +78,25 @@ export default async function PortalAyudaPage() {
   if (!auth || !auth.employee) redirect('/portal/login');
 
   const isRelDep = auth.employee.employment_type === 'dependency';
-  const puedeReintegros = await hasReimbursementAccess(auth.employee.id);
-  const visible = MANUALS.filter(
+  const [puedeReintegros, contenidos] = await Promise.all([
+    hasReimbursementAccess(auth.employee.id),
+    // Lo que carga People desde el admin: beneficios, políticas, formularios.
+    contenidosDeAyudaPara(auth.employee.employment_type),
+  ]);
+  const manuales = MANUALS.filter(
     (m) => (!m.onlyDependency || isRelDep) && (!m.onlyReimbursement || puedeReintegros),
   );
+  // Los manuales del portal son un tema más, así el buscador encuentra todo junto.
+  const temas = armarTemas(contenidos, manuales);
 
   return (
     <PortalAyudaLayout
       employee={auth.employee}
       isLeader={auth.isLeader}
-      description="Cómo funciona cada cosa del portal, paso a paso."
+      description="Beneficios, políticas y cómo usar el portal."
       showBack={false}
     >
-      <ManualIndex manuals={visible} />
+      <CentroDeAyuda temas={temas} />
     </PortalAyudaLayout>
   );
 }

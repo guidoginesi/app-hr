@@ -11,9 +11,15 @@ type RichTextEditorProps = {
 	content: string;
 	onChange: (html: string) => void;
 	placeholder?: string;
+	/**
+	 * Muestra los botones de título (H2 y H3). Los contenidos de Ayuda los
+	 * necesitan para armar una política con secciones; en un mail o un aviso
+	 * sobran, así que el resto de los editores no los ofrece.
+	 */
+	conTitulos?: boolean;
 };
 
-export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, placeholder, conTitulos = false }: RichTextEditorProps) {
 	const editor = useEditor({
 		immediatelyRender: false,
 		extensions: [
@@ -73,6 +79,24 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 		<div className="rounded-lg border border-[var(--border)] bg-white focus-within:border-black focus-within:ring-1 focus-within:ring-black">
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-1 border-b border-[var(--border)] p-2">
+				{conTitulos && (
+					<>
+						{([2, 3] as const).map((level) => (
+							<button
+								key={level}
+								type="button"
+								onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
+								className={`rounded px-2 py-1.5 text-xs font-semibold hover:bg-secondary transition-colors ${
+									editor.isActive('heading', { level }) ? 'bg-secondary text-foreground' : 'text-muted-foreground'
+								}`}
+								title={level === 2 ? 'Título' : 'Subtítulo'}
+							>
+								{level === 2 ? 'Título' : 'Subtítulo'}
+							</button>
+						))}
+						<span className="mx-1 h-5 w-px bg-[var(--border)]" aria-hidden="true" />
+					</>
+				)}
 				{/* Bold */}
 				<button
 					type="button"

@@ -11,7 +11,7 @@ export type ManualCard = {
 /** Un manual es "nuevo" durante sus primeros 14 días. */
 const NEW_DAYS = 14;
 
-function esNuevo(updated: string, today: Date): boolean {
+export function esNuevo(updated: string, today: Date): boolean {
   const [y, m, d] = updated.split('-').map(Number);
   if (!y) return false;
   const diff = (today.getTime() - Date.UTC(y, m - 1, d)) / 86_400_000;
