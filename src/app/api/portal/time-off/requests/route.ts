@@ -5,9 +5,10 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail, logTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType, isHrOnlyApprovalType, isSelfRegisteredType, puedenSuperponerse } from '@/lib/leaveTypes';
-import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline } from '@/lib/leaveCertificates';
+import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline, argentinaDay } from '@/lib/leaveCertificates';
 import { BIRTHDAY_LEAVE_CODE, birthdayWindow, isWithinBirthdayWindow } from '@/lib/birthdayLeave';
 import { diasAusenteEnElAnio } from '@/lib/birthdayBusyDays';
+import { diasEntreFechas } from '@/lib/dateUtils';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
 
 // Regex for UUID format (more permissive than RFC 4122)
@@ -132,13 +133,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tipo de licencia no encontrado' }, { status: 400 });
     }
 
-    // Validate advance notice
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Anticipación, contada desde el día de hoy en Argentina. El servidor corre
+    // en UTC: desde las 21:00 ya está en el día siguiente, y un pedido para el
+    // mismo día rebotaba con "al menos 0 días de anticipación".
+    const daysUntilStart = diasEntreFechas(argentinaDay(), parsed.data.start_date);
     const startDate = parseLocalDate(parsed.data.start_date);
-    const daysUntilStart = Math.floor(
-      (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    );
 
     // La licencia por enfermedad se reporta con el inicio casi siempre ya
     // ocurrido (te enfermás y avisás), así que se exime de la anticipación: si

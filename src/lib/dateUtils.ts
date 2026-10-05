@@ -33,3 +33,12 @@ export function parseLocalDate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
   return new Date(year, month - 1, day);
 }
+
+/**
+ * Días de calendario entre dos fechas YYYY-MM-DD: 0 si son el mismo día,
+ * negativo si `hasta` es anterior. No depende de la zona horaria del proceso:
+ * las dos se interpretan igual, y el redondeo absorbe un cambio de horario.
+ */
+export function diasEntreFechas(desde: string, hasta: string): number {
+  return Math.round((parseLocalDate(hasta).getTime() - parseLocalDate(desde).getTime()) / 86_400_000);
+}
