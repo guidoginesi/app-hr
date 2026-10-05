@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
+import { requireAdminConLegajo } from '@/lib/adminTimeOffAcciones';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
@@ -55,16 +56,31 @@ export async function PUT(
 ) {
   try {
     console.log('PUT /api/admin/time-off/requests/[id] - Starting...');
-    
-    const { isAdmin, user } = await requireAdmin();
+
+    const { id } = await params;
+    const supabase = getSupabaseServer();
+
+    // El chequeo de admin (que ya trae el legajo de quien aprueba, para
+    // approved_by) y la solicitud actual no dependen uno del otro: van en
+    // paralelo. La solicitud trae el código del tipo de licencia en la misma ida.
+    // No se usa nada de ella antes de confirmar que es admin, y los errores
+    // salen en el mismo orden que antes: 401, 400 y 404.
+    const [{ isAdmin, user, adminEmployee }, { data: currentRequest, error: fetchError }] =
+      await Promise.all([
+        requireAdminConLegajo(),
+        supabase
+          .from('leave_requests')
+          .select('*, leave_type:leave_types(code)')
+          .eq('id', id)
+          .single(),
+      ]);
     console.log('Auth check:', { isAdmin, userId: user?.id });
-    
+
     if (!isAdmin || !user) {
       console.log('Unauthorized - not admin or no user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
     console.log('Request ID:', id);
     const body = await req.json();
     const parsed = UpdateRequestSchema.safeParse(body);
@@ -76,16 +92,6 @@ export async function PUT(
       );
     }
 
-    const supabase = getSupabaseServer();
-
-    // Get the current request
-    console.log('Fetching leave request with ID:', id);
-    const { data: currentRequest, error: fetchError } = await supabase
-      .from('leave_requests')
-      .select('*')
-      .eq('id', id)
-      .single();
-
     console.log('Fetch result:', { currentRequest, fetchError });
 
     if (fetchError || !currentRequest) {
@@ -93,17 +99,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // Get admin's employee record for approved_by
-    const { data: adminEmployee } = await supabase
-      .from('employees')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
     const updateData: Record<string, unknown> = { 
       ...parsed.data,
       updated_at: new Date().toISOString(),
     };
+
+    // Qué hacer con el saldo. Se decide con la solicitud como estaba antes del
+    // cambio, pero se escribe recién después de actualizarla: si el update de
+    // la solicitud falla, el saldo no se mueve.
+    let balanceMove: 'approve' | 'release' | null = null;
+    const startYear = new Date(currentRequest.start_date).getFullYear();
 
     // Handle status changes
     if (parsed.data.status) {
@@ -134,79 +139,38 @@ export async function PUT(
       }
 
       // Update balance based on status change (skip for unlimited types)
-      const { data: leaveTypeForBalance } = await supabase
-        .from('leave_types')
-        .select('code')
-        .eq('id', currentRequest.leave_type_id)
-        .single();
-
+      const leaveTypeForBalance = currentRequest.leave_type;
       const tracksBalance = leaveTypeForBalance && !isUnlimitedLeaveType(leaveTypeForBalance.code);
-      const startYear = new Date(currentRequest.start_date).getFullYear();
 
       if (tracksBalance && isPendingStatus && newStatus === 'approved') {
         // Move from pending to used
-        const { data: balance, error: balanceFetchError } = await supabase
-          .from('leave_balances')
-          .select('pending_days, used_days')
-          .eq('employee_id', currentRequest.employee_id)
-          .eq('leave_type_id', currentRequest.leave_type_id)
-          .eq('year', startYear)
-          .single();
-
-        console.log('Balance fetch result:', { balance, error: balanceFetchError, startYear });
-
-        if (balance) {
-          const { error: balanceError } = await supabase
-            .from('leave_balances')
-            .update({
-              pending_days: Math.max(0, balance.pending_days - currentRequest.days_requested),
-              used_days: balance.used_days + currentRequest.days_requested,
-            })
-            .eq('employee_id', currentRequest.employee_id)
-            .eq('leave_type_id', currentRequest.leave_type_id)
-            .eq('year', startYear);
-
-          if (balanceError) {
-            console.error('Error updating balance on approve:', balanceError);
-          }
-        } else {
-          console.log('No balance found for this request - skipping balance update');
-        }
+        balanceMove = 'approve';
       } else if (tracksBalance && isPendingStatus && (isRejectedStatus || newStatus === 'cancelled')) {
         // Remove from pending
-        const { data: balance } = await supabase
-          .from('leave_balances')
-          .select('pending_days')
-          .eq('employee_id', currentRequest.employee_id)
-          .eq('leave_type_id', currentRequest.leave_type_id)
-          .eq('year', startYear)
-          .single();
-
-        if (balance) {
-          const { error: balanceError } = await supabase
-            .from('leave_balances')
-            .update({
-              pending_days: Math.max(0, balance.pending_days - currentRequest.days_requested),
-            })
-            .eq('employee_id', currentRequest.employee_id)
-            .eq('leave_type_id', currentRequest.leave_type_id)
-            .eq('year', startYear);
-
-          if (balanceError) {
-            console.error('Error updating balance on reject:', balanceError);
-          }
-        }
+        balanceMove = 'release';
       }
     }
 
     console.log('Updating leave request:', id, 'with data:', updateData);
 
-    const { data, error } = await supabase
-      .from('leave_requests')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    // El saldo se LEE en paralelo con el update de la solicitud.
+    const [{ data, error }, { data: balance, error: balanceFetchError }] = await Promise.all([
+      supabase
+        .from('leave_requests')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single(),
+      balanceMove
+        ? supabase
+            .from('leave_balances')
+            .select('pending_days, used_days')
+            .eq('employee_id', currentRequest.employee_id)
+            .eq('leave_type_id', currentRequest.leave_type_id)
+            .eq('year', startYear)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
 
     if (error) {
       console.error('Error updating leave request:', error);
@@ -215,10 +179,53 @@ export async function PUT(
 
     console.log('Leave request updated successfully:', data);
 
-    // Si cambiaron fechas o estado, el evento del calendario tiene que seguirlas.
-    sincronizarLicencia(id).catch((err) => console.error('[calendar] al editar:', err));
+    if (balanceMove === 'approve') {
+      console.log('Balance fetch result:', { balance, error: balanceFetchError, startYear });
+    }
 
-    return NextResponse.json(data);
+    // Con la solicitud ya actualizada se mueve el saldo y, en paralelo, se
+    // relee la fila de la vista (nombres de quien aprobó, tipo de licencia),
+    // para que la pantalla actualice la fila en el lugar sin recargar la lista.
+    const [balanceResult, { data: detalle }] = await Promise.all([
+      balanceMove && balance
+        ? supabase
+            .from('leave_balances')
+            .update(
+              balanceMove === 'approve'
+                ? {
+                    pending_days: Math.max(0, balance.pending_days - currentRequest.days_requested),
+                    used_days: balance.used_days + currentRequest.days_requested,
+                  }
+                : {
+                    pending_days: Math.max(0, balance.pending_days - currentRequest.days_requested),
+                  }
+            )
+            .eq('employee_id', currentRequest.employee_id)
+            .eq('leave_type_id', currentRequest.leave_type_id)
+            .eq('year', startYear)
+        : Promise.resolve(null),
+      supabase.from('leave_requests_with_details').select('*').eq('id', id).maybeSingle(),
+    ]);
+
+    if (balanceMove === 'approve' && !balance) {
+      console.log('No balance found for this request - skipping balance update');
+    }
+    if (balanceResult?.error) {
+      console.error(
+        balanceMove === 'approve' ? 'Error updating balance on approve:' : 'Error updating balance on reject:',
+        balanceResult.error
+      );
+    }
+
+    // Si cambiaron fechas o estado, el evento del calendario tiene que seguirlas.
+    // Corre después de responder (after), así no se corta en Vercel.
+    after(() =>
+      sincronizarLicencia(id).catch((err) => console.error('[calendar] al editar:', err))
+    );
+
+    // Se suman los campos de la vista a la fila de leave_requests de siempre:
+    // nada de lo que ya devolvía cambia de nombre ni desaparece.
+    return NextResponse.json(detalle ? { ...data, ...detalle } : data);
   } catch (error: any) {
     console.error('Error in PUT /api/admin/time-off/requests/[id]:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

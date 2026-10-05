@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
@@ -101,6 +101,9 @@ export async function POST(req: NextRequest) {
     if (!auth?.employee) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    // Se guarda aparte para usarlo dentro de after(), donde TypeScript ya no
+    // recuerda que auth.employee no es null.
+    const empleado = auth.employee;
 
     const body = await req.json();
     const parsed = CreateRequestSchema.safeParse(body);
@@ -122,12 +125,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get leave type details
-    const { data: leaveType, error: typeError } = await supabase
-      .from('leave_types')
-      .select('*')
-      .eq('id', parsed.data.leave_type_id)
-      .single();
+    // Las lecturas que validan la solicitud no dependen entre sí, así que van en
+    // una sola ida: el tipo, el saldo del año de inicio, las superposiciones y los
+    // días ausente del año (éstos sólo los usa el día de cumpleaños; para el resto
+    // se descartan). Los errores se siguen evaluando abajo en el mismo orden que
+    // antes: que el resto ya esté leído no cambia cuál gana.
+    const startYear = parseLocalDate(parsed.data.start_date).getFullYear();
+    const [
+      { data: leaveType, error: typeError },
+      { data: balance },
+      { data: overlapping },
+      diasAusente,
+    ] = await Promise.all([
+      supabase.from('leave_types').select('*').eq('id', parsed.data.leave_type_id).single(),
+      supabase
+        .from('leave_balances')
+        .select('*')
+        .eq('employee_id', empleado.id)
+        .eq('leave_type_id', parsed.data.leave_type_id)
+        .eq('year', startYear)
+        .single(),
+      // Dos licencias no comparten fechas, salvo los pares que la regla habilita
+      // (ver puedenSuperponerse). Se excluyen las rechazadas y canceladas.
+      supabase
+        .from('leave_requests')
+        .select('id, leave_type_id, leave_types(code)')
+        .eq('employee_id', empleado.id)
+        .not('status', 'in', '("cancelled","rejected","rejected_leader","rejected_hr")')
+        .lte('start_date', parsed.data.end_date)
+        .gte('end_date', parsed.data.start_date),
+      // Si falla, el error se guarda y se relanza sólo si el tipo es cumpleaños,
+      // como antes: a las demás licencias no las puede tumbar una lectura que no usan.
+      diasAusenteEnElAnio(empleado.id, Number(parsed.data.start_date.slice(0, 4))).then(
+        (dias) => ({ ok: true as const, dias }),
+        (error: unknown) => ({ ok: false as const, error }),
+      ),
+    ]);
 
     if (typeError || !leaveType) {
       return NextResponse.json({ error: 'Tipo de licencia no encontrado' }, { status: 400 });
@@ -153,7 +186,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate study leave requires is_studying
-    if (leaveType.code === 'study' && !auth.employee.is_studying) {
+    if (leaveType.code === 'study' && !empleado.is_studying) {
       return NextResponse.json(
         { error: 'No tienes habilitada la licencia por estudio. Contacta a HR.' },
         { status: 400 }
@@ -179,7 +212,7 @@ export async function POST(req: NextRequest) {
     // El día de cumpleaños sólo se puede tomar dentro de su ventana: del día del
     // cumple (o el próximo hábil disponible) hasta 7 días corridos después.
     if (leaveType.code === BIRTHDAY_LEAVE_CODE) {
-      if (!auth.employee.birth_date) {
+      if (!empleado.birth_date) {
         return NextResponse.json(
           { error: 'No tenés fecha de nacimiento cargada. Escribinos por Consultas para completarla.' },
           { status: 400 },
@@ -188,12 +221,13 @@ export async function POST(req: NextRequest) {
       if (parsed.data.days_requested > 1) {
         return NextResponse.json({ error: 'El día de cumpleaños es un solo día.' }, { status: 400 });
       }
+      if (!diasAusente.ok) throw diasAusente.error;
 
       const ventana = birthdayWindow({
-        birthDate: auth.employee.birth_date,
+        birthDate: empleado.birth_date,
         year: Number(parsed.data.start_date.slice(0, 4)),
         // Se excluye la propia solicitud que se está creando: todavía no existe.
-        busyDays: await diasAusenteEnElAnio(auth.employee.id, Number(parsed.data.start_date.slice(0, 4))),
+        busyDays: diasAusente.dias,
       });
 
       if (
@@ -235,37 +269,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Check balance (skip for unlimited / notification-only types)
-    const startYear = parseLocalDate(parsed.data.start_date).getFullYear();
-    if (!isUnlimitedLeaveType(leaveType.code)) {
-      const { data: balance } = await supabase
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', auth.employee.id)
-        .eq('leave_type_id', parsed.data.leave_type_id)
-        .eq('year', startYear)
-        .single();
-
-      if (balance) {
-        const available =
-          balance.entitled_days + (balance.bonus_days ?? 0) + balance.carried_over - balance.used_days - balance.pending_days;
-        if (parsed.data.days_requested > available) {
-          return NextResponse.json(
-            { error: `No tienes suficientes días disponibles. Disponible: ${available}` },
-            { status: 400 }
-          );
-        }
+    if (!isUnlimitedLeaveType(leaveType.code) && balance) {
+      const available =
+        balance.entitled_days + (balance.bonus_days ?? 0) + balance.carried_over - balance.used_days - balance.pending_days;
+      if (parsed.data.days_requested > available) {
+        return NextResponse.json(
+          { error: `No tienes suficientes días disponibles. Disponible: ${available}` },
+          { status: 400 }
+        );
       }
     }
-
-    // Dos licencias no comparten fechas, salvo los pares que la regla habilita
-    // (ver puedenSuperponerse). Se excluyen las rechazadas y canceladas.
-    const { data: overlapping } = await supabase
-      .from('leave_requests')
-      .select('id, leave_type_id, leave_types(code)')
-      .eq('employee_id', auth.employee.id)
-      .not('status', 'in', '("cancelled","rejected","rejected_leader","rejected_hr")')
-      .lte('start_date', parsed.data.end_date)
-      .gte('end_date', parsed.data.start_date);
 
     const blockingOverlap = (overlapping ?? []).filter((r) => {
       const lt = r.leave_types;
@@ -283,16 +296,14 @@ export async function POST(req: NextRequest) {
     // Get employee's manager for two-level approval (not required for HR-only types)
     const hrOnlyApproval = isHrOnlyApprovalType(leaveType.code);
 
-    const { data: employee } = await supabase
-      .from('employees')
-      .select('manager_id')
-      .eq('id', auth.employee.id)
-      .single();
+    // El legajo ya viene completo en auth.employee (select('*')): no hace falta
+    // volver a pedir manager_id.
+    const managerId = empleado.manager_id ?? null;
 
     // El líder es obligatorio sólo cuando hace falta que alguien apruebe. La
     // licencia por enfermedad no se aprueba, así que no lo exige: alguien sin
     // líder cargado igual puede reportar que está enfermo (sólo no se notifica).
-    if (!hrOnlyApproval && !selfRegistered && !employee?.manager_id) {
+    if (!hrOnlyApproval && !selfRegistered && !managerId) {
       return NextResponse.json(
         { error: 'No tienes un líder asignado. Contacta a HR para configurar tu manager.' },
         { status: 400 }
@@ -308,9 +319,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('leave_requests')
       .insert({
-        employee_id: auth.employee.id,
+        employee_id: empleado.id,
         status: initialStatus,
-        leader_id: hrOnlyApproval ? null : employee?.manager_id ?? null,
+        leader_id: hrOnlyApproval ? null : managerId,
         ...parsed.data,
       })
       .select()
@@ -321,37 +332,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Los tipos autorregistrados —enfermedad— nacen aprobados y no pasan por
-    // ninguna aprobación después: si el evento no se crea acá, no se crea nunca.
-    if (initialStatus === 'approved') {
-      sincronizarLicencia(data.id).catch((err) => console.error('[calendar] al registrar:', err));
-    }
+    // Lo que depende de que la solicitud exista va recién ahora, y en una sola
+    // ida: el saldo (nunca antes del insert: si el insert falla, el saldo no se
+    // mueve) y las semanas remotas (su FK a leave_requests no es diferible).
+    const escriturasPosteriores: PromiseLike<unknown>[] = [];
 
-    // Update pending days in balance (skip for unlimited types)
+    // Update pending days in balance (skip for unlimited types). El saldo se
+    // vuelve a leer acá, después del insert, como antes: el leído al validar
+    // puede haber cambiado mientras tanto (otra solicitud, una aprobación o un
+    // rechazo que mueve pending_days) y escribir con ese valor lo pisaría.
     if (!isUnlimitedLeaveType(leaveType.code)) {
-      const { data: balance } = await supabase
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', auth.employee.id)
-        .eq('leave_type_id', parsed.data.leave_type_id)
-        .eq('year', startYear)
-        .single();
+      escriturasPosteriores.push(
+        (async () => {
+          const { data: saldoActual } = await supabase
+            .from('leave_balances')
+            .select('*')
+            .eq('employee_id', empleado.id)
+            .eq('leave_type_id', parsed.data.leave_type_id)
+            .eq('year', startYear)
+            .single();
 
-      if (balance) {
-        await supabase
-          .from('leave_balances')
-          .update({
-            pending_days: balance.pending_days + parsed.data.days_requested,
-          })
-          .eq('id', balance.id);
-      } else {
-        await supabase.from('leave_balances').insert({
-          employee_id: auth.employee.id,
-          leave_type_id: parsed.data.leave_type_id,
-          year: startYear,
-          pending_days: parsed.data.days_requested,
-        });
-      }
+          if (saldoActual) {
+            await supabase
+              .from('leave_balances')
+              .update({
+                pending_days: saldoActual.pending_days + parsed.data.days_requested,
+              })
+              .eq('id', saldoActual.id);
+          } else {
+            await supabase.from('leave_balances').insert({
+              employee_id: empleado.id,
+              leave_type_id: parsed.data.leave_type_id,
+              year: startYear,
+              pending_days: parsed.data.days_requested,
+            });
+          }
+        })()
+      );
     }
 
     // Handle remote work weeks
@@ -367,7 +384,7 @@ export async function POST(req: NextRequest) {
         weekEnd.setDate(weekEnd.getDate() + 6);
 
         weeks.push({
-          employee_id: auth.employee.id,
+          employee_id: empleado.id,
           year: currentDate.getFullYear(),
           week_number: weekNumber,
           week_start_date: weekStart.toISOString().split('T')[0],
@@ -379,230 +396,272 @@ export async function POST(req: NextRequest) {
       }
 
       if (weeks.length > 0) {
-        await supabase.from('remote_work_weeks').insert(weeks);
+        escriturasPosteriores.push(supabase.from('remote_work_weeks').insert(weeks));
       }
     }
 
-    // Send email notifications
-    const formatDate = (date: string) => {
-      return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
-    };
+    await Promise.all(escriturasPosteriores);
 
-    const emailVariables = {
-      nombre: `${auth.employee.first_name}`,
-      fecha_inicio: formatDate(parsed.data.start_date),
-      fecha_fin: formatDate(parsed.data.end_date),
-      cantidad_dias: String(parsed.data.days_requested),
-      unidad_tiempo: leaveType.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
-      tipo_licencia: leaveType.name,
-    };
+    // Calendario, mails y notificaciones van después de responder: la persona ve
+    // su solicitud creada sin esperar a que se busquen los destinatarios. after()
+    // además mantiene viva la función en Vercel hasta que terminan los envíos.
+    after(async () => {
+      try {
+        const envios: Promise<unknown>[] = [];
 
-    // Email + in-app to employee: request submitted
-    const employeeEmail = auth.employee.work_email || auth.employee.personal_email;
-    if (employeeEmail) {
-      // La plantilla genérica habla de "solicitud", de revisión del líder y de
-      // avisar "cuando esté aprobada". En una licencia auto-registrada nada de
-      // eso pasa, así que va una plantilla propia con lo que sí ocurre: quedó
-      // vigente, se avisó al líder, y falta el certificado con su fecha límite.
-      const certRule = leaveCertRule(leaveType.code);
-      const vencimiento =
-        selfRegistered && certRule
-          ? leaveCertDeadline({
-              leaveTypeCode: leaveType.code,
-              startDate: parsed.data.start_date,
-              endDate: parsed.data.end_date,
-            })
-          : null;
+        // Los tipos autorregistrados —enfermedad— nacen aprobados y no pasan por
+        // ninguna aprobación después: si el evento no se crea acá, no se crea nunca.
+        if (initialStatus === 'approved') {
+          envios.push(sincronizarLicencia(data.id).catch((err) => console.error('[calendar] al registrar:', err)));
+        }
 
-      sendTimeOffEmail({
-        templateKey: selfRegistered ? 'time_off_sick_registered' : 'time_off_request_submitted',
-        to: employeeEmail,
-        variables: vencimiento
-          ? {
-              ...emailVariables,
-              fecha_vencimiento: formatDate(vencimiento),
-              plazo_certificado: String(certRule!.businessDays),
-            }
-          : emailVariables,
-        leaveRequestId: data.id,
-      }).catch((err) => console.error('Error sending request submitted email:', err));
-    }
-    // In-app notification to the employee who submitted
-    if (auth.user?.id) {
-      const submittedBody = selfRegistered
-        ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Acordate de subir el certificado médico dentro de los ${leaveCertRule(leaveType.code)?.businessDays ?? 3} días hábiles.`
-        : hrOnlyApproval
-          ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
-          : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`;
-      createSystemNotification({
-        userIds: [auth.user.id],
-        title: selfRegistered ? 'Licencia por enfermedad registrada' : 'Solicitud de licencia enviada',
-        body: submittedBody,
-        priority: 'info',
-        deepLink: '/portal/time-off',
-        metadata: { entity_type: 'leave_request', entity_id: data.id },
-        dedupeKey: `leave_request:${data.id}:submitted`,
-      }).catch((err) => console.error('Error creating employee submission in-app notification:', err));
-    }
+        // Send email notifications
+        const formatDate = (date: string) => {
+          return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+        };
 
-    if (selfRegistered) {
-      // Licencia por enfermedad: al líder se lo NOTIFICA para que organice la
-      // cobertura. Ve la ausencia y los días, nunca el motivo ni el certificado.
-      if (employee?.manager_id) {
-        const managerResult = await withRetry(async () =>
-          supabase
-            .from('employees')
-            .select('first_name, personal_email, work_email, user_id')
-            .eq('id', employee.manager_id)
-            .single()
-        ).catch(() => ({ data: null as null }));
-        const manager = managerResult?.data ?? null;
+        const emailVariables = {
+          nombre: `${empleado.first_name}`,
+          fecha_inicio: formatDate(parsed.data.start_date),
+          fecha_fin: formatDate(parsed.data.end_date),
+          cantidad_dias: String(parsed.data.days_requested),
+          unidad_tiempo: leaveType.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
+          tipo_licencia: leaveType.name,
+        };
 
-        if (manager) {
-          const managerEmail = manager.work_email || manager.personal_email;
-          if (managerEmail) {
+        // Email + in-app to employee: request submitted
+        const employeeEmail = empleado.work_email || empleado.personal_email;
+        if (employeeEmail) {
+          // La plantilla genérica habla de "solicitud", de revisión del líder y de
+          // avisar "cuando esté aprobada". En una licencia auto-registrada nada de
+          // eso pasa, así que va una plantilla propia con lo que sí ocurre: quedó
+          // vigente, se avisó al líder, y falta el certificado con su fecha límite.
+          const certRule = leaveCertRule(leaveType.code);
+          const vencimiento =
+            selfRegistered && certRule
+              ? leaveCertDeadline({
+                  leaveTypeCode: leaveType.code,
+                  startDate: parsed.data.start_date,
+                  endDate: parsed.data.end_date,
+                })
+              : null;
+
+          envios.push(
             sendTimeOffEmail({
-              templateKey: 'time_off_sick_leader_notification',
-              to: managerEmail,
-              variables: {
-                nombre_lider: manager.first_name,
-                nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
-                ...emailVariables,
-              },
+              templateKey: selfRegistered ? 'time_off_sick_registered' : 'time_off_request_submitted',
+              to: employeeEmail,
+              variables: vencimiento
+                ? {
+                    ...emailVariables,
+                    fecha_vencimiento: formatDate(vencimiento),
+                    plazo_certificado: String(certRule!.businessDays),
+                  }
+                : emailVariables,
               leaveRequestId: data.id,
-            }).catch((err) => console.error('Error sending sick-leave leader notification email:', err));
-          }
-
-          if (manager.user_id) {
+            }).catch((err) => console.error('Error sending request submitted email:', err))
+          );
+        }
+        // In-app notification to the employee who submitted
+        if (auth.user?.id) {
+          const submittedBody = selfRegistered
+            ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Acordate de subir el certificado médico dentro de los ${leaveCertRule(leaveType.code)?.businessDays ?? 3} días hábiles.`
+            : hrOnlyApproval
+              ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
+              : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`;
+          envios.push(
             createSystemNotification({
-              userIds: [manager.user_id],
-              title: 'Licencia por enfermedad en tu equipo',
-              body: `${auth.employee.first_name} ${auth.employee.last_name} está de licencia por enfermedad del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} (${parsed.data.days_requested} día(s)).`,
+              userIds: [auth.user.id],
+              title: selfRegistered ? 'Licencia por enfermedad registrada' : 'Solicitud de licencia enviada',
+              body: submittedBody,
               priority: 'info',
-              deepLink: '/portal/team',
+              deepLink: '/portal/time-off',
               metadata: { entity_type: 'leave_request', entity_id: data.id },
-              dedupeKey: `leave_request:${data.id}:sick_leader_notified`,
-            }).catch((err) => console.error('Error creating sick-leave leader in-app notification:', err));
-          }
-        }
-      }
-    } else if (hrOnlyApproval) {
-      // Notify HR directly — no leader step
-      const { data: admins } = await supabase.from('admins').select('user_id').limit(5);
-
-      if (admins && admins.length > 0) {
-        const adminUserIds = admins.map((a) => a.user_id);
-        const { data: hrEmployees } = await supabase
-          .from('employees')
-          .select('personal_email, work_email')
-          .in('user_id', adminUserIds);
-
-        for (const hr of hrEmployees || []) {
-          const hrEmail = hr.work_email || hr.personal_email;
-          if (hrEmail) {
-            sendTimeOffEmail({
-              templateKey: 'time_off_hr_notification',
-              to: hrEmail,
-              variables: {
-                nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
-                nombre_lider: '—',
-                ...emailVariables,
-              },
-              leaveRequestId: data.id,
-            }).catch((err) => console.error('Error sending HR notification email:', err));
-          }
+              dedupeKey: `leave_request:${data.id}:submitted`,
+            }).catch((err) => console.error('Error creating employee submission in-app notification:', err))
+          );
         }
 
-        createSystemNotification({
-          userIds: adminUserIds,
-          title: 'Notificación de trabajo fuera de domicilio',
-          body: `${auth.employee.first_name} ${auth.employee.last_name} registró ${parsed.data.days_requested} día(s) de ${leaveType.name} que requiere tu revisión.`,
-          priority: 'info',
-          deepLink: '/admin/time-off/requests',
-          metadata: { entity_type: 'leave_request', entity_id: data.id },
-          dedupeKey: `leave_request:${data.id}:pending_hr`,
-        }).catch((err) => console.error('Error creating HR in-app notification:', err));
-      }
-    } else if (employee?.manager_id) {
-      // Email to leader: new request to approve (with retry for transient DB failures)
-      const managerResult = await withRetry(async () =>
-        supabase
-          .from('employees')
-          .select('first_name, personal_email, work_email, user_id')
-          .eq('id', employee.manager_id)
-          .single()
-      ).catch(() => ({ data: null as null }));
-      const manager = managerResult?.data ?? null;
+        if (selfRegistered) {
+          // Licencia por enfermedad: al líder se lo NOTIFICA para que organice la
+          // cobertura. Ve la ausencia y los días, nunca el motivo ni el certificado.
+          if (managerId) {
+            const managerResult = await withRetry(async () =>
+              supabase
+                .from('employees')
+                .select('first_name, personal_email, work_email, user_id')
+                .eq('id', managerId)
+                .single()
+            ).catch(() => ({ data: null as null }));
+            const manager = managerResult?.data ?? null;
 
-      if (!manager) {
-        console.error(
-          `[TimeOff] manager_id=${employee.manager_id} not found in employees for leave_request=${data.id}`
-        );
-        logTimeOffEmail({
-          leaveRequestId: data.id,
-          recipientEmail: 'unknown',
-          templateKey: 'time_off_leader_notification',
-          subject: 'ERROR: manager not found',
-          body: '',
-          error: `manager_id=${employee.manager_id} not found in employees table`,
-        }).catch(() => {});
-      }
+            if (manager) {
+              const managerEmail = manager.work_email || manager.personal_email;
+              if (managerEmail) {
+                envios.push(
+                  sendTimeOffEmail({
+                    templateKey: 'time_off_sick_leader_notification',
+                    to: managerEmail,
+                    variables: {
+                      nombre_lider: manager.first_name,
+                      nombre_colaborador: `${empleado.first_name} ${empleado.last_name}`,
+                      ...emailVariables,
+                    },
+                    leaveRequestId: data.id,
+                  }).catch((err) => console.error('Error sending sick-leave leader notification email:', err))
+                );
+              }
 
-      if (manager) {
-        let managerEmail: string | null = manager.work_email || manager.personal_email;
+              if (manager.user_id) {
+                envios.push(
+                  createSystemNotification({
+                    userIds: [manager.user_id],
+                    title: 'Licencia por enfermedad en tu equipo',
+                    body: `${empleado.first_name} ${empleado.last_name} está de licencia por enfermedad del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} (${parsed.data.days_requested} día(s)).`,
+                    priority: 'info',
+                    deepLink: '/portal/team',
+                    metadata: { entity_type: 'leave_request', entity_id: data.id },
+                    dedupeKey: `leave_request:${data.id}:sick_leader_notified`,
+                  }).catch((err) => console.error('Error creating sick-leave leader in-app notification:', err))
+                );
+              }
+            }
+          }
+        } else if (hrOnlyApproval) {
+          // Notify HR directly — no leader step
+          const { data: admins } = await supabase.from('admins').select('user_id').limit(5);
 
-        if (!managerEmail && manager.user_id) {
-          const { data: authUser } = await supabase.auth.admin.getUserById(manager.user_id);
-          if (authUser?.user?.email) {
-            managerEmail = authUser.user.email;
-            console.warn(
-              `[TimeOff] Manager ${employee.manager_id} has no work/personal email — falling back to auth email for leave_request=${data.id}`
+          if (admins && admins.length > 0) {
+            const adminUserIds = admins.map((a) => a.user_id);
+            const { data: hrEmployees } = await supabase
+              .from('employees')
+              .select('personal_email, work_email')
+              .in('user_id', adminUserIds);
+
+            for (const hr of hrEmployees || []) {
+              const hrEmail = hr.work_email || hr.personal_email;
+              if (hrEmail) {
+                envios.push(
+                  sendTimeOffEmail({
+                    templateKey: 'time_off_hr_notification',
+                    to: hrEmail,
+                    variables: {
+                      nombre_colaborador: `${empleado.first_name} ${empleado.last_name}`,
+                      nombre_lider: '—',
+                      ...emailVariables,
+                    },
+                    leaveRequestId: data.id,
+                  }).catch((err) => console.error('Error sending HR notification email:', err))
+                );
+              }
+            }
+
+            envios.push(
+              createSystemNotification({
+                userIds: adminUserIds,
+                title: 'Notificación de trabajo fuera de domicilio',
+                body: `${empleado.first_name} ${empleado.last_name} registró ${parsed.data.days_requested} día(s) de ${leaveType.name} que requiere tu revisión.`,
+                priority: 'info',
+                deepLink: '/admin/time-off/requests',
+                metadata: { entity_type: 'leave_request', entity_id: data.id },
+                dedupeKey: `leave_request:${data.id}:pending_hr`,
+              }).catch((err) => console.error('Error creating HR in-app notification:', err))
             );
           }
+        } else if (managerId) {
+          // Email to leader: new request to approve (with retry for transient DB failures)
+          const managerResult = await withRetry(async () =>
+            supabase
+              .from('employees')
+              .select('first_name, personal_email, work_email, user_id')
+              .eq('id', managerId)
+              .single()
+          ).catch(() => ({ data: null as null }));
+          const manager = managerResult?.data ?? null;
+
+          if (!manager) {
+            console.error(
+              `[TimeOff] manager_id=${managerId} not found in employees for leave_request=${data.id}`
+            );
+            envios.push(
+              logTimeOffEmail({
+                leaveRequestId: data.id,
+                recipientEmail: 'unknown',
+                templateKey: 'time_off_leader_notification',
+                subject: 'ERROR: manager not found',
+                body: '',
+                error: `manager_id=${managerId} not found in employees table`,
+              }).catch(() => {})
+            );
+          }
+
+          if (manager) {
+            let managerEmail: string | null = manager.work_email || manager.personal_email;
+
+            if (!managerEmail && manager.user_id) {
+              const { data: authUser } = await supabase.auth.admin.getUserById(manager.user_id);
+              if (authUser?.user?.email) {
+                managerEmail = authUser.user.email;
+                console.warn(
+                  `[TimeOff] Manager ${managerId} has no work/personal email — falling back to auth email for leave_request=${data.id}`
+                );
+              }
+            }
+
+            if (managerEmail) {
+              envios.push(
+                sendTimeOffEmail({
+                  templateKey: 'time_off_leader_notification',
+                  to: managerEmail,
+                  variables: {
+                    nombre_lider: manager.first_name,
+                    nombre_colaborador: `${empleado.first_name} ${empleado.last_name}`,
+                    ...emailVariables,
+                  },
+                  leaveRequestId: data.id,
+                }).catch((err) => console.error('Error sending leader notification email:', err))
+              );
+            } else {
+              console.error(
+                `[TimeOff] Cannot notify leader ${managerId}: no email found anywhere for leave_request=${data.id}`
+              );
+              envios.push(
+                logTimeOffEmail({
+                  leaveRequestId: data.id,
+                  recipientEmail: 'unknown',
+                  templateKey: 'time_off_leader_notification',
+                  subject: 'ERROR: no email available for leader',
+                  body: '',
+                  error: `manager_id=${managerId} has no work_email, personal_email, or auth email`,
+                }).catch(() => {})
+              );
+            }
+
+            if (manager.user_id) {
+              envios.push(
+                createSystemNotification({
+                  userIds: [manager.user_id],
+                  title: 'Nueva solicitud de licencia pendiente',
+                  body: `${empleado.first_name} ${empleado.last_name} solicitó ${parsed.data.days_requested} día(s) de ${leaveType.name}.`,
+                  priority: 'info',
+                  deepLink: '/portal/team',
+                  metadata: { entity_type: 'leave_request', entity_id: data.id },
+                  dedupeKey: `leave_request:${data.id}:pending_leader`,
+                }).catch((err) => console.error('Error creating leader in-app notification:', err))
+              );
+            }
+          }
         }
 
-        if (managerEmail) {
-          sendTimeOffEmail({
-            templateKey: 'time_off_leader_notification',
-            to: managerEmail,
-            variables: {
-              nombre_lider: manager.first_name,
-              nombre_colaborador: `${auth.employee.first_name} ${auth.employee.last_name}`,
-              ...emailVariables,
-            },
-            leaveRequestId: data.id,
-          }).catch((err) => console.error('Error sending leader notification email:', err));
-        } else {
-          console.error(
-            `[TimeOff] Cannot notify leader ${employee.manager_id}: no email found anywhere for leave_request=${data.id}`
-          );
-          logTimeOffEmail({
-            leaveRequestId: data.id,
-            recipientEmail: 'unknown',
-            templateKey: 'time_off_leader_notification',
-            subject: 'ERROR: no email available for leader',
-            body: '',
-            error: `manager_id=${employee.manager_id} has no work_email, personal_email, or auth email`,
-          }).catch(() => {});
-        }
-
-        if (manager.user_id) {
-          createSystemNotification({
-            userIds: [manager.user_id],
-            title: 'Nueva solicitud de licencia pendiente',
-            body: `${auth.employee.first_name} ${auth.employee.last_name} solicitó ${parsed.data.days_requested} día(s) de ${leaveType.name}.`,
-            priority: 'info',
-            deepLink: '/portal/team',
-            metadata: { entity_type: 'leave_request', entity_id: data.id },
-            dedupeKey: `leave_request:${data.id}:pending_leader`,
-          }).catch((err) => console.error('Error creating leader in-app notification:', err));
-        }
+        // Cada envío ya registra su propio error: acá sólo se espera a que terminen.
+        await Promise.all(envios);
+      } catch (err) {
+        console.error('Error notifying new leave request in POST /api/portal/time-off/requests:', err);
       }
-    }
+    });
 
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {

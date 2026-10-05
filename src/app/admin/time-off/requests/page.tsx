@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { TimeOffLayout } from '../TimeOffLayout';
 import { Button } from '@pow/ui/components/ui/button';
@@ -114,6 +114,10 @@ export default function TimeOffRequestsPage() {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  // Filas con un aprobar o rechazar en vuelo. Es un conjunto y no un solo id
+  // porque la tabla queda visible mientras tanto: se puede accionar otra fila
+  // y ninguna tiene que perder el loading de su botón hasta que vuelva su PUT.
+  const [enVuelo, setEnVuelo] = useState<ReadonlySet<string>>(() => new Set());
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -136,6 +140,10 @@ export default function TimeOffRequestsPage() {
   const [novExpandedRow, setNovExpandedRow] = useState<string | null>(null);
 
   const currentYear = new Date().getFullYear();
+
+  // Numera las cargas de la lista: si llegan dos respuestas, sólo vale la del
+  // último pedido (un cambio de filtro no puede pisarse con una recarga vieja).
+  const ultimaCargaDeSolicitudes = useRef(0);
 
   useEffect(() => { fetchData(); }, [statusFilter, typeFilter, dateFrom, dateTo]);
 
@@ -160,14 +168,20 @@ export default function TimeOffRequestsPage() {
     if (activeTab === 'novedades') fetchNovedades();
   }, [activeTab, fetchNovedades]);
 
+  function filtrosDeSolicitudes() {
+    const params = new URLSearchParams();
+    if (statusFilter) params.set('status', statusFilter);
+    if (typeFilter) params.set('leave_type_id', typeFilter);
+    if (dateFrom) params.set('from_date', dateFrom);
+    if (dateTo) params.set('to_date', dateTo);
+    return params;
+  }
+
   async function fetchData() {
     setLoading(true);
+    const carga = ++ultimaCargaDeSolicitudes.current;
     try {
-      const params = new URLSearchParams();
-      if (statusFilter) params.set('status', statusFilter);
-      if (typeFilter) params.set('leave_type_id', typeFilter);
-      if (dateFrom) params.set('from_date', dateFrom);
-      if (dateTo) params.set('to_date', dateTo);
+      const params = filtrosDeSolicitudes();
 
       const [requestsRes, typesRes, bonusRes] = await Promise.all([
         fetch(`/api/admin/time-off/requests?${params}`),
@@ -177,7 +191,7 @@ export default function TimeOffRequestsPage() {
 
       if (requestsRes.ok) {
         const data = await requestsRes.json();
-        setRequests(data);
+        if (carga === ultimaCargaDeSolicitudes.current) setRequests(data);
       }
       if (typesRes.ok) {
         const data = await typesRes.json();
@@ -194,8 +208,55 @@ export default function TimeOffRequestsPage() {
     }
   }
 
+  /**
+   * Recarga sólo la lista de solicitudes, sin spinner y sin vaciar la tabla:
+   * los tipos de licencia y los ajustes de saldo no cambian al aprobar o
+   * rechazar.
+   */
+  async function recargarSolicitudesEnSegundoPlano() {
+    const carga = ++ultimaCargaDeSolicitudes.current;
+    try {
+      const res = await fetch(`/api/admin/time-off/requests?${filtrosDeSolicitudes()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (carga === ultimaCargaDeSolicitudes.current) setRequests(data);
+    } catch (error) {
+      console.error('Error refreshing requests:', error);
+    }
+  }
+
+  /**
+   * Después de aprobar o rechazar, actualiza la fila en el lugar con lo que
+   * devolvió la API, en vez de recargar toda la tabla. Si con el filtro de
+   * estado activo la fila ya no corresponde, la saca. Si la respuesta no trae
+   * los campos de la vista (nombres, tipo de licencia), la completa con una
+   * recarga en segundo plano.
+   */
+  function aplicarSolicitudActualizada(id: string, actualizada: Partial<LeaveRequestWithDetails> | null) {
+    if (!actualizada?.status) {
+      recargarSolicitudesEnSegundoPlano();
+      return;
+    }
+    if (statusFilter && actualizada.status !== statusFilter) {
+      setRequests((prev) => prev.filter((r) => r.id !== id));
+    } else {
+      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, ...actualizada } : r)));
+    }
+    if (actualizada.employee_name === undefined) recargarSolicitudesEnSegundoPlano();
+  }
+
+  function marcarEnVuelo(id: string, activo: boolean) {
+    setEnVuelo((prev) => {
+      const sig = new Set(prev);
+      if (activo) sig.add(id);
+      else sig.delete(id);
+      return sig;
+    });
+  }
+
   async function handleApprove(id: string) {
-    setActionLoading(id);
+    if (enVuelo.has(id)) return;
+    marcarEnVuelo(id, true);
     try {
       const res = await fetch(`/api/admin/time-off/requests/${id}`, {
         method: 'PUT',
@@ -204,7 +265,7 @@ export default function TimeOffRequestsPage() {
       });
 
       if (res.ok) {
-        fetchData();
+        aplicarSolicitudActualizada(id, await res.json().catch(() => null));
       } else {
         const errorData = await res.json();
         alert(`Error al aprobar: ${errorData.error || 'Error desconocido'}`);
@@ -213,14 +274,14 @@ export default function TimeOffRequestsPage() {
       console.error('Error approving request:', error);
       alert('Error de conexión al aprobar la solicitud');
     } finally {
-      setActionLoading(null);
+      marcarEnVuelo(id, false);
     }
   }
 
   async function handleReject(id: string) {
-    if (!rejectReason.trim()) return;
+    if (!rejectReason.trim() || enVuelo.has(id)) return;
 
-    setActionLoading(id);
+    marcarEnVuelo(id, true);
     try {
       const res = await fetch(`/api/admin/time-off/requests/${id}`, {
         method: 'PUT',
@@ -231,7 +292,7 @@ export default function TimeOffRequestsPage() {
       if (res.ok) {
         setRejectingId(null);
         setRejectReason('');
-        fetchData();
+        aplicarSolicitudActualizada(id, await res.json().catch(() => null));
       } else {
         const errorData = await res.json();
         alert(`Error al rechazar: ${errorData.error || 'Error desconocido'}`);
@@ -240,7 +301,7 @@ export default function TimeOffRequestsPage() {
       console.error('Error rejecting request:', error);
       alert('Error de conexión al rechazar la solicitud');
     } finally {
-      setActionLoading(null);
+      marcarEnVuelo(id, false);
     }
   }
 
@@ -642,7 +703,7 @@ export default function TimeOffRequestsPage() {
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => handleReject(request.id)}
-                                disabled={!rejectReason.trim() || actionLoading === request.id}
+                                disabled={!rejectReason.trim() || enVuelo.has(request.id)}
                               >
                                 Confirmar
                               </Button>
@@ -663,7 +724,7 @@ export default function TimeOffRequestsPage() {
                                 <Button
                                   size="sm"
                                   onClick={() => handleApprove(request.id)}
-                                  loading={actionLoading === request.id}
+                                  loading={enVuelo.has(request.id)}
                                 >
                                   Aprobar
                                 </Button>
