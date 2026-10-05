@@ -46,6 +46,10 @@ export function esAusencia(code: string | null | undefined): boolean {
  */
 const SUPERPOSICIONES_PERMITIDAS: [LeaveTypeCode, LeaveTypeCode][] = [
   ['pow_days', 'remote_work'],
+  // Igual que un Día Pow: un día libre dentro de una semana remota. Sin esto,
+  // a quien cumple años en una semana remota se le trababa el día de cumpleaños,
+  // que además tiene una ventana corta y no se puede mover a otra semana.
+  ['birthday', 'remote_work'],
   ['remote_work_trip', 'remote_work'],
   // Enfermarse no se planifica ni se pospone: se carga cuando pasa.
   ['sick', 'remote_work'],
