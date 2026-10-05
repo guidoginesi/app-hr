@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
-import { puedenSuperponerse } from '@/lib/leaveTypes';
 
-// Regex for UUID format (more permissive than RFC 4122)
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const CreateRequestSchema = z.object({
-  employee_id: z.string().regex(uuidRegex, 'ID de empleado inválido'),
-  leave_type_id: z.string().regex(uuidRegex, 'Tipo de licencia inválido'),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de inicio inválida'),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha de fin inválida'),
-  days_requested: z.number().positive('Los días deben ser positivos'),
-  notes: z.string().optional().nullable(),
-  attachment_url: z.string().url().optional().nullable(),
-});
+// Sólo listado. Antes había un POST para que el admin cargara licencias a
+// nombre de otro, pero ninguna pantalla lo usaba y tenía dos bugs: buscaba
+// superposiciones con un OR que traía todo el historial de la persona y movía
+// el saldo con una función de la base que no existe. Si RRHH necesita cargar
+// licencias, que sea una pantalla con las mismas reglas que el portal.
 
 // GET /api/admin/time-off/requests - List all leave requests
 export async function GET(req: NextRequest) {
@@ -78,92 +69,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error in GET /api/admin/time-off/requests:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// POST /api/admin/time-off/requests - Create a leave request (admin can create for any employee)
-export async function POST(req: NextRequest) {
-  try {
-    const { isAdmin } = await requireAdmin();
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await req.json();
-    const parsed = CreateRequestSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues.map((e) => e.message).join(', ') },
-        { status: 400 }
-      );
-    }
-
-    const supabase = getSupabaseServer();
-
-    // Validate dates
-    if (parsed.data.end_date < parsed.data.start_date) {
-      return NextResponse.json(
-        { error: 'La fecha de fin debe ser posterior a la fecha de inicio' },
-        { status: 400 }
-      );
-    }
-
-    // Check for overlapping requests
-    // pow_days and remote_work are allowed to overlap with each other
-    const [{ data: newLeaveType }, { data: overlapping }] = await Promise.all([
-      supabase
-        .from('leave_types')
-        .select('code')
-        .eq('id', parsed.data.leave_type_id)
-        .single(),
-      supabase
-        .from('leave_requests')
-        .select('id, leave_type_id, leave_types(code)')
-        .eq('employee_id', parsed.data.employee_id)
-        .neq('status', 'cancelled')
-        .neq('status', 'rejected')
-        .or(`start_date.lte.${parsed.data.end_date},end_date.gte.${parsed.data.start_date}`),
-    ]);
-
-    const newCode = newLeaveType?.code ?? '';
-    const blockingOverlap = (overlapping ?? []).filter((r) => {
-      const lt = r.leave_types;
-      const existingCode = (Array.isArray(lt) ? lt[0] : lt as unknown as { code: string } | null)?.code;
-      return !puedenSuperponerse(newCode, existingCode);
-    });
-
-    if (blockingOverlap.length > 0) {
-      return NextResponse.json(
-        { error: 'Ya existe una solicitud que se superpone con estas fechas' },
-        { status: 400 }
-      );
-    }
-
-    const { data, error } = await supabase
-      .from('leave_requests')
-      .insert(parsed.data)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating leave request:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Update pending days in balance
-    const startYear = new Date(parsed.data.start_date).getFullYear();
-    await supabase.rpc('update_leave_balance_pending', {
-      p_employee_id: parsed.data.employee_id,
-      p_leave_type_id: parsed.data.leave_type_id,
-      p_year: startYear,
-      p_days: parsed.data.days_requested,
-    });
-
-    return NextResponse.json(data, { status: 201 });
-  } catch (error: any) {
-    console.error('Error in POST /api/admin/time-off/requests:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
