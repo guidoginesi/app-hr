@@ -13,6 +13,7 @@ import { runBirthdayLeaveAutomation } from '@/lib/birthdayLeaveAutomation';
 import { sendTalentPoolDigest } from '@/lib/talentPoolDigest';
 import { publishScheduledMessages } from '@/lib/scheduledMessages';
 import { aplicarBajasProgramadas } from '@/lib/bajasProgramadas';
+import { acreditarPeriodoAnual, type ResultadoDeApertura } from '@/lib/aperturaPeriodoAnual';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -113,6 +114,7 @@ export async function GET(req: NextRequest) {
     leaveCertificates: { enviados: 0, errores: [] as string[] },
     birthdayLeave: { acreditados: [] as string[], vencidos: [] as string[], errores: [] as string[] },
     bajasProgramadas: { aplicadas: 0, invitadas: 0, fallidas: 0, detalle: [] as string[] },
+    periodoAnual: null as ResultadoDeApertura | null,
     scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
     errors: [] as string[],
   };
@@ -401,6 +403,17 @@ export async function GET(req: NextRequest) {
     results.birthdayLeave = await runBirthdayLeaveAutomation();
   } catch (e: any) {
     results.errors.push(`Birthday leave: ${e.message}`);
+  }
+
+  // ── PERÍODO ANUAL: vacaciones y Días Pow desde el 1° de octubre ─
+  // Completa los días del período en las filas que siguen en 0. Es idempotente:
+  // después del primer día no encuentra nada que hacer.
+  try {
+    results.periodoAnual = await acreditarPeriodoAnual(getSupabaseServer());
+    // No lanza: sus errores vienen en el resultado y se suman a los del cron.
+    results.errors.push(...results.periodoAnual.errores.map((e) => `Período anual: ${e}`));
+  } catch (e) {
+    results.errors.push(`Período anual: ${(e as Error).message}`);
   }
 
   // ── BANCO DE TALENTOS: resumen a People ────────────────────────
