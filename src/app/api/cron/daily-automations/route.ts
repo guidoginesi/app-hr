@@ -14,6 +14,7 @@ import { sendTalentPoolDigest } from '@/lib/talentPoolDigest';
 import { publishScheduledMessages } from '@/lib/scheduledMessages';
 import { aplicarBajasProgramadas } from '@/lib/bajasProgramadas';
 import { acreditarPeriodoAnual, type ResultadoDeApertura } from '@/lib/aperturaPeriodoAnual';
+import { traspasarAnio, type ResultadoDeTraspaso } from '@/lib/traspasoDeAnio';
 import { Resend } from 'resend';
 
 // Vercel Cron: runs daily at 9:00 AM UTC
@@ -114,6 +115,7 @@ export async function GET(req: NextRequest) {
     leaveCertificates: { enviados: 0, errores: [] as string[] },
     birthdayLeave: { acreditados: [] as string[], vencidos: [] as string[], errores: [] as string[] },
     bajasProgramadas: { aplicadas: 0, invitadas: 0, fallidas: 0, detalle: [] as string[] },
+    traspasoDeAnio: null as ResultadoDeTraspaso | null,
     periodoAnual: null as ResultadoDeApertura | null,
     scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
     errors: [] as string[],
@@ -403,6 +405,16 @@ export async function GET(req: NextRequest) {
     results.birthdayLeave = await runBirthdayLeaveAutomation();
   } catch (e: any) {
     results.errors.push(`Birthday leave: ${e.message}`);
+  }
+
+  // ── TRASPASO DE AÑO: lo que sobró pasa a la fila del año nuevo ──
+  // Una vez por persona y por año, desde el primer cron de enero. Va antes de
+  // la apertura del período para que la fila del año ya exista completa.
+  try {
+    results.traspasoDeAnio = await traspasarAnio(getSupabaseServer());
+    results.errors.push(...results.traspasoDeAnio.errores.map((e) => `Traspaso de año: ${e}`));
+  } catch (e) {
+    results.errors.push(`Traspaso de año: ${(e as Error).message}`);
   }
 
   // ── PERÍODO ANUAL: vacaciones y Días Pow desde el 1° de octubre ─

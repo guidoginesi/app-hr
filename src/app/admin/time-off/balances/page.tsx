@@ -36,7 +36,6 @@ interface BonusModalState {
 export default function TimeOffBalancesPage() {
   const [employees, setEmployees] = useState<EmployeeWithBalances[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recalculating, setRecalculating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [bonusModal, setBonusModal] = useState<BonusModalState>({
     isOpen: false,
@@ -111,29 +110,6 @@ export default function TimeOffBalancesPage() {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleRecalculate() {
-    if (!confirm('¿Recalcular los balances para todos los empleados activos?')) return;
-
-    setRecalculating(true);
-    try {
-      const res = await fetch('/api/admin/time-off/balances/recalculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year: currentYear }),
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        alert(`Balances recalculados para ${result.employees_processed} empleados`);
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Error recalculating balances:', error);
-    } finally {
-      setRecalculating(false);
     }
   }
 
@@ -289,14 +265,7 @@ export default function TimeOffBalancesPage() {
   );
 
   return (
-    <TimeOffLayout
-      active="balances"
-      actions={
-        <Button onClick={handleRecalculate} loading={recalculating}>
-          Recalcular balances
-        </Button>
-      }
-    >
+    <TimeOffLayout active="balances">
       <div className="space-y-6">
         {/* Search */}
         <div>
