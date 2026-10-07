@@ -268,6 +268,17 @@ export function requiereLider(reason: { requiere_lider?: boolean | null }): bool
   return reason.requiere_lider !== false;
 }
 
+/**
+ * ¿Este reintegro se salteó la aprobación del líder?
+ *
+ * Cuando un líder aprueba se guardan quién y cuándo. Cuando el motivo no pasa
+ * por el líder, se guarda sólo el cuándo: hay fecha y no hay nadie. Un pedido
+ * que todavía espera al líder no tiene ninguna de las dos.
+ */
+export function seSalteoAlLider(r: { leader_approved_at: string | null; leader_approved_by: string | null }): boolean {
+  return !!r.leader_approved_at && !r.leader_approved_by;
+}
+
 /** Monto que efectivamente se reintegra. */
 export function payableAmount(r: { amount: number; approved_amount: number | null }): number {
   return r.approved_amount ?? r.amount;

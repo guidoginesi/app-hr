@@ -12,6 +12,7 @@ import {
   RECEIPT_TYPES,
   STATUS_LABELS_EMPLOYEE,
   STEPS,
+  seSalteoAlLider,
   evaluateRequest,
   money,
   payableAmount,
@@ -451,6 +452,13 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
           <ul className="divide-y divide-[var(--border)]">
             {items.map((r) => {
               const stepIndex = STEPS.findIndex((s) => s.key === r.status);
+              // Si el motivo no pasa por el líder, ese paso no se muestra: pintado
+              // parecería que lo aprobó alguien. Se compara con la posición en la
+              // lista completa, así "en validación" sigue marcando "Enviado".
+              const sinLider = seSalteoAlLider(r);
+              const pasos = STEPS.map((s, i) => ({ ...s, i })).filter(
+                (s) => !(sinLider && s.key === 'leader_approved'),
+              );
               const cerrado = ['rejected', 'cancelled'].includes(r.status);
               return (
                 <li key={r.id} className="px-6 py-4">
@@ -474,7 +482,7 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                       <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusPill[r.status]}`}>
                         {/* Sin líder que lo haya aprobado (motivos como Guardería), "Aprobado
                             por tu líder" sería mentira: está esperando a Administración. */}
-                        {r.status === 'leader_approved' && !r.leader_approved_by
+                        {r.status === 'leader_approved' && sinLider
                           ? 'En validación'
                           : STATUS_LABELS_EMPLOYEE[r.status]}
                       </span>
@@ -484,11 +492,11 @@ export function ReintegrosClient({ enabled }: { enabled: boolean }) {
                   {/* Seguimiento: sólo tiene sentido mientras el circuito avanza. */}
                   {!cerrado && (
                     <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      {STEPS.map((s, i) => (
+                      {pasos.map((s) => (
                         <span
                           key={s.key}
                           className={`rounded-full px-2 py-0.5 text-[11px] ${
-                            i <= stepIndex ? 'bg-accent text-[var(--brand-strong)]' : 'bg-secondary text-muted-foreground'
+                            s.i <= stepIndex ? 'bg-accent text-[var(--brand-strong)]' : 'bg-secondary text-muted-foreground'
                           }`}
                         >
                           {s.label}

@@ -9,6 +9,9 @@ import { requiresLeaveCertificate, leaveCertRule, leaveCertDeadline, argentinaDa
 import { BIRTHDAY_LEAVE_CODE, birthdayWindow, isWithinBirthdayWindow } from '@/lib/birthdayLeave';
 import { diasAusenteEnElAnio } from '@/lib/birthdayBusyDays';
 import { diasEntreFechas } from '@/lib/dateUtils';
+import { disponibleParaPedido } from '@/lib/saldoEntreAnios';
+import { MARCA_DE_TRASPASO, PRIMER_TRASPASO_AUTOMATICO } from '@/lib/traspasoDeAnio';
+import { calculateEntitledDays } from '@/lib/leaveBalanceCalculation';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
 
 // Regex for UUID format (more permissive than RFC 4122)
@@ -126,25 +129,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Las lecturas que validan la solicitud no dependen entre sí, así que van en
-    // una sola ida: el tipo, el saldo del año de inicio, las superposiciones y los
-    // días ausente del año (éstos sólo los usa el día de cumpleaños; para el resto
-    // se descartan). Los errores se siguen evaluando abajo en el mismo orden que
+    // una sola ida: el tipo, los saldos, las superposiciones, los días ausente
+    // del año (éstos sólo los usa el día de cumpleaños; para el resto se
+    // descartan) y la marca del traspaso de año. Los errores se siguen evaluando abajo en el mismo orden que
     // antes: que el resto ya esté leído no cambia cuál gana.
     const startYear = parseLocalDate(parsed.data.start_date).getFullYear();
+    const hoy = argentinaDay();
+    const anioActual = Number(hoy.slice(0, 4));
     const [
       { data: leaveType, error: typeError },
-      { data: balance },
+      filasDeSaldo,
       { data: overlapping },
       diasAusente,
+      marcaDeTraspaso,
     ] = await Promise.all([
       supabase.from('leave_types').select('*').eq('id', parsed.data.leave_type_id).single(),
+      // El año del pedido, el anterior, el actual y el siguiente: la regla del
+      // saldo mira el año vigente y el que le sigue (ver saldoEntreAnios).
       supabase
         .from('leave_balances')
-        .select('*')
+        .select('year, entitled_days, carried_over, bonus_days, used_days, pending_days')
         .eq('employee_id', empleado.id)
         .eq('leave_type_id', parsed.data.leave_type_id)
-        .eq('year', startYear)
-        .single(),
+        .in('year', [...new Set([startYear, anioActual - 1, anioActual, anioActual + 1])]),
       // Dos licencias no comparten fechas, salvo los pares que la regla habilita
       // (ver puedenSuperponerse). Se excluyen las rechazadas y canceladas.
       supabase
@@ -160,16 +167,38 @@ export async function POST(req: NextRequest) {
         (dias) => ({ ok: true as const, dias }),
         (error: unknown) => ({ ok: false as const, error }),
       ),
+      // ¿Ya corrió el traspaso de este año para esta persona? Desde 2027.
+      anioActual >= PRIMER_TRASPASO_AUTOMATICO
+        ? supabase
+            .from('automation_log')
+            .select('id')
+            .eq('employee_id', empleado.id)
+            .eq('template_key', MARCA_DE_TRASPASO)
+            .eq('triggered_year', anioActual)
+            .maybeSingle()
+        : Promise.resolve({ data: { id: 'manual' }, error: null }),
     ]);
 
     if (typeError || !leaveType) {
       return NextResponse.json({ error: 'Tipo de licencia no encontrado' }, { status: 400 });
     }
 
+    // Lo que le correspondería en un año sin fila. El cumpleaños lo acredita su
+    // propio cron en el mes del cumpleaños: sin fila todavía, vale el día.
+    const derechoDe = (anio: number) =>
+      leaveType.code === 'birthday'
+        ? 1
+        : calculateEntitledDays(
+            leaveType.code,
+            { hire_date: empleado.hire_date, is_studying: empleado.is_studying },
+            anio,
+            parseLocalDate(hoy),
+          );
+
     // Anticipación, contada desde el día de hoy en Argentina. El servidor corre
     // en UTC: desde las 21:00 ya está en el día siguiente, y un pedido para el
     // mismo día rebotaba con "al menos 0 días de anticipación".
-    const daysUntilStart = diasEntreFechas(argentinaDay(), parsed.data.start_date);
+    const daysUntilStart = diasEntreFechas(hoy, parsed.data.start_date);
     const startDate = parseLocalDate(parsed.data.start_date);
 
     // La licencia por enfermedad se reporta con el inicio casi siempre ya
@@ -268,13 +297,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check balance (skip for unlimited / notification-only types)
-    if (!isUnlimitedLeaveType(leaveType.code) && balance) {
-      const available =
-        balance.entitled_days + (balance.bonus_days ?? 0) + balance.carried_over - balance.used_days - balance.pending_days;
+    // Saldo (salvo los tipos sin tope). Vacaciones y Días Pow del año en curso
+    // y del siguiente se miran juntos hasta el traspaso de año: si no, un
+    // pedido para enero no le resta a lo que se ve en diciembre. Si falta la
+    // fila de un año, se compara con lo que le correspondería (antes no se
+    // controlaba nada y se podía pedir cualquier cantidad). Las filas y la
+    // marca del traspaso ya vinieron en la ronda de lecturas de arriba.
+    if (!isUnlimitedLeaveType(leaveType.code)) {
+      if (filasDeSaldo.error || marcaDeTraspaso.error) {
+        return NextResponse.json({ error: 'No se pudo leer tu saldo. Probá de nuevo en un rato.' }, { status: 500 });
+      }
+      const available = disponibleParaPedido({
+        codigo: leaveType.code,
+        // Hasta que corre el traspaso del año (la madrugada del 1/1), el saldo
+        // vigente sigue siendo el del año anterior.
+        anioVigente: marcaDeTraspaso.data ? anioActual : anioActual - 1,
+        anioPedido: startYear,
+        saldos: Object.fromEntries((filasDeSaldo.data ?? []).map((f) => [f.year, f])),
+        derechoDe,
+      });
       if (parsed.data.days_requested > available) {
         return NextResponse.json(
-          { error: `No tienes suficientes días disponibles. Disponible: ${available}` },
+          { error: `No tienes suficientes días disponibles. Disponible: ${Math.max(0, available)}` },
           { status: 400 }
         );
       }
@@ -360,10 +404,13 @@ export async function POST(req: NextRequest) {
               })
               .eq('id', saldoActual.id);
           } else {
+            // Con lo que le corresponde, no en 0: si no, el segundo pedido de
+            // ese año rebota hasta que el traspaso complete la fila.
             await supabase.from('leave_balances').insert({
               employee_id: empleado.id,
               leave_type_id: parsed.data.leave_type_id,
               year: startYear,
+              entitled_days: leaveType.code === 'birthday' ? 0 : derechoDe(startYear),
               pending_days: parsed.data.days_requested,
             });
           }
