@@ -389,6 +389,9 @@ export default function TimeOffBalancesPage() {
                               {Number(vac.bonus_days) > 0 && (
                                 <p className="text-[10px] text-muted-foreground">+{Number(vac.bonus_days)} bonus</p>
                               )}
+                              {Number(vac.reserved_next_year ?? 0) > 0 && (
+                                <p className="text-[10px] text-muted-foreground">−{Number(vac.reserved_next_year)} pedidos {currentYear + 1}</p>
+                              )}
                             </div>
                           ) : (
                             <div className="text-sm text-muted-foreground">
@@ -425,6 +428,9 @@ export default function TimeOffBalancesPage() {
                                 )}
                                 {Number(pow.bonus_days) > 0 && (
                                   <p className="text-[10px] text-muted-foreground">+{Number(pow.bonus_days)} bonus</p>
+                                )}
+                                {Number(pow.reserved_next_year ?? 0) > 0 && (
+                                  <p className="text-[10px] text-muted-foreground">−{Number(pow.reserved_next_year)} pedidos {currentYear + 1}</p>
                                 )}
                               </div>
                               <button
