@@ -125,6 +125,7 @@ export default async function TimeOffPortalPage() {
                     {' '}/ {Number(balancesByType['vacation']?.entitled_days ?? 0) + Number(balancesByType['vacation']?.carried_over ?? 0) + Number(balancesByType['vacation']?.bonus_days ?? 0)} días
                   </span>
                 </p>
+                <PedidoDelAnioSiguiente dias={balancesByType['vacation']?.reserved_next_year} anio={currentYear + 1} />
               </div>
             </div>
             {/* Tooltip */}
@@ -171,6 +172,7 @@ export default async function TimeOffPortalPage() {
                     {' '}/ {Number(balancesByType['pow_days']?.entitled_days ?? 0) + Number(balancesByType['pow_days']?.carried_over ?? 0) + Number(balancesByType['pow_days']?.bonus_days ?? 0)} días
                   </span>
                 </p>
+                <PedidoDelAnioSiguiente dias={balancesByType['pow_days']?.reserved_next_year} anio={currentYear + 1} />
               </div>
             </div>
             {/* Tooltip */}
@@ -331,5 +333,20 @@ export default async function TimeOffPortalPage() {
         </div>
       </div>
     </PortalShell>
+  );
+}
+
+/**
+ * Lo ya pedido para el año siguiente, que el disponible ya descuenta: hasta el
+ * traspaso del 1/1 esos días quedan en la fila del año que viene y la tarjeta
+ * mostraría más de lo que se puede pedir.
+ */
+function PedidoDelAnioSiguiente({ dias, anio }: { dias?: number; anio: number }) {
+  const n = Number(dias ?? 0);
+  if (n <= 0) return null;
+  return (
+    <p className="mt-0.5 text-xs text-muted-foreground">
+      Descuenta {n} {n === 1 ? 'día pedido' : 'días pedidos'} para {anio}
+    </p>
   );
 }

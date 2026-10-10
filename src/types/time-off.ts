@@ -136,6 +136,8 @@ export interface LeaveBalanceWithDetails extends LeaveBalance {
   hire_date: string | null;
   is_studying: boolean;
   available_days: number;
+  /** Vacaciones y Días Pow: lo ya pedido para el año siguiente, que available_days ya descuenta. */
+  reserved_next_year?: number;
   // bonus_days is inherited from LeaveBalance
 }
 
