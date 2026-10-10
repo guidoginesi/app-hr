@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { TimeOffLayout } from '../TimeOffLayout';
+import { RegistrarLicencia } from './RegistrarLicencia';
 import { Button } from '@pow/ui/components/ui/button';
 import { SelectMenu } from '@pow/ui/components/ui/select-menu';
 import { TabNav } from '@pow/ui/components/ui/tab-nav';
@@ -463,7 +464,17 @@ export default function TimeOffRequestsPage() {
   }
 
   return (
-    <TimeOffLayout active="requests">
+    <TimeOffLayout
+      active="requests"
+      actions={
+        <RegistrarLicencia
+          onRegistrada={() => {
+            fetchData();
+            fetchNovedades();
+          }}
+        />
+      }
+    >
       <div className="space-y-6">
         {/* Sub-secciones de solicitudes */}
         <TabNav<'requests' | 'bonus'>
