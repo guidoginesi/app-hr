@@ -38,11 +38,19 @@ export function TeamTimeOffClient() {
     }
   }
 
+  // La API devuelve la fila de leave_requests actualizada. La vista
+  // leave_requests_with_details trae esas mismas columnas (lr.*) más los datos de
+  // detalle, que no cambian al aprobar o rechazar: se actualiza la fila en el
+  // lugar en vez de recargar toda la lista con spinner.
+  function mergeUpdatedRequest(id: string, updated: Partial<LeaveRequestWithDetails>) {
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
+  }
+
   async function handleApprove(id: string) {
     setActionLoading(id);
     try {
       const res = await fetch(`/api/portal/team/time-off/requests/${id}/approve`, { method: 'PUT' });
-      if (res.ok) fetchRequests();
+      if (res.ok) mergeUpdatedRequest(id, await res.json());
     } catch (error) {
       console.error('Error approving request:', error);
     } finally {
@@ -60,9 +68,9 @@ export function TeamTimeOffClient() {
         body: JSON.stringify({ rejection_reason: rejectReason }),
       });
       if (res.ok) {
+        mergeUpdatedRequest(id, await res.json());
         setRejectingId(null);
         setRejectReason('');
-        fetchRequests();
       }
     } catch (error) {
       console.error('Error rejecting request:', error);

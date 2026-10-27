@@ -17,11 +17,29 @@ function parseLocalDate(dateStr: string): Date {
   return new Date(year, month - 1, day);
 }
 
-export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () => void; onCancel?: () => void }) {
+export function NewTimeOffRequestForm({
+  onSuccess,
+  onCancel,
+  initialLeaveTypes,
+  initialBalances,
+}: {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  /**
+   * Tipos activos y saldos que la página ya leyó en el servidor (con el mismo
+   * filtro y el mismo año que las APIs). Si vienen, el form arranca listo, sin
+   * spinner, y los refresca en segundo plano; si faltan, los pide como siempre.
+   */
+  initialLeaveTypes?: LeaveType[];
+  initialBalances?: LeaveBalanceWithDetails[];
+}) {
   const router = useRouter();
-  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
-  const [balances, setBalances] = useState<LeaveBalanceWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Sin saldos no alcanza con lo de la página: la API de saldos es la que crea
+  // los que faltan (empleado nuevo, primer día del año), así que hay que pedirla.
+  const conDatosIniciales = !!initialLeaveTypes && !!initialBalances && initialBalances.length > 0;
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>(conDatosIniciales ? initialLeaveTypes! : []);
+  const [balances, setBalances] = useState<LeaveBalanceWithDetails[]>(conDatosIniciales ? initialBalances! : []);
+  const [loading, setLoading] = useState(!conDatosIniciales);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -41,6 +59,11 @@ export function NewTimeOffRequestForm({ onSuccess, onCancel }: { onSuccess?: () 
   const [remoteContactoTelefono, setRemoteContactoTelefono] = useState('');
 
   useEffect(() => {
+    // Se piden siempre al montar, como antes. Si la página trajo los datos, el
+    // form arranca con ésos y sin spinner, y el pedido los refresca en segundo
+    // plano: al volver con Atrás, Next restaura la página desde su caché sin
+    // pasar por el servidor, y los saldos traídos serían los de antes de la
+    // última solicitud (o de otro año, si la página quedó abierta).
     fetchData();
   }, []);
 

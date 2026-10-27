@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
-import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
+import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
@@ -20,6 +20,7 @@ export async function PUT(
     if (!auth?.employee || !auth.isLeader) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const leader = auth.employee;
 
     const { id } = await params;
     const body = await req.json();
@@ -34,10 +35,14 @@ export async function PUT(
 
     const supabase = getSupabaseServer();
 
-    // Get the request
+    // Get the request, junto con el empleado (para validar que es reporte directo
+    // y para el mail) y el tipo de licencia (para el saldo y el mail), en una sola
+    // ida. El hint de la FK es obligatorio: leave_requests tiene 4 FK a employees.
     const { data: request, error: fetchError } = await supabase
       .from('leave_requests')
-      .select('*')
+      .select(
+        '*, employee:employees!leave_requests_employee_id_fkey(manager_id, status, first_name, personal_email, work_email, user_id), leave_type:leave_types(code, name, count_type)'
+      )
       .eq('id', id)
       .single();
 
@@ -45,11 +50,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
     }
 
-    // Verify the employee is a direct report
-    const directReports = await getDirectReports(auth.employee.id);
-    const directReportIds = directReports.map((e) => e.id);
-
-    if (!directReportIds.includes(request.employee_id)) {
+    // Verify the employee is a direct report: misma regla que getDirectReports
+    // (manager_id = el líder y empleado activo)
+    const employeeData = request.employee;
+    if (!employeeData || employeeData.manager_id !== leader.id || employeeData.status !== 'active') {
       return NextResponse.json(
         { error: 'No tienes permiso para rechazar esta solicitud' },
         { status: 403 }
@@ -71,7 +75,7 @@ export async function PUT(
         status: 'rejected_leader',
         leader_rejection_reason: parsed.data.rejection_reason,
         // Also update legacy fields for backward compatibility
-        approved_by: auth.employee.id,
+        approved_by: leader.id,
         approved_at: new Date().toISOString(),
         rejection_reason: parsed.data.rejection_reason,
       })
@@ -84,13 +88,11 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const { data: leaveTypeForBalance } = await supabase
-      .from('leave_types')
-      .select('code')
-      .eq('id', request.leave_type_id)
-      .single();
-
-    if (!leaveTypeForBalance || !isUnlimitedLeaveType(leaveTypeForBalance.code)) {
+    // Saldo y semanas remotas: después del update de la solicitud, y entre sí
+    // son independientes, así que van en paralelo
+    const leaveType = request.leave_type;
+    const releasePendingDays = async () => {
+      if (leaveType && isUnlimitedLeaveType(leaveType.code)) return;
       const startYear = new Date(request.start_date).getFullYear();
       const { data: balance } = await supabase
         .from('leave_balances')
@@ -110,65 +112,66 @@ export async function PUT(
           .eq('leave_type_id', request.leave_type_id)
           .eq('year', startYear);
       }
-    }
-
-    // Delete remote work weeks if applicable
-    await supabase.from('remote_work_weeks').delete().eq('leave_request_id', id);
-
-    // Send email notification to employee
-    const formatDate = (date: string) => {
-      return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
     };
 
-    const { data: employeeData } = await supabase
-      .from('employees')
-      .select('first_name, personal_email, work_email, user_id')
-      .eq('id', request.employee_id)
-      .single();
+    await Promise.all([
+      releasePendingDays(),
+      // Delete remote work weeks if applicable
+      supabase.from('remote_work_weeks').delete().eq('leave_request_id', id),
+    ]);
 
-    const { data: leaveType } = await supabase
-      .from('leave_types')
-      .select('name, count_type')
-      .eq('id', request.leave_type_id)
-      .single();
+    // Mail y notificación al empleado: corren después de responder (after)
+    after(async () => {
+      try {
+        // Send email notification to employee
+        const formatDate = (date: string) => {
+          return new Date(date + 'T00:00:00').toLocaleDateString('es-AR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+        };
 
-    if (employeeData) {
-      const employeeEmail = employeeData.work_email || employeeData.personal_email;
-      if (employeeEmail) {
-        sendTimeOffEmail({
-          templateKey: 'time_off_rejected',
-          to: employeeEmail,
-          variables: {
-            nombre: employeeData.first_name,
-            fecha_inicio: formatDate(request.start_date),
-            fecha_fin: formatDate(request.end_date),
-            cantidad_dias: String(request.days_requested),
-            unidad_tiempo: leaveType?.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
-            tipo_licencia: leaveType?.name || 'Licencia',
-            comentario: parsed.data.rejection_reason,
-            rechazado_por: `${auth.employee.first_name} ${auth.employee.last_name}`,
-          },
-          leaveRequestId: id,
-        }).catch((err) => console.error('Error sending rejection email:', err));
+        // Se esperan todos los envíos al final, así after() mantiene viva la función
+        const envios: Promise<unknown>[] = [];
+
+        const employeeEmail = employeeData.work_email || employeeData.personal_email;
+        if (employeeEmail) {
+          envios.push(sendTimeOffEmail({
+            templateKey: 'time_off_rejected',
+            to: employeeEmail,
+            variables: {
+              nombre: employeeData.first_name,
+              fecha_inicio: formatDate(request.start_date),
+              fecha_fin: formatDate(request.end_date),
+              cantidad_dias: String(request.days_requested),
+              unidad_tiempo: leaveType?.count_type === 'weeks' ? 'semana(s)' : 'día(s)',
+              tipo_licencia: leaveType?.name || 'Licencia',
+              comentario: parsed.data.rejection_reason,
+              rechazado_por: `${leader.first_name} ${leader.last_name}`,
+            },
+            leaveRequestId: id,
+          }).catch((err) => console.error('Error sending rejection email:', err)));
+        }
+
+        // In-app notification to employee: rejected by leader
+        if (employeeData.user_id) {
+          envios.push(createSystemNotification({
+            userIds: [employeeData.user_id],
+            title: 'Solicitud de licencia rechazada',
+            body: `Tu solicitud de ${leaveType?.name ?? 'licencia'} fue rechazada por tu líder. Motivo: ${parsed.data.rejection_reason}`,
+            priority: 'warning',
+            deepLink: '/portal/time-off',
+            metadata: { entity_type: 'leave_request', entity_id: id },
+            dedupeKey: `leave_request:${id}:rejected_leader`,
+          }).catch((err) => console.error('Error creating rejection in-app notification:', err)));
+        }
+
+        await Promise.all(envios);
+      } catch (err) {
+        console.error('Error sending leader rejection notifications:', err);
       }
-    }
-
-    // In-app notification to employee: rejected by leader
-    if (employeeData?.user_id) {
-      createSystemNotification({
-        userIds: [employeeData.user_id],
-        title: 'Solicitud de licencia rechazada',
-        body: `Tu solicitud de ${leaveType?.name ?? 'licencia'} fue rechazada por tu líder. Motivo: ${parsed.data.rejection_reason}`,
-        priority: 'warning',
-        deepLink: '/portal/time-off',
-        metadata: { entity_type: 'leave_request', entity_id: id },
-        dedupeKey: `leave_request:${id}:rejected_leader`,
-      }).catch((err) => console.error('Error creating rejection in-app notification:', err));
-    }
+    });
 
     return NextResponse.json(data);
   } catch (error: any) {
