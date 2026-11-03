@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 import { Cake } from 'lucide-react';
-import { requirePortalAccess, getDirectReports } from '@/lib/checkAuth';
+import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { PortalShell } from '../PortalShell';
 import Link from 'next/link';
-import type { LeaveBalanceWithDetails, LeaveRequestWithDetails } from '@/types/time-off';
+import type { LeaveBalanceWithDetails, LeaveRequestWithDetails, LeaveType } from '@/types/time-off';
 import { PageHeader } from '@pow/ui/components/ui/page-header';
 import { NewRequestButton } from './NewRequestButton';
 import { UploadCertificateButton } from '../certificates/UploadCertificateButton';
@@ -25,37 +25,50 @@ export default async function TimeOffPortalPage() {
   const supabase = getSupabaseServer();
   const currentYear = new Date().getFullYear();
 
+  // Las tres consultas son independientes: van juntas en una sola ida.
+  // El conteo del equipo usa un inner join con employees (en vez de traer
+  // los reportes directos y después contar) con los mismos filtros que
+  // getDirectReports: manager_id del líder y status 'active'. La FK va
+  // nombrada porque leave_requests tiene cuatro hacia employees.
+  const [pendingTeamResult, { data: balances }, { data: requests }, { data: tiposActivos }] = await Promise.all([
+    isLeader
+      ? supabase
+          .from('leave_requests')
+          .select('id, employee:employees!leave_requests_employee_id_fkey!inner(id)', { count: 'exact', head: true })
+          .eq('employee.manager_id', employee.id)
+          .eq('employee.status', 'active')
+          .in('status', ['pending_leader', 'pending'])
+      : null,
+    // Get balances
+    supabase
+      .from('leave_balances_with_details')
+      .select('*')
+      .eq('employee_id', employee.id)
+      .eq('year', currentYear),
+    // Get recent/pending requests
+    supabase
+      .from('leave_requests_with_details')
+      .select('*')
+      .eq('employee_id', employee.id)
+      .order('created_at', { ascending: false })
+      .limit(5),
+    // Los tipos activos, para que "Nueva solicitud" abra listo en vez de
+    // esperar dos APIs con el spinner. Misma consulta que /api/portal/time-off/leave-types.
+    supabase
+      .from('leave_types')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
+  ]);
+
+  // La licencia por estudio sólo para quien la tiene habilitada, igual que la API.
+  const tiposDeLicencia = tiposActivos
+    ? (tiposActivos as LeaveType[]).filter((t) => t.code !== 'study' || employee.is_studying)
+    : undefined;
+
   // Get pending team requests count for leaders
-  let pendingTeamCount = 0;
-  if (isLeader) {
-    const directReports = await getDirectReports(employee.id);
-    const directReportIds = directReports.map((e) => e.id);
-    
-    if (directReportIds.length > 0) {
-      const { count } = await supabase
-        .from('leave_requests')
-        .select('*', { count: 'exact', head: true })
-        .in('employee_id', directReportIds)
-        .in('status', ['pending_leader', 'pending']);
-      
-      pendingTeamCount = count || 0;
-    }
-  }
-
-  // Get balances
-  const { data: balances } = await supabase
-    .from('leave_balances_with_details')
-    .select('*')
-    .eq('employee_id', employee.id)
-    .eq('year', currentYear);
-
-  // Get recent/pending requests
-  const { data: requests } = await supabase
-    .from('leave_requests_with_details')
-    .select('*')
-    .eq('employee_id', employee.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
+  const pendingTeamCount = pendingTeamResult?.count || 0;
 
   // Group balances by type
   const balancesByType: Record<string, LeaveBalanceWithDetails> = {};
@@ -72,7 +85,10 @@ export default async function TimeOffPortalPage() {
           actions={
             <>
               <UploadCertificateButton />
-              <NewRequestButton />
+              <NewRequestButton
+                initialLeaveTypes={tiposDeLicencia}
+                initialBalances={(balances ?? undefined) as LeaveBalanceWithDetails[] | undefined}
+              />
             </>
           }
         />
