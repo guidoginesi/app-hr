@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
@@ -216,7 +216,7 @@ export async function PUT(
     console.log('Leave request updated successfully:', data);
 
     // Si cambiaron fechas o estado, el evento del calendario tiene que seguirlas.
-    sincronizarLicencia(id).catch((err) => console.error('[calendar] al editar:', err));
+    after(() => sincronizarLicencia(id).catch((err) => console.error('[calendar] al editar:', err)));
 
     return NextResponse.json(data);
   } catch (error: any) {

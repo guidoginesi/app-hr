@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendTimeOffEmail } from '@/lib/emailService';
@@ -105,7 +105,7 @@ export async function PUT(
 
     // El evento en el calendario del equipo. Sin await: si Google falla, la
     // licencia igual quedó aprobada.
-    sincronizarLicencia(id).catch((err) => console.error('[calendar] al aprobar:', err));
+    after(() => sincronizarLicencia(id).catch((err) => console.error('[calendar] al aprobar:', err)));
 
     // Send email notification to employee
     const formatDate = (date: string) => {

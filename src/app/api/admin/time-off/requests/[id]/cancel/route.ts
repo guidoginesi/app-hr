@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
@@ -114,7 +114,7 @@ export async function PUT(
 
     // Sacar el evento del calendario del equipo: una licencia cancelada que
     // sigue publicada es peor que no haberla publicado nunca.
-    sincronizarLicencia(id).catch((err) => console.error('[calendar] al cancelar:', err));
+    after(() => sincronizarLicencia(id).catch((err) => console.error('[calendar] al cancelar:', err)));
 
     // Delete remote work weeks if applicable
     await supabase.from('remote_work_weeks').delete().eq('leave_request_id', id);

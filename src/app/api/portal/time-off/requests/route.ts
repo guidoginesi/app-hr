@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
@@ -362,7 +362,7 @@ export async function POST(req: NextRequest) {
     // aprobados y no pasan por ninguna aprobación después: si el evento no se
     // crea acá, no se crea nunca.
     if (initialStatus === 'approved') {
-      sincronizarLicencia(data.id).catch((err) => console.error('[calendar] al registrar:', err));
+      after(() => sincronizarLicencia(data.id).catch((err) => console.error('[calendar] al registrar:', err)));
     }
 
     // Update pending days in balance (skip for unlimited types)

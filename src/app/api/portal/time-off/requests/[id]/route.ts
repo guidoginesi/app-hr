@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { requirePortalAccess } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
@@ -86,7 +86,7 @@ export async function DELETE(
     // no hay evento que sacar. Va igual: la regla es que todo cambio de estado
     // sincroniza, y es la regla la que evita que esto se pudra cuando mañana
     // alguien habilite cancelar una aprobada.
-    sincronizarLicencia(id).catch((err) => console.error('[calendar] al cancelar desde el portal:', err));
+    after(() => sincronizarLicencia(id).catch((err) => console.error('[calendar] al cancelar desde el portal:', err)));
 
     const { data: leaveTypeForBalance } = await supabase
       .from('leave_types')
