@@ -31,11 +31,41 @@ type Config = { calendarId: string; email: string; clave: string };
 
 let avisoDeFaltante = false;
 
+/**
+ * La clave privada en PEM, venga como venga pegada en Vercel: con comillas,
+ * con el JSON entero de la cuenta de servicio, con los saltos de línea como
+ * `\n` (escapados una o dos veces) o convertidos en espacios. Se queda con el
+ * base64 de adentro y arma el PEM de nuevo, en líneas de 64. Un PEM mal
+ * formado no da un error claro: OpenSSL tira "DECODER routines::unsupported".
+ */
+export function normalizarClave(valor: string | undefined): string | undefined {
+  if (!valor) return undefined;
+  let texto = valor.trim();
+
+  // El JSON entero de la cuenta de servicio.
+  if (texto.startsWith('{')) {
+    try {
+      const json = JSON.parse(texto) as { private_key?: string };
+      if (json.private_key) texto = json.private_key;
+    } catch {
+      // No era JSON válido: se sigue con el texto tal cual.
+    }
+  }
+
+  // Comillas alrededor, y los \n escapados (una o dos veces).
+  texto = texto.replace(/^["']|["'],?$/g, '').replace(/\\\\n/g, '\n').replace(/\\n/g, '\n');
+
+  const cuerpo = texto.match(/-----BEGIN PRIVATE KEY-----([\s\S]*?)-----END PRIVATE KEY-----/);
+  if (!cuerpo) return texto;
+  const base64 = cuerpo[1].replace(/[^A-Za-z0-9+/=]/g, '');
+  const lineas = base64.match(/.{1,64}/g) ?? [];
+  return `-----BEGIN PRIVATE KEY-----\n${lineas.join('\n')}\n-----END PRIVATE KEY-----\n`;
+}
+
 function configuracion(): Config | null {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  // En Vercel la clave viaja con los saltos de línea escapados.
-  const clave = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, '\n');
+  const clave = normalizarClave(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
 
   if (!calendarId || !email || !clave) {
     if (!avisoDeFaltante) {
