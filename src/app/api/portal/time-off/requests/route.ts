@@ -327,28 +327,27 @@ export async function POST(req: NextRequest) {
       .eq('id', auth.employee.id)
       .single();
 
-    // El líder es obligatorio sólo cuando hace falta que alguien apruebe. La
-    // licencia por enfermedad no se aprueba, así que no lo exige: alguien sin
-    // líder cargado igual puede reportar que está enfermo (sólo no se notifica).
-    if (!hrOnlyApproval && !selfRegistered && !employee?.manager_id) {
-      return NextResponse.json(
-        { error: 'No tienes un líder asignado. Contacta a HR para configurar tu manager.' },
-        { status: 400 }
-      );
-    }
+    // Quien no tiene líder (hoy, sólo el CEO) no tiene a nadie por encima que
+    // apruebe: mandarlo a RRHH sería aprobarse a sí mismo. Su pedido nace
+    // aprobado y descuenta del saldo como cualquier licencia aprobada. Antes
+    // el portal lo rechazaba y había que cargarlo a mano desde el admin.
+    const sinLider = !hrOnlyApproval && !selfRegistered && !employee?.manager_id;
 
     // Create the request:
     //  - self-registered (enfermedad): queda 'approved' (vigente) sin aprobador;
     //    el líder se guarda para notificarlo y para la vista de cobertura.
+    //  - sin líder: queda 'approved' sin aprobador.
     //  - HR-only: salta al líder y va directo a 'pending_hr'.
     //  - resto: circuito de dos niveles desde 'pending_leader'.
-    const initialStatus = selfRegistered ? 'approved' : hrOnlyApproval ? 'pending_hr' : 'pending_leader';
+    const initialStatus =
+      selfRegistered || sinLider ? 'approved' : hrOnlyApproval ? 'pending_hr' : 'pending_leader';
     const { data, error } = await supabase
       .from('leave_requests')
       .insert({
         employee_id: auth.employee.id,
         status: initialStatus,
         leader_id: hrOnlyApproval ? null : employee?.manager_id ?? null,
+        ...(sinLider ? { approved_at: new Date().toISOString() } : {}),
         ...parsed.data,
       })
       .select()
@@ -359,8 +358,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Los tipos autorregistrados —enfermedad— nacen aprobados y no pasan por
-    // ninguna aprobación después: si el evento no se crea acá, no se crea nunca.
+    // Los tipos autorregistrados —enfermedad— y los pedidos sin líder nacen
+    // aprobados y no pasan por ninguna aprobación después: si el evento no se
+    // crea acá, no se crea nunca.
     if (initialStatus === 'approved') {
       sincronizarLicencia(data.id).catch((err) => console.error('[calendar] al registrar:', err));
     }
@@ -375,11 +375,14 @@ export async function POST(req: NextRequest) {
         .eq('year', startYear)
         .single();
 
+      // Aprobado de entrada (sin líder): va directo a lo usado, como hace la
+      // aprobación de RRHH. El resto queda pendiente hasta que se apruebe.
+      const columna = sinLider ? 'used_days' : 'pending_days';
       if (balance) {
         await supabase
           .from('leave_balances')
           .update({
-            pending_days: balance.pending_days + parsed.data.days_requested,
+            [columna]: Number(balance[columna]) + parsed.data.days_requested,
           })
           .eq('id', balance.id);
       } else {
@@ -390,7 +393,7 @@ export async function POST(req: NextRequest) {
           leave_type_id: parsed.data.leave_type_id,
           year: startYear,
           entitled_days: leaveType.code === 'birthday' ? 0 : derechoDe(startYear),
-          pending_days: parsed.data.days_requested,
+          [columna]: parsed.data.days_requested,
         });
       }
     }
@@ -460,7 +463,11 @@ export async function POST(req: NextRequest) {
           : null;
 
       sendTimeOffEmail({
-        templateKey: selfRegistered ? 'time_off_sick_registered' : 'time_off_request_submitted',
+        templateKey: selfRegistered
+          ? 'time_off_sick_registered'
+          : sinLider
+            ? 'time_off_approved_hr'
+            : 'time_off_request_submitted',
         to: employeeEmail,
         variables: vencimiento
           ? {
@@ -476,12 +483,18 @@ export async function POST(req: NextRequest) {
     if (auth.user?.id) {
       const submittedBody = selfRegistered
         ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Acordate de subir el certificado médico dentro de los ${leaveCertRule(leaveType.code)?.businessDays ?? 3} días hábiles.`
-        : hrOnlyApproval
-          ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
-          : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`;
+        : sinLider
+          ? `Registramos tu ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin}. Quedó aprobada: no tenés líder asignado, así que no pasa por aprobación.`
+          : hrOnlyApproval
+            ? `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de HR.`
+            : `Tu solicitud de ${leaveType.name} del ${emailVariables.fecha_inicio} al ${emailVariables.fecha_fin} fue enviada y está pendiente de aprobación de tu líder.`;
       createSystemNotification({
         userIds: [auth.user.id],
-        title: selfRegistered ? 'Licencia por enfermedad registrada' : 'Solicitud de licencia enviada',
+        title: selfRegistered
+          ? 'Licencia por enfermedad registrada'
+          : sinLider
+            ? 'Licencia registrada y aprobada'
+            : 'Solicitud de licencia enviada',
         body: submittedBody,
         priority: 'info',
         deepLink: '/portal/time-off',
