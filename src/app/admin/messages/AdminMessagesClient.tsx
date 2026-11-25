@@ -90,6 +90,8 @@ type CreateForm = {
   email_from_name: string;
   email_reply_to: string;
   email_cover_url: string;
+  email_cover_has_title: boolean;
+  email_highlights: { label: string; value: string }[];
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -111,6 +113,8 @@ const DEFAULT_FORM: CreateForm = {
   email_from_name: '',
   email_reply_to: '',
   email_cover_url: '',
+  email_cover_has_title: false,
+  email_highlights: [],
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -355,6 +359,7 @@ export function AdminMessagesClient({
       const ctx = (m.metadata?.template_context ?? {}) as Record<string, string>;
       const mail = (m.metadata?.email ?? {}) as {
         full?: boolean; subject?: string; from_name?: string; reply_to?: string; cover_url?: string;
+        cover_has_title?: boolean; highlights?: { label: string; value: string }[];
       };
       setForm({
         ...DEFAULT_FORM,
@@ -373,6 +378,8 @@ export function AdminMessagesClient({
         email_from_name: mail.from_name ?? '',
         email_reply_to: mail.reply_to ?? '',
         email_cover_url: mail.cover_url ?? '',
+        email_cover_has_title: Boolean(mail.cover_has_title),
+        email_highlights: mail.highlights ?? [],
         ...audienceToForm(m.audience ?? null),
       });
       setEditingId(msgId);
@@ -457,6 +464,10 @@ export function AdminMessagesClient({
           from_name: form.email_from_name.trim() || null,
           reply_to: form.email_reply_to.trim() || null,
           cover_url: form.email_full ? form.email_cover_url || null : null,
+          cover_has_title: form.email_full && form.email_cover_url ? form.email_cover_has_title : null,
+          highlights: form.email_full
+            ? form.email_highlights.filter((h) => h.label.trim() && h.value.trim())
+            : null,
         },
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
@@ -1311,10 +1322,17 @@ function MailOptions({
   const [uploading, setUploading] = useState(false);
   const [testing, setTesting] = useState(false);
 
-  const uploadCover = async (file: File) => {
+  const [coverKicker, setCoverKicker] = useState('');
+  const [coverTitle, setCoverTitle] = useState('');
+  const [coverSource, setCoverSource] = useState<File | null>(null);
+
+  const uploadCover = async (source: File) => {
     setUploading(true);
     onError(null);
     try {
+      setCoverSource(source);
+      const withTitle = Boolean(coverTitle.trim() || coverKicker.trim());
+      const file = withTitle ? await composeCover(source, coverKicker, coverTitle) : source;
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/admin/messages/cover', { method: 'POST', body: fd });
@@ -1323,7 +1341,7 @@ function MailOptions({
         onError(data.error ?? 'No se pudo subir la carátula.');
         return;
       }
-      setForm((f) => ({ ...f, email_cover_url: data.url }));
+      setForm((f) => ({ ...f, email_cover_url: data.url, email_cover_has_title: withTitle }));
     } catch {
       onError('Error de red al subir la carátula.');
     } finally {
@@ -1367,26 +1385,68 @@ function MailOptions({
       </label>
 
       {form.email_full && (
-        <div>
+        <div className="space-y-3">
           <span className={LABEL_CLS}>Carátula (opcional)</span>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="cover_kicker" className={LABEL_CLS}>Texto chico sobre la foto</label>
+              <input
+                id="cover_kicker"
+                type="text"
+                value={coverKicker}
+                onChange={(e) => setCoverKicker(e.target.value)}
+                placeholder="Viernes 4/12 · 14 h · Terraza"
+                className={INPUT_CLS}
+              />
+            </div>
+            <div>
+              <label htmlFor="cover_title" className={LABEL_CLS}>Título sobre la foto</label>
+              <input
+                id="cover_title"
+                type="text"
+                value={coverTitle}
+                onChange={(e) => setCoverTitle(e.target.value)}
+                placeholder="Despidamos el año *juntos*"
+                className={INPUT_CLS}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Lo que va entre asteriscos sale en naranja. Si escribís un título sobre la foto, el mail no lo repite abajo.
+            Completalos antes de elegir la imagen; si los cambiás después, tocá «Volver a armar».
+          </p>
           {form.email_cover_url ? (
             <div className="space-y-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={form.email_cover_url}
                 alt="Carátula del mail"
-                className="aspect-[600/330] w-full rounded-lg border border-[var(--border)] object-cover"
+                className="w-full rounded-lg border border-[var(--border)]"
               />
-              <Button variant="ghost" size="sm" onClick={() => setForm((f) => ({ ...f, email_cover_url: '' }))}>
-                Sacar la carátula
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {coverSource && (
+                  <Button variant="outline" size="sm" loading={uploading} onClick={() => void uploadCover(coverSource)}>
+                    Volver a armar
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCoverSource(null);
+                    setForm((f) => ({ ...f, email_cover_url: '', email_cover_has_title: false }));
+                  }}
+                >
+                  Sacar la carátula
+                </Button>
+              </div>
             </div>
           ) : (
             <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--border)] px-4 py-6 text-sm text-muted-foreground hover:bg-muted">
-              {uploading ? 'Subiendo…' : 'Elegí una imagen (JPG, PNG o WebP, hasta 5 MB)'}
+              {uploading ? 'Armando y subiendo…' : 'Elegí una imagen (JPG, PNG o WebP)'}
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/jpeg,image/png,image/webp"
                 className="sr-only"
                 disabled={uploading}
                 onChange={(e) => {
@@ -1397,6 +1457,48 @@ function MailOptions({
               />
             </label>
           )}
+
+          <div>
+            <span className={LABEL_CLS}>Datos destacados (opcional, hasta 3)</span>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Salen en recuadros naranja claro después del primer párrafo. Por ejemplo, Cuándo / Viernes 4/12, 14 h.
+            </p>
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => {
+                const h = form.email_highlights[i] ?? { label: '', value: '' };
+                const setH = (patch: Partial<{ label: string; value: string }>) =>
+                  setForm((f) => {
+                    const next = [0, 1, 2].map((j) => f.email_highlights[j] ?? { label: '', value: '' });
+                    next[i] = { ...next[i], ...patch };
+                    // Se guardan sin huecos al final, así no quedan filas vacías.
+                    while (next.length && !next[next.length - 1].label && !next[next.length - 1].value) next.pop();
+                    return { ...f, email_highlights: next };
+                  });
+                return (
+                  <div key={i} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
+                    <input
+                      type="text"
+                      aria-label={`Rótulo ${i + 1}`}
+                      value={h.label}
+                      maxLength={30}
+                      onChange={(e) => setH({ label: e.target.value })}
+                      placeholder={['Cuándo', 'Dónde', 'Confirmá'][i]}
+                      className={INPUT_CLS}
+                    />
+                    <input
+                      type="text"
+                      aria-label={`Dato ${i + 1}`}
+                      value={h.value}
+                      maxLength={80}
+                      onChange={(e) => setH({ value: e.target.value })}
+                      placeholder={['Viernes 4/12, 14 h', 'Terraza de Pow', 'Antes del jueves 26/11'][i]}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1449,4 +1551,109 @@ function MailOptions({
       </div>
     </div>
   );
+}
+
+const COVER_W = 1200;
+const COVER_H = 660; // 600 × 330 a 2x, la proporción de la carátula del mail
+const COVER_FONT = '"Plus Jakarta Sans"';
+
+async function loadCoverFont(): Promise<void> {
+  if (typeof document === 'undefined') return;
+  const id = 'pow-jakarta-font';
+  if (!document.getElementById(id)) {
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap';
+    document.head.appendChild(link);
+    await new Promise((r) => {
+      link.onload = r;
+      link.onerror = r;
+    });
+  }
+  try {
+    await Promise.all([
+      document.fonts.load(`800 64px ${COVER_FONT}`),
+      document.fonts.load(`700 22px ${COVER_FONT}`),
+    ]);
+  } catch {
+    // Sin la fuente se dibuja con la de sistema; la carátula sale igual.
+  }
+}
+
+/**
+ * Arma la carátula como en los artifacts de Pow: la foto recortada a 600×330,
+ * un degradé oscuro abajo y encima el texto chico en amarillo y el título en
+ * blanco, con lo que va entre asteriscos en naranja. Se arma como imagen porque
+ * un texto encima de una foto no se puede hacer de forma confiable en un mail.
+ */
+async function composeCover(source: File, kicker: string, title: string): Promise<File> {
+  await loadCoverFont();
+  const url = URL.createObjectURL(source);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      el.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = COVER_W;
+    canvas.height = COVER_H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return source;
+
+    // Recorte tipo object-fit: cover, centrado.
+    const scale = Math.max(COVER_W / img.width, COVER_H / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (COVER_W - w) / 2, (COVER_H - h) / 2, w, h);
+
+    const grad = ctx.createLinearGradient(0, 0, 0, COVER_H);
+    grad.addColorStop(0.35, 'rgba(23,22,20,0)');
+    grad.addColorStop(1, 'rgba(23,22,20,0.82)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, COVER_W, COVER_H);
+
+    const left = 48;
+    const maxW = COVER_W - left * 2;
+    let bottom = COVER_H - 40;
+
+    // Título: los tramos entre *asteriscos* van en naranja.
+    const parts = title
+      .trim()
+      .split(/(\*[^*]+\*)/)
+      .filter(Boolean)
+      .map((t) => (t.startsWith('*') && t.endsWith('*') ? { t: t.slice(1, -1), o: true } : { t, o: false }));
+    if (parts.length) {
+      let size = 64;
+      const measure = () => {
+        ctx.font = `800 ${size}px ${COVER_FONT}, system-ui, sans-serif`;
+        if ('letterSpacing' in ctx) (ctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.025 * size}px`;
+        return parts.reduce((acc, p) => acc + ctx.measureText(p.t).width, 0);
+      };
+      while (measure() > maxW && size > 36) size -= 2;
+      ctx.textBaseline = 'alphabetic';
+      let x = left;
+      for (const p of parts) {
+        ctx.fillStyle = p.o ? '#FE722B' : '#FFFFFF';
+        ctx.fillText(p.t, x, bottom);
+        x += ctx.measureText(p.t).width;
+      }
+      bottom -= size * 1.05 + 4;
+    }
+
+    if (kicker.trim()) {
+      ctx.font = `700 22px ${COVER_FONT}, system-ui, sans-serif`;
+      if ('letterSpacing' in ctx) (ctx as unknown as { letterSpacing: string }).letterSpacing = '3px';
+      ctx.fillStyle = '#FFEB82';
+      ctx.fillText(kicker.trim().toUpperCase(), left, bottom);
+    }
+
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.86));
+    if (!blob) return source;
+    return new File([blob], 'caratula.jpg', { type: 'image/jpeg' });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

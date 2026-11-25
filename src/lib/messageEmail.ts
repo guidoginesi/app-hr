@@ -26,6 +26,14 @@ export const MessageEmailOptionsSchema = z.object({
     .optional(),
   reply_to: z.string().trim().email('El mail para las respuestas no es válido.').nullable().optional(),
   from_name: z.string().trim().max(60).nullable().optional(),
+  /** La carátula ya trae el título escrito (la compone el formulario). */
+  cover_has_title: z.boolean().nullable().optional(),
+  /** Hasta 3 recuadros destacados (Cuándo / Dónde / Confirmá). */
+  highlights: z
+    .array(z.object({ label: z.string().trim().max(30), value: z.string().trim().max(80) }))
+    .max(3)
+    .nullable()
+    .optional(),
 });
 
 export type MessageEmailOptions = z.infer<typeof MessageEmailOptionsSchema>;
@@ -43,6 +51,9 @@ export function compactEmailOptions(o: MessageEmailOptions): MessageEmailOptions
   if (o.cover_url) out.cover_url = o.cover_url;
   if (o.reply_to) out.reply_to = o.reply_to;
   if (o.from_name) out.from_name = o.from_name;
+  if (o.cover_url && o.cover_has_title) out.cover_has_title = true;
+  const hl = (o.highlights ?? []).filter((h) => h.label && h.value);
+  if (hl.length) out.highlights = hl;
   return out;
 }
 
@@ -89,7 +100,18 @@ export function buildMessageEmail(message: MessageLike, vars: Record<string, str
       subject,
       replyTo,
       from,
-      html: renderFullMessageEmail({ title, bodyHtml, coverUrl: opts.cover_url, preheader: preview, portalUrl }),
+      html: renderFullMessageEmail({
+        title,
+        bodyHtml,
+        coverUrl: opts.cover_url,
+        coverHasTitle: Boolean(opts.cover_has_title),
+        highlights: (opts.highlights ?? []).map((h) => ({
+          label: templated ? renderTemplate(h.label, vars) : h.label,
+          value: templated ? renderTemplate(h.value, vars) : h.value,
+        })),
+        preheader: preview,
+        footerLabel: `Pow · ${monthLabel(new Date())}`,
+      }),
     };
   }
 
@@ -128,6 +150,13 @@ export function buildMessageEmail(message: MessageLike, vars: Record<string, str
       outro: 'Entrá al portal para leer el mensaje completo.',
     }),
   };
+}
+
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+function monthLabel(d: Date): string {
+  // Hora de Argentina: un envío a la noche del último día no puede decir el mes siguiente.
+  const ar = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+  return `${MESES[ar.getUTCMonth()]} ${ar.getUTCFullYear()}`;
 }
 
 /** Si el mail lleva el cuerpo entero, conviene personalizar por destinatario. */
