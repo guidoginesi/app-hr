@@ -83,6 +83,19 @@ type CreateForm = {
   send_to_google_chat: boolean;
   send_email: boolean;
   scheduled_for: string;
+  // Mail completo (metadata.email): el mensaje entero con carátula, asunto y
+  // respuestas propias. Sin esto, el mail es el aviso corto de siempre.
+  email_full: boolean;
+  email_subject: string;
+  email_from_name: string;
+  email_reply_to: string;
+  email_cover_url: string;
+  email_cover_has_title: boolean;
+  email_highlights: { label: string; value: string }[];
+  email_rsvp: boolean;
+  email_rsvp_question: string;
+  email_rsvp_yes: string;
+  email_rsvp_no: string;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -99,6 +112,17 @@ const DEFAULT_FORM: CreateForm = {
   send_to_google_chat: false,
   send_email: false,
   scheduled_for: '',
+  email_full: false,
+  email_subject: '',
+  email_from_name: '',
+  email_reply_to: '',
+  email_cover_url: '',
+  email_cover_has_title: false,
+  email_highlights: [],
+  email_rsvp: false,
+  email_rsvp_question: '',
+  email_rsvp_yes: 'Voy',
+  email_rsvp_no: 'No voy',
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -341,6 +365,11 @@ export function AdminMessagesClient({
       }
       const m = data.message ?? data;
       const ctx = (m.metadata?.template_context ?? {}) as Record<string, string>;
+      const mail = (m.metadata?.email ?? {}) as {
+        full?: boolean; subject?: string; from_name?: string; reply_to?: string; cover_url?: string;
+        cover_has_title?: boolean; highlights?: { label: string; value: string }[];
+        rsvp?: { question?: string | null; yes?: string; no?: string } | null;
+      };
       setForm({
         ...DEFAULT_FORM,
         title: m.title ?? '',
@@ -353,6 +382,17 @@ export function AdminMessagesClient({
         send_email: Boolean(m.send_email),
         scheduled_for: m.scheduled_for ?? '',
         periodo: ctx.periodo ?? '',
+        email_full: Boolean(mail.full),
+        email_subject: mail.subject ?? '',
+        email_from_name: mail.from_name ?? '',
+        email_reply_to: mail.reply_to ?? '',
+        email_cover_url: mail.cover_url ?? '',
+        email_cover_has_title: Boolean(mail.cover_has_title),
+        email_highlights: mail.highlights ?? [],
+        email_rsvp: Boolean(mail.rsvp),
+        email_rsvp_question: mail.rsvp?.question ?? '',
+        email_rsvp_yes: mail.rsvp?.yes || 'Voy',
+        email_rsvp_no: mail.rsvp?.no || 'No voy',
         ...audienceToForm(m.audience ?? null),
       });
       setEditingId(msgId);
@@ -431,6 +471,25 @@ export function AdminMessagesClient({
         send_email: form.send_email,
         scheduled_for: form.scheduled_for || null,
         audience: audiencePayload(form.audience),
+        email: {
+          full: form.email_full,
+          subject: form.email_subject.trim() || null,
+          from_name: form.email_from_name.trim() || null,
+          reply_to: form.email_reply_to.trim() || null,
+          cover_url: form.email_full ? form.email_cover_url || null : null,
+          cover_has_title: form.email_full && form.email_cover_url ? form.email_cover_has_title : null,
+          highlights: form.email_full
+            ? form.email_highlights.filter((h) => h.label.trim() && h.value.trim())
+            : null,
+          rsvp:
+            form.email_full && form.email_rsvp
+              ? {
+                  question: form.email_rsvp_question.trim() || null,
+                  yes: form.email_rsvp_yes.trim() || 'Voy',
+                  no: form.email_rsvp_no.trim() || 'No voy',
+                }
+              : null,
+        },
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
       if (form.periodo.trim()) payload.template_context = { periodo: form.periodo.trim() };
@@ -452,6 +511,7 @@ export function AdminMessagesClient({
               expires_at: (payload.expires_at as string) ?? null,
               audience: payload.audience,
               scheduled_for: payload.scheduled_for,
+              email: payload.email,
             },
           }),
         });
@@ -1045,6 +1105,16 @@ export function AdminMessagesClient({
                     Enviar también por mail a los destinatarios
                   </span>
                 </label>
+
+                {form.send_email && (
+                  <MailOptions
+                    form={form}
+                    setForm={setForm}
+                    editingId={editingId}
+                    onError={setError}
+                    onSuccess={setSuccess}
+                  />
+                )}
               </div>
 
               {/* Footer */}
@@ -1245,4 +1315,413 @@ export function AdminMessagesClient({
           )}
     </div>
   );
+}
+
+const INPUT_CLS =
+  'w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring';
+const LABEL_CLS = 'mb-1 block text-xs font-medium text-secondary-foreground';
+
+/**
+ * Opciones del mail de un mensaje: asunto, remitente y respuestas siempre; la
+ * carátula y el cuerpo entero sólo con "mail completo". La prueba se manda a
+ * quien está logueado y necesita el borrador guardado (sale de lo guardado, no
+ * de lo que está en pantalla).
+ */
+function MailOptions({
+  form,
+  setForm,
+  editingId,
+  onError,
+  onSuccess,
+}: {
+  form: CreateForm;
+  setForm: React.Dispatch<React.SetStateAction<CreateForm>>;
+  editingId: string | null;
+  onError: (msg: string | null) => void;
+  onSuccess: (msg: string | null) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [testing, setTesting] = useState(false);
+
+  const [coverKicker, setCoverKicker] = useState('');
+  const [coverTitle, setCoverTitle] = useState('');
+  const [coverSource, setCoverSource] = useState<File | null>(null);
+
+  const uploadCover = async (source: File) => {
+    setUploading(true);
+    onError(null);
+    try {
+      setCoverSource(source);
+      const withTitle = Boolean(coverTitle.trim() || coverKicker.trim());
+      const file = withTitle ? await composeCover(source, coverKicker, coverTitle) : source;
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/messages/cover', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? 'No se pudo subir la carátula.');
+        return;
+      }
+      setForm((f) => ({ ...f, email_cover_url: data.url, email_cover_has_title: withTitle }));
+    } catch {
+      onError('Error de red al subir la carátula.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const sendTest = async () => {
+    if (!editingId) return;
+    setTesting(true);
+    onError(null);
+    try {
+      const res = await fetch(`/api/admin/messages/${editingId}/test-email`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? 'No se pudo mandar la prueba.');
+        return;
+      }
+      onSuccess(`Te mandé la prueba a ${data.to}. Sale de lo último que guardaste.`);
+    } catch {
+      onError('Error de red al mandar la prueba.');
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 rounded-lg border border-[var(--border)] px-4 py-4">
+      <label htmlFor="email_full" className="flex cursor-pointer items-start gap-3">
+        <Checkbox
+          id="email_full"
+          checked={form.email_full}
+          onCheckedChange={(c) => setForm((f) => ({ ...f, email_full: c === true }))}
+        />
+        <span className="text-sm">
+          <span className="font-medium text-secondary-foreground">Mandar el mensaje completo por mail</span>
+          <span className="block text-xs text-muted-foreground">
+            Con carátula y todo el texto. Sin esto, el mail es un aviso corto con el botón al portal.
+          </span>
+        </span>
+      </label>
+
+      {form.email_full && (
+        <div className="space-y-3">
+          <span className={LABEL_CLS}>Carátula (opcional)</span>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="cover_kicker" className={LABEL_CLS}>Texto chico sobre la foto</label>
+              <input
+                id="cover_kicker"
+                type="text"
+                value={coverKicker}
+                onChange={(e) => setCoverKicker(e.target.value)}
+                placeholder="Viernes 4/12 · 14 h · Terraza"
+                className={INPUT_CLS}
+              />
+            </div>
+            <div>
+              <label htmlFor="cover_title" className={LABEL_CLS}>Título sobre la foto</label>
+              <input
+                id="cover_title"
+                type="text"
+                value={coverTitle}
+                onChange={(e) => setCoverTitle(e.target.value)}
+                placeholder="Despidamos el año *juntos*"
+                className={INPUT_CLS}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Lo que va entre asteriscos sale en naranja. Si escribís un título sobre la foto, el mail no lo repite abajo.
+            Completalos antes de elegir la imagen; si los cambiás después, tocá «Volver a armar».
+          </p>
+          {form.email_cover_url ? (
+            <div className="space-y-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={form.email_cover_url}
+                alt="Carátula del mail"
+                className="w-full rounded-lg border border-[var(--border)]"
+              />
+              <div className="flex flex-wrap gap-2">
+                {coverSource && (
+                  <Button variant="outline" size="sm" loading={uploading} onClick={() => void uploadCover(coverSource)}>
+                    Volver a armar
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCoverSource(null);
+                    setForm((f) => ({ ...f, email_cover_url: '', email_cover_has_title: false }));
+                  }}
+                >
+                  Sacar la carátula
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--border)] px-4 py-6 text-sm text-muted-foreground hover:bg-muted">
+              {uploading ? 'Armando y subiendo…' : 'Elegí una imagen (JPG, PNG o WebP)'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                disabled={uploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadCover(file);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          )}
+
+          <div>
+            <span className={LABEL_CLS}>Datos destacados (opcional, hasta 3)</span>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Salen en recuadros naranja claro después del primer párrafo. Por ejemplo, Cuándo / Viernes 4/12, 14 h.
+            </p>
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => {
+                const h = form.email_highlights[i] ?? { label: '', value: '' };
+                const setH = (patch: Partial<{ label: string; value: string }>) =>
+                  setForm((f) => {
+                    const next = [0, 1, 2].map((j) => f.email_highlights[j] ?? { label: '', value: '' });
+                    next[i] = { ...next[i], ...patch };
+                    // Se guardan sin huecos al final, así no quedan filas vacías.
+                    while (next.length && !next[next.length - 1].label && !next[next.length - 1].value) next.pop();
+                    return { ...f, email_highlights: next };
+                  });
+                return (
+                  <div key={i} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
+                    <input
+                      type="text"
+                      aria-label={`Rótulo ${i + 1}`}
+                      value={h.label}
+                      maxLength={30}
+                      onChange={(e) => setH({ label: e.target.value })}
+                      placeholder={['Cuándo', 'Dónde', 'Confirmá'][i]}
+                      className={INPUT_CLS}
+                    />
+                    <input
+                      type="text"
+                      aria-label={`Dato ${i + 1}`}
+                      value={h.value}
+                      maxLength={80}
+                      onChange={(e) => setH({ value: e.target.value })}
+                      placeholder={['Viernes 4/12, 14 h', 'Terraza de Pow', 'Antes del jueves 26/11'][i]}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-3 border-t border-[var(--border)] pt-3">
+            <label htmlFor="email_rsvp" className="flex cursor-pointer items-start gap-3">
+              <Checkbox
+                id="email_rsvp"
+                checked={form.email_rsvp}
+                onCheckedChange={(c) => setForm((f) => ({ ...f, email_rsvp: c === true }))}
+              />
+              <span className="text-sm">
+                <span className="font-medium text-secondary-foreground">Pedir respuesta con botones</span>
+                <span className="block text-xs text-muted-foreground">
+                  Cada persona responde desde el mail, sin entrar al portal. Las respuestas se ven en el detalle del mensaje.
+                </span>
+              </span>
+            </label>
+            {form.email_rsvp && (
+              <div className="grid gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <input
+                  type="text"
+                  aria-label="Pregunta"
+                  value={form.email_rsvp_question}
+                  maxLength={120}
+                  onChange={(e) => setForm((f) => ({ ...f, email_rsvp_question: e.target.value }))}
+                  placeholder="Venís al asado?"
+                  className={INPUT_CLS}
+                />
+                <input
+                  type="text"
+                  aria-label="Botón de sí"
+                  value={form.email_rsvp_yes}
+                  maxLength={30}
+                  onChange={(e) => setForm((f) => ({ ...f, email_rsvp_yes: e.target.value }))}
+                  placeholder="Voy"
+                  className={INPUT_CLS}
+                />
+                <input
+                  type="text"
+                  aria-label="Botón de no"
+                  value={form.email_rsvp_no}
+                  maxLength={30}
+                  onChange={(e) => setForm((f) => ({ ...f, email_rsvp_no: e.target.value }))}
+                  placeholder="No voy"
+                  className={INPUT_CLS}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="email_subject" className={LABEL_CLS}>Asunto</label>
+        <input
+          id="email_subject"
+          type="text"
+          value={form.email_subject}
+          onChange={(e) => setForm((f) => ({ ...f, email_subject: e.target.value }))}
+          placeholder={form.email_full ? form.title || 'Igual al título' : `Nuevo mensaje: ${form.title || '…'}`}
+          className={INPUT_CLS}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="email_from_name" className={LABEL_CLS}>Nombre del remitente</label>
+          <input
+            id="email_from_name"
+            type="text"
+            value={form.email_from_name}
+            onChange={(e) => setForm((f) => ({ ...f, email_from_name: e.target.value }))}
+            placeholder="Pow People"
+            className={INPUT_CLS}
+          />
+        </div>
+        <div>
+          <label htmlFor="email_reply_to" className={LABEL_CLS}>Las respuestas van a</label>
+          <input
+            id="email_reply_to"
+            type="email"
+            value={form.email_reply_to}
+            onChange={(e) => setForm((f) => ({ ...f, email_reply_to: e.target.value }))}
+            placeholder="La casilla de People"
+            className={INPUT_CLS}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-3">
+        <Button variant="outline" size="sm" onClick={sendTest} loading={testing} disabled={!editingId}>
+          Mandarme una prueba
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {editingId
+            ? 'Te llega sólo a vos. Guardá los cambios antes, la prueba sale del borrador guardado.'
+            : 'Guardá el borrador y abrilo para mandarte una prueba.'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const COVER_W = 1200;
+const COVER_H = 660; // 600 × 330 a 2x, la proporción de la carátula del mail
+const COVER_FONT = '"Plus Jakarta Sans"';
+
+async function loadCoverFont(): Promise<void> {
+  if (typeof document === 'undefined') return;
+  const id = 'pow-jakarta-font';
+  if (!document.getElementById(id)) {
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap';
+    document.head.appendChild(link);
+    await new Promise((r) => {
+      link.onload = r;
+      link.onerror = r;
+    });
+  }
+  try {
+    await Promise.all([
+      document.fonts.load(`800 64px ${COVER_FONT}`),
+      document.fonts.load(`700 22px ${COVER_FONT}`),
+    ]);
+  } catch {
+    // Sin la fuente se dibuja con la de sistema; la carátula sale igual.
+  }
+}
+
+/**
+ * Arma la carátula como en los artifacts de Pow: la foto recortada a 600×330,
+ * un degradé oscuro abajo y encima el texto chico en amarillo y el título en
+ * blanco, con lo que va entre asteriscos en naranja. Se arma como imagen porque
+ * un texto encima de una foto no se puede hacer de forma confiable en un mail.
+ */
+async function composeCover(source: File, kicker: string, title: string): Promise<File> {
+  await loadCoverFont();
+  const url = URL.createObjectURL(source);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      el.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = COVER_W;
+    canvas.height = COVER_H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return source;
+
+    // Recorte tipo object-fit: cover, centrado.
+    const scale = Math.max(COVER_W / img.width, COVER_H / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (COVER_W - w) / 2, (COVER_H - h) / 2, w, h);
+
+    const grad = ctx.createLinearGradient(0, 0, 0, COVER_H);
+    grad.addColorStop(0.35, 'rgba(23,22,20,0)');
+    grad.addColorStop(1, 'rgba(23,22,20,0.82)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, COVER_W, COVER_H);
+
+    const left = 48;
+    const maxW = COVER_W - left * 2;
+    let bottom = COVER_H - 40;
+
+    // Título: los tramos entre *asteriscos* van en naranja.
+    const parts = title
+      .trim()
+      .split(/(\*[^*]+\*)/)
+      .filter(Boolean)
+      .map((t) => (t.startsWith('*') && t.endsWith('*') ? { t: t.slice(1, -1), o: true } : { t, o: false }));
+    if (parts.length) {
+      let size = 64;
+      const measure = () => {
+        ctx.font = `800 ${size}px ${COVER_FONT}, system-ui, sans-serif`;
+        if ('letterSpacing' in ctx) (ctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.025 * size}px`;
+        return parts.reduce((acc, p) => acc + ctx.measureText(p.t).width, 0);
+      };
+      while (measure() > maxW && size > 36) size -= 2;
+      ctx.textBaseline = 'alphabetic';
+      let x = left;
+      for (const p of parts) {
+        ctx.fillStyle = p.o ? '#FE722B' : '#FFFFFF';
+        ctx.fillText(p.t, x, bottom);
+        x += ctx.measureText(p.t).width;
+      }
+      bottom -= size * 1.05 + 4;
+    }
+
+    if (kicker.trim()) {
+      ctx.font = `700 22px ${COVER_FONT}, system-ui, sans-serif`;
+      if ('letterSpacing' in ctx) (ctx as unknown as { letterSpacing: string }).letterSpacing = '3px';
+      ctx.fillStyle = '#FFEB82';
+      ctx.fillText(kicker.trim().toUpperCase(), left, bottom);
+    }
+
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.86));
+    if (!blob) return source;
+    return new File([blob], 'caratula.jpg', { type: 'image/jpeg' });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

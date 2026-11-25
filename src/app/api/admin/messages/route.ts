@@ -4,6 +4,7 @@ import { dbId } from '@/lib/zodId';
 import { requireAdmin } from '@/lib/checkAuth';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { parseMessageFilters, queryMessages } from '@/lib/messagesQuery';
+import { MessageEmailOptionsSchema, compactEmailOptions } from '@/lib/messageEmail';
 
 const CreateMessageSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(200),
@@ -17,6 +18,7 @@ const CreateMessageSchema = z.object({
   send_to_google_chat: z.boolean().default(false),
   send_email: z.boolean().default(false),
   template_context: z.record(z.string(), z.string()).optional(),
+  email: MessageEmailOptionsSchema.optional(),
   audience: z
     .union([
       z.object({ all: z.literal(true) }),
@@ -29,6 +31,16 @@ const CreateMessageSchema = z.object({
     ])
     .default({ all: true }),
 });
+
+function buildMetadata(
+  templateContext: Record<string, string> | undefined,
+  email: z.infer<typeof MessageEmailOptionsSchema> | undefined,
+): Record<string, unknown> | null {
+  const meta: Record<string, unknown> = {};
+  if (templateContext && Object.keys(templateContext).length) meta.template_context = templateContext;
+  if (email) meta.email = compactEmailOptions(email);
+  return Object.keys(meta).length ? meta : null;
+}
 
 // GET /api/admin/messages - Listado filtrado (server-side) con métricas
 export async function GET(req: NextRequest) {
@@ -82,10 +94,7 @@ export async function POST(req: NextRequest) {
         send_to_google_chat: parsed.data.send_to_google_chat,
         send_email: parsed.data.send_email,
         audience: parsed.data.audience,
-        metadata:
-          parsed.data.template_context && Object.keys(parsed.data.template_context).length
-            ? { template_context: parsed.data.template_context }
-            : null,
+        metadata: buildMetadata(parsed.data.template_context, parsed.data.email),
         status: 'draft',
         created_by: user.id,
       })

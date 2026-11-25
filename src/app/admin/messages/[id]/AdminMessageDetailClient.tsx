@@ -27,6 +27,8 @@ type Recipient = {
   confirmed_at: string | null;
   dismissed_at: string | null;
   email_status: string | null;
+  rsvp_response?: 'yes' | 'no' | null;
+  rsvp_at?: string | null;
   employee: {
     first_name: string;
     last_name: string;
@@ -39,9 +41,11 @@ type Metrics = {
   recipients_total: number;
   read_count: number;
   confirmed_count: number;
+  rsvp_yes?: number;
+  rsvp_no?: number;
 };
 
-type Filter = 'all' | 'unread' | 'read' | 'confirmed';
+type Filter = 'all' | 'unread' | 'read' | 'confirmed' | 'rsvp_yes' | 'rsvp_no' | 'rsvp_none';
 
 const priorityBadge: Record<string, string> = {
   info: 'bg-secondary text-muted-foreground',
@@ -78,11 +82,18 @@ export function AdminMessageDetailClient({
   metrics: Metrics;
 }) {
   const [filter, setFilter] = useState<Filter>('all');
+  // Respuesta "Voy / No voy" pedida en el mail (metadata.email.rsvp).
+  const rsvp = (message.metadata as { email?: { rsvp?: { yes?: string; no?: string } | null } } | null)?.email?.rsvp ?? null;
+  const rsvpYes = rsvp?.yes || 'Voy';
+  const rsvpNo = rsvp?.no || 'No voy';
 
   const filtered = initialRecipients.filter((r) => {
     if (filter === 'unread') return !r.read_at;
     if (filter === 'read') return !!r.read_at;
     if (filter === 'confirmed') return !!r.confirmed_at;
+    if (filter === 'rsvp_yes') return r.rsvp_response === 'yes';
+    if (filter === 'rsvp_no') return r.rsvp_response === 'no';
+    if (filter === 'rsvp_none') return !r.rsvp_response;
     return true;
   });
 
@@ -168,6 +179,25 @@ export function AdminMessageDetailClient({
         </div>
       </div>
 
+      {rsvp && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{rsvpYes}</p>
+            <p className="mt-1 text-3xl font-bold text-foreground">{metrics.rsvp_yes ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{rsvpNo}</p>
+            <p className="mt-1 text-3xl font-bold text-foreground">{metrics.rsvp_no ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sin responder</p>
+            <p className="mt-1 text-3xl font-bold text-foreground">
+              {metrics.recipients_total - (metrics.rsvp_yes ?? 0) - (metrics.rsvp_no ?? 0)}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Recipients table */}
       <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
@@ -183,6 +213,13 @@ export function AdminMessageDetailClient({
               { value: 'unread', label: 'No leídos' },
               { value: 'read', label: 'Leídos' },
               { value: 'confirmed', label: 'Confirmados' },
+              ...(rsvp
+                ? ([
+                    { value: 'rsvp_yes', label: rsvpYes },
+                    { value: 'rsvp_no', label: rsvpNo },
+                    { value: 'rsvp_none', label: 'Sin responder' },
+                  ] as { value: Filter; label: string }[])
+                : []),
             ]}
           />
         </div>
@@ -199,6 +236,9 @@ export function AdminMessageDetailClient({
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Entregado</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mail</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Leído</th>
+                  {rsvp && (
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Respuesta</th>
+                  )}
                   {message.require_confirmation && (
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confirmado</th>
                   )}
@@ -239,6 +279,24 @@ export function AdminMessageDetailClient({
                         </span>
                       )}
                     </td>
+                    {rsvp && (
+                      <td className="px-4 py-3">
+                        {r.rsvp_response ? (
+                          <span
+                            title={formatDate(r.rsvp_at ?? null)}
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              r.rsvp_response === 'yes'
+                                ? 'bg-success-subtle text-[var(--green-700)]'
+                                : 'bg-secondary text-muted-foreground'
+                            }`}
+                          >
+                            {r.rsvp_response === 'yes' ? rsvpYes : rsvpNo}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
                     {message.require_confirmation && (
                       <td className="px-4 py-3">
                         {r.confirmed_at ? (

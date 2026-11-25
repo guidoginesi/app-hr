@@ -12,7 +12,7 @@ import { resolveAudienceUserIds, getEmailsForUserIds, type BroadcastAudience } f
 import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 import { sendBatchEmails } from '@/lib/emailService';
-import { renderEmail, getAppUrl, getReplyTo } from '@/lib/email/layout';
+import { buildMessageEmail, needsPerRecipientEmail } from '@/lib/messageEmail';
 import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 const BATCH_SIZE = 500;
@@ -109,50 +109,20 @@ export async function publishMessage(messageId: string, actorUserId: string): Pr
     try {
       const recipientEmails = await getEmailsForUserIds(userIds);
       if (recipientEmails.length > 0) {
-        const replyTo = getReplyTo();
-        const ctx = (message.metadata?.template_context ?? {}) as Record<string, string>;
-        let items: { to: string; subject: string; html: string; replyTo?: string }[];
-
-        if (hasTemplateTokens(message.title, message.body)) {
-          // Plantilla con variables: mail personalizado por destinatario.
+        // Las variables por destinatario sólo hacen falta si el mensaje las usa.
+        let empByUser = new Map<string, unknown>();
+        if (needsPerRecipientEmail(message)) {
           const { data: emps } = await supabase
             .from('employees')
             .select('user_id, first_name, last_name, dni, cuil')
             .in('user_id', userIds);
-          const empByUser = new Map<string, unknown>((emps ?? []).map((e) => [e.user_id as string, e]));
-          items = recipientEmails.map((r) => {
-            const vars = buildRecipientVars((empByUser.get(r.userId) ?? null) as never, ctx);
-            const title = renderTemplate(message.title, vars);
-            return {
-              to: r.email,
-              subject: `Nuevo mensaje: ${title}`,
-              replyTo,
-              html: renderEmail({
-                title,
-                contextLabel: 'Pow · Comunicaciones',
-                bodyHtml: renderTemplate(message.body, vars, true),
-                cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
-              }),
-            };
-          });
-        } else {
-          const preview = getMessageBodyPlainText(message.body).slice(0, 200);
-          const previewText = preview.length >= 200 ? `${preview.trimEnd()}…` : preview;
-          const html = renderEmail({
-            title: message.title,
-            contextLabel: 'Pow · Comunicaciones',
-            preheader: previewText || 'Tenés un mensaje nuevo en el portal',
-            intro: previewText || 'Tenés un mensaje nuevo esperándote en el portal.',
-            cta: { label: 'Ver en el portal', url: `${getAppUrl()}/portal/messages` },
-            outro: 'Entrá al portal para leer el mensaje completo.',
-          });
-          items = recipientEmails.map((r) => ({
-            to: r.email,
-            subject: `Nuevo mensaje: ${message.title}`,
-            html,
-            replyTo,
-          }));
+          empByUser = new Map<string, unknown>((emps ?? []).map((e) => [e.user_id as string, e]));
         }
+        const ctx = (message.metadata?.template_context ?? {}) as Record<string, string>;
+        const items = recipientEmails.map((r) => {
+          const vars = buildRecipientVars((empByUser.get(r.userId) ?? null) as never, ctx);
+          return { to: r.email, ...buildMessageEmail(message, vars, r.userId) };
+        });
 
         const sendResult = await sendBatchEmails(items);
 
