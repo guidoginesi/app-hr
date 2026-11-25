@@ -92,6 +92,10 @@ type CreateForm = {
   email_cover_url: string;
   email_cover_has_title: boolean;
   email_highlights: { label: string; value: string }[];
+  email_rsvp: boolean;
+  email_rsvp_question: string;
+  email_rsvp_yes: string;
+  email_rsvp_no: string;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -115,6 +119,10 @@ const DEFAULT_FORM: CreateForm = {
   email_cover_url: '',
   email_cover_has_title: false,
   email_highlights: [],
+  email_rsvp: false,
+  email_rsvp_question: '',
+  email_rsvp_yes: 'Voy',
+  email_rsvp_no: 'No voy',
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -360,6 +368,7 @@ export function AdminMessagesClient({
       const mail = (m.metadata?.email ?? {}) as {
         full?: boolean; subject?: string; from_name?: string; reply_to?: string; cover_url?: string;
         cover_has_title?: boolean; highlights?: { label: string; value: string }[];
+        rsvp?: { question?: string | null; yes?: string; no?: string } | null;
       };
       setForm({
         ...DEFAULT_FORM,
@@ -380,6 +389,10 @@ export function AdminMessagesClient({
         email_cover_url: mail.cover_url ?? '',
         email_cover_has_title: Boolean(mail.cover_has_title),
         email_highlights: mail.highlights ?? [],
+        email_rsvp: Boolean(mail.rsvp),
+        email_rsvp_question: mail.rsvp?.question ?? '',
+        email_rsvp_yes: mail.rsvp?.yes || 'Voy',
+        email_rsvp_no: mail.rsvp?.no || 'No voy',
         ...audienceToForm(m.audience ?? null),
       });
       setEditingId(msgId);
@@ -468,6 +481,14 @@ export function AdminMessagesClient({
           highlights: form.email_full
             ? form.email_highlights.filter((h) => h.label.trim() && h.value.trim())
             : null,
+          rsvp:
+            form.email_full && form.email_rsvp
+              ? {
+                  question: form.email_rsvp_question.trim() || null,
+                  yes: form.email_rsvp_yes.trim() || 'Voy',
+                  no: form.email_rsvp_no.trim() || 'No voy',
+                }
+              : null,
         },
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
@@ -1498,6 +1519,53 @@ function MailOptions({
                 );
               })}
             </div>
+          </div>
+
+          <div className="space-y-3 border-t border-[var(--border)] pt-3">
+            <label htmlFor="email_rsvp" className="flex cursor-pointer items-start gap-3">
+              <Checkbox
+                id="email_rsvp"
+                checked={form.email_rsvp}
+                onCheckedChange={(c) => setForm((f) => ({ ...f, email_rsvp: c === true }))}
+              />
+              <span className="text-sm">
+                <span className="font-medium text-secondary-foreground">Pedir respuesta con botones</span>
+                <span className="block text-xs text-muted-foreground">
+                  Cada persona responde desde el mail, sin entrar al portal. Las respuestas se ven en el detalle del mensaje.
+                </span>
+              </span>
+            </label>
+            {form.email_rsvp && (
+              <div className="grid gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <input
+                  type="text"
+                  aria-label="Pregunta"
+                  value={form.email_rsvp_question}
+                  maxLength={120}
+                  onChange={(e) => setForm((f) => ({ ...f, email_rsvp_question: e.target.value }))}
+                  placeholder="Venís al asado?"
+                  className={INPUT_CLS}
+                />
+                <input
+                  type="text"
+                  aria-label="Botón de sí"
+                  value={form.email_rsvp_yes}
+                  maxLength={30}
+                  onChange={(e) => setForm((f) => ({ ...f, email_rsvp_yes: e.target.value }))}
+                  placeholder="Voy"
+                  className={INPUT_CLS}
+                />
+                <input
+                  type="text"
+                  aria-label="Botón de no"
+                  value={form.email_rsvp_no}
+                  maxLength={30}
+                  onChange={(e) => setForm((f) => ({ ...f, email_rsvp_no: e.target.value }))}
+                  placeholder="No voy"
+                  className={INPUT_CLS}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

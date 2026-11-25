@@ -47,6 +47,12 @@ export type FullMessageEmail = {
   preheader?: string;
   /** Texto chico del pie, a la izquierda del logo. */
   footerLabel?: string;
+  /** Botones de respuesta (Voy / No voy), con links ya firmados para este destinatario. */
+  rsvp?: {
+    question?: string | null;
+    yes: { label: string; url: string };
+    no: { label: string; url: string };
+  } | null;
 };
 
 const P = `margin:0 0 14px;font-size:15px;line-height:1.6;color:${POW_MAIL.body};`;
@@ -102,6 +108,32 @@ function highlightsHtml(items: Highlight[]): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:2px 0 16px;"><tr>${cells}</tr></table>`;
 }
 
+function rsvpHtml(r: NonNullable<FullMessageEmail['rsvp']>): string {
+  const btn = (label: string, url: string, primary: boolean) =>
+    `<a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 26px;border-radius:999px;font-family:${POW_MAIL.font};font-size:15px;font-weight:700;line-height:1;text-decoration:none;${
+      primary
+        ? `background:${POW_MAIL.ink};color:#FFFFFF;border:1px solid ${POW_MAIL.ink};`
+        : `background:#FFFFFF;color:${POW_MAIL.ink};border:1px solid #D9D4CB;`
+    }">${escapeHtml(label)}</a>`;
+  const question = r.question
+    ? `<div style="margin:0 0 12px;font-size:16px;font-weight:800;letter-spacing:-0.01em;color:${POW_MAIL.ink};">${escapeHtml(r.question)}</div>`
+    : '';
+  return `<div style="margin:6px 0 18px;padding:18px 18px 16px;border:1px solid ${POW_MAIL.line};border-radius:12px;text-align:center;">
+    ${question}
+    ${btn(r.yes.label, r.yes.url, true)}&nbsp;&nbsp;${btn(r.no.label, r.no.url, false)}
+    <div style="margin-top:10px;font-size:12px;color:${POW_MAIL.muted};">Si cambiás de idea, tocá el otro botón.</div>
+  </div>`;
+}
+
+/** Los botones van al final, antes de la firma si el último párrafo es corto ("Guido"). */
+function withRsvp(bodyHtml: string, block: string): string {
+  const starts = [...bodyHtml.matchAll(/<p[\s>]/gi)].map((m) => m.index ?? 0);
+  const last = starts[starts.length - 1];
+  if (last === undefined) return bodyHtml + block;
+  const lastText = bodyHtml.slice(last).replace(/<[^>]+>/g, '').trim();
+  return lastText.length < 30 ? bodyHtml.slice(0, last) + block + bodyHtml.slice(last) : bodyHtml + block;
+}
+
 /** Los recuadros van después del primer párrafo, como en la página del borrador. */
 function withHighlights(bodyHtml: string, items: Highlight[] | undefined): string {
   const list = (items ?? []).filter((h) => h.label.trim() && h.value.trim());
@@ -138,7 +170,9 @@ export function renderFullMessageEmail(content: FullMessageEmail): string {
       )}</h1>`
     : '';
 
-  const body = styleBodyForEmail(withHighlights(content.bodyHtml, content.highlights));
+  let body = styleBodyForEmail(withHighlights(content.bodyHtml, content.highlights));
+  // Después de estilar, para que los <p> del bloque de botones no se pisen.
+  if (content.rsvp) body = withRsvp(body, rsvpHtml(content.rsvp));
 
   return `<!DOCTYPE html>
 <html lang="es">

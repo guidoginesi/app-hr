@@ -3,6 +3,7 @@ import { renderEmail, getAppUrl, getReplyTo, getEmailFrom } from '@/lib/email/la
 import { renderFullMessageEmail } from '@/lib/email/fullMessage';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 import { hasTemplateTokens, renderTemplate } from '@/lib/templateVars';
+import { rsvpUrl } from '@/lib/rsvp';
 
 /**
  * Opciones del mail de un mensaje de Comunicaciones. Viven en
@@ -34,6 +35,19 @@ export const MessageEmailOptionsSchema = z.object({
     .max(3)
     .nullable()
     .optional(),
+  /**
+   * Pedir respuesta con dos botones (sólo en el mail completo). Cada botón es un
+   * link firmado por destinatario; la respuesta queda en
+   * message_recipients.rsvp_response. Ver src/lib/rsvp.ts.
+   */
+  rsvp: z
+    .object({
+      question: z.string().trim().max(120).nullable().optional(),
+      yes: z.string().trim().min(1).max(30).default('Voy'),
+      no: z.string().trim().min(1).max(30).default('No voy'),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type MessageEmailOptions = z.infer<typeof MessageEmailOptionsSchema>;
@@ -54,6 +68,7 @@ export function compactEmailOptions(o: MessageEmailOptions): MessageEmailOptions
   if (o.cover_url && o.cover_has_title) out.cover_has_title = true;
   const hl = (o.highlights ?? []).filter((h) => h.label && h.value);
   if (hl.length) out.highlights = hl;
+  if (o.full && o.rsvp) out.rsvp = { question: o.rsvp.question || null, yes: o.rsvp.yes, no: o.rsvp.no };
   return out;
 }
 
@@ -67,6 +82,7 @@ export function fromWithName(name: string | null | undefined): string | undefine
 }
 
 type MessageLike = {
+  id?: string;
   title: string;
   body: string;
   metadata?: unknown;
@@ -84,7 +100,12 @@ export type MessageEmailItem = {
  * ese destinatario ({{nombre}}, etc.); se reemplazan siempre que el mensaje las
  * use, en los dos formatos.
  */
-export function buildMessageEmail(message: MessageLike, vars: Record<string, string>): MessageEmailItem {
+export function buildMessageEmail(
+  message: MessageLike,
+  vars: Record<string, string>,
+  /** Destinatario, para firmar los botones de respuesta. Sin él, no van botones. */
+  recipientUserId?: string,
+): MessageEmailItem {
   const opts = getMessageEmailOptions(message.metadata);
   const templated = hasTemplateTokens(message.title, message.body, opts.subject);
   const title = templated ? renderTemplate(message.title, vars) : message.title;
@@ -111,6 +132,14 @@ export function buildMessageEmail(message: MessageLike, vars: Record<string, str
         })),
         preheader: preview,
         footerLabel: `Pow · ${monthLabel(new Date())}`,
+        rsvp:
+          opts.rsvp && message.id && recipientUserId
+            ? {
+                question: opts.rsvp.question || null,
+                yes: { label: opts.rsvp.yes, url: rsvpUrl(getAppUrl(), message.id, recipientUserId, 'yes') },
+                no: { label: opts.rsvp.no, url: rsvpUrl(getAppUrl(), message.id, recipientUserId, 'no') },
+              }
+            : null,
       }),
     };
   }

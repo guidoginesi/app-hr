@@ -59,7 +59,7 @@ export async function GET(
       .from('message_recipients')
       .select(
         `
-        id, user_id, delivered_at, read_at, confirmed_at, dismissed_at
+        id, user_id, delivered_at, read_at, confirmed_at, dismissed_at, rsvp_response, rsvp_at
       `
       )
       .eq('message_id', id)
@@ -108,6 +108,8 @@ export async function GET(
       recipients_total: enrichedRecipients.length,
       read_count: enrichedRecipients.filter((r: any) => r.read_at !== null).length,
       confirmed_count: enrichedRecipients.filter((r: any) => r.confirmed_at !== null).length,
+      rsvp_yes: enrichedRecipients.filter((r: any) => r.rsvp_response === 'yes').length,
+      rsvp_no: enrichedRecipients.filter((r: any) => r.rsvp_response === 'no').length,
     };
 
     return NextResponse.json({ message, recipients: enrichedRecipients, metrics });

@@ -121,7 +121,7 @@ export async function publishMessage(messageId: string, actorUserId: string): Pr
         const ctx = (message.metadata?.template_context ?? {}) as Record<string, string>;
         const items = recipientEmails.map((r) => {
           const vars = buildRecipientVars((empByUser.get(r.userId) ?? null) as never, ctx);
-          return { to: r.email, ...buildMessageEmail(message, vars) };
+          return { to: r.email, ...buildMessageEmail(message, vars, r.userId) };
         });
 
         const sendResult = await sendBatchEmails(items);

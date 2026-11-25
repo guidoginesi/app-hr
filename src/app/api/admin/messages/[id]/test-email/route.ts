@@ -32,7 +32,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     .eq('user_id', user.id)
     .maybeSingle();
   const ctx = ((message.metadata as { template_context?: Record<string, string> } | null)?.template_context ?? {});
-  const mail = buildMessageEmail(message, buildRecipientVars((emp ?? null) as never, ctx));
+  const mail = buildMessageEmail(message, buildRecipientVars((emp ?? null) as never, ctx), user.id);
 
   const result = await sendBatchEmails([{ to, ...mail, subject: `[Prueba] ${mail.subject}` }]);
   if (!result.success || !result.ids?.[0]) {
