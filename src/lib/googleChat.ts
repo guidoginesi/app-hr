@@ -53,7 +53,8 @@ export function htmlToChatCardText(html: string): string {
  * Mensaje con tarjeta: título, imagen (URL pública https) y texto. El webhook
  * no puede subir archivos adjuntos, pero sí mostrar una imagen por URL; las
  * carátulas de Comunicaciones viven en el bucket público message-images.
- * Va con `text` además de la tarjeta para que la notificación muestre algo.
+ * El título va sólo en `text` (en negrita), que además es lo que muestra la
+ * notificación; la tarjeta lleva la imagen y el texto.
  */
 export async function sendGoogleChatCard(card: {
   title: string;
@@ -77,7 +78,8 @@ export async function sendGoogleChatCard(card: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text: card.fallbackText,
-      cardsV2: [{ cardId: 'comunicado', card: { header: { title: card.title }, sections: [{ widgets }] } }],
+      // Sin header: el título ya va en `text`, y con los dos se veía repetido.
+      cardsV2: [{ cardId: 'comunicado', card: { sections: [{ widgets }] } }],
     }),
   });
   if (!res.ok) {
