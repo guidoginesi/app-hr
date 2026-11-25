@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/lib/supabaseServer';
 import { z } from 'zod';
 import { dbId } from '@/lib/zodId';
 import { audienceRequiresMassSend, actorCanMassSend } from '@/lib/messagePublish';
+import { MessageEmailOptionsSchema, compactEmailOptions } from '@/lib/messageEmail';
 
 // GET /api/admin/messages/[id] - Get message detail with full recipient list
 const AudienceSchema = z.union([
@@ -26,6 +27,7 @@ const EditMessageSchema = z.object({
   expires_at: z.string().datetime().nullable().optional(),
   audience: AudienceSchema.optional(),
   scheduled_for: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.').nullable().optional(),
+  email: MessageEmailOptionsSchema.optional(),
 });
 
 export async function GET(
@@ -175,7 +177,7 @@ export async function PATCH(
 
       const { data: actual, error: readError } = await supabase
         .from('messages')
-        .select('status')
+        .select('status, metadata')
         .eq('id', id)
         .single();
       if (readError || !actual) return NextResponse.json({ error: 'Message not found' }, { status: 404 });
@@ -202,6 +204,11 @@ export async function PATCH(
       if (e.expires_at !== undefined) update.expires_at = e.expires_at;
       if (e.audience !== undefined) update.audience = e.audience;
       if (e.scheduled_for !== undefined) update.scheduled_for = e.scheduled_for;
+      if (e.email !== undefined) {
+        // Se mezcla con lo que ya tenga metadata (template_context, etc.).
+        const prev = (actual.metadata ?? {}) as Record<string, unknown>;
+        update.metadata = { ...prev, email: compactEmailOptions(e.email) };
+      }
     }
 
     if (Object.keys(update).length === 0) {

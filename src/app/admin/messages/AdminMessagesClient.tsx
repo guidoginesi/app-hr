@@ -83,6 +83,13 @@ type CreateForm = {
   send_to_google_chat: boolean;
   send_email: boolean;
   scheduled_for: string;
+  // Mail completo (metadata.email): el mensaje entero con carátula, asunto y
+  // respuestas propias. Sin esto, el mail es el aviso corto de siempre.
+  email_full: boolean;
+  email_subject: string;
+  email_from_name: string;
+  email_reply_to: string;
+  email_cover_url: string;
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -99,6 +106,11 @@ const DEFAULT_FORM: CreateForm = {
   send_to_google_chat: false,
   send_email: false,
   scheduled_for: '',
+  email_full: false,
+  email_subject: '',
+  email_from_name: '',
+  email_reply_to: '',
+  email_cover_url: '',
 };
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
@@ -341,6 +353,9 @@ export function AdminMessagesClient({
       }
       const m = data.message ?? data;
       const ctx = (m.metadata?.template_context ?? {}) as Record<string, string>;
+      const mail = (m.metadata?.email ?? {}) as {
+        full?: boolean; subject?: string; from_name?: string; reply_to?: string; cover_url?: string;
+      };
       setForm({
         ...DEFAULT_FORM,
         title: m.title ?? '',
@@ -353,6 +368,11 @@ export function AdminMessagesClient({
         send_email: Boolean(m.send_email),
         scheduled_for: m.scheduled_for ?? '',
         periodo: ctx.periodo ?? '',
+        email_full: Boolean(mail.full),
+        email_subject: mail.subject ?? '',
+        email_from_name: mail.from_name ?? '',
+        email_reply_to: mail.reply_to ?? '',
+        email_cover_url: mail.cover_url ?? '',
         ...audienceToForm(m.audience ?? null),
       });
       setEditingId(msgId);
@@ -431,6 +451,13 @@ export function AdminMessagesClient({
         send_email: form.send_email,
         scheduled_for: form.scheduled_for || null,
         audience: audiencePayload(form.audience),
+        email: {
+          full: form.email_full,
+          subject: form.email_subject.trim() || null,
+          from_name: form.email_from_name.trim() || null,
+          reply_to: form.email_reply_to.trim() || null,
+          cover_url: form.email_full ? form.email_cover_url || null : null,
+        },
       };
       if (form.expires_at) payload.expires_at = new Date(form.expires_at).toISOString();
       if (form.periodo.trim()) payload.template_context = { periodo: form.periodo.trim() };
@@ -452,6 +479,7 @@ export function AdminMessagesClient({
               expires_at: (payload.expires_at as string) ?? null,
               audience: payload.audience,
               scheduled_for: payload.scheduled_for,
+              email: payload.email,
             },
           }),
         });
@@ -1045,6 +1073,16 @@ export function AdminMessagesClient({
                     Enviar también por mail a los destinatarios
                   </span>
                 </label>
+
+                {form.send_email && (
+                  <MailOptions
+                    form={form}
+                    setForm={setForm}
+                    editingId={editingId}
+                    onError={setError}
+                    onSuccess={setSuccess}
+                  />
+                )}
               </div>
 
               {/* Footer */}
@@ -1243,6 +1281,172 @@ export function AdminMessagesClient({
               </div>
             </div>
           )}
+    </div>
+  );
+}
+
+const INPUT_CLS =
+  'w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-ring';
+const LABEL_CLS = 'mb-1 block text-xs font-medium text-secondary-foreground';
+
+/**
+ * Opciones del mail de un mensaje: asunto, remitente y respuestas siempre; la
+ * carátula y el cuerpo entero sólo con "mail completo". La prueba se manda a
+ * quien está logueado y necesita el borrador guardado (sale de lo guardado, no
+ * de lo que está en pantalla).
+ */
+function MailOptions({
+  form,
+  setForm,
+  editingId,
+  onError,
+  onSuccess,
+}: {
+  form: CreateForm;
+  setForm: React.Dispatch<React.SetStateAction<CreateForm>>;
+  editingId: string | null;
+  onError: (msg: string | null) => void;
+  onSuccess: (msg: string | null) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [testing, setTesting] = useState(false);
+
+  const uploadCover = async (file: File) => {
+    setUploading(true);
+    onError(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/messages/cover', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? 'No se pudo subir la carátula.');
+        return;
+      }
+      setForm((f) => ({ ...f, email_cover_url: data.url }));
+    } catch {
+      onError('Error de red al subir la carátula.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const sendTest = async () => {
+    if (!editingId) return;
+    setTesting(true);
+    onError(null);
+    try {
+      const res = await fetch(`/api/admin/messages/${editingId}/test-email`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? 'No se pudo mandar la prueba.');
+        return;
+      }
+      onSuccess(`Te mandé la prueba a ${data.to}. Sale de lo último que guardaste.`);
+    } catch {
+      onError('Error de red al mandar la prueba.');
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 rounded-lg border border-[var(--border)] px-4 py-4">
+      <label htmlFor="email_full" className="flex cursor-pointer items-start gap-3">
+        <Checkbox
+          id="email_full"
+          checked={form.email_full}
+          onCheckedChange={(c) => setForm((f) => ({ ...f, email_full: c === true }))}
+        />
+        <span className="text-sm">
+          <span className="font-medium text-secondary-foreground">Mandar el mensaje completo por mail</span>
+          <span className="block text-xs text-muted-foreground">
+            Con carátula y todo el texto. Sin esto, el mail es un aviso corto con el botón al portal.
+          </span>
+        </span>
+      </label>
+
+      {form.email_full && (
+        <div>
+          <span className={LABEL_CLS}>Carátula (opcional)</span>
+          {form.email_cover_url ? (
+            <div className="space-y-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={form.email_cover_url}
+                alt="Carátula del mail"
+                className="aspect-[600/330] w-full rounded-lg border border-[var(--border)] object-cover"
+              />
+              <Button variant="ghost" size="sm" onClick={() => setForm((f) => ({ ...f, email_cover_url: '' }))}>
+                Sacar la carátula
+              </Button>
+            </div>
+          ) : (
+            <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--border)] px-4 py-6 text-sm text-muted-foreground hover:bg-muted">
+              {uploading ? 'Subiendo…' : 'Elegí una imagen (JPG, PNG o WebP, hasta 5 MB)'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                disabled={uploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadCover(file);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          )}
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="email_subject" className={LABEL_CLS}>Asunto</label>
+        <input
+          id="email_subject"
+          type="text"
+          value={form.email_subject}
+          onChange={(e) => setForm((f) => ({ ...f, email_subject: e.target.value }))}
+          placeholder={form.email_full ? form.title || 'Igual al título' : `Nuevo mensaje: ${form.title || '…'}`}
+          className={INPUT_CLS}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="email_from_name" className={LABEL_CLS}>Nombre del remitente</label>
+          <input
+            id="email_from_name"
+            type="text"
+            value={form.email_from_name}
+            onChange={(e) => setForm((f) => ({ ...f, email_from_name: e.target.value }))}
+            placeholder="Pow People"
+            className={INPUT_CLS}
+          />
+        </div>
+        <div>
+          <label htmlFor="email_reply_to" className={LABEL_CLS}>Las respuestas van a</label>
+          <input
+            id="email_reply_to"
+            type="email"
+            value={form.email_reply_to}
+            onChange={(e) => setForm((f) => ({ ...f, email_reply_to: e.target.value }))}
+            placeholder="La casilla de People"
+            className={INPUT_CLS}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-3">
+        <Button variant="outline" size="sm" onClick={sendTest} loading={testing} disabled={!editingId}>
+          Mandarme una prueba
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {editingId
+            ? 'Te llega sólo a vos. Guardá los cambios antes, la prueba sale del borrador guardado.'
+            : 'Guardá el borrador y abrilo para mandarte una prueba.'}
+        </span>
+      </div>
     </div>
   );
 }

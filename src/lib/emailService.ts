@@ -280,6 +280,8 @@ type BatchEmailItem = {
 	subject: string;
 	html: string;
 	replyTo?: string;
+	/** Remitente con otro nombre visible (misma dirección). Sin él, RESEND_FROM_EMAIL. */
+	from?: string;
 };
 
 /**
@@ -308,7 +310,7 @@ export async function sendBatchEmails(
 
 			const { data, error } = await resend.batch.send(
 				chunk.map((e) => ({
-					from: fromEmail,
+					from: e.from || fromEmail,
 					to: e.to,
 					subject: e.subject,
 					html: e.html,
