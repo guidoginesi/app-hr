@@ -27,6 +27,8 @@ export const MessageEmailOptionsSchema = z.object({
     .optional(),
   reply_to: z.string().trim().email('El mail para las respuestas no es válido.').nullable().optional(),
   from_name: z.string().trim().max(60).nullable().optional(),
+  /** Texto que se ve al lado del asunto en la bandeja. Sin él, el comienzo del cuerpo. */
+  preheader: z.string().trim().max(200).nullable().optional(),
   /** La carátula ya trae el título escrito (la compone el formulario). */
   cover_has_title: z.boolean().nullable().optional(),
   /** Hasta 3 recuadros destacados (Cuándo / Dónde / Confirmá). */
@@ -65,6 +67,7 @@ export function compactEmailOptions(o: MessageEmailOptions): MessageEmailOptions
   if (o.cover_url) out.cover_url = o.cover_url;
   if (o.reply_to) out.reply_to = o.reply_to;
   if (o.from_name) out.from_name = o.from_name;
+  if (o.preheader) out.preheader = o.preheader;
   if (o.cover_url && o.cover_has_title) out.cover_has_title = true;
   const hl = (o.highlights ?? []).filter((h) => h.label && h.value);
   if (hl.length) out.highlights = hl;
@@ -130,7 +133,7 @@ export function buildMessageEmail(
           label: templated ? renderTemplate(h.label, vars) : h.label,
           value: templated ? renderTemplate(h.value, vars) : h.value,
         })),
-        preheader: preview,
+        preheader: opts.preheader ? (templated ? renderTemplate(opts.preheader, vars) : opts.preheader) : preview,
         footerLabel: `Pow · ${monthLabel(new Date())}`,
         rsvp:
           opts.rsvp && message.id && recipientUserId
@@ -173,7 +176,7 @@ export function buildMessageEmail(
     html: renderEmail({
       title: message.title,
       contextLabel: 'Pow · Comunicaciones',
-      preheader: previewText || 'Tenés un mensaje nuevo en el portal',
+      preheader: opts.preheader || previewText || 'Tenés un mensaje nuevo en el portal',
       intro: previewText || 'Tenés un mensaje nuevo esperándote en el portal.',
       cta: { label: 'Ver en el portal', url: portalUrl },
       outro: 'Entrá al portal para leer el mensaje completo.',
