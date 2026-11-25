@@ -56,6 +56,8 @@ export type EmailContent = {
   details?: DetailRow[];
   /** CTA primario (botón tinta). */
   cta?: { label: string; url: string };
+  /** Link secundario, en texto, al lado del botón. */
+  secondaryCta?: { label: string; url: string };
   /** Nota secundaria en muted, debajo del CTA. */
   outro?: string;
   /** Letra chica bajo la firma del pie. */
@@ -198,7 +200,12 @@ export function renderEmail(content: EmailContent): string {
 
   const body = content.bodyHtml ?? '';
   const details = content.details && content.details.length ? detailHtml(content.details) : '';
-  const cta = content.cta ? `<div style="margin:2px 0 4px;">${ctaHtml(content.cta)}</div>` : '';
+  const secundario = content.secondaryCta
+    ? `<a href="${escapeHtml(content.secondaryCta.url)}" style="margin-left:14px;font-size:12px;font-weight:600;color:${EMAIL.muted};text-decoration:underline;">${escapeHtml(
+        content.secondaryCta.label,
+      )}</a>`
+    : '';
+  const cta = content.cta ? `<div style="margin:2px 0 4px;">${ctaHtml(content.cta)}${secundario}</div>` : '';
   const outro = content.outro
     ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:${EMAIL.faint};">${escapeHtml(
         content.outro,
@@ -353,15 +360,24 @@ export function renderPlainTemplate(params: {
   templateKey: string;
   subject: string;
   body: string;
+  /**
+   * Un botón propio de este envío (p. ej. agendar Fuera de oficina). Pasa a ser
+   * el principal y el CTA de la plantilla queda como link secundario.
+   */
+  cta?: { label: string; url: string };
+  /** Nota bajo el botón. */
+  outro?: string;
 }): string {
   const cfg = KEY_CONFIG[params.templateKey] ?? { context: 'Pow' };
   const bodyHtml = looksLikeHtml(params.body)
     ? params.body
     : textToParagraphs(params.body);
 
-  const cta = cfg.cta
+  const ctaDeLaPlantilla = cfg.cta
     ? { label: cfg.cta.label, url: `${getAppUrl()}${cfg.cta.path}` }
     : undefined;
+  const cta = params.cta ?? ctaDeLaPlantilla;
+  const secondaryCta = params.cta ? ctaDeLaPlantilla : undefined;
 
   return renderEmail({
     title: stripLeadingEmoji(params.subject),
@@ -370,6 +386,8 @@ export function renderPlainTemplate(params: {
     preheader: stripLeadingEmoji(params.subject),
     bodyHtml,
     cta,
+    secondaryCta,
+    outro: params.outro,
     footerNote: cfg.footerNote,
   });
 }
