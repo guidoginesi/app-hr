@@ -11,7 +11,7 @@
  * fuente se pide a Google Fonts; donde no carga (Gmail web, Outlook) cae en la
  * pila de sistema, que es la misma del resto de los mails.
  */
-import { EMAIL, escapeHtml } from './layout';
+import { EMAIL, escapeHtml, getAppUrl } from './layout';
 
 /** Paleta de los artifacts de Pow (skill pow-artifacts). */
 export const POW_MAIL = {
@@ -148,10 +148,9 @@ function withHighlights(bodyHtml: string, items: Highlight[] | undefined): strin
 }
 
 export function renderFullMessageEmail(content: FullMessageEmail): string {
-  const logoUrl = process.env.EMAIL_LOGO_URL;
-  const brandMark = logoUrl
-    ? `<img src="${escapeHtml(logoUrl)}" alt="Pow" height="14" style="display:block;border:0;height:14px;">`
-    : `<span style="font-size:15px;font-weight:800;letter-spacing:-0.04em;color:${POW_MAIL.ink};">Pow</span>`;
+  // El logo de Pow (el de los artifacts, con el destello) como PNG: los clientes
+  // de mail no muestran SVG. Vive en public/email/pow-logo.png (672×104, 4x).
+  const brandMark = `<img src="${escapeHtml(`${getAppUrl()}/email/pow-logo.png`)}" alt="Pow" width="90" height="14" style="display:block;border:0;width:90px;height:14px;">`;
 
   const preheader = content.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(content.preheader)}</div>`
