@@ -9,10 +9,10 @@
 
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { resolveAudienceUserIds, getEmailsForUserIds, type BroadcastAudience } from '@/lib/notificationService';
-import { sendGoogleChatMessage } from '@/lib/googleChat';
+import { sendGoogleChatMessage, sendGoogleChatCard, htmlToChatCardText } from '@/lib/googleChat';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 import { sendBatchEmails } from '@/lib/emailService';
-import { buildMessageEmail, needsPerRecipientEmail } from '@/lib/messageEmail';
+import { buildMessageEmail, needsPerRecipientEmail, getMessageEmailOptions } from '@/lib/messageEmail';
 import { hasTemplateTokens, renderTemplate, buildRecipientVars } from '@/lib/templateVars';
 
 const BATCH_SIZE = 500;
@@ -158,7 +158,23 @@ export async function publishMessage(messageId: string, actorUserId: string): Pr
       const chatVars = buildRecipientVars(null, (message.metadata?.template_context ?? {}) as Record<string, string>);
       const chatTitle = renderTemplate(message.title, chatVars);
       const chatBody = renderTemplate(getMessageBodyPlainText(message.body), chatVars);
-      await sendGoogleChatMessage(`${priorityEmoji} *${chatTitle}*\n\n${chatBody}`);
+      // Con carátula, va como tarjeta con la imagen; si la tarjeta falla, cae al texto.
+      const coverUrl = getMessageEmailOptions(message.metadata).cover_url;
+      let sent = false;
+      if (coverUrl) {
+        try {
+          await sendGoogleChatCard({
+            title: `${priorityEmoji} ${chatTitle}`,
+            imageUrl: coverUrl,
+            html: htmlToChatCardText(renderTemplate(message.body, chatVars, true)),
+            fallbackText: `${priorityEmoji} *${chatTitle}*`,
+          });
+          sent = true;
+        } catch (cardError) {
+          console.error('[publish] Google Chat card error:', cardError instanceof Error ? cardError.message : cardError);
+        }
+      }
+      if (!sent) await sendGoogleChatMessage(`${priorityEmoji} *${chatTitle}*\n\n${chatBody}`);
     } catch (chatError) {
       console.error('[publish] Google Chat error:', chatError instanceof Error ? chatError.message : chatError);
     }
