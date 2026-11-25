@@ -42,5 +42,14 @@ export async function POST(req: NextRequest) {
 
   // Sin fila: es el mail de prueba (o un mensaje que todavía no se publicó).
   if (!updated?.length) return NextResponse.json({ ok: true, test: true, ...answer });
+
+  // Responder es haberlo leído: sin esto el detalle muestra "No leído" al lado
+  // de un "No voy". Sólo si todavía no estaba leído, para no pisar la fecha.
+  await supabase
+    .from('message_recipients')
+    .update({ read_at: new Date().toISOString() })
+    .eq('message_id', m)
+    .eq('user_id', u)
+    .is('read_at', null);
   return NextResponse.json({ ok: true, ...answer });
 }
