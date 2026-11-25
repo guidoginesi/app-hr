@@ -167,7 +167,7 @@ export async function publishMessage(messageId: string, actorUserId: string): Pr
             title: `${priorityEmoji} ${chatTitle}`,
             imageUrl: coverUrl,
             html: htmlToChatCardText(renderTemplate(message.body, chatVars, true)),
-            fallbackText: `${priorityEmoji} *${chatTitle}*`,
+            fallbackText: `${priorityEmoji} *${chatTitle}*`, // es el título visible
           });
           sent = true;
         } catch (cardError) {
