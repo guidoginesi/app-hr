@@ -89,6 +89,7 @@ type CreateForm = {
   email_subject: string;
   email_from_name: string;
   email_reply_to: string;
+  email_preheader: string;
   email_cover_url: string;
   email_cover_has_title: boolean;
   email_highlights: { label: string; value: string }[];
@@ -116,6 +117,7 @@ const DEFAULT_FORM: CreateForm = {
   email_subject: '',
   email_from_name: '',
   email_reply_to: '',
+  email_preheader: '',
   email_cover_url: '',
   email_cover_has_title: false,
   email_highlights: [],
@@ -367,6 +369,7 @@ export function AdminMessagesClient({
       const ctx = (m.metadata?.template_context ?? {}) as Record<string, string>;
       const mail = (m.metadata?.email ?? {}) as {
         full?: boolean; subject?: string; from_name?: string; reply_to?: string; cover_url?: string;
+        preheader?: string;
         cover_has_title?: boolean; highlights?: { label: string; value: string }[];
         rsvp?: { question?: string | null; yes?: string; no?: string } | null;
       };
@@ -386,6 +389,7 @@ export function AdminMessagesClient({
         email_subject: mail.subject ?? '',
         email_from_name: mail.from_name ?? '',
         email_reply_to: mail.reply_to ?? '',
+        email_preheader: mail.preheader ?? '',
         email_cover_url: mail.cover_url ?? '',
         email_cover_has_title: Boolean(mail.cover_has_title),
         email_highlights: mail.highlights ?? [],
@@ -476,6 +480,7 @@ export function AdminMessagesClient({
           subject: form.email_subject.trim() || null,
           from_name: form.email_from_name.trim() || null,
           reply_to: form.email_reply_to.trim() || null,
+          preheader: form.email_preheader.trim() || null,
           cover_url: form.email_full ? form.email_cover_url || null : null,
           cover_has_title: form.email_full && form.email_cover_url ? form.email_cover_has_title : null,
           highlights: form.email_full
@@ -1578,6 +1583,19 @@ function MailOptions({
           value={form.email_subject}
           onChange={(e) => setForm((f) => ({ ...f, email_subject: e.target.value }))}
           placeholder={form.email_full ? form.title || 'Igual al título' : `Nuevo mensaje: ${form.title || '…'}`}
+          className={INPUT_CLS}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="email_preheader" className={LABEL_CLS}>Vista previa (opcional)</label>
+        <input
+          id="email_preheader"
+          type="text"
+          maxLength={200}
+          value={form.email_preheader}
+          onChange={(e) => setForm((f) => ({ ...f, email_preheader: e.target.value }))}
+          placeholder="Lo que se lee al lado del asunto en la bandeja. Sin esto, el comienzo del texto."
           className={INPUT_CLS}
         />
       </div>
