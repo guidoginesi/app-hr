@@ -5,6 +5,7 @@ import { sendTimeOffEmail } from '@/lib/emailService';
 import { createSystemNotification } from '@/lib/notificationService';
 import { isUnlimitedLeaveType } from '@/lib/leaveTypes';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
+import { extrasFueraDeOficina } from '@/lib/fueraDeOficina';
 
 // PUT /api/admin/time-off/requests/[id]/approve - HR Admin approves a leave request
 export async function PUT(
@@ -124,7 +125,7 @@ export async function PUT(
 
     const { data: leaveType } = await supabase
       .from('leave_types')
-      .select('name, count_type')
+      .select('code, name, count_type')
       .eq('id', request.leave_type_id)
       .single();
 
@@ -143,6 +144,14 @@ export async function PUT(
             tipo_licencia: leaveType?.name || 'Licencia',
           },
           leaveRequestId: id,
+          ...extrasFueraDeOficina({
+            codigo: leaveType?.code,
+            tipoLicencia: leaveType?.name || 'Licencia',
+            desde: request.start_date,
+            hasta: request.end_date,
+            fechaInicioTexto: formatDate(request.start_date),
+            fechaFinTexto: formatDate(request.end_date),
+          }),
         }).catch((err) => console.error('Error sending HR approved email:', err));
       }
     }

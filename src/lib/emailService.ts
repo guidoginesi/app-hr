@@ -344,6 +344,10 @@ type TimeOffEmailParams = {
 	to: string;
 	variables: Record<string, string>;
 	leaveRequestId?: string;
+	/** Botón propio de este envío; el de la plantilla queda como link secundario. */
+	cta?: { label: string; url: string };
+	/** Nota bajo el botón. */
+	outro?: string;
 };
 
 /**
@@ -408,7 +412,13 @@ export async function sendTimeOffEmail(params: TimeOffEmailParams): Promise<{ su
 		// Reemplazar variables en subject y body
 		const subject = replaceVariables(template.subject, params.variables);
 		const bodyText = replaceVariables(template.body, params.variables);
-		const bodyHtml = renderPlainTemplate({ templateKey: params.templateKey, subject, body: bodyText });
+		const bodyHtml = renderPlainTemplate({
+			templateKey: params.templateKey,
+			subject,
+			body: bodyText,
+			cta: params.cta,
+			outro: params.outro,
+		});
 
 		// Enviar email con Resend
 		const resend = getResend();

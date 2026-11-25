@@ -13,6 +13,7 @@ import { disponibleParaPedido } from '@/lib/saldoEntreAnios';
 import { MARCA_DE_TRASPASO, PRIMER_TRASPASO_AUTOMATICO } from '@/lib/traspasoDeAnio';
 import { calculateEntitledDays } from '@/lib/leaveBalanceCalculation';
 import { sincronizarLicencia } from '@/lib/leaveCalendar';
+import { extrasFueraDeOficina } from '@/lib/fueraDeOficina';
 
 // Regex for UUID format (more permissive than RFC 4122)
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -477,6 +478,17 @@ export async function POST(req: NextRequest) {
             }
           : emailVariables,
         leaveRequestId: data.id,
+        // Sin líder queda aprobada en el acto: este es el mail de aprobación.
+        ...(sinLider
+          ? extrasFueraDeOficina({
+              codigo: leaveType.code,
+              tipoLicencia: leaveType.name,
+              desde: parsed.data.start_date,
+              hasta: parsed.data.end_date,
+              fechaInicioTexto: emailVariables.fecha_inicio,
+              fechaFinTexto: emailVariables.fecha_fin,
+            })
+          : {}),
       }).catch((err) => console.error('Error sending request submitted email:', err));
     }
     // In-app notification to the employee who submitted
