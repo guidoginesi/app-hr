@@ -97,21 +97,21 @@ export function styleBodyForEmail(html: string): string {
 
 function highlightsHtml(items: Highlight[]): string {
   const list = items.slice(0, 3);
-  const width = Math.floor(100 / list.length);
+  const width = Math.floor((100 - (list.length - 1) * 2) / list.length);
+  // El fondo va en la celda y no en un div adentro: las celdas de una fila
+  // tienen siempre la misma altura, así un dato corto ("Bariloche") no deja su
+  // recuadro más bajo que los de al lado. La separación es una celda vacía,
+  // porque Outlook y Gmail no respetan border-spacing ni calc().
   const cells = list
     .map((h, i) => {
-      // Separación de 8px entre recuadros sin calc() ni border-spacing, que
-      // Outlook y Gmail no respetan igual.
-      const pad = `padding:0 ${i === list.length - 1 ? 0 : 4}px 0 ${i === 0 ? 0 : 4}px;`;
-      return `<td valign="top" width="${width}%" style="${pad}">
-          <div style="background:${POW_MAIL.accentSoft};border-radius:10px;padding:10px 12px;">
-            <div style="${SMALL_LABEL}">${escapeHtml(h.label)}</div>
-            <div style="margin-top:2px;font-size:14px;font-weight:700;line-height:1.35;color:${POW_MAIL.ink};">${escapeHtml(h.value)}</div>
-          </div>
+      const box = `<td valign="top" width="${width}%" style="background:${POW_MAIL.accentSoft};border-radius:10px;padding:10px 12px;">
+          <div style="${SMALL_LABEL}">${escapeHtml(h.label)}</div>
+          <div style="margin-top:2px;font-size:14px;font-weight:700;line-height:1.35;color:${POW_MAIL.ink};">${escapeHtml(h.value)}</div>
         </td>`;
+      return i === 0 ? box : `<td width="2%" style="font-size:0;line-height:0;">&nbsp;</td>${box}`;
     })
     .join('');
-  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:2px 0 16px;"><tr>${cells}</tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:2px 0 16px;border-collapse:separate;"><tr>${cells}</tr></table>`;
 }
 
 /** Una pregunta por recuadro, con una opción por renglón: las opciones pueden ser largas. */
