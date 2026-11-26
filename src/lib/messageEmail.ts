@@ -3,7 +3,7 @@ import { renderEmail, getAppUrl, getReplyTo, getEmailFrom } from '@/lib/email/la
 import { renderFullMessageEmail } from '@/lib/email/fullMessage';
 import { getMessageBodyPlainText } from '@/lib/messageBody';
 import { hasTemplateTokens, renderTemplate } from '@/lib/templateVars';
-import { rsvpUrl } from '@/lib/rsvp';
+import { rsvpUrl, rsvpOptionUrl } from '@/lib/rsvp';
 
 /**
  * Opciones del mail de un mensaje de Comunicaciones. Viven en
@@ -15,6 +15,16 @@ import { rsvpUrl } from '@/lib/rsvp';
  * - `reply_to`: a dónde van las respuestas. Sin él, RESEND_REPLY_TO_EMAIL.
  * - `from_name`: nombre visible del remitente. La dirección no cambia.
  */
+export const RsvpQuestionSchema = z.object({
+  question: z.string().trim().min(1, 'Cada pregunta necesita su texto.').max(120),
+  options: z
+    .array(z.string().trim().min(1).max(80))
+    .min(2, 'Cada pregunta necesita al menos dos opciones.')
+    .max(6, 'Hasta 6 opciones por pregunta.'),
+});
+
+export type RsvpQuestion = z.infer<typeof RsvpQuestionSchema>;
+
 export const MessageEmailOptionsSchema = z.object({
   full: z.boolean().default(false),
   subject: z.string().trim().max(150).nullable().optional(),
@@ -47,6 +57,11 @@ export const MessageEmailOptionsSchema = z.object({
       question: z.string().trim().max(120).nullable().optional(),
       yes: z.string().trim().min(1).max(30).default('Voy'),
       no: z.string().trim().min(1).max(30).default('No voy'),
+      /**
+       * En vez de "Voy / No voy", preguntas con opciones: cada persona elige
+       * una opción por pregunta. Quedan en message_recipients.rsvp_answers.
+       */
+      questions: z.array(RsvpQuestionSchema).min(1).max(3).nullable().optional(),
     })
     .nullable()
     .optional(),
@@ -71,7 +86,11 @@ export function compactEmailOptions(o: MessageEmailOptions): MessageEmailOptions
   if (o.cover_url && o.cover_has_title) out.cover_has_title = true;
   const hl = (o.highlights ?? []).filter((h) => h.label && h.value);
   if (hl.length) out.highlights = hl;
-  if (o.full && o.rsvp) out.rsvp = { question: o.rsvp.question || null, yes: o.rsvp.yes, no: o.rsvp.no };
+  if (o.full && o.rsvp) {
+    out.rsvp = o.rsvp.questions?.length
+      ? { yes: o.rsvp.yes, no: o.rsvp.no, questions: o.rsvp.questions }
+      : { question: o.rsvp.question || null, yes: o.rsvp.yes, no: o.rsvp.no };
+  }
   return out;
 }
 
@@ -136,7 +155,17 @@ export function buildMessageEmail(
         preheader: opts.preheader ? (templated ? renderTemplate(opts.preheader, vars) : opts.preheader) : preview,
         footerLabel: `Pow · ${monthLabel(new Date())}`,
         rsvp:
-          opts.rsvp && message.id && recipientUserId
+          opts.rsvp?.questions?.length && message.id && recipientUserId
+            ? {
+                questions: opts.rsvp.questions.map((q, qi) => ({
+                  question: q.question,
+                  options: q.options.map((label, oi) => ({
+                    label,
+                    url: rsvpOptionUrl(getAppUrl(), message.id!, recipientUserId, qi, oi),
+                  })),
+                })),
+              }
+            : opts.rsvp && message.id && recipientUserId
             ? {
                 question: opts.rsvp.question || null,
                 yes: { label: opts.rsvp.yes, url: rsvpUrl(getAppUrl(), message.id, recipientUserId, 'yes') },

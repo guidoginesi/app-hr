@@ -29,6 +29,8 @@ type Recipient = {
   email_status: string | null;
   rsvp_response?: 'yes' | 'no' | null;
   rsvp_at?: string | null;
+  /** Preguntas con opciones: { "<pregunta>": <opción> }. */
+  rsvp_answers?: Record<string, number> | null;
   employee: {
     first_name: string;
     last_name: string;
@@ -83,9 +85,18 @@ export function AdminMessageDetailClient({
 }) {
   const [filter, setFilter] = useState<Filter>('all');
   // Respuesta "Voy / No voy" pedida en el mail (metadata.email.rsvp).
-  const rsvp = (message.metadata as { email?: { rsvp?: { yes?: string; no?: string } | null } } | null)?.email?.rsvp ?? null;
+  // O preguntas con opciones (rsvp.questions): cada uno elige una por pregunta.
+  const rsvp = (message.metadata as {
+    email?: { rsvp?: { yes?: string; no?: string; questions?: { question: string; options: string[] }[] | null } | null };
+  } | null)?.email?.rsvp ?? null;
   const rsvpYes = rsvp?.yes || 'Voy';
   const rsvpNo = rsvp?.no || 'No voy';
+  const questions = rsvp?.questions?.length ? rsvp.questions : null;
+  const answerOf = (r: Recipient, qi: number): number | undefined => {
+    const v = r.rsvp_answers?.[String(qi)];
+    return typeof v === 'number' && questions?.[qi]?.options[v] !== undefined ? v : undefined;
+  };
+  const complete = (r: Recipient) => Boolean(questions?.every((_, qi) => answerOf(r, qi) !== undefined));
 
   const filtered = initialRecipients.filter((r) => {
     if (filter === 'unread') return !r.read_at;
@@ -93,7 +104,7 @@ export function AdminMessageDetailClient({
     if (filter === 'confirmed') return !!r.confirmed_at;
     if (filter === 'rsvp_yes') return r.rsvp_response === 'yes';
     if (filter === 'rsvp_no') return r.rsvp_response === 'no';
-    if (filter === 'rsvp_none') return !r.rsvp_response;
+    if (filter === 'rsvp_none') return questions ? !complete(r) : !r.rsvp_response;
     return true;
   });
 
@@ -179,7 +190,42 @@ export function AdminMessageDetailClient({
         </div>
       </div>
 
-      {rsvp && (
+      {questions && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {questions.map((q, qi) => {
+            const pending = initialRecipients.filter((r) => answerOf(r, qi) === undefined).length;
+            return (
+              <div key={qi} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{q.question}</p>
+                <ul className="mt-3 space-y-2">
+                  {q.options.map((label, oi) => {
+                    const who = initialRecipients.filter((r) => answerOf(r, qi) === oi);
+                    return (
+                      <li key={oi} className="flex items-start justify-between gap-3 text-sm">
+                        <span className="text-foreground">
+                          {label}
+                          {who.length > 0 && (
+                            <span className="block text-xs text-muted-foreground">
+                              {who.map((r) => (r.employee ? r.employee.first_name : 'Externo')).join(', ')}
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-lg font-bold text-foreground">{who.length}</span>
+                      </li>
+                    );
+                  })}
+                  <li className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-2 text-sm text-muted-foreground">
+                    <span>Sin responder</span>
+                    <span className="text-lg font-bold">{pending}</span>
+                  </li>
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {rsvp && !questions && (
         <div className="grid grid-cols-3 gap-4">
           <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{rsvpYes}</p>
@@ -213,7 +259,9 @@ export function AdminMessageDetailClient({
               { value: 'unread', label: 'No leídos' },
               { value: 'read', label: 'Leídos' },
               { value: 'confirmed', label: 'Confirmados' },
-              ...(rsvp
+              ...(questions
+                ? ([{ value: 'rsvp_none', label: 'Falta responder' }] as { value: Filter; label: string }[])
+                : rsvp
                 ? ([
                     { value: 'rsvp_yes', label: rsvpYes },
                     { value: 'rsvp_no', label: rsvpNo },
@@ -279,7 +327,28 @@ export function AdminMessageDetailClient({
                         </span>
                       )}
                     </td>
-                    {rsvp && (
+                    {questions && (
+                      <td className="px-4 py-3" title={formatDate(r.rsvp_at ?? null)}>
+                        {questions.some((_, qi) => answerOf(r, qi) !== undefined) ? (
+                          <ul className="space-y-0.5">
+                            {questions.map((q, qi) => {
+                              const a = answerOf(r, qi);
+                              return (
+                                <li key={qi} className="text-xs">
+                                  <span className="text-muted-foreground">{q.question} </span>
+                                  <span className={a === undefined ? 'text-muted-foreground' : 'font-medium text-foreground'}>
+                                    {a === undefined ? '—' : q.options[a]}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
+                    {rsvp && !questions && (
                       <td className="px-4 py-3">
                         {r.rsvp_response ? (
                           <span

@@ -97,6 +97,9 @@ type CreateForm = {
   email_rsvp_question: string;
   email_rsvp_yes: string;
   email_rsvp_no: string;
+  /** "Voy / No voy" o preguntas con opciones (una opción por renglón). */
+  email_rsvp_mode: 'yesno' | 'options';
+  email_rsvp_questions: { question: string; options: string }[];
 };
 
 const DEFAULT_FORM: CreateForm = {
@@ -125,7 +128,22 @@ const DEFAULT_FORM: CreateForm = {
   email_rsvp_question: '',
   email_rsvp_yes: 'Voy',
   email_rsvp_no: 'No voy',
+  email_rsvp_mode: 'yesno',
+  email_rsvp_questions: [{ question: '', options: '' }],
 };
+
+/** Las preguntas del formulario, sin las vacías: las opciones van una por renglón. */
+function rsvpQuestionsPayload(qs: { question: string; options: string }[]) {
+  return qs
+    .map((q) => ({
+      question: q.question.trim(),
+      options: q.options
+        .split('\n')
+        .map((o) => o.trim())
+        .filter(Boolean),
+    }))
+    .filter((q) => q.question || q.options.length);
+}
 
 function audienceLabel(audience: Record<string, unknown> | null): string {
   if (!audience) return 'Todos';
@@ -371,7 +389,10 @@ export function AdminMessagesClient({
         full?: boolean; subject?: string; from_name?: string; reply_to?: string; cover_url?: string;
         preheader?: string;
         cover_has_title?: boolean; highlights?: { label: string; value: string }[];
-        rsvp?: { question?: string | null; yes?: string; no?: string } | null;
+        rsvp?: {
+          question?: string | null; yes?: string; no?: string;
+          questions?: { question: string; options: string[] }[] | null;
+        } | null;
       };
       setForm({
         ...DEFAULT_FORM,
@@ -397,6 +418,10 @@ export function AdminMessagesClient({
         email_rsvp_question: mail.rsvp?.question ?? '',
         email_rsvp_yes: mail.rsvp?.yes || 'Voy',
         email_rsvp_no: mail.rsvp?.no || 'No voy',
+        email_rsvp_mode: mail.rsvp?.questions?.length ? 'options' : 'yesno',
+        email_rsvp_questions: mail.rsvp?.questions?.length
+          ? mail.rsvp.questions.map((q) => ({ question: q.question, options: q.options.join('\n') }))
+          : [{ question: '', options: '' }],
         ...audienceToForm(m.audience ?? null),
       });
       setEditingId(msgId);
@@ -488,11 +513,13 @@ export function AdminMessagesClient({
             : null,
           rsvp:
             form.email_full && form.email_rsvp
-              ? {
-                  question: form.email_rsvp_question.trim() || null,
-                  yes: form.email_rsvp_yes.trim() || 'Voy',
-                  no: form.email_rsvp_no.trim() || 'No voy',
-                }
+              ? form.email_rsvp_mode === 'options'
+                ? { questions: rsvpQuestionsPayload(form.email_rsvp_questions) }
+                : {
+                    question: form.email_rsvp_question.trim() || null,
+                    yes: form.email_rsvp_yes.trim() || 'Voy',
+                    no: form.email_rsvp_no.trim() || 'No voy',
+                  }
               : null,
         },
       };
@@ -1541,6 +1568,81 @@ function MailOptions({
               </span>
             </label>
             {form.email_rsvp && (
+              <div role="radiogroup" aria-label="Tipo de respuesta" className="flex flex-wrap gap-4 text-sm">
+                {([
+                  ['yesno', 'Dos botones (Voy / No voy)'],
+                  ['options', 'Preguntas con opciones'],
+                ] as const).map(([value, label]) => (
+                  <label key={value} className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="radio"
+                      name="email_rsvp_mode"
+                      value={value}
+                      checked={form.email_rsvp_mode === value}
+                      onChange={() => setForm((f) => ({ ...f, email_rsvp_mode: value }))}
+                    />
+                    <span className="text-secondary-foreground">{label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {form.email_rsvp && form.email_rsvp_mode === 'options' && (
+              <div className="space-y-3">
+                {form.email_rsvp_questions.map((q, i) => {
+                  const setQ = (patch: Partial<{ question: string; options: string }>) =>
+                    setForm((f) => ({
+                      ...f,
+                      email_rsvp_questions: f.email_rsvp_questions.map((x, j) => (j === i ? { ...x, ...patch } : x)),
+                    }));
+                  return (
+                    <div key={i} className="space-y-2 rounded-lg border border-[var(--border)] p-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          aria-label={`Pregunta ${i + 1}`}
+                          value={q.question}
+                          maxLength={120}
+                          onChange={(e) => setQ({ question: e.target.value })}
+                          placeholder={['Cuándo llegás?', 'Cuándo volvés?', 'Qué preferís?'][i]}
+                          className={INPUT_CLS}
+                        />
+                        {form.email_rsvp_questions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((f) => ({ ...f, email_rsvp_questions: f.email_rsvp_questions.filter((_, j) => j !== i) }))
+                            }
+                            className="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground"
+                          >
+                            Quitar
+                          </button>
+                        )}
+                      </div>
+                      <textarea
+                        aria-label={`Opciones de la pregunta ${i + 1}`}
+                        value={q.options}
+                        rows={3}
+                        onChange={(e) => setQ({ options: e.target.value })}
+                        placeholder={'Una opción por renglón (de 2 a 6)\nMartes 8 a la noche\nMiércoles 9 a la mañana'}
+                        className={INPUT_CLS}
+                      />
+                    </div>
+                  );
+                })}
+                {form.email_rsvp_questions.length < 3 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({ ...f, email_rsvp_questions: [...f.email_rsvp_questions, { question: '', options: '' }] }))
+                    }
+                    className="text-xs font-semibold text-[var(--accent-text,#D9480F)] hover:underline"
+                  >
+                    + Agregar pregunta
+                  </button>
+                )}
+              </div>
+            )}
+            {form.email_rsvp && form.email_rsvp_mode === 'yesno' && (
               <div className="grid gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
                 <input
                   type="text"
