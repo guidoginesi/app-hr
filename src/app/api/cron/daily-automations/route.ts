@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { sincronizarPendientes } from '@/lib/leaveCalendar';
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { sendGoogleChatMessage } from '@/lib/googleChat';
 import { sendTimeOffEmail } from '@/lib/emailService';
@@ -117,6 +118,7 @@ export async function GET(req: NextRequest) {
     bajasProgramadas: { aplicadas: 0, invitadas: 0, fallidas: 0, detalle: [] as string[] },
     traspasoDeAnio: null as ResultadoDeTraspaso | null,
     periodoAnual: null as ResultadoDeApertura | null,
+    calendario: { sincronizadas: 0, errores: [] as string[] },
     scheduledMessages: { publicados: 0, fallidos: 0, detalle: [] as { id: string; title: string; ok: boolean; error?: string }[] },
     errors: [] as string[],
   };
@@ -444,6 +446,16 @@ export async function GET(req: NextRequest) {
     results.bajasProgramadas = await aplicarBajasProgramadas(getSupabaseServer());
   } catch (e: any) {
     results.errors.push(`Bajas programadas: ${e.message}`);
+  }
+
+  // ── CALENDARIO DEL EQUIPO ──────────────────────────────────────
+  // Publica las licencias aprobadas que quedaron sin evento: las cargadas por
+  // fuera de la app o las que Google rechazó en el momento.
+  try {
+    results.calendario = await sincronizarPendientes(today.toISOString().slice(0, 10));
+    results.errors.push(...results.calendario.errores.map((e) => `Calendario: ${e}`));
+  } catch (e) {
+    results.errors.push(`Calendario: ${(e as Error).message}`);
   }
 
   // ── MENSAJES PROGRAMADOS ───────────────────────────────────────

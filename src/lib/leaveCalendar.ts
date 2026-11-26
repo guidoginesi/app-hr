@@ -14,7 +14,7 @@
 
 import { getSupabaseServer } from '@/lib/supabaseServer';
 import { TIPOS_SINCRONIZABLES, textoDelEvento } from '@/lib/leaveCalendarText';
-import { crearEvento, actualizarEvento, borrarEvento, type EventoDeCalendario } from '@/lib/googleCalendar';
+import { crearEvento, actualizarEvento, borrarEvento, calendarioConfigurado, type EventoDeCalendario } from '@/lib/googleCalendar';
 
 type Fila = {
   id: string;
@@ -94,4 +94,41 @@ export async function sincronizarLicencia(requestId: string): Promise<ResultadoD
     .update({ google_event_id: eventId, calendar_synced_at: ahora })
     .eq('id', requestId);
   return 'creado';
+}
+
+/**
+ * Licencias aprobadas, de hoy en adelante, que deberían estar en el calendario
+ * y no tienen evento. Pasa cuando se cargan por fuera de las rutas de la app
+ * (un script, un insert a mano) o cuando Google falló en el momento: en los
+ * dos casos nadie vuelve a llamar a `sincronizarLicencia`. La corre el cron
+ * diario, una por una y con pausa, porque Google corta las altas en paralelo
+ * con 403 rateLimitExceeded.
+ */
+export async function sincronizarPendientes(
+  hoy: string,
+  limite = 40,
+): Promise<{ sincronizadas: number; errores: string[] }> {
+  const resultado = { sincronizadas: 0, errores: [] as string[] };
+  if (!calendarioConfigurado()) return resultado;
+
+  const { data, error } = await getSupabaseServer()
+    .from('leave_requests_with_details')
+    .select('id, employee_name')
+    .eq('status', 'approved')
+    .is('google_event_id', null)
+    .gte('end_date', hoy)
+    .in('leave_type_code', TIPOS_SINCRONIZABLES)
+    .order('start_date')
+    .limit(limite);
+  if (error) throw new Error(`No se pudieron leer las licencias sin evento: ${error.message}`);
+
+  for (const [i, fila] of (data ?? []).entries()) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 1500));
+    try {
+      if ((await sincronizarLicencia(fila.id)) === 'creado') resultado.sincronizadas++;
+    } catch (e) {
+      resultado.errores.push(`${fila.employee_name ?? fila.id}: ${(e as Error).message}`);
+    }
+  }
+  return resultado;
 }
