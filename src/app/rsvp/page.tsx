@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { RsvpClient } from './RsvpClient';
+import { RsvpOptionsClient } from './RsvpOptionsClient';
 
 export const metadata: Metadata = { title: 'Tu respuesta · Pow', robots: { index: false, follow: false } };
 
@@ -14,5 +15,12 @@ export default async function RsvpPage({
 }) {
   const sp = await searchParams;
   const one = (k: string) => (typeof sp[k] === 'string' ? (sp[k] as string) : '');
+  const index = (k: string) => (/^\d$/.test(one(k)) ? Number(one(k)) : undefined);
+  const q = index('q');
+  const o = index('o');
+  // Pregunta con opciones (q + o) o "Voy / No voy" (r).
+  if (q !== undefined && o !== undefined) {
+    return <RsvpOptionsClient m={one('m')} u={one('u')} t={one('t')} q={q} o={o} />;
+  }
   return <RsvpClient m={one('m')} u={one('u')} r={one('r') === 'no' ? 'no' : 'yes'} t={one('t')} />;
 }

@@ -59,7 +59,7 @@ export async function GET(
       .from('message_recipients')
       .select(
         `
-        id, user_id, delivered_at, read_at, confirmed_at, dismissed_at, rsvp_response, rsvp_at
+        id, user_id, delivered_at, read_at, confirmed_at, dismissed_at, rsvp_response, rsvp_at, rsvp_answers
       `
       )
       .eq('message_id', id)

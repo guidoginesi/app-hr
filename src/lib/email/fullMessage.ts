@@ -47,12 +47,18 @@ export type FullMessageEmail = {
   preheader?: string;
   /** Texto chico del pie, a la izquierda del logo. */
   footerLabel?: string;
-  /** Botones de respuesta (Voy / No voy), con links ya firmados para este destinatario. */
-  rsvp?: {
-    question?: string | null;
-    yes: { label: string; url: string };
-    no: { label: string; url: string };
-  } | null;
+  /**
+   * Botones de respuesta, con links ya firmados para este destinatario: Voy /
+   * No voy, o una lista de preguntas con sus opciones.
+   */
+  rsvp?:
+    | {
+        question?: string | null;
+        yes: { label: string; url: string };
+        no: { label: string; url: string };
+      }
+    | { questions: { question: string; options: { label: string; url: string }[] }[] }
+    | null;
 };
 
 const P = `margin:0 0 14px;font-size:15px;line-height:1.6;color:${POW_MAIL.body};`;
@@ -108,7 +114,26 @@ function highlightsHtml(items: Highlight[]): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:2px 0 16px;"><tr>${cells}</tr></table>`;
 }
 
+/** Una pregunta por recuadro, con una opción por renglón: las opciones pueden ser largas. */
+function rsvpOptionsHtml(questions: { question: string; options: { label: string; url: string }[] }[]): string {
+  const blocks = questions
+    .map(
+      (q) => `<div style="margin:0 0 12px;padding:16px 14px 8px;border:1px solid ${POW_MAIL.line};border-radius:12px;">
+    <div style="margin:0 0 12px;font-size:16px;font-weight:800;letter-spacing:-0.01em;color:${POW_MAIL.ink};">${escapeHtml(q.question)}</div>
+    ${q.options
+      .map(
+        (o) =>
+          `<a href="${escapeHtml(o.url)}" style="display:block;margin:0 0 8px;padding:12px 16px;border-radius:10px;border:1px solid #D9D4CB;background:#FFFFFF;font-family:${POW_MAIL.font};font-size:15px;font-weight:700;line-height:1.35;color:${POW_MAIL.ink};text-decoration:none;">${escapeHtml(o.label)}</a>`,
+      )
+      .join('')}
+  </div>`,
+    )
+    .join('');
+  return `<div style="margin:6px 0 18px;">${blocks}<div style="font-size:12px;color:${POW_MAIL.muted};text-align:center;">Tocá una opción en cada pregunta. Si cambiás de idea, tocá otra.</div></div>`;
+}
+
 function rsvpHtml(r: NonNullable<FullMessageEmail['rsvp']>): string {
+  if ('questions' in r) return rsvpOptionsHtml(r.questions);
   const btn = (label: string, url: string, primary: boolean) =>
     `<a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 26px;border-radius:999px;font-family:${POW_MAIL.font};font-size:15px;font-weight:700;line-height:1;text-decoration:none;${
       primary

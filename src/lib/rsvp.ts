@@ -31,3 +31,30 @@ export function rsvpUrl(appUrl: string, messageId: string, userId: string, answe
   const q = new URLSearchParams({ m: messageId, u: userId, r: answer, t: signRsvp(messageId, userId) });
   return `${appUrl}/rsvp?${q.toString()}`;
 }
+
+/** Link de una opción de una pregunta (mensajes con `rsvp.questions`). Misma firma. */
+export function rsvpOptionUrl(appUrl: string, messageId: string, userId: string, question: number, option: number): string {
+  const q = new URLSearchParams({
+    m: messageId,
+    u: userId,
+    q: String(question),
+    o: String(option),
+    t: signRsvp(messageId, userId),
+  });
+  return `${appUrl}/rsvp?${q.toString()}`;
+}
+
+/** { "0": 1 } → pregunta 0, opción 1. Lo que no sea un índice válido se ignora. */
+export type RsvpAnswers = Record<string, number>;
+
+export function readRsvpAnswers(raw: unknown, questions: { options: string[] }[]): RsvpAnswers {
+  const out: RsvpAnswers = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const qi = Number(k);
+    if (Number.isInteger(qi) && questions[qi] && Number.isInteger(v) && (v as number) >= 0 && (v as number) < questions[qi].options.length) {
+      out[String(qi)] = v as number;
+    }
+  }
+  return out;
+}
