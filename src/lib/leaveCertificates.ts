@@ -90,3 +90,16 @@ export const LEAVE_CERT_STATUS_LABELS: Record<LeaveCertStatus, string> = {
   pendiente: 'Certificado pendiente',
   vencido: 'Certificado vencido',
 };
+
+/**
+ * Desde los exámenes de 2027, la licencia por estudio sin comprobante puede
+ * costar un Día Pow. No se descuenta solo: el recordatorio lo avisa en rojo y,
+ * si a las 48 horas sigue sin comprobante, la licencia va al reporte de RRHH,
+ * que decide si lo descuenta. Lo anterior a esa fecha no lleva el aviso.
+ */
+export const AVISO_DIA_POW_DESDE = '2027-01-01';
+export const HORAS_PARA_EL_REPORTE = 48;
+
+export function llevaAvisoDeDiaPow(code: string | null | undefined, endDate: string): boolean {
+  return code === STUDY_LEAVE_CODE && endDate >= AVISO_DIA_POW_DESDE;
+}
