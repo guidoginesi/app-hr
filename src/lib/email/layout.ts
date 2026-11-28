@@ -58,6 +58,8 @@ export type EmailContent = {
   cta?: { label: string; url: string };
   /** Link secundario, en texto, al lado del botón. */
   secondaryCta?: { label: string; url: string };
+  /** Aviso destacado en rojo, antes del CTA (ej. una consecuencia si no se cumple un plazo). */
+  alert?: string;
   /** Nota secundaria en muted, debajo del CTA. */
   outro?: string;
   /** Letra chica bajo la firma del pie. */
@@ -206,6 +208,11 @@ export function renderEmail(content: EmailContent): string {
       )}</a>`
     : '';
   const cta = content.cta ? `<div style="margin:2px 0 4px;">${ctaHtml(content.cta)}${secundario}</div>` : '';
+  const alert = content.alert
+    ? `<div style="margin:4px 0 16px;padding:12px 14px;background:${EMAIL.dangerBg};border:1px solid ${EMAIL.danger};border-radius:8px;font-size:14px;line-height:1.5;font-weight:700;color:${EMAIL.danger};">${escapeHtml(
+        content.alert,
+      )}</div>`
+    : '';
   const outro = content.outro
     ? `<p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:${EMAIL.faint};">${escapeHtml(
         content.outro,
@@ -249,6 +256,7 @@ ${preheader}
           ${introHtml}
           ${body}
           ${details}
+          ${alert}
           ${cta}
           ${outro}
         </div>

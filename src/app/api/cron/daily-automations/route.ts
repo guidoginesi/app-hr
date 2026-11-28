@@ -9,7 +9,7 @@ import { sendApprovalDigests } from '@/lib/approvalDigest';
 import { runAutomaticReceiptReminders } from '@/lib/payrollReceiptReminders';
 import { runAutomaticInvoiceReminders } from '@/lib/payrollInvoiceReminders';
 import { runInquiryAutomations } from '@/lib/inquiryAutomations';
-import { runLeaveCertificateReminders } from '@/lib/leaveCertificateReminders';
+import { runLeaveCertificateReminders, runStudyCertificateReport } from '@/lib/leaveCertificateReminders';
 import { runBirthdayLeaveAutomation } from '@/lib/birthdayLeaveAutomation';
 import { sendTalentPoolDigest } from '@/lib/talentPoolDigest';
 import { publishScheduledMessages } from '@/lib/scheduledMessages';
@@ -114,6 +114,7 @@ export async function GET(req: NextRequest) {
     inquiries: { autoClosed: 0, digest: [] as string[], pending: 0 },
     talentPool: { sent: [] as string[], nuevos: 0 },
     leaveCertificates: { enviados: 0, errores: [] as string[] },
+    reporteEstudio: { reportadas: 0, errores: [] as string[] },
     birthdayLeave: { acreditados: [] as string[], vencidos: [] as string[], errores: [] as string[] },
     bajasProgramadas: { aplicadas: 0, invitadas: 0, fallidas: 0, detalle: [] as string[] },
     traspasoDeAnio: null as ResultadoDeTraspaso | null,
@@ -400,6 +401,15 @@ export async function GET(req: NextRequest) {
     results.leaveCertificates = await runLeaveCertificateReminders();
   } catch (e: any) {
     results.errors.push(`Leave certificate reminders: ${e.message}`);
+  }
+
+  // Licencias por estudio (desde 2027) que siguen sin comprobante 48 h después
+  // del recordatorio con el aviso del Día Pow: van a RRHH para que decida.
+  try {
+    results.reporteEstudio = await runStudyCertificateReport();
+    results.errors.push(...results.reporteEstudio.errores);
+  } catch (e) {
+    results.errors.push(`Study certificate report: ${(e as Error).message}`);
   }
 
   // ── DÍA DE CUMPLEAÑOS: acreditación y vencimiento ──────────────
